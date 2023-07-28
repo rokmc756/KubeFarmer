@@ -1,0 +1,166 @@
+---
+# Install iSCSI initiator
+
+#
+- name: Install iSCSI initiator
+  yum:
+    name: "{{ item }}"
+    state: present
+  register: iscsi_initiator_installed
+  with_items:
+    - "iscsi-initiator-utils"
+
+#
+- debug:
+    var: iscsi_initiator_installed
+
+#
+- name: Copy iscsi initiator config file
+  template: src=initiatorname.iscsi.j2 dest=/etc/iscsi/initiatorname.iscsi owner=root group=root mode=644 force=yes
+  register: iscsi_initiator_config_copied
+
+#
+- debug:
+    var: iscsi_initiator_config_copied
+
+#
+- name: Modify iscsid.conf for authentication method and username / password
+  lineinfile:
+    dest: /etc/iscsi/iscsid.conf
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    state: "{{ item.state }}"
+    backrefs: "{{ item.backrefs }}"
+  register: iscsid_config_modified
+  with_items:
+    - { regexp: "^#node.session.auth.authmethod = CHAP", line: "node.session.auth.authmethod = CHAP", state: present, backrefs: yes }
+    - { regexp: "^#node.session.auth.username = username", line: "node.session.auth.username = {{ iscsiuser }}", state: present, backrefs: yes }
+    - { regexp: "^#node.session.auth.password = password", line: "node.session.auth.password = {{ iscsipass }}", state: present, backrefs: yes }
+
+#
+- debug:
+    var: iscsid_config_modified
+
+#
+- name: Enable and start iscsid
+  systemd:
+    name: iscsid
+    state: restarted
+  register: iscsid_restarted
+  until: iscsid_restarted is succeeded
+  retries: 3
+  delay: 10
+
+#
+- debug:
+    var: iscsid_started
+
+#
+- name: Discover target
+  command: iscsiadm -m discovery -t sendtargets -p {{ hostvars[groups['iscsi-storage'][0]].ansible_ssh_host }}
+  register: target_discovered
+
+#
+- debug:
+    var: target_discovered
+
+#
+- name: Confirm status after discovery
+  command: iscsiadm -m node -o show
+  register: discovery_status_confirmed
+
+#
+- debug:
+    var: discovery_status_confirmed
+
+#
+- name: Login to the target
+  command: |
+    iscsiadm --mode node --target iqn.2022-12.io.pivotal.jtest:{{ rhel_version }}.{{ inventory_hostname }} \
+    --portal {{ hostvars[groups['iscsi-storage'][0]].ansible_ssh_host }} --login
+  register: target_logined
+
+#
+- debug:
+    var: target_logined
+
+#
+- name: Confirm the established session
+  command: iscsiadm -m session -o show
+  register: established_session_confirmed
+
+#
+- debug:
+    var: established_session_confirmed
+
+#
+- name: Confirm the partitions
+  command: cat /proc/partitions
+  register: partitions_confirmed
+
+#
+- debug:
+    var: partitions_confirmed
+
+#
+- name: Install parted
+  yum:
+    name: parted
+    state: present
+  register: parted_installed
+
+#
+- debug:
+    var: parted_installed
+
+#
+- name: "Add new partition /dev/sdb1"
+  parted:
+    device: /dev/sdb
+    number: 1
+    flags: [ lvm ]
+    state: present
+  register: partition_added
+
+#
+- debug:
+    var: partition_added
+
+#
+- name: Format the partition
+  filesystem:
+    fstype: xfs
+    dev: /dev/sdb1
+  register: partition_formatted
+
+#
+- debug:
+    var: partition_formatted
+
+#
+- name: Creates directory for iscsi connection
+  file:
+    path: "{{ iscsi_disk_base_dir }}/{{inventory_hostname}}_iscsidir"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+    recurse: yes
+  register: directory_created
+
+#
+- debug:
+    var: directory_created
+
+#
+- name: Mount the partition to
+  mount:
+    fstype: xfs
+    src: /dev/sdb1
+    path: "{{ iscsi_disk_base_dir }}/{{inventory_hostname}}_iscsidir"
+    state: mounted
+  register: partition_mounted
+
+#
+- debug:
+    var: partition_mounted

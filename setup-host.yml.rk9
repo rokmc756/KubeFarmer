@@ -1,0 +1,16 @@
+---
+#- hosts: rk9-slave
+#  roles:
+#    - harbor
+
+- hosts: all
+  become: yes
+  vars:
+    print_debug: true
+    install_dep_packages: false
+    install_k8s_packages: false
+    uninstall_dep_packages: false
+    uninstall_k8s_packages: false
+  roles:
+    - kubernetes-cluster
+    - dashboard

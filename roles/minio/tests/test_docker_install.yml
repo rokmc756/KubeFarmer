@@ -1,0 +1,34 @@
+---
+- hosts: localhost
+  gather_facts: no
+  connection: local
+  vars_files:
+    - vars.yml
+  tasks:
+    - name: start container
+      docker_container:
+        name: "{{container_name}}"
+        hostname: "{{container_name}}"
+        image: registry.gitlab.com/vladgo/centos7-systemd
+        state: started
+        tty: yes
+        keep_volumes: no
+        published_ports: "{{ minio_port }}"
+        privileged: yes
+        volumes:
+          - /sys/fs/cgroup:/sys/fs/cgroup:ro
+
+    - name: add container to inventory
+      add_host:
+        name: "{{container_name}}"
+        ansible_host: "{{container_name}}"
+        ansible_user: root
+        ansible_connection: docker
+        groups: docker
+      changed_when: false
+
+- hosts: docker
+  vars_files:
+    - vars.yml
+  roles:
+    - ansible-minio

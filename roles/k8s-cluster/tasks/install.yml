@@ -1,0 +1,658 @@
+---
+# Install Kubernetes Cluster for RHEL or CentOS 7.x / 8.x
+
+#
+- name: Install rpm packages of dependenies to need installing packages regarding kubernates for RHEL or Rocky 9
+  become: true
+  become_user: root
+  yum:
+    name: "{{ item }}"
+    state: present
+  ignore_errors: yes
+  register: selinux_policy_installed
+  with_items:
+    - yum-utils
+    - firewalld
+    - python3-libselinux
+    - python3
+    - python3-libselinux
+    - libselinux-python3
+    - python3-policycoreutils
+    - policycoreutils-python-utils
+    - iproute-tc
+    - container-selinux
+    - chrony
+    - jq
+    - java-1.8.0-openjdk
+  when: install_dep_packages and hostvars[inventory_hostname].ansible_distribution_major_version|int >= 9
+
+#
+- name: Install rpm packages of dependenies to need installing packages regarding kubernates for RHEL / CentOS 7
+  become: true
+  become_user: root
+  yum:
+    name: "{{ item }}"
+    state: present
+  ignore_errors: yes
+  register: selinux_policy_installed
+  with_items:
+    - python2
+    - python2-libselinux
+  when: install_dep_packages and hostvars[inventory_hostname].ansible_distribution_major_version|int <= 8
+
+#
+- debug:
+    var: selinux_policy_installed
+  when: print_debug
+
+#
+- name: Enable firewalld for all nodes
+  become: true
+  become_user: root
+  systemd:
+    name: firewalld
+    state: started
+    enabled: yes
+
+#
+- name: Add line into /etc/locale.conf for LC_TYPE to prevent error
+  become: true
+  become_user: root
+  lineinfile:
+    path: /etc/locale.conf
+    line: "LC_CTYPE=en_US.UTF-8"
+  register: lctype_line_added
+
+#
+- name: Unset variables of token and certs generated previously by kubeadm init
+  set_fact:
+    token_ca_cert:
+    token_01:
+
+#
+- name: Disabling SELinux to be required by kubnernates cluster
+  become: true
+  become_user: root
+  selinux:
+    state: disabled
+  register: selinux_disabled
+  notify:
+    - restart system
+    - waiting for server to come back after reboot
+  failed_when: selinux_disabled.msg | default('ok', True) is not search('(^ok$|libselinux-python|(SELinux state changed))')
+
+#
+- debug:
+    var: selinux_disabled.stdout_lines
+  when: print_debug
+
+#
+- name: Check if selinux has been disabled in Configurtion file
+  become: true
+  become_user: root
+  command: grep SELINUX /etc/sysconfig/selinux
+  register: sevalue
+
+#
+- debug:
+    var: sevalue.stdout_lines
+  when: print_debug
+
+#
+- name: Enable firewalld for all nodes
+  become: true
+  become_user: root
+  systemd:
+    name: firewalld
+    state: started
+    enabled: yes
+
+#
+- name: Allow Kubernetes service ports for master node
+  become: true
+  become_user: root
+  firewalld:
+    permanent: yes
+    immediate: yes
+    port: "{{ item.port }}/{{ item.proto }}"
+    state: "{{ item.state }}"
+    zone: "{{ item.zone }}"
+  with_items: "{{ master_ports }}"
+  when: inventory_hostname in groups['master']
+
+#
+- name: Allow Kubernetes service ports for workder nodes
+  become: true
+  become_user: root
+  firewalld:
+    permanent: yes
+    immediate: yes
+    port: "{{ item.port }}/{{ item.proto }}"
+    state: "{{ item.state }}"
+    zone: "{{ item.zone }}"
+  with_items: "{{ workers_ports }}"
+  when: inventory_hostname in groups['workers']
+
+#
+- name: Reload firewalld for all nodes
+  become: true
+  become_user: root
+  command: firewall-cmd --reload
+
+#
+- name: Enable br_netfilter and overlay module for iptables in all nodes
+  become: true
+  become_user: root
+  copy:
+    dest: /etc/modules-load.d/containerd.conf
+    content: |
+      overlay
+      br_netfilter
+
+#
+- name: Enable bridge module for iptables to route packets into kubernetes cluster nodes
+  become: true
+  become_user: root
+  copy:
+    dest: /etc/sysctl.d/99-kubernetes-cri.conf
+    content: |
+      net.ipv4.ip_forward = 1
+      net.bridge.bridge-nf-call-iptables = 1
+      net.bridge.bridge-nf-call-ip6tables = 1
+
+#
+- name: Apply kernel parameters for kubernetes cluster
+  become: true
+  become_user: root
+  command: sysctl --system
+
+#
+- name: Add docker repository in all nodes
+  become: true
+  become_user: root
+  yum_repository:
+    name: docker-ce
+    description: Add docker repsotiry
+    baseurl: "https://download.docker.com/linux/centos/{{ hostvars[inventory_hostname].ansible_distribution_major_version }}/x86_64/stable/"
+    gpgcheck: "no"
+
+#
+- name: Install the latest version of docker-ce packages in all nodes
+  become: true
+  become_user: root
+  yum:
+    name: "{{ item }}"
+    state: present
+  ignore_errors: yes
+  with_items:
+    - "docker-ce"
+    - "docker-ce-cli"
+    - "containerd.io"
+    - "docker-compose-plugin"
+  when: install_dep_packages
+
+#
+- name: Initialize containerd
+  become: true
+  become_user: root
+  shell: |
+    containerd config default > /etc/containerd/config.toml
+  # command: containerd config default | tee /etc/containerd/config.toml
+
+#
+- name: Edit containerd configuration
+  become: true
+  become_user: root
+  lineinfile:
+    dest: /etc/containerd/config.toml
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    state: "{{ item.state }}"
+  with_items:
+    - { regexp: '            SystemdCgroup = false', line: '            SystemdCgroup = true', state: present, backrefs: no }
+  # - { regexp: 'runc.options', line: '            SystemdCgroup = true', state: present }
+  #   firstmatch: yes
+
+#
+- name: Restart containerd to apply SystemdCgroup in config.toml in all nodes
+  become: true
+  become_user: root
+  systemd:
+    name: containerd
+    state: restarted
+    enabled: yes
+  register: containerd_enabled
+  until: containerd_enabled is succeeded
+  retries: 20
+  delay: 20
+
+#
+- name: Enable and start docker in all nodes
+  become: true
+  become_user: root
+  systemd:
+    name: docker
+    state: started
+    enabled: yes
+  register: docker_enabled
+  until: docker_enabled is succeeded
+  retries: 20
+  delay: 20
+
+#
+- name: Creates docker directory under /etc in all nodes
+  become: true
+  become_user: root
+  file:
+    path: /etc/docker
+    state: directory
+
+#
+- name: Configure the docker daemon to use systemd for the management of the cotainer's cgroups in all nodes
+  become: true
+  become_user: root
+  template: src=daemon.json.j2 dest=/etc/docker/daemon.json owner=root group=root mode=644 force=yes
+  register: cgroup_docker_configured
+
+#
+- name: Restart docker daemon in all nodes
+  become: true
+  become_user: root
+  systemd:
+    name: docker
+    state: restarted
+    enabled: yes
+  register: docker_restarted
+  until: docker_restarted is succeeded
+  retries: 10
+  delay: 10
+
+#
+- name: Add Kubernetes repositories in all nodes
+  become: true
+  become_user: root
+  template: src=kubernetes.repo.j2 dest=/etc/yum.repos.d/kubernetes.repo owner=root group=root mode=644 force=yes
+  register: kubernetes_repo_added
+
+#
+- name: Install kubeadm packages for all nodes
+  become: true
+  become_user: root
+  yum:
+    name: "{{ item }}"
+    state: present
+  ignore_errors: yes
+  with_items:
+    - "kubectl-{{ k8s_major_version }}.{{ k8s_minor_version }}.{{ k8s_patch_version }}"
+    - "kubelet-{{ k8s_major_version }}.{{ k8s_minor_version }}.{{ k8s_patch_version }}"
+    - "kubeadm-{{ k8s_major_version }}.{{ k8s_minor_version }}.{{ k8s_patch_version }}"
+    - "yum-plugin-versionlock"
+  when: install_k8s_packages
+
+#
+- name: Configure the kubelet daemon to use systemd for the management of the cotainer's cgroups in all nodes
+  become: true
+  become_user: root
+  template: src=kubelet.j2 dest=/etc/sysconfig/kubelet owner=root group=root mode=644 force=yes
+  register: kubernetes_repo_added
+
+#
+- name: Enable and Start kubelet in all nodes
+  become: true
+  become_user: root
+  systemd:
+    name: kubelet
+    state: restarted
+    enabled: yes
+    daemon_reload: yes
+
+#
+- name: Install Cgroup packages in all nodes
+  become: true
+  become_user: root
+  yum:
+    name: "{{ item }}"
+    state: present
+  ignore_errors: yes
+  with_items:
+    - libcgroup
+    - libcgroup-tools
+  when: install_dep_packages and hostvars[inventory_hostname].ansible_distribution_major_version|int < 9
+
+#
+- name: Enable Cgroup in all nodes
+  become: true
+  become_user: root
+  service: name=cgconfig state=started enabled=yes
+  when: hostvars[inventory_hostname].ansible_distribution_major_version|int < 9
+
+#
+- name: Lock versions to avoid unwanted updated yum update in all nodes
+  become: true
+  become_user: root
+  command: yum versionlock kubelet kubeadm kubectl
+  register: virsions_lock
+  command: yum versionlock kubelet-{{ k8s_major_version }}.{{ k8s_minor_version }}.{{ k8s_patch_version }} kubectl-{{ k8s_major_version }}.{{ k8s_minor_version }}.{{ k8s_patch_version }} kubeadm-{{ k8s_major_version }}.{{ k8s_minor_version }}.{{ k8s_patch_version }}
+
+#
+- name: Create Cluster configuration in master node
+  become: true
+  become_user: root
+  shell: |
+    kubeadm config print init-defaults | tee /root/cluster-config.yaml
+  register: cluster_config_created
+  when: inventory_hostname in groups['master']
+
+#
+- name: Modify cluster-config.yaml to replace "{{ hostvars[inventory_hostname]['ansible_eth1']['ipv4']['address'] }}" with Control Plane's IP address
+  become: true
+  become_user: root
+  lineinfile:
+    dest: /root/cluster-config.yaml
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    state: "{{ item.state }}"
+    backrefs: "{{ item.backrefs }}"
+  with_items:
+    - { regexp: "^  name: node", line: "  name: {{ ansible_hostname }}", state: present, backrefs: yes }
+    - { regexp: "^  advertiseAddress: 1.2.3.4", line: "  advertiseAddress: {{ hostvars[inventory_hostname]['ansible_eth1']['ipv4']['address'] }}", state: present, backrefs: yes }
+    - { regexp: "^  criSocket: /var/run/dockershim.sock", line: "  criSocket: /run/containerd/containerd.sock", state: present, backrefs: yes }
+  when: inventory_hostname in groups['master']
+
+#
+- name: Modify cluster-config.yaml
+  become: true
+  become_user: root
+  lineinfile:
+    path: /root/cluster-config.yaml
+    line: "{{ item.content }}"
+    insertafter: EOF
+    create: true
+  with_items:
+    - { content: '---' }
+    - { content: 'apiVersion: kubelet.config.k8s.io/v1beta1' }
+    - { content: 'kind: KubeletConfiguration' }
+    - { content: 'cgroupDriver: systemd' }
+  when: inventory_hostname in groups['master']
+
+#
+- name: Disable swap in order to initialize Kubernetes master
+  become: true
+  become_user: root
+  shell: |
+    swapoff -a
+    sed -i '/swap/s/^/#/g' /etc/fstab
+
+#
+- name: Stop firewalld for all nodes
+  become: true
+  become_user: root
+  systemd:
+    name: firewalld
+    state: stopped
+    enabled: yes
+
+#
+- name: Change Kubelet systemd file
+  become: true
+  become_user: root
+  template: src=kubelet.systemd.j2 dest=/usr/lib/systemd/system/kubelet.service owner=root group=root mode=644 force=yes
+  register: kubelet_systemd_changed
+
+#
+#- name: Move temoporary Kubelet systemd file in recursive directory of /usr/lib/systemd/system/kubelet.service.d to /tmp directory
+#  become: true
+#  become_user: root
+#  shell: mv -f /usr/lib/systemd/system/kubelet.service.d/10-kubeadm.conf /tmp/
+#  register: kubeadm_conf_moved
+
+#
+- name: Enable and Start kubelet in all nodes
+  become: true
+  become_user: root
+  systemd:
+    name: kubelet
+    state: restarted
+    enabled: yes
+    daemon_reload: yes
+
+#
+- name: Reset Kubernetes
+  become: true
+  become_user: root
+  command: kubeadm reset -f
+  when: inventory_hostname in groups['master']
+
+#
+- name: Initialize Kubernetest master and create cluster
+  become: true
+  become_user: root
+  command: kubeadm init --apiserver-advertise-address={{ hostvars[groups['master'][0]]['ansible_eth1']['ipv4']['address'] }} --pod-network-cidr=10.142.0.0/16 --ignore-preflight-errors=all
+  async: 360
+  poll: 5
+  register: kubeadm_init
+  when: inventory_hostname in groups['master']
+  # command: kubeadm init --apiserver-advertise-address={{ hostvars[groups['master'][0]]['ansible_eth1']['ipv4']['address'] }} --pod-network-cidr=192.168.0.0/24 --kubernetes-version=v1.21.1 --ignore-preflight-errors=all
+
+#
+- debug:
+    msg: "{{ kubeadm_init.stdout_lines }}"
+  when: inventory_hostname in groups['master']
+
+#
+- name: Set fact for token ca certificate
+  set_fact:
+    token_ca_cert: "{{ (kubeadm_init.stdout_lines | select('search', 'discovery-token-ca-cert-hash') | list | string | split(' '))[1] }}"
+  delegate_to: "{{ item }}"
+  delegate_facts: True
+  with_items: "{{ groups['all'] }}"
+  when: inventory_hostname in groups['master']
+
+#
+- debug:
+    msg: "{{ token_ca_cert }}"
+
+#
+- name: Set fact for token
+  set_fact:
+    token_01: "{{ (kubeadm_init.stdout_lines | select('search', '--token') | list | string | split(' '))[4] }}"
+  delegate_to: "{{ item }}"
+  delegate_facts: True
+  with_items: "{{ groups['all'] }}"
+  when: inventory_hostname in groups['master']
+
+#
+- debug:
+    msg: "{{ token_01 }}"
+
+#
+- name: Enable your user to start using the cluster.
+  become: true
+  become_user: root
+  shell: |
+    mkdir -p $HOME/.kube
+    rm -f $HOME/.kube/config
+    cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+    chown $(id -u):$(id -g) $HOME/.kube/config
+  register: start_using_cluster_enabled
+  when: inventory_hostname in groups['master']
+
+#
+- debug:
+    msg: "{{ start_using_cluster_enabled }}"
+  when: inventory_hostname in groups['master']
+
+#
+- name: Configure kubectl config
+  become: true
+  become_user: root
+  shell: |
+    kubectl taint nodes  {{ hostvars[groups['master'][0]].ansible_hostname }} node-role.kubernetes.io/control-plane:NoSchedule-
+  register: kubectl_configured
+  until: kubectl_configured is succeeded
+  retries: 10
+  delay: 10
+  when: inventory_hostname in groups['master']
+  #  kubectl taint nodes --all node-role.kubernetes.io/master-
+
+#
+- debug:
+    msg: "{{ kubectl_configured }}"
+  when: inventory_hostname in groups['master']
+
+#
+- name: Confirm that the kubectl command is activated.
+  become: true
+  become_user: root
+  command: kubectl get nodes
+  register: kubectl_get_nodes
+  when: inventory_hostname in groups['master']
+
+#
+- debug:
+    msg: "{{ kubectl_get_nodes }}"
+  when: inventory_hostname in groups['master']
+
+#
+- name: Create pod for master as well
+  become: true
+  become_user: root
+  lineinfile:
+    path: /root/.bashrc
+    line: "{{ item.content }}"
+    insertafter: EOF
+    create: true
+  register: master_pod_created
+  with_items:
+    - { content: " if [ -f /etc/bash_completion ] && ! shopt -oq posix; then " }
+    - { content: "   . /etc/bash_completion " }
+    - { content: " fi " }
+    - { content: " source <(kubectl completion bash) " }
+  when: inventory_hostname in groups['master']
+
+#
+- debug:
+    msg: "{{ master_pod_created }}"
+  when: inventory_hostname in groups['master']
+
+#
+- name: Download calico networking
+  become: true
+  become_user: root
+  get_url:
+    url: https://raw.githubusercontent.com/projectcalico/calico/v3.25.0/manifests/calico.yaml
+    dest: /root/calico.yaml
+    mode: 0644
+  register: calico_downloaded
+  when: inventory_hostname in groups['master']
+  # url: https://docs.projectcalico.org/manifests/calico.yaml
+  # url: https://projectcalico.docs.tigera.io/manifests/calico.yaml
+
+#
+- name: Modify /root/calica.yaml for cidr
+  become: true
+  become_user: root
+  lineinfile:
+    dest: /root/calico.yaml
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    state: "{{ item.state }}"
+    backrefs: "{{ item.backrefs }}"
+  register: calica_cidr_modified
+  with_items:
+    - { regexp: "^            # - name: CALICO_IPV4POOL_CIDR", line: "            - name: CALICO_IPV4POOL_CIDR", state: present, backrefs: yes }
+    - { regexp: "^            #   value: \"192.168.0.0/16\"", line: "              value: \"10.142.0.0/16\"", state: present, backrefs: yes }
+  when: inventory_hostname in groups['master']
+
+#
+- debug:
+    var: calica_cidr_modified
+  when: inventory_hostname in groups['master']
+
+#
+- name: Setup networking with calico
+  become: true
+  become_user: root
+  command: kubectl apply -f /root/calico.yaml
+  register: calico_network_setup
+  when: inventory_hostname in groups['master']
+
+#
+- debug:
+    msg: "{{ calico_network_setup }}"
+  when: inventory_hostname in groups['master']
+
+#- name: Setup networking with kube-flannel
+#  become: true
+#  become_user: root
+#  command: kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+#  register: kube_flannel_network_setup
+#  when: inventory_hostname in groups['master']
+
+#
+#- debug:
+#    msg: "{{ kube_flannel_network_setup }}"
+#  when: inventory_hostname in groups['master']
+
+#
+- name: Confirm that the kubectl command is activated.
+  become: true
+  become_user: root
+  command: kubectl get nodes
+  register: kubectl_get_nodes
+  when: inventory_hostname in groups['master']
+
+#
+- debug:
+    msg: "{{ kubectl_get_nodes }}"
+  when: inventory_hostname in groups['master']
+
+# Initialize workder nodes in kubernetes cluster
+- name: Reset Kubernetes on cluster nodes
+  become: true
+  become_user: root
+  command:  kubeadm reset -f
+  when: inventory_hostname in groups['workers']
+
+#
+- name: Join the other kubernetes nodes to cluster, the command must be run on the worker nodes only
+  become: true
+  become_user: root
+  command: kubeadm join "{{ hostvars[groups['master'][0]]['ansible_eth1']['ipv4']['address'] }}:6443" --token "{{ token_01 }}" --discovery-token-ca-cert-hash "{{ token_ca_cert }}"
+  register: store_it_copied
+  ignore_errors: yes
+  when: inventory_hostname in groups['workers']
+
+#
+- debug:
+    msg: "{{ store_it_copied }}"
+  when: inventory_hostname in groups['workers']
+
+#
+- name: Confirm that the kubectl command is activated
+  become: true
+  become_user: root
+  command: kubectl get nodes
+  register: kubectl_get_nodes
+  when: inventory_hostname in groups['master']
+
+#
+- debug:
+    msg: "{{ kubectl_get_nodes }}"
+  when: inventory_hostname in groups['master']
+
+#
+- name: Enable and Start kubelet in master node
+  become: true
+  become_user: root
+  systemd:
+    name: kubelet
+    state: restarted
+    enabled: yes
+  register: master_kubelet_restarted
+  when: inventory_hostname in groups['master']
+
+#
+- debug:
+    msg: "{{ master_kubelet_restarted }}"
+  when: inventory_hostname in groups['master']

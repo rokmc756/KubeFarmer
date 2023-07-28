@@ -1,0 +1,3 @@
+container_name: minio
+minio_access_key: 4DE30C520FCB4D42BC77
+minio_secret_key: 85efc606344d45b4a0b6f8cdb397d336

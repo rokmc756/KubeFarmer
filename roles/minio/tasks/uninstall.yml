@@ -1,0 +1,84 @@
+---
+# 1
+- name: Stopping NGINX
+  service:
+    name: nginx
+    state: stopped
+  ignore_errors: yes
+  when: nginx_package == 'nginx'
+
+# 2
+- name: Delete config files of Nginx
+  become: true
+  file:
+    path: "{{}}"
+    state: absent
+  ignore_errors: yes
+  with_items:
+    - "/etc/nginx/conf.d/default.conf"
+    - "/etc/nginx/nginx.conf"
+  when: nginx_package == 'nginx'
+
+# 3
+- name: Uninstalling NGINX
+  yum: name={{ nginx_package }} state=absent
+  ignore_errors: yes
+  when: nginx_package == 'nginx'
+
+# 4
+- name: Remove nginx repository (and clean up left-over metadata)
+  yum_repository:
+    name: epel
+    file: nginx_repo
+    state: absent
+  ignore_errors: yes
+  when: nginx_package == 'nginx'
+
+# 5
+- name: Stopping Minio
+  systemd:
+    name: minio
+    state: stopped
+  ignore_errors: yes
+
+# 6
+- name: Delete config and binary files of Minio
+  become: true
+  file:
+    path: "{{ item }}"
+    state: absent
+  with_items:
+    - "/usr/lib/systemd/system/{{ minio_service }}-check.timer"
+    - "/usr/lib/systemd/system/{{ minio_service }}-check.service"
+    - "/etc/default/{{ minio_service }}"
+    - "/etc/systemd/system/{{ minio_service }}.service"
+    - "{{ minio_client_bin }}"
+    - "{{ minio_client_config }}"
+    - "{{ minio_config }}"
+    - "{{ minio_volumes }}"
+    - "{{ minio_bin }}"
+
+# 10
+- name: Force systemd to reread configs
+  systemd:
+    daemon_reload: yes
+
+# 11
+- name: Remove minio user
+  user:
+    name: "{{ minio_user }}"
+    state: absent
+    remove: yes
+
+# 12
+- name: Stop and disable Firewalld
+  systemd:
+    name: 'firewalld'
+    state: stopped
+    enabled: no
+
+# 13
+- name: Uninstall Firewalld RPM package
+  yum:
+    name: firewalld
+    state: absent

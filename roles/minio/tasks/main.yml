@@ -1,0 +1,30 @@
+---
+# Install MySQL Galera Cluster for Red Hat / CentOS
+
+# for now fail if it's not a Red Hat based system
+- name: Check OS ( GPDB )
+  fail: msg="Not a Red Hat based system!"
+  when: ansible_os_family != 'RedHat' or  ansible_os_family != 'CentOS' or  ansible_os_family != 'Rocky'
+
+- name: Configure firewall for MinIO
+  include: firewalld.yml
+  when: configure_firewall
+  tags: install
+
+- name: Install MinIO
+  include: minio.yml
+  when: install_minio
+  tags: install
+
+- name: Install Nginx
+  include: nginx.yml
+  when: install_nginx
+  tags: install
+
+- name: Uninstallation of MinIO for Red Hat / CentOS / Rocky
+  include: uninstall.yml
+  tags: uninstall
+
+- name: Upgrade of MinIO for Red Hat / CentOS / Rocky
+  include: upgrade.yml
+  tags: upgrade

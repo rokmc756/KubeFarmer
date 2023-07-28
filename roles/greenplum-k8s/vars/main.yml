@@ -1,0 +1,7 @@
+---
+#
+major_version: "2"
+minor_version: "3"
+patch_version: "0"
+rhel_version: "el7"
+home_dir: "/root"

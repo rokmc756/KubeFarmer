@@ -1,0 +1,27 @@
+---
+- hosts: minio
+  become: yes
+  become_user: root
+  pre_tasks:
+    - debug: msg="{{ minio_cluster_nodes }}"
+  roles:
+    - ansible-minio
+  vars:
+    minio_access_key: 4DE30C520FCB4D42BC77
+    minio_secret_key: 85efc606344d45b4a0b6f8cdb397d336
+    minio_cluster_nodes: "{{ groups['minio']|map('extract', hostvars, 'ansible_default_ipv4') \
+                        | map(attribute='address') \
+                        | map('regex_replace', '^(.*)$', 'http://\\1/export') | list }}"
+    #minio_server_url: minio.tar.xz
+    minio_volumes:
+      - /export
+
+- hosts: nginx
+  become: yes
+  become_user: root
+  roles:
+    - role: ansible-minio
+      install_nginx: yes
+      install_minio: no
+      nginx_nodes: "{{ groups['minio']|map('extract', hostvars, 'ansible_default_ipv4') \
+                    |map(attribute='address') | list }}"

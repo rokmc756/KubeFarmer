@@ -1,0 +1,5 @@
+---
+iscsi_disk_base_dir: "/data/iscsi01"
+rhel_version: "rk9"
+iscsiuser: "iscsiadmin"
+iscsipass: "changeme"

@@ -1,0 +1,10 @@
+---
+- hosts: rk8-slave
+  roles:
+    - harbor
+
+- hosts: rk8-master,rk8-node01,rk8-node02,rk8-node03
+  roles:
+    - kubernetes-cluster
+
+#    - greenplum-k8s

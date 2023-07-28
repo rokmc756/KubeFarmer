@@ -1,0 +1,47 @@
+# create new
+# if you set some devices, add <target>-</target> and set the same way with follows
+# naming rule : [ iqn.(year)-(month).(reverse of domain name):(any name you like) ]
+<target iqn.2022-02.io.pivotal.jtest:labs.target01>
+    # Provided device as a iSCSI target
+    backing-store {{ iscsi_disk_base_dir }}/disk01.img
+    # iSCSI Initiator's IQN you allow to connect
+    initiator-name iqn.2022-02.io.pivotal.jtest:co7-node01.initiator
+    # Authentication info ( set anyone you like for "username", "password" )
+    # incominguser admin changeme
+</target>
+
+<target iqn.2022-02.io.pivotal.jtest:labs.target02>
+    # Provided device as a iSCSI target
+    backing-store {{ iscsi_disk_base_dir }}/disk02.img
+    # iSCSI Initiator's IQN you allow to connect
+    initiator-name iqn.2022-02.io.pivotal.jtest:co7-node02.initiator
+    # Authentication info ( set anyone you like for "username", "password" )
+    # incominguser admin changeme
+</target>
+
+<target iqn.2022-02.io.pivotal.jtest:labs.target03>
+    # Provided device as a iSCSI target
+    backing-store {{ iscsi_disk_base_dir }}/disk03.img
+    # iSCSI Initiator's IQN you allow to connect
+    initiator-name iqn.2022-02.io.pivotal.jtest:co7-node03.initiator
+    # Authentication info ( set anyone you like for "username", "password" )
+    # incominguser admin changeme
+</target>
+
+<target iqn.2022-02.io.pivotal.jtest:labs.target04>
+    # Provided device as a iSCSI target
+    backing-store {{ iscsi_disk_base_dir }}/disk04.img
+    # iSCSI Initiator's IQN you allow to connect
+    initiator-name iqn.2022-02.io.pivotal.jtest:co7-master.initiator
+    # Authentication info ( set anyone you like for "username", "password" )
+    # incominguser admin changeme
+</target>
+
+<target iqn.2022-02.io.pivotal.jtest:labs.target05>
+    # Provided device as a iSCSI target
+    backing-store {{ iscsi_disk_base_dir }}/disk05.img
+    # iSCSI Initiator's IQN you allow to connect
+    initiator-name iqn.2022-02.io.pivotal.jtest:co7-slave.initiator
+    # Authentication info ( set anyone you like for "username", "password" )
+    # incominguser admin changeme
+</target>

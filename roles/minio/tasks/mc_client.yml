@@ -1,0 +1,70 @@
+---
+- name: Download minio client
+  get_url:
+    url: "{{ minio_client_url }}"
+    dest: "{{ minio_client_bin }}"
+    checksum: "{{ minio_client_checksum | d(omit) }}"
+    mode: 0755
+    timeout: 20
+  when: minio_client_url.endswith('mc') or minio_client_url.endswith('Z')
+
+- name: install unzip
+  yum: name=unzip
+  when: minio_client_url.endswith('zip')
+
+- name: Unarchive minio client
+  unarchive:
+    src: "{{ minio_client_url }}"
+    dest: "{{ minio_client_bin | dirname }}"
+    remote_src: "{{ minio_client_url.startswith('http') }}"
+    mode: 0755
+  when: minio_client_url.endswith('zip')
+
+- name: install sudo
+  yum: name=sudo
+  when: minio_user != 'root'
+
+- name: Add minio server to client config
+  become: yes
+  become_user: "{{ minio_user }}"
+  command: "{{ minio_client_bin }} config host add minio http://{{ ansible_host | default('localhost') }}:{{ minio_port }} {{ minio_access_key }} {{ minio_secret_key }}"
+  args:
+    creates: "{{ minio_client_config }}"
+
+- block:
+    - name: Create minio admin service
+      copy:
+        content: |
+          [Unit]
+          Description=Check minio {{ minio_service }} heal
+          [Service]
+          WorkingDirectory={{ minio_user_home }}
+          User={{ minio_user }}
+          Type=oneshot
+          ExecStart={{ minio_client_bin }} admin heal -r minio
+        dest: /usr/lib/systemd/system/{{ minio_service }}-check.service
+      notify: systemd daemon-reload
+
+    - name: Create timer for minio admin service
+      copy:
+        content: |
+          [Unit]
+          Description=Run minio {{ minio_service }} heal check
+          [Timer]
+          OnCalendar={{ minio_check_calendar | d('weekly') }}
+        dest: /usr/lib/systemd/system/{{ minio_service }}-check.timer
+
+    - name: Start minio admin service timer
+      systemd: name={{ minio_service }}-check.timer state=started enabled=yes daemon_reload=yes
+
+    - name: Check cluster status
+      become: yes
+      become_user: "{{ minio_user }}"
+      command: "{{ minio_client_bin }} admin info minio --json"
+      changed_when: no
+      register: info
+      until: "(info.stdout_lines | map('from_json') | map(attribute='storage.backend.offlineDisks') | sum) == 0"
+      retries: 5
+      delay: 10
+  when:
+    - minio_client_admin_host in [ansible_default_ipv4.address, 'localhost', ansible_hostname, ansible_nodename, ansible_host]

@@ -1,0 +1,57 @@
+---
+- name: Install Firewalld RPM package
+  yum:
+    name: 'firewalld'
+    state: present
+#  when: disable_firewall is defined and disable_firewall
+
+- name: Enable Firewalld
+  systemd:
+    name: 'firewalld'
+    state: started
+    enabled: yes
+  ignore_errors: true
+  when: disable_firewall is defined and disable_firewall
+
+- name: Open Firewall
+  firewalld:
+    port: '{{item}}/tcp'
+    permanent: true
+    state: enabled
+    zone: public
+    immediate: yes
+  with_items:
+    - '{{minio_port}}'
+    - '{{minio_static_port}}'
+    - '80'
+  ignore_errors: true
+  when: open_firewall is defined and open_firewall
+
+#- name: Disabled Firewalld
+#  systemd:
+#    name: 'firewalld'
+#    state: stopped
+#    enabled: no
+#  ignore_errors: true
+#  when: disable_firewall is defined and disable_firewall
+
+- name: Whitelist of Ip addresses
+  firewalld:
+    zone: public
+    rich_rule: "rule family=ipv4 source address={{ hostvars[item]['ansible_eth1']['ipv4']['address'] }} accept"
+    permanent: true
+    state: enabled
+  with_items:
+    - "{{ groups['minio'] }}"
+  when: open_firewall is defined and open_firewall
+#    - "{{ groups['rabbitmq'] }}"
+
+- name: Bounce firewalld
+  service: name=firewalld state=restarted
+
+# Stop and disable firewalld for unloading nf_conntrack kernel module
+- name: Stop and disable Firewalld
+  systemd:
+    name: 'firewalld'
+    state: stopped
+    enabled: no

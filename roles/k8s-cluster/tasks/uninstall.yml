@@ -1,0 +1,139 @@
+---
+# Install Kubernetes Cluster for RHEL or CentOS 8.x
+
+#
+- name: yum version clear
+  become: true
+  become_user: root
+  command: yum versionlock clear
+  register: yum_version_clear
+  ignore_errors: yes
+
+#
+- name: Uninstall the latest version of a docker-ce package.
+  become: true
+  become_user: root
+  yum:
+    name: "{{ item }}"
+    state: absent
+  ignore_errors: yes
+  with_items:
+    - haproxy
+    - etcd
+    - firewalld
+  when: uninstall_dep_packages
+
+#
+- name: Disable and stop docker
+  become: true
+  become_user: root
+  systemd:
+    name: docker
+    state: stopped
+    enabled: no
+  ignore_errors: yes
+
+#
+- name: Disable and stop containerd
+  become: true
+  become_user: root
+  systemd:
+    name: containerd
+    state: stopped
+    enabled: no
+  ignore_errors: yes
+
+#
+- name: Kill processes regarding containerd
+  become: true
+  become_user: root
+  shell: |
+    kill -9 `ps -ef | grep containerd | awk '{print $2}'`
+  register: containerd_killed
+  ignore_errors: yes
+
+#
+- debug:
+    msg: "{{ containerd_killed }}"
+
+#
+- name: Disable and Stop kubelet
+  become: true
+  become_user: root
+  systemd:
+    name: kubelet
+    state: stopped
+    enabled: no
+  ignore_errors: yes
+
+#
+# Uninstall containerd.io package to manages the complete container lifecycle from image transfer and storage to container execution and supervision to low-level storage
+- name: Uninstall the latest version of docker-ce package.
+  become: true
+  become_user: root
+  yum:
+    name: "{{ item }}"
+    state: absent
+  with_items:
+    - docker-ce
+    - docker-ce-cli
+    - docker-scan-plugin
+    - containerd.io
+    - container-selinux
+    - libcgroup
+    - libcgroup-tools
+  when: uninstall_dep_packages
+#   - libcgroup
+#   - libcgroup-tools
+
+#
+- name: Uninstall kubeadm package
+  become: true
+  become_user: root
+  yum:
+    name: "{{ item }}"
+    state: absent
+  with_items:
+    - "kubeadm"
+    - "kubelet"
+    - "kubectl"
+  when: uninstall_k8s_packages
+
+#
+- name: Remove docker / kube and containerd directory and file
+  become: true
+  become_user: root
+  shell: |
+    rm -rf /var/lib/kubelet
+    rm -f /etc/kubernetes/pki/ca.crt
+    rm -f /usr/lib/systemd/system/kubelet.service
+    rm -f /etc/kubernetes/kubelet.conf
+    rm -rf /var/lib/containerd
+    rm -rf /etc/docker
+    rm -rf /var/lib/docker
+    rm -f /etc/sysconfig/kubelet
+    rm -f /etc/modules-load.d/containerd.conf
+    rm -f /etc/sysctl.d/99-kubernetes-cir.conf
+    rm -f /etc/containerd/config.toml
+    rm -rf /etc/cni/net.d/*
+    rm -rf $HOME/.kube
+    mv /var/lib/docker/overlay2 /var/lib/docker/overlay2_$(date +"%Y-%m%d-%H%M%S")
+    mv /var/lib/docker/devicemapper /var/lib/docker/devicemapper_$(date +"%Y-%m%d-%H%M%S")
+    mv /var/lib/docker/containers /var/lib/docker/containers_$(date +"%Y-%m%d-%H%M%S")
+    rm -rf /root/.docker
+    rm -rf /root/calico.yaml
+  register: kube_dir_removed
+  ignore_errors: yes
+
+#
+- debug:
+    msg: "{{ kube_dir_removed }}"
+
+#
+- name: Delete Kubernetes repositories
+  become: true
+  become_user: root
+  command: rm -f /etc/yum.repos.d/kubernetes.repo
+  register: kubernetes_repo_deleted
+  ignore_errors: yes
+

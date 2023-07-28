@@ -1,0 +1,20 @@
+---
+- name: Down harbor
+  become: true
+  become_user: root
+  shell: |
+    export PATH=$PATH:/usr/local/bin && docker-compose -f /root/harbor/docker-compose.yml down -v
+  register: haror_down
+
+- debug:
+    var: harbor_down
+
+- name: Run Harbor in the background.
+  become: true
+  become_user: root
+  shell: |
+    export PATH=$PATH:/usr/local/bin && docker-compose -f /root/harbor/docker-compose.yml up -d
+  register: haror_up
+
+- debug:
+    var: harbor_up

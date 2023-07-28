@@ -1,0 +1,52 @@
+---
+- hosts: localhost
+  gather_facts: no
+  connection: local
+  vars:
+    distrib_names:
+      - minio1
+      - minio2
+      - minio3
+      - minio4
+  vars_files:
+    - vars.yml
+  tasks:
+    - name: start container
+      docker_container:
+        name: "{{item}}"
+        hostname: "{{item}}"
+        image: registry.gitlab.com/vladgo/centos7-systemd
+        state: started
+        tty: yes
+        keep_volumes: no
+        published_ports: "{{ minio_port }}"
+        privileged: yes
+        volumes:
+          - /sys/fs/cgroup:/sys/fs/cgroup:ro
+      with_items: "{{distrib_names}}"
+
+    - name: add container to inventory
+      add_host:
+        name: "{{item}}"
+        ansible_host: "{{item}}"
+        ansible_user: root
+        ansible_connection: docker
+        groups: minio
+      changed_when: false
+      with_items: "{{distrib_names}}"
+
+- hosts: minio
+  vars_files:
+    - vars.yml
+  vars:
+    distrib_names:
+      - minio1
+      - minio2
+      - minio3
+      - minio4
+    minio_client_admin_host: "{{ hostvars[groups.minio.0].ansible_host }}"
+    minio_volumes: "{{ groups['minio']|map('extract', hostvars, 'ansible_default_ipv4') \
+                          | map(attribute='address') \
+                          | map('regex_replace', '^(.*)$', 'http://\\1/export') | list }}"
+  roles:
+    - ansible-minio

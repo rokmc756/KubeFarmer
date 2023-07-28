@@ -1,0 +1,493 @@
+---
+# Reinit Kubernetes Cluster for RHEL/CentOS/Rocky Linux 7.x / 8.x / 9.x
+
+#
+- name: Install firewalld rpm packages
+  become: true
+  become_user: root
+  yum:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - firewalld
+
+#
+- name: Start firewalld for all nodes
+  become: true
+  become_user: root
+  systemd:
+    name: firewalld
+    state: started
+    enabled: yes
+
+- name: Reset ruleset for public zone in firewalld
+  become: true
+  become_user: root
+  shell: |
+    firewall-cmd --load-zone-defaults=public --permanent
+    firewall-cmd --reload
+
+#
+- name: Unset variables of token and certs generated previously by kubeadm init
+  set_fact:
+    token_ca_cert:
+    token_01:
+
+#
+- name: Set SELinux permissive mode
+  become: true
+  become_user: root
+  shell: |
+    setenforce 0
+    sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config
+
+#
+- name: Allow Kubernetes service ports for master node
+  become: true
+  become_user: root
+  firewalld:
+    permanent: yes
+    immediate: yes
+    port: "{{ item.port }}/{{ item.proto }}"
+    state: "{{ item.state }}"
+    zone: "{{ item.zone }}"
+  with_items: "{{ master_ports }}"
+  when: inventory_hostname in groups['master']
+
+#
+- name: Allow Kubernetes service ports for workder nodes
+  become: true
+  become_user: root
+  firewalld:
+    permanent: yes
+    immediate: yes
+    port: "{{ item.port }}/{{ item.proto }}"
+    state: "{{ item.state }}"
+    zone: "{{ item.zone }}"
+  with_items: "{{ workers_ports }}"
+  when: inventory_hostname in groups['workers']
+
+#
+- name: Enable Masquerade on Master node
+  become: true
+  become_user: root
+  firewalld:
+    masquerade: true
+    state: enabled
+    permanent: true
+    zone: public
+  when: inventory_hostname in groups['master'] or inventory_hostname in groups['workers']
+
+#
+#- name: Enable Masquerade on Master node
+#  become: true
+#  become_user: root
+#  command: firewall-cmd --zone=public --add-masquerade --permanent
+
+#
+- name: Reload firewalld for all nodes
+  become: true
+  become_user: root
+  command: firewall-cmd --reload
+
+#
+- name: Start firewalld for all nodes
+  become: true
+  become_user: root
+  systemd:
+    name: firewalld
+    state: restarted
+    enabled: yes
+
+# - meta: end_play
+
+#
+- name: Reset Kubernetes forster
+  become: true
+  become_user: root
+  command: kubeadm reset -f
+  when: inventory_hostname in groups['master']
+
+- name: Reset Kubernetes for workers
+  become: true
+  become_user: root
+  command:  kubeadm reset -f
+  when: inventory_hostname in groups['workers']
+
+#
+- name: Initialize Kubernetest master and create cluster
+  become: true
+  become_user: root
+  command: kubeadm init --apiserver-advertise-address={{ hostvars[groups['master'][0]]['ansible_eth1']['ipv4']['address'] }} --pod-network-cidr=10.142.0.0/16 --ignore-preflight-errors=all
+  async: 360
+  poll: 5
+  register: kubeadm_init
+  when: inventory_hostname in groups['master']
+  # command: kubeadm init --apiserver-advertise-address={{ hostvars[groups['master'][0]]['ansible_eth1']['ipv4']['address'] }} --pod-network-cidr=192.168.0.0/16 --upload-certs --v=5 --ignore-preflight-errors=all
+  # command: kubeadm init --upload-certs --apiserver-advertise-address={{ hostvars[groups['master'][0]]['ansible_eth1']['ipv4']['address'] }} --pod-network-cidr=10.142.0.0/16 --ignore-preflight-errors=all
+  # command: kubeadm init --config /etc/kubernetes/kubeadm.conf --upload-certs --v=5
+  # command: kubeadm init --apiserver-advertise-address={{ hostvars[groups['master'][0]]['ansible_eth1']['ipv4']['address'] }} --pod-network-cidr=10.142.0.0/16 --ignore-preflight-errors=all
+  # command: kubeadm init --apiserver-advertise-address={{ hostvars[groups['master'][0]]['ansible_eth1']['ipv4']['address'] }} --ignore-preflight-errors=all   #
+  # command: kubeadm init --apiserver-advertise-address={{ hostvars[groups['master'][0]]['ansible_eth1']['ipv4']['address'] }} --ignore-preflight-errors=all   #
+  # command: kubeadm init --apiserver-advertise-address={{ hostvars[groups['master'][0]]['ansible_eth1']['ipv4']['address'] }} --pod-network-cidr=10.42.0.0/16 --ignore-preflight-errors=all
+  # command: kubeadm init --apiserver-advertise-address={{ hostvars[groups['master'][0]]['ansible_eth1']['ipv4']['address'] }} --ignore-preflight-errors=all   #
+  # command: kubeadm init --apiserver-advertise-address={{ hostvars[groups['master'][0]]['ansible_eth1']['ipv4']['address'] }} --pod-network-cidr=10.10.0.0/16 --ignore-preflight-errors=all   # For kube-flannel
+  # command: kubeadm init --apiserver-advertise-address={{ hostvars[groups['master'][0]]['ansible_eth1']['ipv4']['address'] }} --pod-network-cidr=10.142.0.0/16 --ignore-preflight-errors=all
+  # command: kubeadm init --apiserver-advertise-address={{ hostvars[groups['master'][0]]['ansible_eth1']['ipv4']['address'] }} --pod-network-cidr=10.244.0.0/16 --ignore-preflight-errors=all
+  # command: kubeadm init --apiserver-advertise-address={{ hostvars[groups['master'][0]]['ansible_eth1']['ipv4']['address'] }} --pod-network-cidr=192.168.0.0/16 --ignore-preflight-errors=all
+  # command: kubeadm init --apiserver-advertise-address={{ hostvars[groups['master'][0]]['ansible_eth1']['ipv4']['address'] }} --pod-network-cidr=10.42.0.0/16 --ignore-preflight-errors=all
+
+#
+- debug:
+    msg: "{{ kubeadm_init.stdout_lines }}"
+  when: inventory_hostname in groups['master']
+
+#
+- name: Set fact for token ca certificate
+  set_fact:
+    token_ca_cert: "{{ (kubeadm_init.stdout_lines | select('search', 'discovery-token-ca-cert-hash') | list | string | split(' '))[1] }}"
+  delegate_to: "{{ item }}"
+  delegate_facts: True
+  with_items: "{{ groups['all'] }}"
+  when: inventory_hostname in groups['master']
+
+- debug:
+    msg: "{{ token_ca_cert }}"
+
+#
+- name: Set fact for token
+  set_fact:
+    token_01: "{{ (kubeadm_init.stdout_lines | select('search', '--token') | list | string | split(' '))[4] }}"
+  delegate_to: "{{ item }}"
+  delegate_facts: True
+  with_items: "{{ groups['all'] }}"
+  when: inventory_hostname in groups['master']
+
+- debug:
+    msg: "{{ token_01 }}"
+
+
+#
+- name: Enable your user to start using the cluster.
+  become: true
+  become_user: root
+  shell: |
+    rm -f $HOME/.kube
+    rm -rf /root/calico.yaml
+    mkdir -p $HOME/.kube
+    rm -f $HOME/.kube/config
+    cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+    chown $(id -u):$(id -g) $HOME/.kube/config
+  register: start_using_cluster_enabled
+  when: inventory_hostname in groups['master']
+
+- debug:
+    msg: "{{ start_using_cluster_enabled }}"
+  when: inventory_hostname in groups['master']
+
+#
+- name: Configure kubectl config
+  become: true
+  become_user: root
+  shell: |
+    kubectl taint nodes  {{ hostvars[groups['master'][0]].ansible_hostname }} node-role.kubernetes.io/control-plane:NoSchedule-
+  register: kubectl_configured
+  until: kubectl_configured is succeeded
+  retries: 10
+  delay: 10
+  when: inventory_hostname in groups['master']
+  # for k8s 1.26
+  #  kubectl taint nodes  {{ hostvars[groups['master'][0]].ansible_hostname }} node-role.kubernetes.io/control-plane:NoSchedule-
+  # for k8s 1.21
+  #  kubectl taint nodes  {{ hostvars[groups['master'][0]].ansible_hostname }} node-role.kubernetes.io/control-plane:NoSchedule-
+  #  kubectl taint nodes --all node-role.kubernetes.io/master-
+
+- debug:
+    msg: "{{ kubectl_configured }}"
+  when: inventory_hostname in groups['master']
+
+#
+- name: Confirm that the kubectl command is activated.
+  become: true
+  become_user: root
+  command: kubectl get nodes
+  register: kubectl_get_nodes
+  when: inventory_hostname in groups['master']
+
+- debug:
+    msg: "{{ kubectl_get_nodes }}"
+  when: inventory_hostname in groups['master']
+
+#
+- name: Create pod for master as well
+  become: true
+  become_user: root
+  lineinfile:
+    path: /root/.bashrc
+    line: "{{ item.content }}"
+    insertafter: EOF
+    create: true
+  register: master_pod_created
+  with_items:
+    - { content: " if [ -f /etc/bash_completion ] && ! shopt -oq posix; then " }
+    - { content: "   . /etc/bash_completion " }
+    - { content: " fi " }
+    - { content: " source <(kubectl completion bash) " }
+  when: inventory_hostname in groups['master']
+
+- debug:
+    msg: "{{ master_pod_created }}"
+  when: inventory_hostname in groups['master']
+
+# Test 1
+#- name: Test 1
+#  become: true
+#  become_user: root
+#  command: kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/master/manifests/tigera-operator.yaml
+#  async: 360
+#  poll: 5
+#  register: test1
+#  when: inventory_hostname in groups['master']
+##  # command: kubectl create -f https://docs.projectcalico.org/manifests/tigera-operator.yaml
+
+#
+#- debug:
+#    msg: "{{ test1.stdout_lines }}"
+#  when: inventory_hostname in groups['master']
+
+# Test 2
+#- name: Test 2
+#  become: true
+#  become_user: root
+#  command: kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/master/manifests/custom-resources.yaml
+#  async: 360
+#  poll: 5
+#  register: test2
+#  when: inventory_hostname in groups['master']
+#  # command: kubectl create -f https://docs.projectcalico.org/manifests/custom-resources.yaml
+
+#
+#- debug:
+#    msg: "{{ test2.stdout_lines }}"
+#  when: inventory_hostname in groups['master']
+
+#
+- name: Download calico networking
+  become: true
+  become_user: root
+  get_url:
+    url: https://raw.githubusercontent.com/projectcalico/calico/v3.25.0/manifests/calico.yaml
+    dest: /root/calico.yaml
+    mode: 0644
+  register: calico_downloaded
+  when: inventory_hostname in groups['master']
+
+  # url: https://docs.projectcalico.org/archive/v3.23/manifests/calico.yaml --> It's working well
+  # url: https://raw.githubusercontent.com/projectcalico/calico/v3.25.0/manifests/calico.yaml  --> It's working well
+  # url: https://projectcalico.docs.tigera.io/manifests/calico.yaml  --> Need to check if works
+  # url: https://raw.githubusercontent.com/projectcalico/calico/master/manifests/calico.yaml -> *** Not working ***
+
+#
+- debug:
+    var: calico_downloaeded
+  when: inventory_hostname in groups['master']
+
+#
+- name: Modify /root/calica.yaml for cidr
+  become: true
+  become_user: root
+  lineinfile:
+    dest: /root/calico.yaml
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    state: "{{ item.state }}"
+    backrefs: "{{ item.backrefs }}"
+  register: calica_cidr_modified
+  with_items:
+    - { regexp: "^            # - name: CALICO_IPV4POOL_CIDR", line: "            - name: CALICO_IPV4POOL_CIDR", state: present, backrefs: yes }
+    - { regexp: "^            #   value: \"192.168.0.0/16\"", line: "              value: \"10.142.0.0/16\"", state: present, backrefs: yes }
+  when: inventory_hostname in groups['master']
+  #  - { regexp: "^            #   value: \"192.168.0.0/16\"", line: "              value: \"10.42.0.0/16\"", state: present, backrefs: yes }
+
+#
+- debug:
+    var: calica_cidr_modified
+  when: inventory_hostname in groups['master']
+
+#
+- name: Setup networking with calico
+  become: true
+  become_user: root
+  command: kubectl apply -f /root/calico.yaml
+  register: calico_network_setup
+  when: inventory_hostname in groups['master']
+
+- debug:
+    msg: "{{ calico_network_setup }}"
+  when: inventory_hostname in groups['master']
+
+#
+#- name: Setup networking with kube-flannel
+#  become: true
+#  become_user: root
+#  command: kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+#  register: kube_flannel_network_setup
+#  when: inventory_hostname in groups['master']
+#
+#- debug:
+#    msg: "{{ kube_flannel_network_setup }}"
+#  when: inventory_hostname in groups['master']
+
+#- name: Confirm that the kubectl command is activated.
+#  become: true
+#  become_user: root
+#  command: kubectl get nodes
+#  register: kubectl_get_nodes
+#  when: inventory_hostname in groups['master']
+
+#- debug:
+#    msg: "{{ kubectl_get_nodes }}"
+#  when: inventory_hostname in groups['master']
+
+#
+- name: Join the other kubernetes nodes to cluster, the command must be run on the worker nodes only
+  become: true
+  become_user: root
+  command: kubeadm join "{{ hostvars[groups['master'][0]]['ansible_eth1']['ipv4']['address'] }}:6443" --token "{{ token_01 }}" --discovery-token-ca-cert-hash "{{ token_ca_cert }}"
+  register: store_it_copied
+  ignore_errors: yes
+  when: inventory_hostname in groups['workers']
+
+#
+- debug:
+    msg: "{{ store_it_copied }}"
+  when: inventory_hostname in groups['workers']
+
+#
+- name: Confirm that the kubectl command is activated
+  become: true
+  become_user: root
+  command: kubectl get nodes
+  register: kubectl_get_nodes
+  when: inventory_hostname in groups['master']
+
+#
+- debug:
+    msg: "{{ kubectl_get_nodes }}"
+  when: inventory_hostname in groups['master']
+
+#
+- name: Restart docker daemon in all nodes
+  become: true
+  become_user: root
+  systemd:
+    name: docker
+    state: restarted
+    enabled: yes
+  register: docker_restarted
+  until: docker_restarted is succeeded
+  retries: 10
+  delay: 10
+
+#
+- name: Restart kubelet in master node
+  become: true
+  become_user: root
+  systemd:
+    name: kubelet
+    state: restarted
+    enabled: yes
+  register: kubelet_restarted
+
+- debug:
+    msg: "{{ kubelet_restarted }}"
+  when: inventory_hostname in groups['master']
+
+#
+#- name: Allow Kubernetes service ports for master node
+#  become: true
+#  become_user: root
+#  firewalld:
+#    permanent: yes
+#    immediate: yes
+#    port: "{{ item.port }}/{{ item.proto }}"
+#    state: "{{ item.state }}"
+#    zone: "{{ item.zone }}"
+#  with_items: "{{ master_ports }}"
+#  when: inventory_hostname in groups['master']
+#  #  - { port: "5432-31594", proto: "tcp", state: "enabled", zone: "public" }
+
+#
+#- name: Allow Kubernetes service ports for workder nodes
+#  become: true
+#  become_user: root
+#  firewalld:
+#    permanent: yes
+#    immediate: yes
+#    port: "{{ item.port }}/{{ item.proto }}"
+#    state: "{ {item.state }}"
+#    zone: "{{ item.zone }}"
+#  with_items: "{{ workers_ports }}"
+#  when: inventory_hostname in groups['workers']
+#  # - { port: "5432-31594", proto: "tcp", state: "enabled", zone: "public" }
+
+#
+#- name: Enable Masquerade on Master node
+#  become: true
+#  become_user: root
+#  command: firewall-cmd --zone=public --add-masquerade --permanent
+
+#
+- name: Start firewalld for all nodes
+  become: true
+  become_user: root
+  systemd:
+    name: firewalld
+    state: restarted
+    enabled: yes
+
+#
+- name: Make directory for local filesystem
+  become: true
+  become_user: root
+  shell: |
+    rm -rf /iscsi01
+    rm -rf /local-vols
+    mkdir -p /local-vols/gpdb-vol01
+    mkdir -p /local-vols/gpdb-vol02
+    mkdir -p /local-vols/gpdb-vol03
+    mkdir -p /local-vols/gpdb-vol04
+    mkdir -p /local-vols/gpdb-vol05
+    mkdir -p /local-vols/gpdb-vol06
+    mkdir -p /local-vols/gpdb-vol07
+    mkdir -p /local-vols/gpdb-vol08
+    mkdir -p /local-vols/gpdb-vol09
+    mkdir -p /local-vols/gpdb-vol10
+    chmod 777 /local-vols -R
+    mkdir -p /iscsi-vols/gpdb-vol01
+    mkdir -p /iscsi-vols/gpdb-vol02
+    mkdir -p /iscsi-vols/gpdb-vol03
+    mkdir -p /iscsi-vols/gpdb-vol04
+    mkdir -p /iscsi-vols/gpdb-vol05
+    mkdir -p /iscsi-vols/gpdb-vol06
+    mkdir -p /iscsi-vols/gpdb-vol07
+    mkdir -p /iscsi-vols/gpdb-vol08
+    mkdir -p /iscsi-vols/gpdb-vol09
+    mkdir -p /iscsi-vols/gpdb-vol10
+    chmod 777 /iscsi-vols/ -R
+  ignore_errors: yes
+#  when: inventory_hostname in groups['workers']
+#
+#  Calico CNI
+#  https://stackoverflow.com/questions/62139375/calico-ips-confusion
+#  https://www.skyer9.pe.kr/wordpress/?p=7317
+#
+#
+# https://github.com/projectcalico/calico/issues/5711
+# This is to do with the settings on kube-proxy. If your pod-cidr isn't in the range that's configured on kube-proxy, kube-proxy will NAT pod-pod traffic between different nodes, which will break network policy (though connectivity will appear to work)
+# Typically you have to re-create the cluster with the correct pod-cidr defined.
+# Fundamentally:
+# kube-proxy and calico pod-cidr settings must agree (calico pod-cidr must be wholly within the kube-proxy cluster-cidr)
+# host-cidr, pod-cidr and service-cidrs need to be disjoint (i.e. separate and non-overlapping)
+
+# https://www.centlinux.com/2022/11/install-kubernetes-master-node-rocky-linux.html

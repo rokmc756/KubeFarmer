@@ -1,0 +1,23 @@
+#
+- hosts: rk9-master
+  become: yes
+  tasks:
+    - name: Set port forwarding if access from other client hosts
+      become: true
+      become_user: root
+      shell: nohup kubectl port-forward -n kubernetes-dashboard service/kubernetes-dashboard --address 0.0.0.0 10443:443 > /var/log/k8s_dashboard.log 2>&1 &
+      register: port_forwarding_set
+      async: 1000
+      poll: 0
+      # command: kubectl port-forward -n kubernetes-dashboard service/kubernetes-dashboard --address 0.0.0.0 10443:443
+      # shell: nohup kubectl port-forward -n kubernetes-dashboard service/kubernetes-dashboard --address 0.0.0.0 '{{ external_dashboard_port }}':'{{ internal_dashboard_port }}' </dev/null >/dev/null 2>&1 &
+      # shell: nohup kubectl port-forward -n kubernetes-dashboard service/kubernetes-dashboard --address 0.0.0.0 10443:443 </dev/null >/dev/null 2>&1 &
+      # command: "kubectl port-forward -n kubernetes-dashboard service/kubernetes-dashboard --address 0.0.0.0 {{ external_dashboard_port }}:{{ internal_dashboard_port }}"
+
+    #
+    - debug: var=port_forwarding_set
+      become: true
+      become_user: root
+    #  shell: nohup python -mSimpleHTTPServer </dev/null >/dev/null 2>&1 &
+
+      # gather_facts: true

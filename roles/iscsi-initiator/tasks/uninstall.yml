@@ -1,0 +1,190 @@
+---
+# Uniinstall iSCSI initiator
+#
+
+# 1
+- name: Unmount the partition and remove entry in /etc/fstab
+  mount:
+    path: "{{ iscsi_disk_base_dir }}/{{inventory_hostname}}_iscsidir"
+    state: "{{ item }}"
+  register: partition_unmounted
+  with_items:
+    - "unmounted"
+    - "absent"
+
+#
+- debug:
+    var: partition_unmounted
+
+# 2
+- name: Delete directory for iscsi connection
+  file:
+    path: "{{ iscsi_disk_base_dir }}/{{inventory_hostname}}_iscsidir"
+    state: absent
+  register: directory_deleted
+
+#
+- debug:
+    var: directory_deleted
+
+# Remove a partition from iscsi disk
+# 3
+- parted:
+    device: /dev/sdb
+    number: "1"
+    state: absent
+  register: partition_deleted
+
+#
+- debug:
+    var: partition_deleted
+
+
+# 4
+- name: Uninstall parted
+  yum:
+    name: parted
+    state: absent
+  register: parted_uninstalled
+
+#
+- debug:
+    var: parted_uninstalled
+
+# 5
+- name: Confirm the partitions
+  command: cat /proc/partitions
+  register: partitions_confirmed
+
+#
+- debug:
+    var: partitions_confirmed
+
+# 6
+- name: Confirm the established session
+  command: iscsiadm -m session -o show
+  register: established_session_confirmed
+
+#
+- debug:
+    var: established_session_confirmed
+
+# 9
+- name: Kill iSCSI Session
+  command: |
+    iscsiadm --mode node -T iqn.2022-12.io.pivotal.jtest:{{ rhel_version }}.{{ inventory_hostname }} \
+    -p {{ hostvars[groups['iscsi-storage'][0]].ansible_ssh_host }}:3260 -u
+  register: iscsi_session_killed
+
+#
+- debug:
+    var: iscsi_session_killed
+
+# 9
+- name: Remove node to prevent the session from re-establishing
+  command: |
+    iscsiadm --mode node -o delete -T iqn.2022-12.io.pivotal.jtest:{{ rhel_version }}.{{ inventory_hostname }}
+  register: node_session_removed
+
+#
+- debug:
+    var: node_session_removed
+
+# 10
+- name: Make sure that the session is no longer listed
+  command: |
+    iscsiadm -m session
+  ignore_errors: yes
+  register: session_listed
+
+#
+- debug:
+    var: session_listed
+# If required, you can also delete the targets from the ISCSI discovery database entirely.
+# iscsiadm -m discoverydb -t sendtargets -p <IP>:<port> -o delete
+
+#
+- name: Delete directory of iscsi session to prevent re-establish connection
+  file:
+    path: "/var/lib/iscsi/nodes/iqn.2022-12.io.pivotal.jtest:{{ rhel_version }}.{{ inventory_hostname }}"
+    state: absent
+  register: iscsi_session_directory_deleted
+
+#
+- debug:
+    var: iscsi_session_directory_deleted
+
+# 11
+#- name: Check the filesystem to ensure that not try to re-establish the connection on future boot operation
+#  command: |
+#    ls /var/lib/iscsi/nodes/iqn.2022-12.io.pivotal.jtest:{{ rhel_version }}.{{ inventory_hostname }}
+#  register: reestabliable_connection_checked
+#
+#
+#- debug:
+#    var: reestabliable_connection_checked
+
+# Identify the sessions that are still open:
+# iscsiadm -m session
+# Find the one with unitrends.dpu in it.
+# Then run iscsiadm -m node -T <iqn> -p <ip address>:<port number> -u
+
+
+# 12
+- name: Stop and disable iscsid
+  systemd:
+    name: iscsid
+    state: stopped
+  register: iscsid_stopped
+  until: iscsid_stopped is succeeded
+  retries: 3
+  delay: 10
+
+#
+- debug:
+    var: iscsid_stopped
+
+# 13
+- name: Rollback iscsid.conf for authentication method and username / password
+  lineinfile:
+    dest: /etc/iscsi/iscsid.conf
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    state: "{{ item.state }}"
+    backrefs: "{{ item.backrefs }}"
+  register: iscsid_config_rollbacked
+  with_items:
+    - { regexp: "^node.session.auth.authmethod = CHAP", line: "#node.session.auth.authmethod = CHAP", state: present, backrefs: yes }
+    - { regexp: "^node.session.auth.username = username", line: "#node.session.auth.username = {{ iscsiuser }}", state: present, backrefs: yes }
+    - { regexp: "^node.session.auth.password = password", line: "#node.session.auth.password = {{ iscsipass }}", state: present, backrefs: yes }
+
+#
+- debug:
+    var: iscsid_config_rollbacked
+
+# 14
+- name: Delete config files of iscsi initiator
+  file:
+    path: "{{ item }}"
+    state: absent
+  register: iscsi_initator_config_files_deleted
+  with_items:
+    - "/etc/iscsi/iscsid.conf"
+    - "/etc/iscsi/initiatorname.iscsi"
+
+#
+- debug:
+    var: iscsi_initator_config_files_deleted
+
+# 15
+- name: Uninstall iSCSI initiator
+  yum:
+    name: "{{ item }}"
+    state: absent
+  register: iscsi_initiator_uninstalled
+  with_items:
+    - "iscsi-initiator-utils"
+
+#
+- debug:
+    var: iscsi_initiator_uninstalled

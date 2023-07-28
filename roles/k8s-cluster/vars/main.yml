@@ -1,0 +1,97 @@
+---
+#
+major_version: "8"
+minor_version: "5"
+patch_version: ""
+rhel_version: "7"
+k8s_major_version: "1"
+k8s_minor_version: "26"
+k8s_patch_version: "2"
+# k8s_patch_version: "14"
+
+dashboard_port: "10443"
+# k8s version for gpdb : 1.21.1
+# latest k8s version : 1.26.2
+
+master_ports:
+  - { "port" : "22", "proto" : "tcp", "state" : "enabled", "zone" : "public" }
+  - { "port" : "53", "proto" : "tcp", "state" : "enabled", "zone" : "public" }          # kube-dns
+  - { "port" : "53", "proto" : "udp", "state" : "enabled", "zone" : "public" }          # kube-dns
+  - { "port" : "80", "proto" : "tcp", "state" : "enabled", "zone" : "public" }
+  - { "port" : "179", "proto" : "tcp", "state" : "enabled", "zone" : "public" }         # Calico CNI
+  - { "port" : "443", "proto" : "tcp", "state" : "enabled", "zone" : "public" }         # Calico CNI
+  - { "port" : "2376", "proto" : "tcp", "state" : "enabled", "zone" : "public" }
+  - { "port" : "2379", "proto" : "tcp", "state" : "enabled", "zone" : "public" }        # Calico CNI
+  - { "port" : "2380", "proto" : "tcp", "state" : "enabled", "zone" : "public" }
+  - { "port" : "2381", "proto" : "tcp", "state" : "enabled", "zone" : "public" }        # Liveness of etcd
+  - { "port" : "4444", "proto" : "udp", "state" : "enabled", "zone" : "public" }        # ?
+  - { "port" : "4789", "proto" : "udp", "state" : "enabled", "zone" : "public" }        # Calico CNI
+  - { "port" : "5432", "proto" : "tcp", "state" : "enabled", "zone" : "public" }        # Postgres ?
+  - { "port" : "5473", "proto" : "tcp", "state" : "enabled", "zone" : "public" }        # Calico CNI
+  - { "port" : "6080", "proto" : "tcp", "state" : "enabled", "zone" : "public" }        # cert-manager-webhook
+  - { "port" : "6443", "proto" : "tcp", "state" : "enabled", "zone" : "public" }        # Calico CNI
+  - { "port" : "8080", "proto" : "udp", "state" : "enabled", "zone" : "public" }        # Liveness of coredns
+  - { "port" : "8081", "proto" : "udp", "state" : "enabled", "zone" : "public" }        # Readiness of postgres operator
+  - { "port" : "8181", "proto" : "udp", "state" : "enabled", "zone" : "public" }        # Readness of coredns
+  - { "port" : "8472", "proto" : "udp", "state" : "enabled", "zone" : "public" }
+  - { "port" : "9099", "proto" : "tcp", "state" : "enabled", "zone" : "public" }
+  - { "port" : "9153", "proto" : "tcp", "state" : "enabled", "zone" : "public" }        # kube-dns
+  - { "port" : "9402", "proto" : "tcp", "state" : "enabled", "zone" : "public" }        # cert-manager-controller
+  - { "port" : "9443", "proto" : "tcp", "state" : "enabled", "zone" : "public" }        # vmware postgres-operator
+  - { "port" : "10249", "proto" : "tcp", "state" : "enabled", "zone" : "public" }       # kube-proxy
+  - { "port" : "10250", "proto" : "tcp", "state" : "enabled", "zone" : "public" }
+  - { "port" : "10251", "proto" : "tcp", "state" : "enabled", "zone" : "public" }
+  - { "port" : "10252", "proto" : "tcp", "state" : "enabled", "zone" : "public" }
+  - { "port" : "10254", "proto" : "tcp", "state" : "enabled", "zone" : "public" }
+  - { "port" : "10255", "proto" : "tcp", "state" : "enabled", "zone" : "public" }
+  - { "port" : "10256", "proto" : "tcp", "state" : "enabled", "zone" : "public" }       # kube-proxy
+  - { "port" : "10257", "proto" : "tcp", "state" : "enabled", "zone" : "public" }       # Liveness of kube-controller-manager
+  - { "port" : "10259", "proto" : "tcp", "state" : "enabled", "zone" : "public" }       # Liveness of kube-controller
+  - { "port" : "10260", "proto" : "tcp", "state" : "enabled", "zone" : "public" }       # For cert-manager
+  - { "port" : "10443", "proto" : "tcp", "state" : "enabled", "zone" : "public" }       # For dashboard
+  - { "port" : "16443", "proto" : "tcp", "state" : "enabled", "zone" : "public" }       # For control-plane endpoint
+  - { "port" : "30000-32767", "proto" : "tcp", "state" : "enabled", "zone" : "public" }
+  - { "port" : "30000-32767", "proto" : "udp", "state" : "enabled", "zone" : "public" }  # Checking why it's needed to add
+
+workers_ports:
+  - { "port" : "22", "proto" : "tcp", "state" : "enabled", "zone" : "public" }
+  - { "port" : "80", "proto" : "tcp", "state" : "enabled", "zone" : "public" }
+  - { "port" : "53", "proto" : "tcp", "state" : "enabled", "zone" : "public" }           # kube-dns
+  - { "port" : "53", "proto" : "udp", "state" : "enabled", "zone" : "public" }           # kube-dns
+  - { "port" : "179", "proto" : "tcp", "state" : "enabled", "zone" : "public" }          # Calico CNI
+  - { "port" : "443", "proto" : "tcp", "state" : "enabled", "zone" : "public" }          # Calico CNI
+  - { "port" : "2376", "proto" : "tcp", "state" : "enabled", "zone" : "public" }
+  - { "port" : "2379", "proto" : "tcp", "state" : "enabled", "zone" : "public" }         # Calico CNI
+  - { "port" : "2380", "proto" : "tcp", "state" : "enabled", "zone" : "public" }
+  - { "port" : "2381", "proto" : "tcp", "state" : "enabled", "zone" : "public" }         # Liveness of etcd
+  - { "port" : "4444", "proto" : "udp", "state" : "enabled", "zone" : "public" }         # ?
+  - { "port" : "4789", "proto" : "udp", "state" : "enabled", "zone" : "public" }         # Calico CNI
+  - { "port" : "5432", "proto" : "tcp", "state" : "enabled", "zone" : "public" }         # Postgres ?
+  - { "port" : "5473", "proto" : "tcp", "state" : "enabled", "zone" : "public" }         # Calico CNI
+  - { "port" : "6080", "proto" : "tcp", "state" : "enabled", "zone" : "public" }         # cert-manager-webhook
+  - { "port" : "6443", "proto" : "tcp", "state" : "enabled", "zone" : "public" }         # Calico CNI
+  - { "port" : "8080", "proto" : "udp", "state" : "enabled", "zone" : "public" }         # Liveness of coredns
+  - { "port" : "8081", "proto" : "udp", "state" : "enabled", "zone" : "public" }         # Readiness of postgres operator
+  - { "port" : "8181", "proto" : "udp", "state" : "enabled", "zone" : "public" }         # Readness of coredns
+  - { "port" : "8472", "proto" : "udp", "state" : "enabled", "zone" : "public" }
+  - { "port" : "9153", "proto" : "tcp", "state" : "enabled", "zone" : "public" }         # kube-dns
+  - { "port" : "9402", "proto" : "tcp", "state" : "enabled", "zone" : "public" }         # cert-manager-controller
+  - { "port" : "9443", "proto" : "tcp", "state" : "enabled", "zone" : "public" }         # vmware postgres-operator
+  - { "port" : "9099", "proto" : "tcp", "state" : "enabled", "zone" : "public" }
+  - { "port" : "10249", "proto" : "tcp", "state" : "enabled", "zone" : "public" }        # kube-proxy
+  - { "port" : "10250", "proto" : "tcp", "state" : "enabled", "zone" : "public" }
+  - { "port" : "10254", "proto" : "tcp", "state" : "enabled", "zone" : "public" }
+  - { "port" : "10255", "proto" : "tcp", "state" : "enabled", "zone" : "public" }
+  - { "port" : "10256", "proto" : "tcp", "state" : "enabled", "zone" : "public" }        # kube-proxy
+  - { "port" : "10257", "proto" : "tcp", "state" : "enabled", "zone" : "public" }        # Liveness of kube-controller-manager
+  - { "port" : "10259", "proto" : "tcp", "state" : "enabled", "zone" : "public" }        # Liveness of kube-controller
+  - { "port" : "10260", "proto" : "tcp", "state" : "enabled", "zone" : "public" }        # cert-manager-webhook
+  - { "port" : "30000-32767", "proto" : "tcp", "state" : "enabled", "zone" : "public" }
+  - { "port" : "30000-32767", "proto" : "udp", "state" : "enabled", "zone" : "public" }  # Checking why it's needed to add
+
+# References of firewalld rule for Rancher
+# - https://ranchermanager.docs.rancher.com/v2.5/getting-started/installation-and-upgrade/advanced-options/advanced-use-cases/open-ports-with-firewalld
+# - https://medium.com/platformer-blog/kubernetes-on-centos-7-with-firewalld-e7b53c1316af
+#
+# References of Calico CNI Requirements
+# https://docs.tigera.io/calico/latest/getting-started/kubernetes/requirements

@@ -1,0 +1,175 @@
+---
+# Uninstall Harbor continaer registry for CentOS 8.x or Rocky 8
+
+- name: Down all docker containers for harbor by docker-compose down -v
+  become: true
+  become_user: root
+  shell: |
+    docker-compose down -v
+  ignore_errors: yes
+  register: docker_compose_down
+
+- debug:
+    var: docker_compose_down
+
+- name: Remnove database and registry directories used by harbor containers 
+  become: true
+  become_user: root
+  shell: |
+    rm -rf /data/database
+    rm -rf /data/registry
+  ignore_errors: yes
+  register: db_reg_directory_removed
+
+- debug:
+    var: db_reg_directory_removed
+
+- name: Verify that docker is uninstalled correctly by removing the hello-world image.
+  become: true
+  become_user: root
+  shell: |
+    docker rm hello-world
+  ignore_errors: yes
+  register: docker_rm_hello
+
+- debug:
+    var: docker_rm_hello
+
+- name: Stop Harbor in the background.
+  become: true
+  become_user: root
+  shell: |
+    export PATH=$PATH:/usr/local/bin  && docker-compose stop
+    export PATH=$PATH:/usr/local/bin  && docker-compose -f /root/harbor/docker-compose.yml down -v
+  ignore_errors: yes
+  register: hardbor_stop
+
+- debug:
+    var: harbor_down
+
+- name: Uninstall Docker-Compose using pip
+  become: true
+  become_user: root
+  shell: |
+    export PATH=$PATH:/usr/local/bin && pip3 uninstall docker-compose -y
+    export PATH=$PATH:/usr/local/bin && pip3 uninstall setuptools_rust -y
+    export PATH=$PATH:/usr/local/bin && pip3 uninstall pip setuptools -y
+  ignore_errors: yes
+  register: docker_compose_uninstalled
+  # pip2 install docker-compose
+
+- debug:
+    var: docker_uninstalled
+
+- name: Alternative python version to python3
+  become: true
+  become_user: root
+  command: alternatives --set python /usr/bin/python3
+  ignore_errors: yes
+  register: python_version_alternative
+
+- debug:
+    var: python_version_alternative
+
+- name: Disable and Stop docker
+  become: true
+  become_user: root
+  systemd:
+    name: docker
+    state: stopped
+    enabled: no
+  ignore_errors: yes
+  register: docker_disabled
+
+- debug:
+    var: docker_disabled
+
+- name: Remove repository (and clean up left-over metadata)
+  become: true
+  become_user: root
+  yum_repository:
+    name: epel
+    file: docker_repo
+    state: absent
+  ignore_errors: yes
+  register: docker_repo_removed
+
+- debug:
+    var: docker_repo_removed
+
+- name: Alternative python 2.7 version
+  become: true
+  become_user: root
+  command: alternatives --set python /usr/bin/python2
+  register: alternative_python_version
+  when: hostvars[inventory_hostname].ansible_distribution_major_version|int <= 8
+  # command: update-alternatives --install /usr/bin/python python /usr/bin/python2.7 1
+
+- name: Uninstall the latest version of docker-ce packages
+  become: true
+  become_user: root
+  yum:
+    name: "{{ item }}"
+    state: absent
+  with_items:
+    - "docker-ce"
+  register: docker_uninstalled
+
+- debug:
+    var: docker_uninstalled
+
+- name: Uninstall the EPEL repo and other required packages to your system
+  become: true
+  become_user: root
+  yum:
+    name: "{{ item }}"
+    state: absent
+  register: epel_uninstalled
+  with_items:
+    - epel-release
+    - wget
+    - yum-utils
+
+- debug:
+    var: epel_uninstalled
+
+- name: Enabling SELinux to be required
+  become: true
+  become_user: root
+  selinux:
+    state: permissive
+  register: selinux_enabled
+  ignore_errors: yes
+  notify:
+    - restart system
+    - waiting for server to come back after reboot
+
+- debug:
+    var: selinux_enabled.stdout_lines
+
+- name: Check if selinux has been enabled in Configurtion file
+  become: true
+  become_user: root
+  command: grep SELINUX /etc/sysconfig/selinux
+  ignore_errors: yes
+  register: sevalue
+
+- debug:
+    var: sevalue.stdout_lines
+
+- name: Remnove certs and harbor files and directories
+  become: true
+  become_user: root
+  shell: |
+    rm -rf /root/harbor
+    rm -rf /root/certs
+    rm -rf /etc/docker/cert.d/*
+    rm -rf /etc/docker/daemon.json
+    rm -rf /data/certs
+    rm -rf /var/lib/docker
+  ignore_errors: yes
+  register: certs_harbor_removed
+
+- debug:
+    var: certs_harbor_removed
+

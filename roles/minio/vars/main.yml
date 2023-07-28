@@ -1,0 +1,3 @@
+configure_firewall: true
+minio_access_key: minioadmin
+minio_secret_key: changeme

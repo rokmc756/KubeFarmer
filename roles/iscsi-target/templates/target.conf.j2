@@ -1,0 +1,13 @@
+# create new
+# if you set some devices, add <target>-</target> and set the same way with follows
+# naming rule : [ iqn.(year)-(month).(reverse of domain name):(any name you like) ]
+{% for server in groups["workers"] %}
+<target iqn.2022-12.io.pivotal.jtest:{{ rhel_version }}.{{ hostvars[server] }}>
+    # Provided device as a iSCSI target
+    backing-store {{ iscsi_disk_base_dir }}/{{ hostvars[server] }}_vdisk.img
+    # iSCSI Initiator's IQN you allow to connect
+    initiator-name iqn.2022-12.io.pivotal.jtest:{{ hostvars[server] }}.initiator
+    # Authentication info ( set anyone you like for "username", "password" )
+    # incominguser admin changeme
+</target>
+{% endfor %}

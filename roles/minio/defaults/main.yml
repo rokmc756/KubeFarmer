@@ -1,0 +1,41 @@
+install_minio: yes
+install_nginx: no
+nginx_package: nginx
+nginx_worker_processes: "{{ (ansible_processor_vcpus is defined) | ternary(ansible_processor_vcpus, 'auto') }}"
+nginx_nodes: []
+nginx_max_body_size: 128m
+minio_server_url: https://dl.minio.io/server/minio/release/linux-amd64/minio
+minio_server_checksum:
+# minio_user: jomoon
+minio_user: minio
+minio_service: "{{ minio_user }}"
+minio_user_home: /home/{{ minio_user }}
+minio_config: "{{ minio_user_home }}/.minio/config.json"
+minio_client_config: "{{ minio_user_home }}/.mc/config.json"
+# python -c "import uuid; print str(uuid.uuid4().get_hex().upper()[0:20])"
+# minio_access_key: ''
+# python -c "import uuid; print str(uuid.uuid4().get_hex()[0:40])"
+# minio_secret_key: ''
+minio_bin: /usr/local/bin/minio
+minio_port: 9000
+minio_static_port: 9001
+minio_listen_address: 0.0.0.0
+minio_volumes:
+  - /data
+#  - /export
+minio_client_install: yes
+minio_client_url: https://dl.minio.io/client/mc/release/linux-amd64/mc
+minio_client_checksum:
+minio_client_bin: /usr/local/bin/mc
+minio_client_admin_host:
+minio_check_calendar: weekly
+minio_config_opts:
+  hosts:
+    minio:
+      url: http://{{ ansible_host | default('localhost') }}:{{ minio_port }},
+      accessKey: "{{ minio_access_key }}"
+      secretKey: "{{ minio_secret_key }}"
+      api: S3v4
+#minio_user_id:
+minio_root_user: minioadmin
+minio_root_password: changeme

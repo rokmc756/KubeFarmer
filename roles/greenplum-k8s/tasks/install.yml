@@ -1,0 +1,114 @@
+---
+
+- name: Copy Greenplum for Kubernetes tarball file
+  become: true
+  become_user: root
+  copy: src=greenplum-for-kubernetes-v{{ major_version }}.{{ minor_version }}.{{ patch_version }}.tar.gz dest={{ home_dir }} mode=0644 owner=root group=root
+  register: gpdb_k8s_copied
+  when: inventory_hostname in groups['master']
+
+- debug: msg={{ gpdb_k8s_copied }}
+
+- name: Untar Greenplum for Kubernetes tarball file
+  become: true
+  become_user: root
+  unarchive: src=/root/greenplum-for-kubernetes-v{{ major_version }}.{{ minor_version }}.{{ patch_version }}.tar.gz dest={{ home_dir }} owner=root group=root copy=no
+  register: gpdb_k8s_untared
+  when: inventory_hostname in groups['master']
+
+- debug: msg={{ gpdb_k8s_untared }}
+
+- name: Go into the new greenplum-for-kubernetes directory and load the Greenplum Database Docker image to the local Docker registry
+  become: true
+  become_user: root
+  shell: |
+     cd /root/greenplum-for-kubernetes-*/
+     docker load -i ./images/greenplum-for-kubernetes
+     docker load -i ./images/greenplum-operator
+  async: 120
+  poll: 5
+  register: gpdb_k8s_docker_loaded
+  when: inventory_hostname in groups['master']
+
+- debug: msg={{ gpdb_k8s_docker_loaded }}
+
+- name: Verify that both Docker images are now available
+  become: true
+  become_user: root
+  shell: |
+     docker images "greenplum-*"
+  async: 120
+  poll: 5
+  register: gpdb_k8s_docker_verified
+  when: inventory_hostname in groups['master']
+
+- debug: msg={{ gpdb_k8s_docker_verified }}
+
+- name: Install helm
+  become: true
+  become_user: root
+  shell: |
+    cd /root
+    curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+    chmod 700 get_helm.sh
+    ./get_helm.sh
+  async: 120
+  poll: 5
+  register: helm_installed
+  ignore_errors: yes
+  when: inventory_hostname in groups['master']
+
+- debug: msg={{ helm_installed }}
+
+- name: If you did not create a YAML configuration file (as in the case with Minikube) omit the -f option
+  become: true
+  become_user: root
+  shell: |
+    cd /root/greenplum-for-kubernetes-*/
+    /usr/local/bin/helm install greenplum-operator operator/
+  ignore_errors: yes
+  register: gpdb_operator_installed
+  when: inventory_hostname in groups['master']
+  # /usr/local/bin/helm install greenplum-operator -f workspace/operator-values-overrides.yaml operator/
+
+- debug: msg={{ gpdb_operator_installed }}
+
+- name: Installing the operator creates a new service account named greenplum-system-operator. It is for internal use, but it is visible if you use the kubectl get serviceaccount command
+  become: true
+  become_user: root
+  shell: |
+    kubectl get serviceaccount
+  async: 120
+  poll: 5
+  ignore_errors: yes
+  register: serviceaccount_get
+  when: inventory_hostname in groups['master']
+
+- debug: msg={{ serviceaccount_get }}
+
+- name: Use watch kubectl get all to monitor the progress of the deployment. The deployment is complete when the Greenplum Operator pod is in the Running state and the replica set are available. For example
+  become: true
+  become_user: root
+  shell: |
+    kubectl get all
+  async: 120
+  poll: 5
+  ignore_errors: yes
+  register: monitor_progress_get_all
+  when: inventory_hostname in groups['master']
+
+- debug: msg={{ monitor_progress_get_all }}
+
+- name: Check the logs of the operator to ensure that it is running properly
+  become: true
+  become_user: root
+  shell: |
+    kubectl logs -l app=greenplum-operator
+  async: 120
+  poll: 5
+  ignore_errors: yes
+  register: gpdb_operator_logs
+  when: inventory_hostname in groups['master']
+
+- debug: msg={{ gpdb_operator_logs }}
+

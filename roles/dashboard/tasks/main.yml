@@ -1,0 +1,23 @@
+---
+# Install Kubernetes Dashboard
+
+# for now fail if it's not a Red Hat based system
+- name: Check OS ( GPDB )
+  fail: msg="Not a Red Hat based system!"
+  when: ansible_os_family != 'RedHat' or ansible_os_family != 'CentOS' or ansible_os_family != 'Rocky'
+
+- name: Installation of kubernetes dashboard
+  include: install.yml
+  tags: install
+
+- name: Reinitialize kubernetes dashboard
+  include: reinit.yml
+  tags: reinit
+
+- name: Uninstall kubernetes dashboard
+  include: uninstall.yml
+  tags: uninstall
+
+- name: Upgrad kubernetes dashboard
+  include: upgrade.yml
+  tags: upgrade

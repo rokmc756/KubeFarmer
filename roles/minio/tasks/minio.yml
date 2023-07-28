@@ -1,0 +1,98 @@
+---
+- name: Check number of drives in cluster
+  assert:
+    that:
+      - minio_volumes|count >= 4
+      - minio_volumes|count <= 16
+    msg: Minio cluster work with minimum 4 and maximum 16 drives
+  when:
+    - minio_volumes|count > 1
+
+- name: create minio user
+  user:
+    name: "{{ minio_user }}"
+    uid: "{{ minio_user_id | d(omit) }}"
+  when: minio_user != 'root'
+
+- name: Download minio server
+  get_url:
+    url: "{{ minio_server_url }}"
+    dest: "{{ minio_bin }}"
+    mode: 0755
+    checksum: "{{ minio_server_checksum | d(omit) }}"
+  when: minio_server_url.endswith('minio') or minio_server_url.endswith('Z')
+  notify: restart minio
+
+- name: Unarchive minio server
+  unarchive:
+    src: "{{ minio_server_url }}"
+    dest: "{{ minio_bin | dirname }}"
+    remote_src: "{{ minio_server_url.startswith('http') }}"
+    validate_certs: no
+    mode: 0755
+  when: minio_server_url.endswith('xz')
+  notify: restart minio
+
+- name: create export dir
+  file:
+    path: "{{ item | urlsplit('path') }}"
+    state: directory
+    mode: 0755
+    owner: "{{ minio_user }}"
+  when: (item | urlsplit('hostname')) in ([ansible_hostname, ansible_host, ansible_fqdn, none] + ansible_all_ipv4_addresses)
+  with_items: "{{ minio_volumes }}"
+
+- name: check existing config
+  stat: path={{ minio_config }}
+  register: config_file
+
+- block:
+    - name: load existing config
+      slurp: src="{{ minio_config }}"
+      register: config_slurp
+      no_log: yes
+
+    - name: set config.json to variable
+      set_fact: config_json="{{ config_slurp.content | b64decode  | from_json }}"
+      no_log: yes
+
+    - name: set accessKey
+      set_fact: minio_access_key="{{ config_json.credential.accessKey }}"
+
+    - name: set secretKey
+      set_fact: minio_secret_key="{{ config_json.credential.secretKey }}"
+  when:
+    - config_file.stat.exists is defined
+    - config_file.stat.exists
+
+- name: check that keys is defined
+  assert:
+    that:
+      - minio_access_key is defined
+      - minio_secret_key is defined
+      - minio_access_key is not none
+      - minio_secret_key is not none
+      - minio_access_key != ''
+      - minio_secret_key != ''
+    msg: minio_access_key and minio_secret_key must be defined and is not empty
+
+- name: copy defaults options template
+  template:
+    src: minio_opt.j2
+    dest: /etc/default/{{ minio_service }}
+  notify: restart minio
+
+- name: copy systemd service template
+  template:
+    src: minio.service.j2
+    dest: /etc/systemd/system/{{ minio_service }}.service
+  notify: restart minio
+
+- name: start minio
+  systemd: name={{ minio_service }} state=started enabled=yes daemon_reload=yes
+
+- name: force to restart minio server
+  meta: flush_handlers
+
+- include: mc_client.yml
+  when: minio_client_install

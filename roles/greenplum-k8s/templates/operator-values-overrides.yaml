@@ -1,0 +1,5 @@
+operatorImageRepository: ${IMAGE_REPO}/greenplum-operator
+greenplumImageRepository: ${IMAGE_REPO}/greenplum-for-kubernetes
+operatorWorkerSelector: {
+greenplum-operator: "default"
+}
