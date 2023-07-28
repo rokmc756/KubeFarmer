@@ -67,6 +67,7 @@ $ make uninstall
 - https://medium.com/@heshani.samarasekara/installing-harbor-registry-in-centos-7-961773d155ec
 -https://serverfault.com/questions/1059073/kubernetes-trouble-var-lib-calico-nodename-no-such-file-or-directory
 
+## Testing
 ~~~
 iscsiadm --mode node --targetname iqn.2022-02.io.pivotal.jtest:labs.target01 --portal 192.168.0.2 -u
 iscsiadm --mode node --targetname iqn.2022-02.io.pivotal.jtest:labs.target01 --portal 192.168.0.2 -o delete
