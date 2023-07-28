@@ -1,6 +1,9 @@
 # What is KubeFarmer
 KubeFamer is ansible playbook to deploy kubernetes cluster on Rocky Linux 9 in order to deploy bunch of k8s software and application on it such as postgres,kubeflow,kafka and so an.
 
+# Kubernetes Cluster Architecutre
+![alt text](https://github.com/rokmc756/kubefarmer/blob/main/roles/k8s-cluster/files/kubernetes_architecture.webp)
+
 # How to install Kubernetes Cluster
 ~~~
 - hosts: all
