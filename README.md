@@ -16,15 +16,15 @@ KubeFamer is ansible playbook to deploy kubernetes cluster on Rocky Linux 9 in o
 ~~~
 
 # Reference
-https://www.tecmint.com/install-a-kubernetes-cluster-on-centos-8/
-https://kubernetes.io/docs/setup/production-environment/container-runtimes/#docker
-https://medium.com/@heshani.samarasekara/installing-harbor-registry-in-centos-7-961773d155ec
-https://serverfault.com/questions/1059073/kubernetes-trouble-var-lib-calico-nodename-no-such-file-or-directory
+## https://www.tecmint.com/install-a-kubernetes-cluster-on-centos-8/
+## https://kubernetes.io/docs/setup/production-environment/container-runtimes/#docker
+## https://medium.com/@heshani.samarasekara/installing-harbor-registry-in-centos-7-961773d155ec
+## https://serverfault.com/questions/1059073/kubernetes-trouble-var-lib-calico-nodename-no-such-file-or-directory
 
-
-# iscsiadm --mode node --targetname iqn.2022-02.io.pivotal.jtest:labs.target01 --portal 192.168.0.2 -u
-# iscsiadm --mode node --targetname iqn.2022-02.io.pivotal.jtest:labs.target01 --portal 192.168.0.2 -o delete
-
+~~~
+iscsiadm --mode node --targetname iqn.2022-02.io.pivotal.jtest:labs.target01 --portal 192.168.0.2 -u
+iscsiadm --mode node --targetname iqn.2022-02.io.pivotal.jtest:labs.target01 --portal 192.168.0.2 -o delete
+~~~
 
 ~~~
 [root@rk9-master ~]# kubectl get ns
