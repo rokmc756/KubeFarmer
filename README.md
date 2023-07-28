@@ -1,11 +1,51 @@
-# What is KubeFarmer
+## What is KubeFarmer
 KubeFamer is ansible playbook to deploy kubernetes cluster on Rocky Linux 9 in order to deploy bunch of k8s software and application on it such as postgres,kubeflow,kafka and so an.
 
-# Kubernetes Cluster Architecutre
+## Kubernetes Cluster Architecutre
 ![alt text](https://github.com/rokmc756/kubefarmer/blob/main/roles/k8s-cluster/files/kubernetes_architecture.webp)
 
-# How to install Kubernetes Cluster
+## Supported Platform and OS
+Virtual Machines
+Baremetal
+RHEL and CentOS 9
+
+## Prerequisite for ansible host
+MacOS or Fedora/CentOS/RHEL should have installed ansible as ansible host.
+Supported OS for ansible target host should be prepared with package repository configured such as yum, dnf and apt
+
+## Prepare ansible host to run gpfarmer
+* MacOS
 ~~~
+$ xcode-select --install
+$ brew install ansible
+$ brew install https://raw.githubusercontent.com/kadwanev/bigboybrew/master/Library/Formula/sshpass.rb
+~~~
+
+* Fedora/CentOS/RHEL
+~~~
+$ sudo yum install ansible
+~~~
+
+## How to install and uninstall Kubernetes Cluster
+~~~
+$ vi ansible-hosts
+[all:vars]
+ssh_key_filename="id_rsa"
+remote_machine_username="jomoon"
+remote_machine_password="changeme"
+
+[master]
+rh7-master ansible_ssh_host=192.168.0.61
+
+[standby]
+rh7-slave ansible_ssh_host=192.168.0.62
+
+[segments]
+rh7-node01 ansible_ssh_host=192.168.0.63
+rh7-node02 ansible_ssh_host=192.168.0.64
+rh7-node03 ansible_ssh_host=192.168.0.65
+
+$ vi setup-host.yml
 - hosts: all
   become: yes
   vars:
@@ -16,13 +56,16 @@ KubeFamer is ansible playbook to deploy kubernetes cluster on Rocky Linux 9 in o
     uninstall_k8s_packages: true
   roles:
     - k8s-cluster
+
+$ make install
+$ make uninstall
 ~~~
 
-# Reference
-### https://www.tecmint.com/install-a-kubernetes-cluster-on-centos-8/
-### https://kubernetes.io/docs/setup/production-environment/container-runtimes/#docker
-### https://medium.com/@heshani.samarasekara/installing-harbor-registry-in-centos-7-961773d155ec
-### https://serverfault.com/questions/1059073/kubernetes-trouble-var-lib-calico-nodename-no-such-file-or-directory
+## Reference
+- https://www.tecmint.com/install-a-kubernetes-cluster-on-centos-8/
+- https://kubernetes.io/docs/setup/production-environment/container-runtimes/#docker
+- https://medium.com/@heshani.samarasekara/installing-harbor-registry-in-centos-7-961773d155ec
+-https://serverfault.com/questions/1059073/kubernetes-trouble-var-lib-calico-nodename-no-such-file-or-directory
 
 ~~~
 iscsiadm --mode node --targetname iqn.2022-02.io.pivotal.jtest:labs.target01 --portal 192.168.0.2 -u
