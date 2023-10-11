@@ -3,7 +3,7 @@
   yum:
     name: 'firewalld'
     state: present
-#  when: disable_firewall is defined and disable_firewall
+  when: open_firewall is defined and open_firewall
 
 - name: Enable Firewalld
   systemd:
@@ -11,7 +11,7 @@
     state: started
     enabled: yes
   ignore_errors: true
-  when: disable_firewall is defined and disable_firewall
+  when: open_firewall is defined and open_firewall
 
 - name: Open Firewall
   firewalld:

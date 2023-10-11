@@ -8,7 +8,7 @@
 
 - name: Configure firewall for MinIO
   include: firewalld.yml
-  when: configure_firewall
+  when: open_firewall
   tags: install
 
 - name: Install MinIO

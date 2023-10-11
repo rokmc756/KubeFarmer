@@ -1,3 +1,13 @@
-configure_firewall: true
+enable_ssl: true
+open_firewall: true
 minio_access_key: minioadmin
 minio_secret_key: changeme
+# SSL Key configuration
+minio_ssl_dir: "/root/certs"
+minio_ssl_days: 3660
+minio_ssl_country: "KR"
+minio_ssl_state: "Seoul"
+minio_ssl_location: "GangNam"
+minio_ssl_organization: "Pivotal"
+minio_ssl_common_name: "jtest.pivotal.io"
+minio_ssl_email: "jomoon@pivotal.io"

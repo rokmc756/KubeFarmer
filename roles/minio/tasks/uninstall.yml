@@ -57,6 +57,8 @@
     - "{{ minio_config }}"
     - "{{ minio_volumes }}"
     - "{{ minio_bin }}"
+    - "/root/certs"
+    - "/root/.minio"
 
 # 10
 - name: Force systemd to reread configs

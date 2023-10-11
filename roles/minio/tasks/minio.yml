@@ -88,11 +88,52 @@
     dest: /etc/systemd/system/{{ minio_service }}.service
   notify: restart minio
 
+#
+- name: Check if SSL Directory is already existed
+  stat: path=/root/certs
+  register: check_ssl_dir_existed
+  when: enable_ssl == True
+
+#
+- name: Create SSL directory
+  file: path={{ item }} state=directory owner=root group=root
+  changed_when: False
+  register: dir_ssl_dir_created
+  with_items:
+    - "/root/certs"
+    - "/root/.minio/certs"
+    - "/root/.minio/certs/CAs"
+  when: enable_ssl == True
+
+#
+- name: Create SSL key to connect intoo Greenplum Database
+  shell: ( openssl req -x509 -newkey rsa:4096 -sha256 -days 365 -nodes -keyout {{ minio_ssl_dir }}/private.key -out {{ minio_ssl_dir }}/public.crt -subj "/CN=rk9-minio.jtest.pivotal.io" -addext "subjectAltName=DNS:rk9-minio.jtest.pivotal.io,DNS:192.168.0.2,IP:0.0.0.0,IP:127.0.0.1,IP:192.168.0.98" )
+  when: enable_ssl == True
+
+#
+- name: Copy file with owner and permissions
+  copy:
+    src: "{{ item.org }}"
+    dest: "{{ item.dest }}"
+    owner: root
+    group: root
+    mode: 0644
+    remote_src: yes
+  with_items:
+    - { org: "/root/certs/public.crt", dest: "/root/.minio/certs/public.crt" }
+    - { org: "/root/certs/private.key", dest: "/root/.minio/certs/private.key" }
+    - { org: "/root/certs/public.crt", dest: "/root/.minio/certs/CAs/public.crt" }
+  when: enable_ssl == True
+
+#
 - name: start minio
   systemd: name={{ minio_service }} state=started enabled=yes daemon_reload=yes
 
+#
 - name: force to restart minio server
   meta: flush_handlers
 
+#
 - include: mc_client.yml
   when: minio_client_install
+

@@ -2,8 +2,8 @@
 
 USERNAME=jomoon
 COMMON="yes"
-# ANSIBLE_HOST_PASS="rmsidwoalfh"
-ANSIBLE_HOST_PASS="Mc002661!@"
+# ANSIBLE_HOST_PASS="Mc002661!@"
+ANSIBLE_HOST_PASS="changeme"
 ANSIBLE_TARGET_PASS="changeme"
 # include ./*.mk
 
@@ -50,20 +50,20 @@ init:	setup-host.yml update-host.yml
 	ansible-playbook -i ansible-hosts -u ${USERNAME} --ssh-common-args='-o UserKnownHostsFile=./known_hosts -o VerifyHostKeyDNS=true' install-ansible-prereqs.yml
 
 # - https://ansible-tutorial.schoolofdevops.com/control_structures/
-install: role-update setup-host.yml
-	ansible-playbook -i ansible-hosts --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-host.yml --tags="install"
+install: role-update install-hosts.yml
+	ansible-playbook -i ansible-hosts --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} install-hosts.yml --tags="install"
 
-reinit: role-update setup-host.yml
-	ansible-playbook -i ansible-hosts --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-host.yml --tags="reinit"
+reinit: role-update reinit-hosts.yml
+	ansible-playbook -i ansible-hosts --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} reinit-hosts.yml --tags="reinit"
 
-uninstall: role-update setup-host.yml
-	ansible-playbook -i ansible-hosts --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-host.yml --tags="uninstall"
+uninstall: role-update uninstall-hosts.yml
+	ansible-playbook -i ansible-hosts --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} uninstall-hosts.yml --tags="uninstall"
 
-upgrade: role-update setup-host.yml
-	ansible-playbook -i ansible-hosts --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-host.yml --tags="upgrade"
+upgrade: role-update upgrade-hosts.yml
+	ansible-playbook -i ansible-hosts --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} upgrade-hosts.yml --tags="upgrade"
 
-update:
-	ansible-playbook -i ansible-hosts --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -i ${IP}, -u ${USERNAME} update-host.yml
+update: role-update update-hosts.yml
+	ansible-playbook -i ansible-hosts --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -i ${IP}, -u ${USERNAME} update-hosts.yml
 
 # https://stackoverflow.com/questions/4219255/how-do-you-get-the-list-of-targets-in-a-makefile
 no_targets__:
@@ -74,13 +74,13 @@ role-update:
 ssh:
 	ssh -o UserKnownHostsFile=./known_hosts ${USERNAME}@${IP}
 
-install-host.yml:
-	cp -a install-host.template install-host.yml
+install-hosts.yml:
+	cp -a install-host.template install-hosts.yml
 
-update-host.yml:
-	cp -a update-host.template update-host.yml
+update-hosts.yml:
+	cp -a update-host.template update-hosts.yml
 
-clean:
-	rm -rf ./known_hosts install-host.yml update-host.yml
+# clean:
+# 	rm -rf ./known_hosts install-hosts.yml update-hosts.yml
 
 .PHONY:	all init install update ssh common clean no_targets__ role-update

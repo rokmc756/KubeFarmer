@@ -1,25 +1,4 @@
 #---
-#- hosts: workers
-#  become: yes
-#  roles:
-#    - iscsi-initiator
-
-#- hosts: rk9-iscsid
-#  become: yes
-#  roles:
-#    - iscsi-target
-#    - minio
-
-#- hosts: rk9-harbor
-#  become: yes
-#  roles:
-#    - harbor
-
-#- hosts: minio
-#  become: yes
-#  roles:
-#- minio
-
 - hosts: all
   become: yes
   vars:
@@ -32,5 +11,4 @@
 #    k8s_network_address: "192.168.0.0/16"
   roles:
     - k8s-cluster
-#    - dashboard
-
+    - dashboard

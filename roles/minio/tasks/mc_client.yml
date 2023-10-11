@@ -27,9 +27,10 @@
 - name: Add minio server to client config
   become: yes
   become_user: "{{ minio_user }}"
-  command: "{{ minio_client_bin }} config host add minio http://{{ ansible_host | default('localhost') }}:{{ minio_port }} {{ minio_access_key }} {{ minio_secret_key }}"
+  command: "{{ minio_client_bin }} config host add minio https://{{ ansible_host | default('localhost') }}:{{ minio_port }} {{ minio_access_key }} {{ minio_secret_key }}"
   args:
     creates: "{{ minio_client_config }}"
+  # command: "{{ minio_client_bin }} config host add minio http://{{ ansible_host | default('localhost') }}:{{ minio_port }} {{ minio_access_key }} {{ minio_secret_key }}"
 
 - block:
     - name: Create minio admin service

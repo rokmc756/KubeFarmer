@@ -1,0 +1,29 @@
+#---
+#- hosts: workers
+#  become: yes
+#  roles:
+#    - iscsi-initiator
+
+#
+- hosts: rk9-minio
+  become: yes
+  roles:
+    - minio
+#    - iscsi-target
+
+- hosts: rk9-harbor
+  become: yes
+  roles:
+    - harbor
+
+- hosts: all
+  become: yes
+  vars:
+    print_debug: true
+    install_dep_packages: true
+    install_k8s_packages: true
+#    calico_network: false
+#    k8s_network_address: "192.168.0.0/16"
+  roles:
+    - k8s-cluster
+    - dashboard
