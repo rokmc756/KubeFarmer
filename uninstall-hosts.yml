@@ -1,15 +1,15 @@
 #
-- hosts: all
-  become: yes
-  vars:
-    print_debug: true
-    uninstall_dep_packages: true
-    uninstall_k8s_packages: true
+#- hosts: all
+#  become: yes
+#  vars:
+#    print_debug: true
+#    uninstall_dep_packages: true
+#    uninstall_k8s_packages: true
 #    calico_network: false
 #    k8s_network_address: "192.168.0.0/16"
-  roles:
-    - dashboard
-    - k8s-cluster
+#  roles:
+#    - dashboard
+#    - k8s-cluster
 
 #
 - hosts: rk9-minio
@@ -18,10 +18,10 @@
     - minio
 #    - iscsi-target
 
-- hosts: rk9-harbor
-  become: yes
-  roles:
-    - harbor
+#- hosts: rk9-harbor
+#  become: yes
+#  roles:
+#    - harbor
 
 #- hosts: workers
 #  become: yes

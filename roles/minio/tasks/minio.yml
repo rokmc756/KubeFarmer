@@ -1,4 +1,5 @@
 ---
+#
 - name: Check number of drives in cluster
   assert:
     that:
@@ -8,21 +9,58 @@
   when:
     - minio_volumes|count > 1
 
-- name: create minio user
+#
+- name: Create minio user
   user:
     name: "{{ minio_user }}"
     uid: "{{ minio_user_id | d(omit) }}"
   when: minio_user != 'root'
 
+#
+- set_fact:
+    minio_file_name: minio-{{ minio_release_date }}.tar.gz
+
+#
+- name: Check if minio binary is already existed
+  stat: path={{ minio_bin }}
+  register: minio_bin_exists
+
+#
+- debug: msg={{ minio_bin_exists }}
+
+#
+- name: Copy minio binary from local directory, roles/minio/files
+  copy: src=minio-{{ minio_release_date }}.tar.gz dest=/tmp/minio-{{ minio_release_date }}.tar.gz mode=0644 owner=root group=root
+  register: minio_local_copy
+  when: minio_bin_exists.stat.exists == false and minio_download == false
+
+
+- name: Unarchive minio gzip file
+  unarchive:
+    src: "/tmp/minio-{{ minio_release_date }}.tar.gz"
+    dest: "/usr/local/bin"
+    owner: "root"
+    group: "root"
+    mode: "0755"
+    remote_src: yes
+    # extra_opts:
+    #- --transform
+    #- s/^xxx/yyy/
+  register: minio_unarchive
+  when: minio_bin_exists.stat.exists == false and minio_download == false
+  notify: restart minio
+
+#
 - name: Download minio server
   get_url:
     url: "{{ minio_server_url }}"
     dest: "{{ minio_bin }}"
     mode: 0755
     checksum: "{{ minio_server_checksum | d(omit) }}"
-  when: minio_server_url.endswith('minio') or minio_server_url.endswith('Z')
+  when: ( minio_server_url.endswith('minio') or minio_server_url.endswith('Z') ) and ( minio_bin_exists.stat.exists == false and minio_download == true )
   notify: restart minio
 
+#
 - name: Unarchive minio server
   unarchive:
     src: "{{ minio_server_url }}"
@@ -30,10 +68,11 @@
     remote_src: "{{ minio_server_url.startswith('http') }}"
     validate_certs: no
     mode: 0755
-  when: minio_server_url.endswith('xz')
+  when: minio_server_url.endswith('xz') and ( minio_bin_exists.stat.exists == false and minio_download == true )
   notify: restart minio
 
-- name: create export dir
+#
+- name: Create export dir
   file:
     path: "{{ item | urlsplit('path') }}"
     state: directory
@@ -42,12 +81,14 @@
   when: (item | urlsplit('hostname')) in ([ansible_hostname, ansible_host, ansible_fqdn, none] + ansible_all_ipv4_addresses)
   with_items: "{{ minio_volumes }}"
 
-- name: check existing config
+#
+- name: Check existing config
   stat: path={{ minio_config }}
   register: config_file
 
+#
 - block:
-    - name: load existing config
+    - name: Load existing config
       slurp: src="{{ minio_config }}"
       register: config_slurp
       no_log: yes
@@ -65,7 +106,8 @@
     - config_file.stat.exists is defined
     - config_file.stat.exists
 
-- name: check that keys is defined
+#
+- name: Check that keys is defined
   assert:
     that:
       - minio_access_key is defined
@@ -76,64 +118,29 @@
       - minio_secret_key != ''
     msg: minio_access_key and minio_secret_key must be defined and is not empty
 
-- name: copy defaults options template
+#
+- name: Copy defaults options template
   template:
     src: minio_opt.j2
     dest: /etc/default/{{ minio_service }}
   notify: restart minio
 
-- name: copy systemd service template
+#
+- name: Copy systemd service template
   template:
     src: minio.service.j2
     dest: /etc/systemd/system/{{ minio_service }}.service
   notify: restart minio
 
 #
-- name: Check if SSL Directory is already existed
-  stat: path=/root/certs
-  register: check_ssl_dir_existed
-  when: enable_ssl == True
-
-#
-- name: Create SSL directory
-  file: path={{ item }} state=directory owner=root group=root
-  changed_when: False
-  register: dir_ssl_dir_created
-  with_items:
-    - "/root/certs"
-    - "/root/.minio/certs"
-    - "/root/.minio/certs/CAs"
-  when: enable_ssl == True
-
-#
-- name: Create SSL key to connect intoo Greenplum Database
-  shell: ( openssl req -x509 -newkey rsa:4096 -sha256 -days 365 -nodes -keyout {{ minio_ssl_dir }}/private.key -out {{ minio_ssl_dir }}/public.crt -subj "/CN=rk9-minio.jtest.pivotal.io" -addext "subjectAltName=DNS:rk9-minio.jtest.pivotal.io,DNS:192.168.0.2,IP:0.0.0.0,IP:127.0.0.1,IP:192.168.0.98" )
-  when: enable_ssl == True
-
-#
-- name: Copy file with owner and permissions
-  copy:
-    src: "{{ item.org }}"
-    dest: "{{ item.dest }}"
-    owner: root
-    group: root
-    mode: 0644
-    remote_src: yes
-  with_items:
-    - { org: "/root/certs/public.crt", dest: "/root/.minio/certs/public.crt" }
-    - { org: "/root/certs/private.key", dest: "/root/.minio/certs/private.key" }
-    - { org: "/root/certs/public.crt", dest: "/root/.minio/certs/CAs/public.crt" }
-  when: enable_ssl == True
-
-#
-- name: start minio
+- name: Start minio
   systemd: name={{ minio_service }} state=started enabled=yes daemon_reload=yes
 
 #
-- name: force to restart minio server
+- name: Force to restart minio server
   meta: flush_handlers
 
 #
-- include: mc_client.yml
+- import_tasks: mc-client.yml
   when: minio_client_install
 

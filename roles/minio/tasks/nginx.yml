@@ -1,4 +1,5 @@
 ---
+#
 - name: Add nginx repo
   yum_repository:
     name: nginx
@@ -20,26 +21,30 @@
 #    gpgcheck: yes
 #  when: nginx_package == 'nginx'
 
-
+#
 - name: Installing NGINX
   yum: name={{ nginx_package }} validate_certs=no
 
+#
 - name: Copy nginx.conf
   template:
-    src: nginx.conf
+    src: nginx.conf.j2
     dest: /etc/nginx/nginx.conf
-  notify: restart nginx
+  notify: Restart nginx
 
+#
 - name: Copy minio app nginx conf
   template:
-    src: default.conf
+    src: default.conf.j2
     dest: /etc/nginx/conf.d/default.conf
   when: nginx_nodes != []
-  notify: restart nginx
+  notify: Restart nginx
 
-- name: Show nginx address
+#
+- name: Show NGINX address
   debug: msg="Minio cluster address http://{{ ansible_default_ipv4.address }}/minio"
 
+#
 - name: Starting NGINX
   service:
     name: nginx

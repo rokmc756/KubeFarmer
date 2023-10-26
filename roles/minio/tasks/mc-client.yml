@@ -1,4 +1,35 @@
 ---
+#
+#
+- name: Check if minio client binary is already existed
+  stat: path={{ minio_client_bin }}
+  register: mc_bin_exists
+
+#
+- debug: msg={{ mc_bin_exists }}
+
+#
+- name: Copy minio client binary from local directory, roles/minio/files
+  copy: src=mc-{{ minio_release_date }}.tar.gz dest=/tmp/mc-{{ minio_release_date }}.tar.gz mode=0644 owner=root group=root
+  register: mc_local_copy
+  when: mc_bin_exists.stat.exists == false and minio_download == false
+
+#
+- name: Unarchive minio client gzip file
+  unarchive:
+    src: "/tmp/mc-{{ minio_release_date }}.tar.gz"
+    dest: "/usr/local/bin"
+    owner: "root"
+    group: "root"
+    mode: "0755"
+    remote_src: yes
+    # extra_opts:
+    #- --transform
+    #- s/^xxx/yyy/
+  register: mc_unarchive
+  when: mc_bin_exists.stat.exists == false and minio_download == false
+
+#
 - name: Download minio client
   get_url:
     url: "{{ minio_client_url }}"
@@ -6,32 +37,41 @@
     checksum: "{{ minio_client_checksum | d(omit) }}"
     mode: 0755
     timeout: 20
-  when: minio_client_url.endswith('mc') or minio_client_url.endswith('Z')
+  when: ( minio_client_url.endswith('mc') or minio_client_url.endswith('Z') ) and ( mc_bin_exists.stat.exists == false and minio_download == true )
 
-- name: install unzip
+#
+- name: Install unzip
   yum: name=unzip
-  when: minio_client_url.endswith('zip')
+  when: minio_client_url.endswith('zip') and ( mc_bin_exists.stat.exists == false and minio_download == false )
 
+#
 - name: Unarchive minio client
   unarchive:
     src: "{{ minio_client_url }}"
     dest: "{{ minio_client_bin | dirname }}"
     remote_src: "{{ minio_client_url.startswith('http') }}"
     mode: 0755
-  when: minio_client_url.endswith('zip')
+  when: minio_client_url.endswith('zip') and ( mc_bin_exists.stat.exists == false and minio_download == false )
 
-- name: install sudo
+#
+- name: Install sudo
   yum: name=sudo
   when: minio_user != 'root'
 
+#
+- name: Fix ownership for /home/{{ minio_user }}
+  file: path=/home/{{ minio_user }}/.ansible/tmp state=directory mode=0700 owner={{ minio_user }} group={{ minio_user }}
+
+#
 - name: Add minio server to client config
   become: yes
   become_user: "{{ minio_user }}"
-  command: "{{ minio_client_bin }} config host add minio https://{{ ansible_host | default('localhost') }}:{{ minio_port }} {{ minio_access_key }} {{ minio_secret_key }}"
+  command: "{{ minio_client_bin }} --insecure config host add minio https://{{ ansible_host | default('localhost') }}:{{ minio_port }} {{ minio_access_key }} {{ minio_secret_key }}"
   args:
     creates: "{{ minio_client_config }}"
   # command: "{{ minio_client_bin }} config host add minio http://{{ ansible_host | default('localhost') }}:{{ minio_port }} {{ minio_access_key }} {{ minio_secret_key }}"
 
+#
 - block:
     - name: Create minio admin service
       copy:
@@ -69,3 +109,4 @@
       delay: 10
   when:
     - minio_client_admin_host in [ansible_default_ipv4.address, 'localhost', ansible_hostname, ansible_nodename, ansible_host]
+

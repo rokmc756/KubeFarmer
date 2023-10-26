@@ -1,7 +1,9 @@
 enable_ssl: true
 open_firewall: true
+minio_release_date: 20231025
 minio_access_key: minioadmin
 minio_secret_key: changeme
+
 # SSL Key configuration
 minio_ssl_dir: "/root/certs"
 minio_ssl_days: 3660
@@ -11,3 +13,9 @@ minio_ssl_location: "GangNam"
 minio_ssl_organization: "Pivotal"
 minio_ssl_common_name: "jtest.pivotal.io"
 minio_ssl_email: "jomoon@pivotal.io"
+
+# allow_world_readable_tmpfiles: true
+# remote_tmp: /home/minio/.ansible/tmp
+# remote_tmp: /tmp/.ansible/tmp
+# ansible_remote_tmp: /tmp/.ansible/tmp
+# [WARNING]: Unable to use /tmp/.ansible/tmp as temporary directory, failing back to system: [Errno 13] Permission denied: '/tmp/.ansible/tmp'

@@ -1,5 +1,7 @@
 install_minio: yes
-install_nginx: no
+# use_nginx: no
+# minio_download: true
+
 nginx_package: nginx
 nginx_worker_processes: "{{ (ansible_processor_vcpus is defined) | ternary(ansible_processor_vcpus, 'auto') }}"
 nginx_nodes: []
@@ -32,7 +34,7 @@ minio_check_calendar: weekly
 minio_config_opts:
   hosts:
     minio:
-      url: http://{{ ansible_host | default('localhost') }}:{{ minio_port }},
+      url: https://{{ ansible_host | default('localhost') }}:{{ minio_port }},
       accessKey: "{{ minio_access_key }}"
       secretKey: "{{ minio_secret_key }}"
       api: S3v4

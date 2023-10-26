@@ -1,30 +1,42 @@
 ---
-# Install MySQL Galera Cluster for Red Hat / CentOS
-
+# Define import tasks according to tags option to install or uninstall minio s3 object storage in Red Hat / CentOS / Rocky Linux
+#
 # for now fail if it's not a Red Hat based system
 - name: Check OS ( GPDB )
   fail: msg="Not a Red Hat based system!"
   when: ansible_os_family != 'RedHat' or  ansible_os_family != 'CentOS' or  ansible_os_family != 'Rocky'
 
+#
 - name: Configure firewall for MinIO
-  include: firewalld.yml
+  import_tasks: firewalld.yml
+  tags: install
   when: open_firewall
-  tags: install
 
+#
+- name: Enable SSL
+  import_tasks: enable-ssl.yml
+  tags: install
+  when: enable_ssl
+
+#
 - name: Install MinIO
-  include: minio.yml
+  import_tasks: minio.yml
+  tags: install
   when: install_minio
-  tags: install
 
+#
 - name: Install Nginx
-  include: nginx.yml
-  when: install_nginx
+  import_tasks: nginx.yml
   tags: install
+  when: use_nginx
 
+#
 - name: Uninstallation of MinIO for Red Hat / CentOS / Rocky
-  include: uninstall.yml
+  import_tasks: uninstall.yml
   tags: uninstall
 
+#
 - name: Upgrade of MinIO for Red Hat / CentOS / Rocky
-  include: upgrade.yml
+  import_tasks: upgrade.yml
   tags: upgrade
+
