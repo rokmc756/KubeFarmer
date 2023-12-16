@@ -7,17 +7,17 @@
   when: ansible_os_family != 'RedHat'
 
 - name: Installation of Harbor container registry
-  include: install.yml
+  import_tasks: install.yml
   tags: install
 
 - name: re-initialization of Harbor container registry
-  include: reinit.yml
+  import_tasks: reinit.yml
   tags: reinit
 
 - name: Uninstallation of Harbor container registry
-  include: uninstall.yml
+  import_tasks: uninstall.yml
   tags: uninstall
 
 - name: Upgrade of Harbor container registry
-  include: upgrade.yml
+  import_tasks: upgrade.yml
   tags: upgrade

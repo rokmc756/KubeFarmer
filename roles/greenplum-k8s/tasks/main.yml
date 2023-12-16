@@ -8,9 +8,9 @@
   when: ansible_os_family != 'RedHat'
 
 - name: Install
-  include: install.yml
+  import_tasks: install.yml
   tags: install
 
 - name: Uninstall
-  include: uninstall.yml
+  import_tasks: uninstall.yml
   tags: uninstall

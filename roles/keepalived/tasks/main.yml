@@ -8,13 +8,13 @@
   when: ansible_os_family != 'RedHat' or ansible_os_family != 'CentOS' or ansible_os_family != 'Rocky'
 
 - name: Installation of Keepalived
-  include: install.yml
+  import_tasks: install.yml
   tags: install
 
 - name: Uninstallation of Keepalived
-  include: uninstall.yml
+  import_tasks: uninstall.yml
   tags: uninstall
 
 - name: Upgrade of Keepalived
-  include: upgrade.yml
+  import_tasks: upgrade.yml
   tags: upgrade

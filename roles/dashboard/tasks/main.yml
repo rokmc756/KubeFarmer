@@ -7,17 +7,17 @@
   when: ansible_os_family != 'RedHat' or ansible_os_family != 'CentOS' or ansible_os_family != 'Rocky'
 
 - name: Installation of kubernetes dashboard
-  include: install.yml
+  import_tasks: install.yml
   tags: install
 
 - name: Reinitialize kubernetes dashboard
-  include: reinit.yml
+  import_tasks: reinit.yml
   tags: reinit
 
 - name: Uninstall kubernetes dashboard
-  include: uninstall.yml
+  import_tasks: uninstall.yml
   tags: uninstall
 
 - name: Upgrad kubernetes dashboard
-  include: upgrade.yml
+  import_tasks: upgrade.yml
   tags: upgrade

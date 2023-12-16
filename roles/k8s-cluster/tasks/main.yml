@@ -7,17 +7,17 @@
   when: ansible_os_family != 'RedHat' or  ansible_os_family != 'CentOS' or  ansible_os_family != 'Rocky'
 
 - name: Installation of Kubernetes Cluster for Red Hat / CentOS / Rocky
-  include: install.yml
+  import_tasks: install.yml
   tags: install
 
 - name: re-initialization of Kubernetes Cluster for Red Hat / CentOS / Rocky
-  include: reinit.yml
+  import_tasks: reinit.yml
   tags: reinit
 
 - name: Uninstallation of Kubernetes Cluster for Red Hat / CentOS / Rocky / Rocky
-  include: uninstall.yml
+  import_tasks: uninstall.yml
   tags: uninstall
 
 - name: Upgrade of MySQL Kubernetes Cluster for Red Hat / CentOS / Rocky
-  include: upgrade.yml
+  import_tasks: upgrade.yml
   tags: upgrade

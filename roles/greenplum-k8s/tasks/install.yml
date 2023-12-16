@@ -111,4 +111,3 @@
   when: inventory_hostname in groups['master']
 
 - debug: msg={{ gpdb_operator_logs }}
-

@@ -331,7 +331,7 @@
   become_user: root
   command: yum versionlock kubelet kubeadm kubectl
   register: virsions_lock
-  command: yum versionlock kubelet-{{ k8s_major_version }}.{{ k8s_minor_version }}.{{ k8s_patch_version }} kubectl-{{ k8s_major_version }}.{{ k8s_minor_version }}.{{ k8s_patch_version }} kubeadm-{{ k8s_major_version }}.{{ k8s_minor_version }}.{{ k8s_patch_version }}
+  # command: yum versionlock kubelet-{{ k8s_major_version }}.{{ k8s_minor_version }}.{{ k8s_patch_version }} kubectl-{{ k8s_major_version }}.{{ k8s_minor_version }}.{{ k8s_patch_version }} kubeadm-{{ k8s_major_version }}.{{ k8s_minor_version }}.{{ k8s_patch_version }}
 
 #
 - name: Create Cluster configuration in master node

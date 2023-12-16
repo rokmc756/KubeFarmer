@@ -15,8 +15,8 @@ rk9-node01 ansible_ssh_host=192.168.0.93
 rk9-node02 ansible_ssh_host=192.168.0.94
 rk9-node03 ansible_ssh_host=192.168.0.95
 
-[docker-repo]
-rk9-harbor ansible_ssh_host=192.168.0.99
-
-[minio]
-rk9-minio ansible_ssh_host=192.168.0.98
+#[docker-repo]
+#rk9-harbor ansible_ssh_host=192.168.0.99
+#
+#[minio]
+#rk9-minio ansible_ssh_host=192.168.0.98
