@@ -1,6 +1,5 @@
 ---
 # Install Kubernetes Cluster for RHEL or CentOS 7.x / 8.x
-
 #
 - name: Install rpm packages of dependenies to need installing packages regarding kubernates for RHEL or Rocky 9
   become: true
