@@ -76,11 +76,10 @@ $ make install
 ```
 
 #### 3) Reinitialize Kubernetes Cluster
-make reinit will reinitialize k8s cluster referring install-hosts.yml playbook same as initial deployment
+The make reinit will reinitialize k8s cluster referring install-hosts.yml playbook same as initial deployment
 ```
 $ make reinit
 ```
-
 
 #### 4) Configure KubeFarmer ansible playbook and destroy harbor, dashboard and kubenetes cluster
 ```
