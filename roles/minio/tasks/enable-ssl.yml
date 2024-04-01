@@ -1,6 +1,6 @@
 #
 - name: Check if SSL Directory is already existed
-  stat: path={{ minio_ssl_dir }}
+  stat: path={{ minio.ssl.dir }}
   register: check_ssl_dir_existed
 
 #
@@ -9,17 +9,15 @@
   changed_when: False
   register: dir_ssl_dir_created
   with_items:
-    - "{{ minio_ssl_dir }}"
+    - "{{ minio.ssl.dir }}"
     - "/root/.minio/certs"
     - "/root/.minio/certs/CAs"
 
 #
 - name: Create SSL key
   shell: |
-    (
-      openssl req -x509 -newkey rsa:4096 -sha256 -days 365 -nodes -keyout {{ minio_ssl_dir }}/private.key -out {{ minio_ssl_dir }}/public.crt \
-      -subj "/CN={{ hostvars[inventory_hostname]['ansible_hostname'] }}.jtest.pivotal.io" -addext "subjectAltName=DNS:{{ hostvars[inventory_hostname]['ansible_hostname'] }}.jtest.pivotal.io,DNS:192.168.0.101,DNS:192.168.0.199,IP:0.0.0.0,IP:127.0.0.1,IP:{{ hostvars[inventory_hostname]['ansible_eth0']['ipv4']['address'] }}"
-    )
+    openssl req -x509 -newkey rsa:4096 -sha256 -days 365 -nodes -keyout {{ minio.ssl.dir }}/private.key -out {{ minio.ssl.dir }}/public.crt \
+    -subj "/CN={{ hostvars[inventory_hostname]['ansible_hostname'] }}.{{ minio.ssl.common_name }}" -addext "subjectAltName=DNS:{{ hostvars[inventory_hostname]['ansible_hostname'] }}.{{ minio.ssl.common_name }},DNS:192.168.0.100,DNS:192.168.0.90,IP:0.0.0.0,IP:127.0.0.1,IP:{{ hostvars[inventory_hostname]['ansible_'~netdev0]['ipv4']['address'] }}"
 
 #
 - name: Copy file with owner and permissions
@@ -31,7 +29,7 @@
     mode: 0644
     remote_src: yes
   with_items:
-    - { org: "{{ minio_ssl_dir }}/public.crt", dest: "/root/.minio/certs/public.crt" }
-    - { org: "{{ minio_ssl_dir }}/private.key", dest: "/root/.minio/certs/private.key" }
-    - { org: "{{ minio_ssl_dir }}/public.crt", dest: "/root/.minio/certs/CAs/public.crt" }
+    - { org: "{{ minio.ssl.dir }}/public.crt", dest: "/root/.minio/certs/public.crt" }
+    - { org: "{{ minio.ssl.dir }}/private.key", dest: "/root/.minio/certs/private.key" }
+    - { org: "{{ minio.ssl.dir }}/public.crt", dest: "/root/.minio/certs/CAs/public.crt" }
 

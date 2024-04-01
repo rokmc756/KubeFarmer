@@ -25,8 +25,8 @@
     zone: public
     immediate: yes
   with_items:
-    - '{{minio_port}}'
-    - '{{minio_static_port}}'
+    - '{{minio.port}}'
+    - '{{minio.static_port}}'
     - '80'
   ignore_errors: true
   when: open_firewall is defined and open_firewall
@@ -43,13 +43,13 @@
 - name: Whitelist of Ip addresses
   firewalld:
     zone: public
-    rich_rule: "rule family=ipv4 source address={{ hostvars[item]['ansible_eth1']['ipv4']['address'] }} accept"
+    rich_rule: "rule family=ipv4 source address={{ ipaddr0 }} accept"
     permanent: true
     state: enabled
   with_items:
-    - "{{ groups['minio'] }}"
+    - "{{ groups['ext_storages'] }}"
   when: open_firewall is defined and open_firewall
-#    - "{{ groups['rabbitmq'] }}"
+  #  rich_rule: "rule family=ipv4 source address={{ hostvars[item]['ansible_'netdev0]['ipv4']['address'] }} accept"
 
 #
 - name: Bounce firewalld

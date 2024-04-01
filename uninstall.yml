@@ -8,8 +8,9 @@
     calico_network: false
     k8s_network_address: "192.168.0.0/16"
   roles:
-    - dashboard
-    - k8s-cluster
+    - init-hosts
+    # - dashboard
+    # - k8s-cluster
 
 #
 #- hosts: rk9-minio

@@ -14,7 +14,7 @@ all:
 	@echo "[ Available targets ]"
 	@echo ""
 	@echo "init:            will install basic requirements (will ask several times for a password)"
-	@echo "install:         will install the host with what is defined in install-host.yml"
+	@echo "install:         will install the host with what is defined in install.yml"
 	@echo "update:          run OS updates"
 	@echo "ssh:             jump ssh to host"
 	@echo "role-update:     update all downloades roles"
@@ -50,14 +50,14 @@ init:	setup-host.yml update-host.yml
 	ansible-playbook -i ansible-hosts -u ${USERNAME} --ssh-common-args='-o UserKnownHostsFile=./known_hosts -o VerifyHostKeyDNS=true' install-ansible-prereqs.yml
 
 # - https://ansible-tutorial.schoolofdevops.com/control_structures/
-install: role-update install-hosts.yml
-	ansible-playbook -i ansible-hosts --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} install-hosts.yml --tags="install"
+install: role-update install.yml
+	ansible-playbook -i ansible-hosts --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} install.yml --tags="install"
 
 reinit: role-update reinit-hosts.yml
-	ansible-playbook -i ansible-hosts --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} reinit-hosts.yml --tags="reinit"
+	ansible-playbook -i ansible-hosts --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} reinit.yml --tags="reinit"
 
-uninstall: role-update uninstall-hosts.yml
-	ansible-playbook -i ansible-hosts --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} uninstall-hosts.yml --tags="uninstall"
+uninstall: role-update uninstall.yml
+	ansible-playbook -i ansible-hosts --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} uninstall.yml --tags="uninstall"
 
 upgrade: role-update upgrade-hosts.yml
 	ansible-playbook -i ansible-hosts --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} upgrade-hosts.yml --tags="upgrade"

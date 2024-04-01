@@ -13,7 +13,7 @@
         state: started
         tty: yes
         keep_volumes: no
-        published_ports: "{{ minio_port }}"
+        published_ports: "{{ minio.port }}"
         privileged: yes
         volumes:
           - /sys/fs/cgroup:/sys/fs/cgroup:ro
@@ -32,3 +32,4 @@
     - vars.yml
   roles:
     - ansible-minio
+

@@ -1,6 +1,6 @@
-rh_common_pkgs: "sshpass,s3cmd,cifs-utils,nfs-utils,lsof,elfutils-libelf-devel,glibc-headers,glibc-devel,rpcbind,xfsprogs,kernel-devel,jq,expect"
+rh_common_pkgs: "sshpass,cifs-utils,nfs-utils,lsof,elfutils-libelf-devel,glibc-headers,glibc-devel,rpcbind,xfsprogs,kernel-devel,jq,expect,net-tools"
 rh_common_devel_pkgs: "git"
-# libxml2-python
+# libxml2-python,s3cmd
 
 rh7_common_devel_pkgs: "make,perl,gcc,tcl,tk,libnl"
 rh8_common_devel_pkgs: "make,perl,gcc,tcl,tk,libnl3"

@@ -1,21 +1,63 @@
+# python -c "import uuid; print str(uuid.uuid4().get_hex().upper()[0:20])"
+# minio_access_key: ''
+# python -c "import uuid; print str(uuid.uuid4().get_hex()[0:40])"
+# minio_secret_key: ''
+
+install_minio: true
 enable_ssl: true
 open_firewall: true
-minio_release_date: 20231025
-minio_access_key: minioadmin
-minio_secret_key: changeme
 
-# SSL Key configuration
-minio_ssl_dir: "/root/certs"
-minio_ssl_days: 3660
-minio_ssl_country: "KR"
-minio_ssl_state: "Seoul"
-minio_ssl_location: "GangNam"
-minio_ssl_organization: "Pivotal"
-minio_ssl_common_name: "jtest.pivotal.io"
-minio_ssl_email: "jomoon@pivotal.io"
+nginx:
+  package: nginx
+  worker_processes: "{{ (ansible_processor_vcpus is defined) | ternary(ansible_processor_vcpus, 'auto') }}"
+  nodes: []
+  max_body_size: 128m
+  use: no
 
-# allow_world_readable_tmpfiles: true
-# remote_tmp: /home/minio/.ansible/tmp
-# remote_tmp: /tmp/.ansible/tmp
-# ansible_remote_tmp: /tmp/.ansible/tmp
-# [WARNING]: Unable to use /tmp/.ansible/tmp as temporary directory, failing back to system: [Errno 13] Permission denied: '/tmp/.ansible/tmp'
+minio:
+  download: false
+  server_url: https://dl.minio.io/server/minio/release/linux-amd64/minio
+  server_checksum:
+  user_id: ""
+  root_user: minioadmin
+  root_password: changeme
+  user: minio
+  service: minio
+  user_home: /home/minio
+  config: "/home/minio/.minio/config.json"
+  client_config: /home/minio/.mc/config.json
+  bin: /usr/local/bin/minio
+  port: 9000
+  static_port: 9001
+  listen_address: 0.0.0.0
+  volumes:
+    - /data     # - /export
+  client_install: yes
+  client_url: https://dl.minio.io/client/mc/release/linux-amd64/mc
+  client_checksum:
+  client_bin: /usr/local/bin/mc
+  client_admin_host:
+  check_calendar: weekly
+  config_opts:
+    hosts:
+      minio:
+        url: https://{{ ansible_host | default('localhost') }}:9000
+        accessKey: "minioadmin"
+        secretKey: "changeme"
+        api: S3v4
+  release_date: 20240307
+  access_key: minioadmin
+  secret_key: changeme
+  ssl:
+    dir: "/root/certs"
+    days: 3660
+    country: "KR"
+    state: "Seoul"
+    location: "Guro"
+    organization: "WekaIO"
+    common_name: "jtest.weka.io"
+    email: "jack.moon@weka.io"
+
+mc:
+  release_date: 20240307
+

@@ -8,7 +8,7 @@
       http://nginx.org/packages/centos/{{ ansible_distribution_major_version }}/$basearch/
     gpgkey: https://nginx.org/keys/nginx_signing.key
     gpgcheck: yes
-  when: nginx_package == 'nginx'
+  when: nginx.package == 'nginx'
 
 #- name: Add nginx repo
 #  yum_repository:
@@ -19,11 +19,11 @@
 #      ternary('rhel', 'centos')}}/{{ ansible_distribution_major_version }}/$basearch/
 #    gpgkey: https://nginx.org/keys/nginx_signing.key
 #    gpgcheck: yes
-#  when: nginx_package == 'nginx'
+#  when: nginx.package == 'nginx'
 
 #
 - name: Installing NGINX
-  yum: name={{ nginx_package }} validate_certs=no
+  yum: name={{ nginx.package }} validate_certs=no
 
 #
 - name: Copy nginx.conf
@@ -37,7 +37,7 @@
   template:
     src: default.conf.j2
     dest: /etc/nginx/conf.d/default.conf
-  when: nginx_nodes != []
+  when: nginx.nodes != []
   notify: Restart nginx
 
 #
@@ -49,3 +49,4 @@
   service:
     name: nginx
     state: started
+
