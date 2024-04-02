@@ -1,31 +1,5 @@
 ---
-# Reinit Kubernetes Cluster for RHEL/CentOS/Rocky Linux 7.x / 8.x / 9.x
-
-#
-- name: Install firewalld rpm packages
-  become: true
-  become_user: root
-  yum:
-    name: "{{ item }}"
-    state: present
-  with_items:
-    - firewalld
-
-#
-- name: Start firewalld for all nodes
-  become: true
-  become_user: root
-  systemd:
-    name: firewalld
-    state: started
-    enabled: yes
-
-- name: Reset ruleset for public zone in firewalld
-  become: true
-  become_user: root
-  shell: |
-    firewall-cmd --load-zone-defaults=public --permanent
-    firewall-cmd --reload
+# Reinit Kubernetes
 
 #
 - name: Unset variables of token and certs generated previously by kubeadm init
@@ -35,42 +9,36 @@
 
 #
 - name: Set SELinux permissive mode
-  become: true
-  become_user: root
   shell: |
     setenforce 0
     sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config
 
 #
-- name: Allow Kubernetes service ports for master node
-  become: true
-  become_user: root
-  firewalld:
-    permanent: yes
-    immediate: yes
-    port: "{{ item.port }}/{{ item.proto }}"
-    state: "{{ item.state }}"
-    zone: "{{ item.zone }}"
-  with_items: "{{ master_ports }}"
-  when: inventory_hostname in groups['master']
+#- name: Enable Masquerade on Master node
+#  firewalld:
+#    masquerade: true
+#    state: enabled
+#    permanent: true
+#    zone: public
+#  when: inventory_hostname in groups['master'] or inventory_hostname in groups['workers']
 
 #
-- name: Allow Kubernetes service ports for workder nodes
-  become: true
-  become_user: root
-  firewalld:
-    permanent: yes
-    immediate: yes
-    port: "{{ item.port }}/{{ item.proto }}"
-    state: "{{ item.state }}"
-    zone: "{{ item.zone }}"
-  with_items: "{{ workers_ports }}"
-  when: inventory_hostname in groups['workers']
+#- name: Enable Masquerade on Master node
+#  command: firewall-cmd --zone=public --add-masquerade --permanent
+
+#
+#- name: Reload firewalld for all nodes
+#  command: firewall-cmd --reload
+
+#
+- name: Start firewalld for all nodes
+  systemd:
+    name: firewalld
+    state: restarted
+    enabled: yes
 
 #
 - name: Enable Masquerade on Master node
-  become: true
-  become_user: root
   firewalld:
     masquerade: true
     state: enabled
@@ -78,47 +46,20 @@
     zone: public
   when: inventory_hostname in groups['master'] or inventory_hostname in groups['workers']
 
-#
-#- name: Enable Masquerade on Master node
-#  become: true
-#  become_user: root
-#  command: firewall-cmd --zone=public --add-masquerade --permanent
 
-#
-- name: Reload firewalld for all nodes
-  become: true
-  become_user: root
-  command: firewall-cmd --reload
-
-#
-- name: Start firewalld for all nodes
-  become: true
-  become_user: root
-  systemd:
-    name: firewalld
-    state: restarted
-    enabled: yes
-
-# - meta: end_play
 
 #
 - name: Reset Kubernetes forster
-  become: true
-  become_user: root
   command: kubeadm reset -f
   when: inventory_hostname in groups['master']
 
 - name: Reset Kubernetes for workers
-  become: true
-  become_user: root
-  command:  kubeadm reset -f
+  command: kubeadm reset -f
   when: inventory_hostname in groups['workers']
 
 #
 - name: Initialize Kubernetest master and create cluster
-  become: true
-  become_user: root
-  command: kubeadm init --apiserver-advertise-address={{ hostvars[groups['master'][0]]['ansible_eth1']['ipv4']['address'] }} --pod-network-cidr=10.142.0.0/16 --ignore-preflight-errors=all
+  command: kubeadm init --apiserver-advertise-address={{ hostvars[groups['master'][0]]['ansible_'~netdev1]['ipv4']['address'] }} --pod-network-cidr=10.142.0.0/16 --ignore-preflight-errors=all
   async: 360
   poll: 5
   register: kubeadm_init
@@ -169,8 +110,6 @@
 
 #
 - name: Enable your user to start using the cluster.
-  become: true
-  become_user: root
   shell: |
     rm -f $HOME/.kube
     rm -rf /root/calico.yaml
@@ -187,8 +126,6 @@
 
 #
 - name: Configure kubectl config
-  become: true
-  become_user: root
   shell: |
     kubectl taint nodes  {{ hostvars[groups['master'][0]].ansible_hostname }} node-role.kubernetes.io/control-plane:NoSchedule-
   register: kubectl_configured
@@ -208,8 +145,6 @@
 
 #
 - name: Confirm that the kubectl command is activated.
-  become: true
-  become_user: root
   command: kubectl get nodes
   register: kubectl_get_nodes
   when: inventory_hostname in groups['master']
@@ -220,8 +155,6 @@
 
 #
 - name: Create pod for master as well
-  become: true
-  become_user: root
   lineinfile:
     path: /root/.bashrc
     line: "{{ item.content }}"
@@ -273,8 +206,6 @@
 
 #
 - name: Download calico networking
-  become: true
-  become_user: root
   get_url:
     url: https://raw.githubusercontent.com/projectcalico/calico/v3.25.0/manifests/calico.yaml
     dest: /root/calico.yaml
@@ -294,8 +225,6 @@
 
 #
 - name: Modify /root/calica.yaml for cidr
-  become: true
-  become_user: root
   lineinfile:
     dest: /root/calico.yaml
     regexp: "{{ item.regexp }}"
@@ -316,8 +245,6 @@
 
 #
 - name: Setup networking with calico
-  become: true
-  become_user: root
   command: kubectl apply -f /root/calico.yaml
   register: calico_network_setup
   when: inventory_hostname in groups['master']
@@ -351,9 +278,7 @@
 
 #
 - name: Join the other kubernetes nodes to cluster, the command must be run on the worker nodes only
-  become: true
-  become_user: root
-  command: kubeadm join "{{ hostvars[groups['master'][0]]['ansible_eth1']['ipv4']['address'] }}:6443" --token "{{ token_01 }}" --discovery-token-ca-cert-hash "{{ token_ca_cert }}"
+  command: kubeadm join "{{ hostvars[groups['master'][0]]['ansible_'~netdev1]['ipv4']['address'] }}:6443" --token "{{ token_01 }}" --discovery-token-ca-cert-hash "{{ token_ca_cert }}"
   register: store_it_copied
   ignore_errors: yes
   when: inventory_hostname in groups['workers']
@@ -365,8 +290,6 @@
 
 #
 - name: Confirm that the kubectl command is activated
-  become: true
-  become_user: root
   command: kubectl get nodes
   register: kubectl_get_nodes
   when: inventory_hostname in groups['master']
@@ -378,8 +301,6 @@
 
 #
 - name: Restart docker daemon in all nodes
-  become: true
-  become_user: root
   systemd:
     name: docker
     state: restarted
@@ -391,8 +312,6 @@
 
 #
 - name: Restart kubelet in master node
-  become: true
-  become_user: root
   systemd:
     name: kubelet
     state: restarted
@@ -405,8 +324,6 @@
 
 #
 #- name: Allow Kubernetes service ports for master node
-#  become: true
-#  become_user: root
 #  firewalld:
 #    permanent: yes
 #    immediate: yes
@@ -419,8 +336,6 @@
 
 #
 #- name: Allow Kubernetes service ports for workder nodes
-#  become: true
-#  become_user: root
 #  firewalld:
 #    permanent: yes
 #    immediate: yes
@@ -433,14 +348,10 @@
 
 #
 #- name: Enable Masquerade on Master node
-#  become: true
-#  become_user: root
 #  command: firewall-cmd --zone=public --add-masquerade --permanent
 
 #
 - name: Start firewalld for all nodes
-  become: true
-  become_user: root
   systemd:
     name: firewalld
     state: restarted
@@ -448,8 +359,6 @@
 
 #
 - name: Make directory for local filesystem
-  become: true
-  become_user: root
   shell: |
     rm -rf /iscsi01
     rm -rf /local-vols
@@ -491,3 +400,13 @@
 # host-cidr, pod-cidr and service-cidrs need to be disjoint (i.e. separate and non-overlapping)
 
 # https://www.centlinux.com/2022/11/install-kubernetes-master-node-rocky-linux.html
+
+#
+- name: Validate if k8s Workers are all Ready
+  shell: kubectl get nodes
+  register: check_k8s_workers_status
+  until: check_k8s_workers_status.stdout.find("NotReady") == -1
+  retries: 30
+  when: inventory_hostname in groups['master']
+- debug: msg={{ check_k8s_workers_status }}
+  when: print_debug == true and inventory_hostname in groups['master']

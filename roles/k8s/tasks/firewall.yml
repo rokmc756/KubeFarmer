@@ -1,0 +1,66 @@
+---
+#
+- name: Enable firewalld for all nodes
+  systemd:
+    name: firewalld
+    state: started
+    enabled: yes
+
+#
+- name: Allow Kubernetes service ports for master node
+  firewalld:
+    permanent: yes
+    immediate: yes
+    port: "{{ item.port }}/{{ item.proto }}"
+    state: "{{ item.state }}"
+    zone: "{{ item.zone }}"
+  with_items: "{{ master_ports }}"
+  when: inventory_hostname in groups['master']
+
+#
+- name: Allow Kubernetes service ports for workder nodes
+  firewalld:
+    permanent: yes
+    immediate: yes
+    port: "{{ item.port }}/{{ item.proto }}"
+    state: "{{ item.state }}"
+    zone: "{{ item.zone }}"
+  with_items: "{{ workers_ports }}"
+  when: inventory_hostname in groups['workers']
+
+#
+- name: Reload firewalld for all nodes
+  command: firewall-cmd --reload
+
+#
+- name: Stop firewalld for all nodes
+  systemd:
+    name: firewalld
+    state: stopped
+    enabled: yes
+
+#
+- name: Disabling SELinux to be required by kubnernates cluster
+  selinux:
+    state: disabled
+  register: selinux_disabled
+  notify:
+    - Restart system
+    - Waiting for server to come back after reboot
+  failed_when: selinux_disabled.msg | default('ok', True) is not search('(^ok$|libselinux-python|(SELinux state changed))')
+
+#
+- debug:
+    var: selinux_disabled.stdout_lines
+  when: print_debug
+
+#
+- name: Check if selinux has been disabled in Configurtion file
+  command: grep SELINUX /etc/sysconfig/selinux
+  register: sevalue
+
+#
+- debug:
+    var: sevalue.stdout_lines
+  when: print_debug
+

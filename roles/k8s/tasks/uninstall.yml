@@ -3,30 +3,26 @@
 
 #
 - name: yum version clear
-  become: true
-  become_user: root
   command: yum versionlock clear
   register: yum_version_clear
   ignore_errors: yes
 
 #
-- name: Uninstall the latest version of a docker-ce package.
-  become: true
-  become_user: root
-  yum:
-    name: "{{ item }}"
-    state: absent
-  ignore_errors: yes
-  with_items:
-    - haproxy
-    - etcd
-    - firewalld
-  when: uninstall_dep_packages
+#- name: Uninstall the latest version of a docker-ce package.
+#  become: true
+#  become_user: root
+#  yum:
+#    name: "{{ item }}"
+#    state: absent
+#  ignore_errors: yes
+#  with_items:
+#    - haproxy
+#    - etcd
+#    - firewalld
+#  when: uninstall_dep_packages
 
 #
 - name: Disable and stop docker
-  become: true
-  become_user: root
   systemd:
     name: docker
     state: stopped
@@ -35,8 +31,6 @@
 
 #
 - name: Disable and stop containerd
-  become: true
-  become_user: root
   systemd:
     name: containerd
     state: stopped
@@ -45,8 +39,6 @@
 
 #
 - name: Kill processes regarding containerd
-  become: true
-  become_user: root
   shell: |
     kill -9 `ps -ef | grep containerd | awk '{print $2}'`
   register: containerd_killed
@@ -58,8 +50,6 @@
 
 #
 - name: Disable and Stop kubelet
-  become: true
-  become_user: root
   systemd:
     name: kubelet
     state: stopped
@@ -69,8 +59,6 @@
 #
 # Uninstall containerd.io package to manages the complete container lifecycle from image transfer and storage to container execution and supervision to low-level storage
 - name: Uninstall the latest version of docker-ce package.
-  become: true
-  become_user: root
   yum:
     name: "{{ item }}"
     state: absent
@@ -88,8 +76,6 @@
 
 #
 - name: Uninstall kubeadm package
-  become: true
-  become_user: root
   yum:
     name: "{{ item }}"
     state: absent
@@ -101,8 +87,6 @@
 
 #
 - name: Remove docker / kube and containerd directory and file
-  become: true
-  become_user: root
   shell: |
     rm -rf /var/lib/kubelet
     rm -f /etc/kubernetes/pki/ca.crt
@@ -131,9 +115,10 @@
 
 #
 - name: Delete Kubernetes repositories
-  become: true
-  become_user: root
-  command: rm -f /etc/yum.repos.d/kubernetes.repo
+  command: rm -f {{ item }}
   register: kubernetes_repo_deleted
+  with_items:
+    - "/etc/yum.repos.d/kubernetes.repo"
+    - "/etc/yum.repos.d/docker-ce.repo"
   ignore_errors: yes
 

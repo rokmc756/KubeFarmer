@@ -1,5 +1,5 @@
 ---
-# Install Kubernetes Cluster for RHEL or CentOS 7.x / 8.x
+# Install Kubernetes Cluster
 #
 - name: Install rpm packages of dependenies to need installing packages regarding kubernates for RHEL or Rocky 9
   become: true
@@ -9,20 +9,7 @@
     state: present
   ignore_errors: yes
   register: selinux_policy_installed
-  with_items:
-    - yum-utils
-    - firewalld
-    - python3-libselinux
-    - python3
-    - python3-libselinux
-    - libselinux-python3
-    - python3-policycoreutils
-    - policycoreutils-python-utils
-    - iproute-tc
-    - container-selinux
-    - chrony
-    - jq
-    - java-1.8.0-openjdk
+  with_items: "{{ install_pkgs }}"
   when: install_dep_packages and hostvars[inventory_hostname].ansible_distribution_major_version|int >= 9
 
 #
@@ -34,9 +21,7 @@
     state: present
   ignore_errors: yes
   register: selinux_policy_installed
-  with_items:
-    - python2
-    - python2-libselinux
+  with_items: "{{ install_pkgs }}"
   when: install_dep_packages and hostvars[inventory_hostname].ansible_distribution_major_version|int <= 8
 
 #
@@ -76,8 +61,8 @@
     state: disabled
   register: selinux_disabled
   notify:
-    - restart system
-    - waiting for server to come back after reboot
+    - Restart system
+    - Waiting for server to come back after reboot
   failed_when: selinux_disabled.msg | default('ok', True) is not search('(^ok$|libselinux-python|(SELinux state changed))')
 
 #
@@ -174,6 +159,7 @@
     description: Add docker repsotiry
     baseurl: "https://download.docker.com/linux/centos/{{ hostvars[inventory_hostname].ansible_distribution_major_version }}/x86_64/stable/"
     gpgcheck: "no"
+    # baseurl: "https://download.docker.com/linux/centos/docker-ce.repo"
 
 #
 - name: Install the latest version of docker-ce packages in all nodes
@@ -183,11 +169,7 @@
     name: "{{ item }}"
     state: present
   ignore_errors: yes
-  with_items:
-    - "docker-ce"
-    - "docker-ce-cli"
-    - "containerd.io"
-    - "docker-compose-plugin"
+  with_items: "{{ rh_docker_pkgs }}"
   when: install_dep_packages
 
 #
@@ -285,7 +267,6 @@
     - "kubectl-{{ k8s_major_version }}.{{ k8s_minor_version }}.{{ k8s_patch_version }}"
     - "kubelet-{{ k8s_major_version }}.{{ k8s_minor_version }}.{{ k8s_patch_version }}"
     - "kubeadm-{{ k8s_major_version }}.{{ k8s_minor_version }}.{{ k8s_patch_version }}"
-    - "yum-plugin-versionlock"
   when: install_k8s_packages
 
 #
@@ -343,7 +324,7 @@
   when: inventory_hostname in groups['master']
 
 #
-- name: Modify cluster-config.yaml to replace "{{ hostvars[inventory_hostname]['ansible_eth1']['ipv4']['address'] }}" with Control Plane's IP address
+- name: Modify cluster-config.yaml to replace "{{ hostvars[inventory_hostname]['ansible_'~netdev1]['ipv4']['address'] }}" with Control Plane's IP address
   become: true
   become_user: root
   lineinfile:
@@ -354,7 +335,7 @@
     backrefs: "{{ item.backrefs }}"
   with_items:
     - { regexp: "^  name: node", line: "  name: {{ ansible_hostname }}", state: present, backrefs: yes }
-    - { regexp: "^  advertiseAddress: 1.2.3.4", line: "  advertiseAddress: {{ hostvars[inventory_hostname]['ansible_eth1']['ipv4']['address'] }}", state: present, backrefs: yes }
+    - { regexp: "^  advertiseAddress: 1.2.3.4", line: "  advertiseAddress: {{ hostvars[inventory_hostname]['ansible_'~netdev1]['ipv4']['address'] }}", state: present, backrefs: yes }
     - { regexp: "^  criSocket: /var/run/dockershim.sock", line: "  criSocket: /run/containerd/containerd.sock", state: present, backrefs: yes }
   when: inventory_hostname in groups['master']
 
@@ -426,12 +407,12 @@
 - name: Initialize Kubernetest master and create cluster
   become: true
   become_user: root
-  command: kubeadm init --apiserver-advertise-address={{ hostvars[groups['master'][0]]['ansible_eth1']['ipv4']['address'] }} --pod-network-cidr=10.142.0.0/16 --ignore-preflight-errors=all
+  command: kubeadm init --apiserver-advertise-address={{ hostvars[groups['master'][0]]['ansible_'~netdev1]['ipv4']['address'] }} --pod-network-cidr=10.142.0.0/16 --ignore-preflight-errors=all
   async: 360
   poll: 5
   register: kubeadm_init
   when: inventory_hostname in groups['master']
-  # command: kubeadm init --apiserver-advertise-address={{ hostvars[groups['master'][0]]['ansible_eth1']['ipv4']['address'] }} --pod-network-cidr=192.168.0.0/24 --kubernetes-version=v1.21.1 --ignore-preflight-errors=all
+  # command: kubeadm init --control-plane-endpoint={{ hostvars[groups['master'][0]].ansible_hostname }}
 
 #
 - debug:
@@ -448,7 +429,8 @@
   when: inventory_hostname in groups['master']
 
 #
-- debug:
+- name: Print fact for token ca certificate
+  debug:
     msg: "{{ token_ca_cert }}"
 
 #
@@ -461,7 +443,8 @@
   when: inventory_hostname in groups['master']
 
 #
-- debug:
+- name: Print fact for token
+  debug:
     msg: "{{ token_01 }}"
 
 #
@@ -617,7 +600,7 @@
 - name: Join the other kubernetes nodes to cluster, the command must be run on the worker nodes only
   become: true
   become_user: root
-  command: kubeadm join "{{ hostvars[groups['master'][0]]['ansible_eth1']['ipv4']['address'] }}:6443" --token "{{ token_01 }}" --discovery-token-ca-cert-hash "{{ token_ca_cert }}"
+  command: kubeadm join "{{ hostvars[groups['master'][0]]['ansible_'~netdev1]['ipv4']['address'] }}:6443" --token "{{ token_01 }}" --discovery-token-ca-cert-hash "{{ token_ca_cert }}"
   register: store_it_copied
   ignore_errors: yes
   when: inventory_hostname in groups['workers']
@@ -655,3 +638,14 @@
 - debug:
     msg: "{{ master_kubelet_restarted }}"
   when: inventory_hostname in groups['master']
+
+#
+- name: Validate if k8s Workers are all Ready
+  shell: kubectl get nodes
+  register: check_k8s_workers_status
+  until: check_k8s_workers_status.stdout.find("NotReady") == -1
+  retries: 30
+  when: inventory_hostname in groups['master']
+- debug: msg={{ check_k8s_workers_status }}
+  when: print_debug == true and inventory_hostname in groups['master']
+

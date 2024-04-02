@@ -8,10 +8,12 @@
     calico_network: false
     k8s_network_address: "192.168.0.0/16"
   roles:
-    - init-hosts
+    - k8s
+  #  - init-hosts
 
-  #  - k8s-cluster
+  #  - k8s
   #  - dashboard
+
 
 #- hosts: workers
 #  become: yes
@@ -19,13 +21,14 @@
 #    - iscsi-initiator
 
 #
-#- hosts: rk9-minio
+#- hosts: ext_storages
+#minio
 #  become: yes
 #  roles:
 #    - minio
 #    - iscsi-target
 
-#- hosts: rk9-harbor
+#- hosts: harbor
 #  become: yes
 #  roles:
 #    - harbor
