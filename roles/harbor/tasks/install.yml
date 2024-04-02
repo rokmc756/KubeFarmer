@@ -2,27 +2,18 @@
 # Install Harbor continaer registry for CentOS 8.x or Rocky 8
 
 #- name: Install Python 2.7 but do not select it
-#  become: true
-#  become_user: root
-#  community.general.alternatives:
+#  alternatives:
 #    name: python
 #    path: /usr/bin/python2.7
 #    link: /usr/bin/python
 #    state: present
 
-#- name: Alternative python 2.7 version
-#  become: true
-#  become_user: root
-#  command: update-alternatives --install /usr/bin/python python /usr/bin/python2.7 1
-#  register: alternative_python_version
-
-- name: Alternative python version to python2
-  become: true
-  become_user: root
+#
+- name: Alternative Python Version to Python2
   command: alternatives --set python /usr/bin/python2
-  ignore_errors: yes
   register: python_version_alternative
   when: hostvars[inventory_hostname].ansible_distribution_major_version|int <= 8
+  #  command: update-alternatives --install /usr/bin/python python /usr/bin/python2.7 1
 
 - debug:
     var: python_version_alternative
@@ -30,23 +21,19 @@
 
 #
 - name: Uninstall python3-pip
-  become: true
-  become_user: root
-  yum:
+  package:
     name: "{{ item }}"
     state: absent
   with_items:
     - "python3-pip"
 
 #
-- name: Install the EPEL repo and other required packages to your system
-  become: true
-  become_user: root
-  yum:
+- name: Install the EPEL Repo and Other Required Packages to Your System
+  package:
     name: "{{ item }}"
     state: present
   ignore_errors: yes
-  register: epel_installed
+  register: dependency_packages_installed
   with_items:
     - "epel-release"
     - "firewalld"
@@ -58,59 +45,51 @@
     - "libselinux-python3"
     - "wget"
     - "yum-utils"
-  register: dependency_packages_installed
 
 #
 - debug:
     var: dependency_packages_installed
 
 #
-- name: Install the EPEL repo and other required packages to your system
-  become: true
-  become_user: root
-  yum:
+- name: Install the EPEL Repo and Other Required Packages to Your System
+  package:
     name: "{{ item }}"
     state: present
-  ignore_errors: yes
   register: python2_packages_installed
   with_items:
     - "python2-pip"
     - "python2-psycopg2"
     - "libselinux-python2"
-  register: python2_packages_installed
   when: hostvars[inventory_hostname].ansible_distribution_major_version|int <= 8
 
 #
 - debug:
-    var: epel_installed
+    var: python2_packages_installed
   when: hostvars[inventory_hostname].ansible_distribution_major_version|int <= 8
 
 #
-- name: Disabling SELinux to be required
-  become: true
-  become_user: root
+- name: Disabling SELinux to be Required
   selinux:
     state: disabled
   register: selinux_disabled
   notify:
-    - restart system
-    - waiting for server to come back after reboot
+    - Restart system
+    - Waiting for server to come back after reboot
+
+- meta: flush_handlers
 
 - debug:
     var: selinux_disabled.stdout_lines
 
-- name: Check if selinux has been disabled in Configurtion file
-  become: true
-  become_user: root
+- name: Check if SELinux has been disabled in Configurtion File
   command: grep SELINUX /etc/sysconfig/selinux
   register: sevalue
 
 - debug:
     var: sevalue.stdout_lines
+
 #
-- name: Add docker repository
-  become: true
-  become_user: root
+- name: Add Docker Repository
   yum_repository:
     name: docker-ce
     description: Add docker repsotiry
@@ -121,12 +100,9 @@
 - debug:
     var: docker_repo_added
 
-
-
-- name: Install the latest version of docker-ce packages in all nodes
-  become: true
-  become_user: root
-  yum:
+#
+- name: Install the latest version of Docker-CE Packages in All Nodes
+  package:
     name: "{{ item }}"
     state: present
   with_items:
@@ -136,9 +112,8 @@
 - debug:
     var: docker_installed
 
-- name: Install Docker-Compose using pip
-  become: true
-  become_user: root
+#
+- name: Install Docker-Compose Using Pip
   shell: |
     export PATH=$PATH:/usr/local/bin && pip3 install --upgrade pip
     export PATH=$PATH:/usr/local/bin && pip3 install --upgrade --ignore-installed pip setuptools
@@ -153,9 +128,8 @@
 - debug:
     var: docker_installed
 
-- name: Enable and start docker
-  become: true
-  become_user: root
+#
+- name: Enable and Start Docker
   systemd:
     name: docker
     state: started
@@ -170,9 +144,8 @@
 - debug:
     var: docker_enabled
 
-- name: Verify that docker is installed correctly by running the hello-world image.
-  become: true
-  become_user: root
+#
+- name: Verify that Docker is installed Correctly by Running the Hello-World Image
   shell: |
     docker run hello-world
   ignore_errors: yes
@@ -181,9 +154,8 @@
 - debug:
     var: docker_run_hellow
 
-- name: The binary of the installer can be downloaded from the release page. Choose either the online or offline installer
-  become: true
-  become_user: root
+#
+- name: The Binary of the Installer can be Downloaded From the Release page. Choose Either the Online or Offline Installer
   get_url:
     url: https://github.com/vmware/harbor/releases/download/v{{ major_version }}.{{ minor_version }}.{{ patch_version }}/harbor-online-installer-v{{ major_version }}.{{ minor_version }}.{{ patch_version }}.tgz
     dest: /root/harbor-online-installer-v{{ major_version }}.{{ minor_version }}.{{ patch_version }}.tgz
@@ -194,9 +166,7 @@
     var: harbor_downloaed
 
 #
-- name: Unarchive Harbor tarball
-  become: true
-  become_user: root
+- name: Unarchive Harbor Tarball
   unarchive: src=/root/harbor-online-installer-v{{ major_version }}.{{ minor_version }}.{{ patch_version }}.tgz dest=/root/ remote_src=yes owner=root group=root
   register: harbor_unarchived
 
@@ -204,15 +174,13 @@
     var: harbor_unarchived
 
 
-# new cert
+# New cert
 # openssl req -x509 -newkey rsa:4096 -sha256 -days 365 -nodes -keyout ./private.key -out ./public.crt \ -subj "/CN=rk9-harbor.jtest.pivotal.io" \
 #  -addext "subjectAltName=DNS:rk9-harbor.jtest.pivotal.io,DNS:192.168.0.2,IP:0.0.0.0,IP:127.0.0.1,IP:192.168.0.199"
 
-# previous certs
+# Previous Certs
 # openssl req -x509 -new -nodes -sha512 -days 3650 -subj "/C={{ cert_country }}/ST={{ cert_state }}/L={{ cert_location }}/O={{ cert_org }}/OU={{ cert_org_unit }}/CN={{ ansible_fqdn }}" -key /root/certs/ca.key -out /root/certs/ca.crt
-- name: Generate your own SSL certificate
-  become: true
-  become_user: root
+- name: Generate Your Own SSL Certificate
   shell: |
     mkdir /root/certs && mkdir /data/certs
     openssl genrsa -out /root/certs/ca.key 4096
@@ -224,18 +192,16 @@
 - debug:
     var: certs_generated
 
-- name: Copy an x509 v3 extension file.
-  become: true
-  become_user: root
+#
+- name: Copy an x509 v3 Extension File
   template: src=v3.ext.j2 dest=/root/certs/v3.ext  owner=root group=root mode=644 force=yes
   register: v3_ext_copied
 
 - debug:
     var: v3_ext_copied
 
-- name: Generate an x509 v3 extension file.
-  become: true
-  become_user: root
+#
+- name: Generate an x509 v3 Extension File
   shell: |
     openssl x509 -req -sha512 -days 3650 -extfile /root/certs/v3.ext -CA /root/certs/ca.crt -CAkey /root/certs/ca.key -CAcreateserial -in /root/certs/{{ ansible_fqdn }}.csr -out /root/certs/{{ ansible_fqdn }}.crt
   register: v3_ext_generated
@@ -243,35 +209,53 @@
 - debug:
     var: v3_ext_generated
 
-- name: Generate an x509 v3 extension file.
-  become: true
-  become_user: root
+- name: Generate an x509 v3 Extension File
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    remote_src: yes
+  register: certs_copied
+  with_items:
+    - { src: "/root/certs/{{ ansible_fqdn }}.crt", dest: "/data/certs/{{ ansible_fqdn }}.crt" }
+    - { src: "/root/certs/{{ ansible_fqdn }}.key", dest: "/data/certs/{{ ansible_fqdn }}.key" }
+
+#
+- name: Copy harbor.tmpl to harboy.yml
   shell: |
-    cp -f /root/certs/{{ ansible_fqdn }}.crt /data/certs/
-    cp -f /root/certs/{{ ansible_fqdn }}.key /data/certs/
     openssl x509 -inform PEM -in /root/certs/{{ ansible_fqdn }}.crt -out /root/certs/{{ ansible_fqdn }}.cert
-    mkdir -p /etc/docker/certs.d/{{ ansible_fqdn }}:443
-    cp -f /root/certs/{{ ansible_fqdn }}.cert /etc/docker/certs.d/{{ ansible_fqdn }}:443/
-    cp -f /root/certs/{{ ansible_fqdn }}.key /etc/docker/certs.d/{{ ansible_fqdn }}:443/
-    cp -f /root/certs/ca.crt /etc/docker/certs.d/{{ ansible_fqdn }}:443/
-  register: certs_generated
+  register: harbor_yml_copied
 
-- debug:
-    var: certs_generated
+#
+- name: Creates directory
+  file:
+    path: "/etc/docker/certs.d/{{ ansible_fqdn }}:443"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
 
+#
+- name: Generate an x509 v3 Extension File
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    remote_src: yes
+  register: certs_copied
+  with_items:
+    - { src: "/root/certs/{{ ansible_fqdn }}.cert", dest: "/etc/docker/certs.d/{{ ansible_fqdn }}:443/{{ ansible_fqdn }}.cert" }
+    - { src: "/root/certs/{{ ansible_fqdn }}.key",  dest: "/etc/docker/certs.d/{{ ansible_fqdn }}:443/{{ ansible_fqdn }}.key" }
+    - { src: "/root/certs/ca.crt",                  dest: "/etc/docker/certs.d/{{ ansible_fqdn }}:443/ca.crt" }
 
-- name: Configure the docker daemon to use systemd for the management of the cotainer's cgroups and repository
-  become: true
-  become_user: root
+#
+- name: Configure the Docker Daemon to Use Systemd for the Management of the Cotainer's Cgroups and Repository
   template: src=daemon.json.j2 dest=/etc/docker/daemon.json owner=root group=root mode=644 force=yes
   register: cgroup_docker_configured
 
 - debug:
     var: cgroup_docker_configured
 
-- name: Restart docker
-  become: true
-  become_user: root
+#
+- name: Restart Docker
   systemd:
     name: docker
     state: restarted
@@ -283,24 +267,19 @@
 - debug:
     var: docker_restarted
 
-- name: Alternative python version to python2
-  become: true
-  become_user: root
+#
+- name: Alternative Python Version to Python2
   command: alternatives --set python /usr/bin/python2
   ignore_errors: yes
   register: python_version_alternative
   when: hostvars[inventory_hostname].ansible_distribution_major_version|int <= 8
 
-
 - debug:
     var: python_version_alternative
   when: hostvars[inventory_hostname].ansible_distribution_major_version|int <= 8
 
-
 # dest: /root/harbor/harbor.yml
 - name: Modify harbor.yml "{{ ansible_fqdn }}" with Control Plane's IP address
-  become: true
-  become_user: root
   lineinfile:
     dest: /root/harbor/harbor.yml.tmpl
     regexp: "{{ item.regexp }}"
@@ -318,45 +297,43 @@
 - debug:
     var: harbor_config_modified
 
-
-# For harbor 2.8.0
+#
 - name: Copy harbor.tmpl to harboy.yml
-  become: true
-  become_user: root
-  shell: |
-    cp -f /root/harbor/harbor.yml.tmpl  /root/harbor/harbor.yml
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    remote_src: yes
   register: harbor_yml_copied
+  with_items:
+    - { src: "/root/harbor/harbor.yml.tmpl", dest: "/root/harbor/harbor.yml" }
 
-# For 2.8.0
-- name: Run prepare for installation.
-  become: true
-  become_user: root
+#
+- name: Run Prepare for Installation
   shell: |
     export PATH=$PATH:/usr/local/bin && sh /root/harbor/prepare --with-notary --with-trivy
   register: install_prepare_run
   # For 1.10
   #  export PATH=$PATH:/usr/local/bin && sh /root/harbor/prepare --with-notary --with-clair --with-chartmuseum
 
+#
 - debug:
     var: install_prepare_run
 
-- name: Run Harbor in the background.
-  become: true
-  become_user: root
+#
+- name: Run Harbor in the Background
   shell: |
     export PATH=$PATH:/usr/local/bin && docker compose -f /root/harbor/docker-compose.yml up -d
   register: haror_run
   async: 600
   poll: 5
-  # until: docker_enabled is succeeded
-  #  export PATH=$PATH:/usr/local/bin && docker-compose -f /root/harbor/docker-compose.yml up -d
+  # until: docker_run is succeeded
 
+#
 - debug:
     var: harbor_run
 
-- name: Enable and start firewalld
-  become: true
-  become_user: root
+#
+- name: Enable and Start Firewalld
   systemd:
     name: firewalld
     state: started
@@ -364,14 +341,21 @@
     daemon-reload: yes
   register: firewalld_enabled
 
-- name: Allow port 80 through the firewalld.
-  become: true
-  become_user: root
-  shell: |
-    firewall-cmd --permanent --zone=public --add-port=80/tcp
-    firewall-cmd --permanent --zone=public --add-port=22/tcp
-    firewall-cmd --reload
+#
+- name: Allow Port 80 and 20 ports through Firewalld
+  firewalld:
+    permanent: yes
+    immediate: yes
+    port: "{{ item.port }}/{{ item.proto }}"
+    state: "{{ item.state }}"
+    zone: "{{ item.zone }}"
   register: firewalld_port_allowed
+  with_items:
+    - { port: "80", zone: "public", state: "enabled" }
+    - { port: "80", zone: "public", state: "enabled" }
+  when: inventory_hostname in groups['master']
 
+#
 - debug:
     var: firewalld_port_allowed
+

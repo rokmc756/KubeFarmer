@@ -1,19 +1,21 @@
 ---
-- hosts: all
+- hosts: harbor
   become: yes
-  vars:
-    print_debug: true
-    install_dep_packages: true
-    install_k8s_packages: true
-    calico_network: false
-    k8s_network_address: "192.168.0.0/16"
   roles:
-    - k8s
-  #  - init-hosts
+    - harbor
 
-  #  - k8s
-  #  - dashboard
-
+#- hosts: all
+#  become: yes
+#  vars:
+#    print_debug: true
+#    install_dep_packages: true
+#    install_k8s_packages: true
+#    calico_network: false
+#    k8s_network_address: "192.168.0.0/16"
+#  roles:
+#    - k8s
+#    - init-hosts
+#    - dashboard
 
 #- hosts: workers
 #  become: yes
