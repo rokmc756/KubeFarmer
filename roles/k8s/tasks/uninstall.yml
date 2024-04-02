@@ -2,13 +2,13 @@
 # Install Kubernetes Cluster for RHEL or CentOS 8.x
 
 #
-- name: yum version clear
+- name: YUM Version Clear
   command: yum versionlock clear
   register: yum_version_clear
   ignore_errors: yes
 
 #
-#- name: Uninstall the latest version of a docker-ce package.
+#- name: Uninstall the latest version of a Docker-CE Package.
 #  become: true
 #  become_user: root
 #  yum:
@@ -22,7 +22,7 @@
 #  when: uninstall_dep_packages
 
 #
-- name: Disable and stop docker
+- name: Disable and Stop Docker
   systemd:
     name: docker
     state: stopped
@@ -30,7 +30,7 @@
   ignore_errors: yes
 
 #
-- name: Disable and stop containerd
+- name: Disable and Stop Containerd
   systemd:
     name: containerd
     state: stopped
@@ -38,7 +38,7 @@
   ignore_errors: yes
 
 #
-- name: Kill processes regarding containerd
+- name: Kill Processes Regarding Containerd
   shell: |
     kill -9 `ps -ef | grep containerd | awk '{print $2}'`
   register: containerd_killed
@@ -49,7 +49,7 @@
     msg: "{{ containerd_killed }}"
 
 #
-- name: Disable and Stop kubelet
+- name: Disable and Stop Kubelet
   systemd:
     name: kubelet
     state: stopped
@@ -58,7 +58,7 @@
 
 #
 # Uninstall containerd.io package to manages the complete container lifecycle from image transfer and storage to container execution and supervision to low-level storage
-- name: Uninstall the latest version of docker-ce package.
+- name: Uninstall the latest version of Docker-CE Package.
   yum:
     name: "{{ item }}"
     state: absent
@@ -75,7 +75,7 @@
 #   - libcgroup-tools
 
 #
-- name: Uninstall kubeadm package
+- name: Uninstall Kubeadm Package
   yum:
     name: "{{ item }}"
     state: absent
@@ -86,7 +86,7 @@
   when: uninstall_k8s_packages
 
 #
-- name: Remove docker / kube and containerd directory and file
+- name: Remove Docker / Kube and Containerd Directory and File
   shell: |
     rm -rf /var/lib/kubelet
     rm -f /etc/kubernetes/pki/ca.crt
@@ -114,7 +114,7 @@
     msg: "{{ kube_dir_removed }}"
 
 #
-- name: Delete Kubernetes repositories
+- name: Delete Kubernetes Repositories
   command: rm -f {{ item }}
   register: kubernetes_repo_deleted
   with_items:

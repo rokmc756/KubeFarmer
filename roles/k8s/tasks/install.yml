@@ -1,18 +1,18 @@
 ---
-- name: Add line into /etc/locale.conf for LC_TYPE to prevent error
+- name: Add Line into /etc/locale.conf for LC_TYPE to Prevent Error
   lineinfile:
     path: /etc/locale.conf
     line: "LC_CTYPE=en_US.UTF-8"
   register: lctype_line_added
 
 #
-- name: Unset variables of token and certs generated previously by kubeadm init
+- name: Unset Variables of Token and Certs Generated Previously by Kubeadm Init
   set_fact:
-    token_ca_cert:
-    token_01:
+    k8s_token_ca_cert:
+    k8s_token:
 
 #
-- name: Enable br_netfilter and overlay module for iptables in all nodes
+- name: Enable br_netfilter and Overlay Module for iptables in All Nodes
   copy:
     dest: /etc/modules-load.d/containerd.conf
     content: |
@@ -20,7 +20,7 @@
       br_netfilter
 
 #
-- name: Enable bridge module for iptables to route packets into kubernetes cluster nodes
+- name: Enable Bridge Module for IPTables to Route Packets into Kubernetes Cluster Nodes
   copy:
     dest: /etc/sysctl.d/99-kubernetes-cri.conf
     content: |
@@ -29,17 +29,17 @@
       net.bridge.bridge-nf-call-ip6tables = 1
 
 #
-- name: Apply kernel parameters for kubernetes cluster
+- name: Apply Kernel Parameters for Kubernetes Cluster
   command: sysctl --system
 
 #
-- name: Initialize containerd
+- name: Initialize Containerd
   shell: |
     containerd config default > /etc/containerd/config.toml
   # command: containerd config default | tee /etc/containerd/config.toml
 
 #
-- name: Edit containerd configuration
+- name: Edit Containerd Configuration
   lineinfile:
     dest: /etc/containerd/config.toml
     regexp: "{{ item.regexp }}"
@@ -51,7 +51,7 @@
   #   firstmatch: yes
 
 #
-- name: Restart containerd to apply SystemdCgroup in config.toml in all nodes
+- name: Restart Containerd to Apply SystemdCgroup in config.toml in All Nodes
   systemd:
     name: containerd
     state: restarted
@@ -62,7 +62,7 @@
   delay: 20
 
 #
-- name: Enable and start docker in all nodes
+- name: Enable and Start Docker in All Nodes
   systemd:
     name: docker
     state: started
@@ -73,18 +73,18 @@
   delay: 20
 
 #
-- name: Creates docker directory under /etc in all nodes
+- name: Creates Docker Directory Under /etc in All Nodes
   file:
     path: /etc/docker
     state: directory
 
 #
-- name: Configure the docker daemon to use systemd for the management of the cotainer's cgroups in all nodes
+- name: Configure the Docker Daemon to Use Systemd for the Management of the Cotainer's CGGroups in All Nodes
   template: src=daemon.json.j2 dest=/etc/docker/daemon.json owner=root group=root mode=644 force=yes
   register: cgroup_docker_configured
 
 #
-- name: Restart docker daemon in all nodes
+- name: Restart Docker Daemon in All Nodes
   systemd:
     name: docker
     state: restarted
@@ -95,12 +95,12 @@
   delay: 10
 
 #
-- name: Configure the kubelet daemon to use systemd for the management of the cotainer's cgroups in all nodes
+- name: Configure the Kubelet Daemon to Use Systemd for the Management of the Cotainer's CGroups in All Nodes
   template: src=kubelet.j2 dest=/etc/sysconfig/kubelet owner=root group=root mode=644 force=yes
   register: kubernetes_repo_added
 
 #
-- name: Enable and Start kubelet in all nodes
+- name: Enable and Start Kubelet in All Nodes
   systemd:
     name: kubelet
     state: restarted
@@ -108,25 +108,25 @@
     daemon_reload: yes
 
 #
-- name: Enable Cgroup in all nodes
+- name: Enable Cgroup in All Nodes
   service: name=cgconfig state=started enabled=yes
   when: hostvars[inventory_hostname].ansible_distribution_major_version|int < 9
 
 #
-- name: Lock versions to avoid unwanted updated yum update in all nodes
+- name: Lock Versions to Avoid Unwanted Updated YUM Updates in All Nodes
   command: yum versionlock kubelet kubeadm kubectl
   register: virsions_lock
   # command: yum versionlock kubelet-{{ k8s_major_version }}.{{ k8s_minor_version }}.{{ k8s_patch_version }} kubectl-{{ k8s_major_version }}.{{ k8s_minor_version }}.{{ k8s_patch_version }} kubeadm-{{ k8s_major_version }}.{{ k8s_minor_version }}.{{ k8s_patch_version }}
 
 #
-- name: Create Cluster configuration in master node
+- name: Create Cluster Configuration in Master Node
   shell: |
     kubeadm config print init-defaults | tee /root/cluster-config.yaml
   register: cluster_config_created
   when: inventory_hostname in groups['master']
 
 #
-- name: Modify cluster-config.yaml to replace "{{ hostvars[inventory_hostname]['ansible_'~netdev1]['ipv4']['address'] }}" with Control Plane's IP address
+- name: Modify cluster-config.yaml to Replace "{{ hostvars[inventory_hostname]['ansible_'~netdev1]['ipv4']['address'] }}" with Control Plane's IP address
   lineinfile:
     dest: /root/cluster-config.yaml
     regexp: "{{ item.regexp }}"
@@ -154,25 +154,25 @@
   when: inventory_hostname in groups['master']
 
 #
-- name: Disable swap in order to initialize Kubernetes master
+- name: Disable SWAP in Order to initialize Kubernetes Master
   shell: |
     swapoff -a
     sed -i '/swap/s/^/#/g' /etc/fstab
 
 #
-- name: Change Kubelet systemd file
+- name: Change Kubelet Systemd File
   template: src=kubelet.systemd.j2 dest=/usr/lib/systemd/system/kubelet.service owner=root group=root mode=644 force=yes
   register: kubelet_systemd_changed
 
-#
 #- name: Move temoporary Kubelet systemd file in recursive directory of /usr/lib/systemd/system/kubelet.service.d to /tmp directory
 #  shell: mv -f /usr/lib/systemd/system/kubelet.service.d/10-kubeadm.conf /tmp/
 #  register: kubeadm_conf_moved
 
 #
-- name: Enable and Start kubelet in all nodes
+- name: Enable and Start Kubelet in All Nodes
   systemd:
     name: kubelet
     state: restarted
     enabled: yes
     daemon_reload: yes
+

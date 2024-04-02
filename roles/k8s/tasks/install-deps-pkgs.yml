@@ -1,7 +1,7 @@
 ---
-# Install Kubernetes Cluster
+# Install Kubernetes Software
 #
-- name: Install rpm packages of dependenies to need installing packages regarding kubernates for RHEL or Rocky 9
+- name: Install RPM Packages of Dependenies to Need Installing Packages Regarding Kubernates
   package:
     name: "{{ item }}"
     state: present
@@ -10,7 +10,7 @@
   when: install_dep_packages and hostvars[inventory_hostname].ansible_distribution_major_version|int >= 9
 
 #
-- name: Install rpm packages of dependenies to need installing packages regarding kubernates for RHEL / CentOS 7
+- name: Install RPM Packages of Dependenies to Need Installing Packages Regarding Kubernates
   package:
     name: "{{ item }}"
     state: present
@@ -26,7 +26,7 @@
   when: print_debug
 
 #
-- name: Add docker repository in all nodes
+- name: Add Docker Repository in All Nodes
   yum_repository:
     name: docker-ce
     description: Add docker repsotiry
@@ -35,7 +35,7 @@
     # baseurl: "https://download.docker.com/linux/centos/docker-ce.repo"
 
 #
-- name: Install docker-ce packages of the latest version in all nodes
+- name: Install Docker-CE Packages of the Latest Version in All Nodes
   package:
     name: "{{ item }}"
     state: present
@@ -43,12 +43,12 @@
   when: install_dep_packages
 
 #
-- name: Add Kubernetes repositories in all nodes
+- name: Add Kubernetes Repositories in All Nodes
   template: src=kubernetes.repo.j2 dest=/etc/yum.repos.d/kubernetes.repo owner=root group=root mode=644 force=yes
   register: kubernetes_repo_added
 
 #
-- name: Install kubeadm packages for all nodes
+- name: Install Kubeadm Packages for All Nodes
   package:
     name: "{{ item }}"
     state: present
@@ -59,7 +59,7 @@
   when: install_k8s_packages
 
 #
-- name: Install Cgroup packages in all nodes
+- name: Install Cgroup Packages in All Nodes
   package:
     name: "{{ item }}"
     state: present

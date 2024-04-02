@@ -1,13 +1,13 @@
 ---
 #
-- name: Enable firewalld for all nodes
+- name: Enable Firewalld for All Nodes
   systemd:
     name: firewalld
     state: started
     enabled: yes
 
 #
-- name: Allow Kubernetes service ports for master node
+- name: Allow Kubernetes Service Ports for Master Node
   firewalld:
     permanent: yes
     immediate: yes
@@ -18,7 +18,7 @@
   when: inventory_hostname in groups['master']
 
 #
-- name: Allow Kubernetes service ports for workder nodes
+- name: Allow Kubernetes Service Ports for Workder Nodes
   firewalld:
     permanent: yes
     immediate: yes
@@ -29,18 +29,18 @@
   when: inventory_hostname in groups['workers']
 
 #
-- name: Reload firewalld for all nodes
+- name: Reload Firewalld for All Nodes
   command: firewall-cmd --reload
 
 #
-- name: Stop firewalld for all nodes
+- name: Stop Firewalld for All Nodes
   systemd:
     name: firewalld
     state: stopped
     enabled: yes
 
 #
-- name: Disabling SELinux to be required by kubnernates cluster
+- name: Disabling SELinux to be required by Kubnernates Cluster
   selinux:
     state: disabled
   register: selinux_disabled
@@ -52,15 +52,15 @@
 #
 - debug:
     var: selinux_disabled.stdout_lines
-  when: print_debug
+  when: print_debug == true
 
 #
-- name: Check if selinux has been disabled in Configurtion file
+- name: Check if SELinux has been Disabled in Configurtion File
   command: grep SELINUX /etc/sysconfig/selinux
   register: sevalue
 
 #
 - debug:
     var: sevalue.stdout_lines
-  when: print_debug
+  when: print_debug == true
 

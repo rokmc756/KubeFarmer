@@ -4,9 +4,9 @@ k8s:
   cluster_name: jack-k8s
   major_version: "1"
   minor_version: "2"
-  build_version: "6"
-  patch_version: ".64"
-  download_url: "get.weka.io/dist/v1/pkg"
+  build_version: "8"
+  patch_version: ""
+  download_url: ""
   download: false
   base_path: /root
   admin_user: admin
@@ -23,7 +23,7 @@ k8s:
     ipaddr0: "192.168.0.7"
     ipaddr1: "192.168.1.7"
     ipaddr2: "192.168.2.7"
-    data_plane: netdev2
+    data_plane: netdev
   obs: false
   fs: false
   protocol:
@@ -31,7 +31,6 @@ k8s:
     nfs: false
     smb: false
   client:
-    wekafs: false
     smb: false
     nfs: false
     s3: false
@@ -45,15 +44,4 @@ k8s:
     net:
       ipaddr0: "192.168.0."
       ipaddr1: "192.168.1."
-  tools:                                       # git clone https://github.com/weka/tools; cd tools ; git checkout v1.3.8
-    name: tools
-    major_version: 1
-    minor_version: 3
-    patch_version: 8
-    download: false
-    bin_type: tar.gz
-  wsa:
-    download_url: "get.weka.io/api/v1/wsa/4.2.9.28/"
-  wma:
-    download_url: "get.weka.io/api/v1/wms/1.2.2/"
 

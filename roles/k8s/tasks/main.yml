@@ -7,7 +7,7 @@
   when: ansible_os_family != 'RedHat' or  ansible_os_family != 'CentOS' or  ansible_os_family != 'Rocky'
 
 #
-- name: Set facts for network and packages informations for Linux Distribution
+- name: Set facts for network and packages informations
   import_tasks: set-k8s-facts.yml
   tags:
     - install
@@ -35,7 +35,7 @@
 
 #
 - name: Initialize Kubernetes Cluster
-  import_tasks: initialize-k8s.yml
+  import_tasks: init-k8s.yml
   tags: install
   when: inventory_hostname in groups['master'] or inventory_hostname in groups['slave'] or inventory_hostname in groups['workers']
 
@@ -46,7 +46,7 @@
   when: inventory_hostname in groups['master'] or inventory_hostname in groups['slave'] or inventory_hostname in groups['workers']
 
 #
-- name: Uninstall Kubernetes Cluster
+- name: Destroy Kubernetes Cluster
   import_tasks: uninstall.yml
   tags: uninstall
   when: inventory_hostname in groups['master'] or inventory_hostname in groups['slave'] or inventory_hostname in groups['workers']

@@ -1,26 +1,16 @@
 ---
 # Reinit Kubernetes
-
 #
-- name: Unset variables of token and certs generated previously by kubeadm init
+- name: Unset Variables of Token and Certs Generated Previously by Kubeadm Init
   set_fact:
-    token_ca_cert:
-    token_01:
+    k8s_token_ca_cert:
+    k8s_token:
 
 #
-- name: Set SELinux permissive mode
+- name: Set SELinux Permissive Mode
   shell: |
     setenforce 0
     sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config
-
-#
-#- name: Enable Masquerade on Master node
-#  firewalld:
-#    masquerade: true
-#    state: enabled
-#    permanent: true
-#    zone: public
-#  when: inventory_hostname in groups['master'] or inventory_hostname in groups['workers']
 
 #
 #- name: Enable Masquerade on Master node
@@ -31,14 +21,14 @@
 #  command: firewall-cmd --reload
 
 #
-- name: Start firewalld for all nodes
+- name: Start Firewalld For All Nodes
   systemd:
     name: firewalld
     state: restarted
     enabled: yes
 
 #
-- name: Enable Masquerade on Master node
+- name: Enable Masquerade On Master Node
   firewalld:
     masquerade: true
     state: enabled
@@ -46,19 +36,18 @@
     zone: public
   when: inventory_hostname in groups['master'] or inventory_hostname in groups['workers']
 
-
-
 #
-- name: Reset Kubernetes forster
+- name: Reset Kubernetes Forster
   command: kubeadm reset -f
   when: inventory_hostname in groups['master']
 
-- name: Reset Kubernetes for workers
+#
+- name: Reset Kubernetes for Workers
   command: kubeadm reset -f
   when: inventory_hostname in groups['workers']
 
 #
-- name: Initialize Kubernetest master and create cluster
+- name: Initialize Kubernetes Master and Create Cluster
   command: kubeadm init --apiserver-advertise-address={{ hostvars[groups['master'][0]]['ansible_'~netdev1]['ipv4']['address'] }} --pod-network-cidr=10.142.0.0/16 --ignore-preflight-errors=all
   async: 360
   poll: 5
@@ -67,49 +56,42 @@
   # command: kubeadm init --apiserver-advertise-address={{ hostvars[groups['master'][0]]['ansible_eth1']['ipv4']['address'] }} --pod-network-cidr=192.168.0.0/16 --upload-certs --v=5 --ignore-preflight-errors=all
   # command: kubeadm init --upload-certs --apiserver-advertise-address={{ hostvars[groups['master'][0]]['ansible_eth1']['ipv4']['address'] }} --pod-network-cidr=10.142.0.0/16 --ignore-preflight-errors=all
   # command: kubeadm init --config /etc/kubernetes/kubeadm.conf --upload-certs --v=5
-  # command: kubeadm init --apiserver-advertise-address={{ hostvars[groups['master'][0]]['ansible_eth1']['ipv4']['address'] }} --pod-network-cidr=10.142.0.0/16 --ignore-preflight-errors=all
-  # command: kubeadm init --apiserver-advertise-address={{ hostvars[groups['master'][0]]['ansible_eth1']['ipv4']['address'] }} --ignore-preflight-errors=all   #
-  # command: kubeadm init --apiserver-advertise-address={{ hostvars[groups['master'][0]]['ansible_eth1']['ipv4']['address'] }} --ignore-preflight-errors=all   #
   # command: kubeadm init --apiserver-advertise-address={{ hostvars[groups['master'][0]]['ansible_eth1']['ipv4']['address'] }} --pod-network-cidr=10.42.0.0/16 --ignore-preflight-errors=all
-  # command: kubeadm init --apiserver-advertise-address={{ hostvars[groups['master'][0]]['ansible_eth1']['ipv4']['address'] }} --ignore-preflight-errors=all   #
   # command: kubeadm init --apiserver-advertise-address={{ hostvars[groups['master'][0]]['ansible_eth1']['ipv4']['address'] }} --pod-network-cidr=10.10.0.0/16 --ignore-preflight-errors=all   # For kube-flannel
   # command: kubeadm init --apiserver-advertise-address={{ hostvars[groups['master'][0]]['ansible_eth1']['ipv4']['address'] }} --pod-network-cidr=10.142.0.0/16 --ignore-preflight-errors=all
   # command: kubeadm init --apiserver-advertise-address={{ hostvars[groups['master'][0]]['ansible_eth1']['ipv4']['address'] }} --pod-network-cidr=10.244.0.0/16 --ignore-preflight-errors=all
   # command: kubeadm init --apiserver-advertise-address={{ hostvars[groups['master'][0]]['ansible_eth1']['ipv4']['address'] }} --pod-network-cidr=192.168.0.0/16 --ignore-preflight-errors=all
-  # command: kubeadm init --apiserver-advertise-address={{ hostvars[groups['master'][0]]['ansible_eth1']['ipv4']['address'] }} --pod-network-cidr=10.42.0.0/16 --ignore-preflight-errors=all
 
 #
-- debug:
-    msg: "{{ kubeadm_init.stdout_lines }}"
+- debug: msg={{ kubeadm_init.stdout_lines }}
   when: inventory_hostname in groups['master']
 
 #
-- name: Set fact for token ca certificate
+- name: Set Fact For Token CA Certificate
   set_fact:
-    token_ca_cert: "{{ (kubeadm_init.stdout_lines | select('search', 'discovery-token-ca-cert-hash') | list | string | split(' '))[1] }}"
+    k8s_token_ca_cert: "{{ (kubeadm_init.stdout_lines | select('search', 'discovery-token-ca-cert-hash') | list | string | split(' '))[1] }}"
   delegate_to: "{{ item }}"
   delegate_facts: True
   with_items: "{{ groups['all'] }}"
   when: inventory_hostname in groups['master']
 
-- debug:
-    msg: "{{ token_ca_cert }}"
+#
+- debug: msg={{ k8s_token_ca_cert }}
 
 #
-- name: Set fact for token
+- name: Set Fact For Token
   set_fact:
-    token_01: "{{ (kubeadm_init.stdout_lines | select('search', '--token') | list | string | split(' '))[4] }}"
+    k8s_token: "{{ (kubeadm_init.stdout_lines | select('search', '--token') | list | string | split(' '))[4] }}"
   delegate_to: "{{ item }}"
   delegate_facts: True
   with_items: "{{ groups['all'] }}"
   when: inventory_hostname in groups['master']
 
-- debug:
-    msg: "{{ token_01 }}"
-
+#
+- debug: msg={{ k8s_token }}
 
 #
-- name: Enable your user to start using the cluster.
+- name: Enable Your User to Start Using the Cluster.
   shell: |
     rm -f $HOME/.kube
     rm -rf /root/calico.yaml
@@ -120,12 +102,12 @@
   register: start_using_cluster_enabled
   when: inventory_hostname in groups['master']
 
-- debug:
-    msg: "{{ start_using_cluster_enabled }}"
+#
+- debug: msg={{ start_using_cluster_enabled }}
   when: inventory_hostname in groups['master']
 
 #
-- name: Configure kubectl config
+- name: Configure Kubectl Config
   shell: |
     kubectl taint nodes  {{ hostvars[groups['master'][0]].ansible_hostname }} node-role.kubernetes.io/control-plane:NoSchedule-
   register: kubectl_configured
@@ -139,22 +121,23 @@
   #  kubectl taint nodes  {{ hostvars[groups['master'][0]].ansible_hostname }} node-role.kubernetes.io/control-plane:NoSchedule-
   #  kubectl taint nodes --all node-role.kubernetes.io/master-
 
-- debug:
-    msg: "{{ kubectl_configured }}"
+#
+- debug: msg={{ kubectl_configured }}
   when: inventory_hostname in groups['master']
 
 #
-- name: Confirm that the kubectl command is activated.
+- name: Confirm that the Kubectl Command is activated.
   command: kubectl get nodes
   register: kubectl_get_nodes
   when: inventory_hostname in groups['master']
 
+#
 - debug:
     msg: "{{ kubectl_get_nodes }}"
   when: inventory_hostname in groups['master']
 
 #
-- name: Create pod for master as well
+- name: Create POD for Master as well
   lineinfile:
     path: /root/.bashrc
     line: "{{ item.content }}"
@@ -168,44 +151,36 @@
     - { content: " source <(kubectl completion bash) " }
   when: inventory_hostname in groups['master']
 
-- debug:
-    msg: "{{ master_pod_created }}"
+#
+- debug: msg={{ master_pod_created }}
   when: inventory_hostname in groups['master']
 
-# Test 1
-#- name: Test 1
-#  become: true
-#  become_user: root
+#- name: Configure Tiger Operator Network
 #  command: kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/master/manifests/tigera-operator.yaml
 #  async: 360
 #  poll: 5
 #  register: test1
 #  when: inventory_hostname in groups['master']
-##  # command: kubectl create -f https://docs.projectcalico.org/manifests/tigera-operator.yaml
+#  command: kubectl create -f https://docs.projectcalico.org/manifests/tigera-operator.yaml
 
-#
 #- debug:
 #    msg: "{{ test1.stdout_lines }}"
 #  when: inventory_hostname in groups['master']
 
-# Test 2
-#- name: Test 2
-#  become: true
-#  become_user: root
+#- name: Configure Custom Resources
 #  command: kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/master/manifests/custom-resources.yaml
 #  async: 360
 #  poll: 5
 #  register: test2
 #  when: inventory_hostname in groups['master']
-#  # command: kubectl create -f https://docs.projectcalico.org/manifests/custom-resources.yaml
+#  command: kubectl create -f https://docs.projectcalico.org/manifests/custom-resources.yaml
 
-#
 #- debug:
 #    msg: "{{ test2.stdout_lines }}"
 #  when: inventory_hostname in groups['master']
 
 #
-- name: Download calico networking
+- name: Download Calico Networking
   get_url:
     url: https://raw.githubusercontent.com/projectcalico/calico/v3.25.0/manifests/calico.yaml
     dest: /root/calico.yaml
@@ -213,18 +188,12 @@
   register: calico_downloaded
   when: inventory_hostname in groups['master']
 
-  # url: https://docs.projectcalico.org/archive/v3.23/manifests/calico.yaml --> It's working well
-  # url: https://raw.githubusercontent.com/projectcalico/calico/v3.25.0/manifests/calico.yaml  --> It's working well
-  # url: https://projectcalico.docs.tigera.io/manifests/calico.yaml  --> Need to check if works
-  # url: https://raw.githubusercontent.com/projectcalico/calico/master/manifests/calico.yaml -> *** Not working ***
-
 #
-- debug:
-    var: calico_downloaeded
+- debug: msg={{ calico_downloaeded }}
   when: inventory_hostname in groups['master']
 
 #
-- name: Modify /root/calica.yaml for cidr
+- name: Modify /root/calica.yaml for CIDR
   lineinfile:
     dest: /root/calico.yaml
     regexp: "{{ item.regexp }}"
@@ -239,53 +208,43 @@
   #  - { regexp: "^            #   value: \"192.168.0.0/16\"", line: "              value: \"10.42.0.0/16\"", state: present, backrefs: yes }
 
 #
-- debug:
-    var: calica_cidr_modified
+- debug: msg={{ calica_cidr_modified }}
   when: inventory_hostname in groups['master']
 
 #
-- name: Setup networking with calico
+- name: Setup Networking with Calico
   command: kubectl apply -f /root/calico.yaml
   register: calico_network_setup
   when: inventory_hostname in groups['master']
 
-- debug:
-    msg: "{{ calico_network_setup }}"
+- debug: msg={{ calico_network_setup }}
   when: inventory_hostname in groups['master']
 
-#
 #- name: Setup networking with kube-flannel
-#  become: true
-#  become_user: root
 #  command: kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
 #  register: kube_flannel_network_setup
 #  when: inventory_hostname in groups['master']
 #
-#- debug:
-#    msg: "{{ kube_flannel_network_setup }}"
+#- debug: msg={{ kube_flannel_network_setup }}
 #  when: inventory_hostname in groups['master']
 
 #- name: Confirm that the kubectl command is activated.
-#  become: true
-#  become_user: root
 #  command: kubectl get nodes
 #  register: kubectl_get_nodes
 #  when: inventory_hostname in groups['master']
 
-#- debug:
-#    msg: "{{ kubectl_get_nodes }}"
+#- debug: msg={{ kubectl_get_nodes }}
 #  when: inventory_hostname in groups['master']
 
 #
-- name: Join the other kubernetes nodes to cluster, the command must be run on the worker nodes only
-  command: kubeadm join "{{ hostvars[groups['master'][0]]['ansible_'~netdev1]['ipv4']['address'] }}:6443" --token "{{ token_01 }}" --discovery-token-ca-cert-hash "{{ token_ca_cert }}"
+- name: Join the Other Kubernetes Nodes to Cluster, the Command must be Run on the Worker Nodes Only
+  command: kubeadm join "{{ hostvars[groups['master'][0]]['ansible_'~netdev1]['ipv4']['address'] }}:6443" --token "{{ k8s_token }}" --discovery-token-ca-cert-hash "{{ k8s_token_ca_cert }}"
   register: store_it_copied
   ignore_errors: yes
   when: inventory_hostname in groups['workers']
 
 #
-- debug:
-    msg: "{{ store_it_copied }}"
+- debug: msg={{ store_it_copied }}
   when: inventory_hostname in groups['workers']
 
 #
@@ -295,12 +254,11 @@
   when: inventory_hostname in groups['master']
 
 #
-- debug:
-    msg: "{{ kubectl_get_nodes }}"
+- debug: msg={{ kubectl_get_nodes }}
   when: inventory_hostname in groups['master']
 
 #
-- name: Restart docker daemon in all nodes
+- name: Restart Docker Daemon in All Nodes
   systemd:
     name: docker
     state: restarted
@@ -311,18 +269,16 @@
   delay: 10
 
 #
-- name: Restart kubelet in master node
+- name: Restart Kubelet in Master Node
   systemd:
     name: kubelet
     state: restarted
     enabled: yes
   register: kubelet_restarted
 
-- debug:
-    msg: "{{ kubelet_restarted }}"
+- debug: msg={{ kubelet_restarted }}
   when: inventory_hostname in groups['master']
 
-#
 #- name: Allow Kubernetes service ports for master node
 #  firewalld:
 #    permanent: yes
@@ -332,9 +288,8 @@
 #    zone: "{{ item.zone }}"
 #  with_items: "{{ master_ports }}"
 #  when: inventory_hostname in groups['master']
-#  #  - { port: "5432-31594", proto: "tcp", state: "enabled", zone: "public" }
+#  - { port: "5432-31594", proto: "tcp", state: "enabled", zone: "public" }
 
-#
 #- name: Allow Kubernetes service ports for workder nodes
 #  firewalld:
 #    permanent: yes
@@ -346,54 +301,23 @@
 #  when: inventory_hostname in groups['workers']
 #  # - { port: "5432-31594", proto: "tcp", state: "enabled", zone: "public" }
 
-#
 #- name: Enable Masquerade on Master node
 #  command: firewall-cmd --zone=public --add-masquerade --permanent
 
 #
-- name: Start firewalld for all nodes
+- name: Start Firewalld for All Nodes
   systemd:
     name: firewalld
     state: restarted
     enabled: yes
 
-#
-- name: Make directory for local filesystem
-  shell: |
-    rm -rf /iscsi01
-    rm -rf /local-vols
-    mkdir -p /local-vols/gpdb-vol01
-    mkdir -p /local-vols/gpdb-vol02
-    mkdir -p /local-vols/gpdb-vol03
-    mkdir -p /local-vols/gpdb-vol04
-    mkdir -p /local-vols/gpdb-vol05
-    mkdir -p /local-vols/gpdb-vol06
-    mkdir -p /local-vols/gpdb-vol07
-    mkdir -p /local-vols/gpdb-vol08
-    mkdir -p /local-vols/gpdb-vol09
-    mkdir -p /local-vols/gpdb-vol10
-    chmod 777 /local-vols -R
-    mkdir -p /iscsi-vols/gpdb-vol01
-    mkdir -p /iscsi-vols/gpdb-vol02
-    mkdir -p /iscsi-vols/gpdb-vol03
-    mkdir -p /iscsi-vols/gpdb-vol04
-    mkdir -p /iscsi-vols/gpdb-vol05
-    mkdir -p /iscsi-vols/gpdb-vol06
-    mkdir -p /iscsi-vols/gpdb-vol07
-    mkdir -p /iscsi-vols/gpdb-vol08
-    mkdir -p /iscsi-vols/gpdb-vol09
-    mkdir -p /iscsi-vols/gpdb-vol10
-    chmod 777 /iscsi-vols/ -R
-  ignore_errors: yes
-#  when: inventory_hostname in groups['workers']
-#
-#  Calico CNI
-#  https://stackoverflow.com/questions/62139375/calico-ips-confusion
-#  https://www.skyer9.pe.kr/wordpress/?p=7317
-#
-#
+# Calico CNI
+# https://stackoverflow.com/questions/62139375/calico-ips-confusion
+# https://www.skyer9.pe.kr/wordpress/?p=7317
+
 # https://github.com/projectcalico/calico/issues/5711
-# This is to do with the settings on kube-proxy. If your pod-cidr isn't in the range that's configured on kube-proxy, kube-proxy will NAT pod-pod traffic between different nodes, which will break network policy (though connectivity will appear to work)
+# This is to do with the settings on kube-proxy. If your pod-cidr isn't in the range that's configured on kube-proxy,
+# kube-proxy will NAT pod-pod traffic between different nodes, which will break network policy (though connectivity will appear to work)
 # Typically you have to re-create the cluster with the correct pod-cidr defined.
 # Fundamentally:
 # kube-proxy and calico pod-cidr settings must agree (calico pod-cidr must be wholly within the kube-proxy cluster-cidr)
@@ -402,7 +326,7 @@
 # https://www.centlinux.com/2022/11/install-kubernetes-master-node-rocky-linux.html
 
 #
-- name: Validate if k8s Workers are all Ready
+- name: Validate if Kubernetes Workers are all Ready
   shell: kubectl get nodes
   register: check_k8s_workers_status
   until: check_k8s_workers_status.stdout.find("NotReady") == -1
@@ -410,3 +334,4 @@
   when: inventory_hostname in groups['master']
 - debug: msg={{ check_k8s_workers_status }}
   when: print_debug == true and inventory_hostname in groups['master']
+
