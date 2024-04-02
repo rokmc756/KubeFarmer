@@ -21,12 +21,16 @@
 
 #
 - name: Enable Bridge Module for IPTables to Route Packets into Kubernetes Cluster Nodes
-  copy:
-    dest: /etc/sysctl.d/99-kubernetes-cri.conf
-    content: |
-      net.ipv4.ip_forward = 1
-      net.bridge.bridge-nf-call-iptables = 1
-      net.bridge.bridge-nf-call-ip6tables = 1
+  template: src=sysctl-k8s.conf.j2 dest=/etc/sysctl.d/sysctl-k8s.conf owner=root group=root mode=644 force=yes
+  register: enable_bridge_module
+
+#
+#  copy:
+#    dest: /etc/sysctl.d/99-kubernetes-cri.conf
+#    content: |
+#      net.ipv4.ip_forward = 1
+#      net.bridge.bridge-nf-call-iptables = 1
+#      net.bridge.bridge-nf-call-ip6tables = 1
 
 #
 - name: Apply Kernel Parameters for Kubernetes Cluster

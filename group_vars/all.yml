@@ -24,7 +24,6 @@ k8s:
     ipaddr1: "192.168.1.7"
     ipaddr2: "192.168.2.7"
     data_plane: netdev
-  obs: false
   fs: false
   protocol:
     s3: false

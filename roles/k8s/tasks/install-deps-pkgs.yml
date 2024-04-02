@@ -15,9 +15,7 @@
     name: "{{ item }}"
     state: present
   register: selinux_policy_installed
-  with_items:
-    - python2
-    - python2-libselinux
+  with_items: "{{ rh8_common_devel_pkgs }}"
   when: install_dep_packages and hostvars[inventory_hostname].ansible_distribution_major_version|int <= 8
 
 #
@@ -32,7 +30,6 @@
     description: Add docker repsotiry
     baseurl: "https://download.docker.com/linux/centos/{{ hostvars[inventory_hostname].ansible_distribution_major_version }}/x86_64/stable/"
     gpgcheck: "no"
-    # baseurl: "https://download.docker.com/linux/centos/docker-ce.repo"
 
 #
 - name: Install Docker-CE Packages of the Latest Version in All Nodes

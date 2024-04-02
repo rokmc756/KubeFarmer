@@ -28,7 +28,7 @@
 
 #
 - name: Print Fact for Token CA Certificate
-  debug: 
+  debug:
     msg: "{{ k8s_token_ca_cert }}"
 
 #

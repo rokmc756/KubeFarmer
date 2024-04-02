@@ -7,7 +7,6 @@
   register: yum_version_clear
   ignore_errors: yes
 
-#
 #- name: Uninstall the latest version of a Docker-CE Package.
 #  become: true
 #  become_user: root
@@ -27,7 +26,8 @@
     name: docker
     state: stopped
     enabled: no
-  ignore_errors: yes
+  register: docker_stopped
+  until: docker_stopped is succeeded
 
 #
 - name: Disable and Stop Containerd
@@ -35,7 +35,8 @@
     name: containerd
     state: stopped
     enabled: no
-  ignore_errors: yes
+  register: containerd_stopped
+  until: containerd_stopped is succeeded
 
 #
 - name: Kill Processes Regarding Containerd
@@ -46,7 +47,7 @@
 
 #
 - debug:
-    msg: "{{ containerd_killed }}"
+    var: "{{ containerd_killed }}"
 
 #
 - name: Disable and Stop Kubelet
@@ -54,25 +55,18 @@
     name: kubelet
     state: stopped
     enabled: no
-  ignore_errors: yes
+  register: kubelet_stopped
+  until: kubelet_stopped is succeeded
 
 #
-# Uninstall containerd.io package to manages the complete container lifecycle from image transfer and storage to container execution and supervision to low-level storage
-- name: Uninstall the latest version of Docker-CE Package.
+# Uninstall Containerd.io Package to Manages the Complete Container Lifecycle from Image Transfer
+# and Storage to Container Execution and Supervision to Low-Level Storage
+- name: Uninstall the Latest Version of Docker-CE Package.
   yum:
     name: "{{ item }}"
     state: absent
-  with_items:
-    - docker-ce
-    - docker-ce-cli
-    - docker-scan-plugin
-    - containerd.io
-    - container-selinux
-    - libcgroup
-    - libcgroup-tools
+  with_items: "{{ rh_docker_pkgs }}"
   when: uninstall_dep_packages
-#   - libcgroup
-#   - libcgroup-tools
 
 #
 - name: Uninstall Kubeadm Package
@@ -86,39 +80,47 @@
   when: uninstall_k8s_packages
 
 #
-- name: Remove Docker / Kube and Containerd Directory and File
-  shell: |
-    rm -rf /var/lib/kubelet
-    rm -f /etc/kubernetes/pki/ca.crt
-    rm -f /usr/lib/systemd/system/kubelet.service
-    rm -f /etc/kubernetes/kubelet.conf
-    rm -rf /var/lib/containerd
-    rm -rf /etc/docker
-    rm -rf /var/lib/docker
-    rm -f /etc/sysconfig/kubelet
-    rm -f /etc/modules-load.d/containerd.conf
-    rm -f /etc/sysctl.d/99-kubernetes-cir.conf
-    rm -f /etc/containerd/config.toml
-    rm -rf /etc/cni/net.d/*
-    rm -rf $HOME/.kube
-    mv /var/lib/docker/overlay2 /var/lib/docker/overlay2_$(date +"%Y-%m%d-%H%M%S")
-    mv /var/lib/docker/devicemapper /var/lib/docker/devicemapper_$(date +"%Y-%m%d-%H%M%S")
-    mv /var/lib/docker/containers /var/lib/docker/containers_$(date +"%Y-%m%d-%H%M%S")
-    rm -rf /root/.docker
-    rm -rf /root/calico.yaml
+- name: Delete Kube Directories
+  file:
+    path: "{{ item }}"
+    state: absent
   register: kube_dir_removed
-  ignore_errors: yes
+  ignore_errors: true
+  with_items:
+    - "/etc/kubernetes/pki/ca.crt"
+    - "/usr/lib/systemd/system/kubelet.service"
+    - "/etc/kubernetes/kubelet.conf"
+    - "/etc/docker"
+    - "/var/lib/docker"
+    - "/etc/sysconfig/kubelet"
+    - "/etc/sysctl.d/99-kubernetes-cir.conf"
+    - "/etc/cni/net.d/*"
+    - "$HOME/.kube"
+    - "/var/lib/docker/overlay2"
+    - "/var/lib/docker/devicemapper"
+    - "/var/lib/docker/containers"
+    - "/root/.docker"
+    - "/root/calico.yaml"
+    - "/etc/containerd/config.toml"
+    - "/etc/modules-load.d/containerd.conf"
+    - "/var/lib/containerd"
+    - "/var/lib/kubelet"
 
 #
-- debug:
-    msg: "{{ kube_dir_removed }}"
+- debug: msg={{ kube_dir_removed }}
+  when: print_debug == true
 
 #
 - name: Delete Kubernetes Repositories
-  command: rm -f {{ item }}
+  file:
+    path: "{{ item }}"
+    state: absent
   register: kubernetes_repo_deleted
+  ignore_errors: yes
   with_items:
     - "/etc/yum.repos.d/kubernetes.repo"
     - "/etc/yum.repos.d/docker-ce.repo"
-  ignore_errors: yes
+
+- debug: msg={{ kubernetes_repo_deleted }}
+  when: print_debug == true
 

@@ -1,6 +1,6 @@
 ---
 # Reinit Kubernetes
-#
+
 - name: Unset Variables of Token and Certs Generated Previously by Kubeadm Init
   set_fact:
     k8s_token_ca_cert:
