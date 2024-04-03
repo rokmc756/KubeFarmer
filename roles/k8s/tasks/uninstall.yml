@@ -1,5 +1,5 @@
 ---
-# Install Kubernetes Cluster for RHEL or CentOS 8.x
+# Destroy Kubernetes Cluster
 
 #
 - name: YUM Version Clear
@@ -124,3 +124,26 @@
 - debug: msg={{ kubernetes_repo_deleted }}
   when: print_debug == true
 
+#
+- name: Remove kubectl commnd in .bashrc
+  lineinfile:
+    path: "{{ item.file }}"
+    regexp: "{{ item.regexp }}"
+    state: "{{ item.state }}"
+  with_items:
+    - { file: "/root/.bashrc", regexp: "kubectl completion bash", state: absent }
+  register: remove_kubectl_command_bashrc
+
+- debug: msg={{ remove_kubectl_command_bashrc }}
+  when: print_debug == true
+
+#
+- name: Reboot required
+  shell: ( /bin/sleep 5 ; /sbin/shutdown -r now "Ansible updates triggered" ) &
+  async: 30
+  poll: 0
+  notify:
+    - Waiting for server to come back after reboot
+#  when: selinux_enabled.reboot_required == true
+
+- meta: flush_handlers

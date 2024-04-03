@@ -1,4 +1,6 @@
 ---
+# Deploy Kubernetes Cluster
+#
 - name: Add Line into /etc/locale.conf for LC_TYPE to Prevent Error
   lineinfile:
     path: /etc/locale.conf

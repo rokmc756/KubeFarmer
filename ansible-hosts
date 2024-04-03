@@ -15,6 +15,3 @@ rk9-node03 ansible_ssh_host=192.168.0.73
 rk9-node04 ansible_ssh_host=192.168.0.74
 rk9-node05 ansible_ssh_host=192.168.0.75
 
-[docker_repo]
-harbor ansible_ssh_host=192.168.0.79
-
