@@ -161,28 +161,22 @@
 #    - Waiting for server to come back after reboot
 #  ignore_errors: yes
 
-#- meta: flush_handlers
-
 - debug:
     var: selinux_enabled.stdout_lines
-
-
-#
-#- name: Reboot required - Step 1
-#  command: /usr/bin/needs-restarting
-#  register: reboot_required
-#  ignore_errors: True
-#  changed_when: False
 
 #
 - name: Reboot required (Red Hat) - Step 2
   shell: ( /bin/sleep 5 ; /sbin/shutdown -r now "Ansible updates triggered" ) &
   async: 30
   poll: 0
-  ignore_errors: true
   notify:
     - Waiting for server to come back after restart
 #  when: reboot_required.rc == 1
+#  ignore_errors: true
+
+# It works also
+#- name: Reboot machine and send a message
+#  reboot: msg="Rebooting machine in 5 seconds"
 
 - meta: flush_handlers
 
@@ -190,7 +184,6 @@
 - name: Check if SELinux has been enabled in Configurtion File
   command: grep SELINUX /etc/sysconfig/selinux
   register: sevalue
-  # ignore_errors: yes
 
 - debug:
     var: sevalue.stdout_lines

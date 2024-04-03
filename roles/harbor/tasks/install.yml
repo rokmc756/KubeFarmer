@@ -68,18 +68,24 @@
   when: hostvars[inventory_hostname].ansible_distribution_major_version|int <= 8
 
 #
-- name: Disabling SELinux to be Required
+- name: Disable SELinux to be Required
   selinux:
     state: disabled
   register: selinux_disabled
-  notify:
-    - Restart system
-    - Waiting for server to come back after reboot
-
-- meta: flush_handlers
 
 - debug:
     var: selinux_disabled.stdout_lines
+
+#
+- name: Reboot required (Red Hat) - Step 2
+  shell: ( /bin/sleep 5 ; /sbin/shutdown -r now "Ansible updates triggered" ) &
+  async: 30
+  poll: 0
+  notify:
+    - Waiting for server to come back after restart
+
+#
+- meta: flush_handlers
 
 - name: Check if SELinux has been disabled in Configurtion File
   command: grep SELINUX /etc/sysconfig/selinux
@@ -172,7 +178,6 @@
 
 - debug:
     var: harbor_unarchived
-
 
 # New cert
 # openssl req -x509 -newkey rsa:4096 -sha256 -days 365 -nodes -keyout ./private.key -out ./public.crt \ -subj "/CN=rk9-harbor.jtest.pivotal.io" \

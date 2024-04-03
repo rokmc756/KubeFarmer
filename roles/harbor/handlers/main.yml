@@ -1,10 +1,10 @@
 ---
 - name: Waiting for server to come back after restart
-  local_action: wait_for host={{ inventory_hostname }} port=22 state=started delay=20 timeout=90
+  local_action: wait_for host={{ hostvars[inventory_hostname].ansible_ssh_host }} port=22 state=started delay=10 timeout=300 connect_timeout=300 search_regex=OpenSSH
   become: no
 
 - name: Restart system
   shell: ( /bin/sleep 5 ; shutdown -r now "Ansible updates triggered" ) &
-  async: 30
+  async: 300
   poll: 0
   ignore_errors: true
