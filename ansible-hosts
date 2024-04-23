@@ -1,17 +1,1 @@
-[all:vars]
-ssh_key_filename="id_rsa"
-remote_machine_username="jomoon"
-remote_machine_password="changeme"
-ansible_python_interpreter=/usr/bin/python3
-
-[master]
-rk9-node01 ansible_ssh_host=192.168.0.71
-
-[slave]
-rk9-node02 ansible_ssh_host=192.168.0.72
-
-[workers]
-rk9-node03 ansible_ssh_host=192.168.0.73
-rk9-node04 ansible_ssh_host=192.168.0.74
-rk9-node05 ansible_ssh_host=192.168.0.75
-
+ansible-hosts-osuse15

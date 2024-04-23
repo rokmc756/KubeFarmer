@@ -10,15 +10,14 @@
   become: yes
   vars:
     print_debug: true
-    uninstall_dep_packages: true
-    uninstall_k8s_packages: true
+    uninstall_dep_pkgs: true
+    uninstall_k8s_pkgs: false
     calico_network: false
     k8s_network_address: "192.168.0.0/16"
   roles:
     - k8s
 #    - init-hosts
 #    - dashboard
-
 
 #- hosts: minio
 #  become: yes

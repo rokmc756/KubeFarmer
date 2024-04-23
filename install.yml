@@ -10,19 +10,14 @@
   become: yes
   vars:
     print_debug: true
-    install_dep_packages: true
-    install_k8s_packages: true
+    install_dep_pkgs: true
+    install_k8s_pkgs: false
     calico_network: false
     k8s_network_address: "192.168.0.0/16"
   roles:
     - k8s
 #    - init-hosts
 #    - dashboard
-
-#- hosts: workers
-#  become: yes
-#  roles:
-#    - iscsi-initiator
 
 #
 #- hosts: ext_storages
@@ -31,9 +26,4 @@
 #  roles:
 #    - minio
 #    - iscsi-target
-
-#- hosts: harbor
-#  become: yes
-#  roles:
-#    - harbor
 

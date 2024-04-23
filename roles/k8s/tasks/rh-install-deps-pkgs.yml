@@ -7,7 +7,8 @@
     state: present
   ignore_errors: yes
   with_items: "{{ install_pkgs }}"
-  when: install_dep_packages and hostvars[inventory_hostname].ansible_distribution_major_version|int >= 9
+  when: install_dep_packages
+#  and hostvars[inventory_hostname].ansible_distribution_major_version|int >= 9
 
 #
 - name: Install RPM Packages of Dependenies to Need Installing Packages Regarding Kubernates
@@ -16,8 +17,7 @@
     state: present
   register: selinux_policy_installed
   with_items: "{{ rh8_common_devel_pkgs }}"
-  when: install_dep_packages and hostvars[inventory_hostname].ansible_distribution_major_version|int <= 8
-
+  when: install_dep_packages and ( ansible_distribution == "RedHat" or ansible_distribution == "CentOS" or ansible_distribution == "Rocky" ) and ansible_distribution_major_version|int <= 8
 #
 - debug:
     var: selinux_policy_installed
@@ -30,6 +30,7 @@
     description: Add docker repsotiry
     baseurl: "https://download.docker.com/linux/centos/{{ hostvars[inventory_hostname].ansible_distribution_major_version }}/x86_64/stable/"
     gpgcheck: "no"
+  when: ( ansible_distribution == "RedHat" or ansible_distribution == "CentOS" or ansible_distribution == "Rocky" ) and ansible_distribution_major_version|int >= 9
 
 #
 - name: Install Docker-CE Packages of the Latest Version in All Nodes
@@ -37,7 +38,7 @@
     name: "{{ item }}"
     state: present
   with_items: "{{ rh_docker_pkgs }}"
-  when: install_dep_packages
+  when: install_dep_packages and ( ansible_distribution == "RedHat" or ansible_distribution == "CentOS" or ansible_distribution == "Rocky" ) and ansible_distribution_major_version|int >= 9
 
 #
 - name: Add Kubernetes Repositories in All Nodes

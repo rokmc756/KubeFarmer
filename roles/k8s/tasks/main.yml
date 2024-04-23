@@ -3,57 +3,62 @@
 
 # for now fail if it's not a Red Hat based system
 - name: Check OS ( Kubernetes )
-  fail: msg="Not a Red Hat based system!"
-  when: ansible_os_family != 'RedHat' or  ansible_os_family != 'CentOS' or  ansible_os_family != 'Rocky'
+  fail: msg="Not a Red Hat or SuSE based system!"
+  when: ansible_os_family != 'RedHat' or  ansible_os_family != 'CentOS' or  ansible_os_family != 'Rocky' or ansible_os_family != 'SUSE'
 
-#
+
 - name: Set facts for network and packages informations
   import_tasks: set-k8s-facts.yml
   tags:
     - install
     - uninstall
     - reinit
-  when: inventory_hostname in groups['master'] or inventory_hostname in groups['slave'] or inventory_hostname in groups['workers']
 
-#
-- name: Install Prerequistes Packages
-  import_tasks: install-deps-pkgs.yml
+
+- name: Install Prerequistes Packages for RedHat/CentOS/Rocky
+  import_tasks: rh-install-deps-pkgs.yml
   tags: install
-  when: inventory_hostname in groups['master'] or inventory_hostname in groups['slave'] or inventory_hostname in groups['workers']
+  when: install_dep_pkgs == true and ( ansible_distribution == "RedHat" or ansible_distribution == "CentOS" or ansible_distribution == "Rocky" )
 
-#
+
+- name: Install Prerequistes Packages for Open SuSE
+  import_tasks: suse-install-deps-pkgs.yml
+  tags: install
+  when: install_dep_pkgs == true and ansible_distribution == "openSUSE Leap"
+
+
 - name: Configure Firewall
   import_tasks: firewall.yml
   tags: install
-  when: inventory_hostname in groups['master'] or inventory_hostname in groups['slave'] or inventory_hostname in groups['workers']
+  when: install_dep_pkgs == false
 
-#
+
 - name: Launch Kubernetes Software
   import_tasks: install.yml
   tags: install
-  when: inventory_hostname in groups['master'] or inventory_hostname in groups['slave'] or inventory_hostname in groups['workers']
+  when: install_dep_pkgs == false
 
-#
+
 - name: Initialize Kubernetes Cluster
   import_tasks: init-k8s.yml
   tags: install
-  when: inventory_hostname in groups['master'] or inventory_hostname in groups['slave'] or inventory_hostname in groups['workers']
+  when: install_dep_pkgs == false
 
-#
+
 - name: Reinitialize Kubernetes Cluster
   import_tasks: reinit.yml
   tags: reinit
-  when: inventory_hostname in groups['master'] or inventory_hostname in groups['slave'] or inventory_hostname in groups['workers']
+  when: install_dep_pkgs == false
 
-#
+
 - name: Destroy Kubernetes Cluster
   import_tasks: uninstall.yml
   tags: uninstall
-  when: inventory_hostname in groups['master'] or inventory_hostname in groups['slave'] or inventory_hostname in groups['workers']
+  when: uninstall_dep_pkgs == false
 
-#
-- name: Upgrade Kubernetes Cluster
-  import_tasks: upgrade.yml
-  tags: upgrade
-  when: inventory_hostname in groups['master'] or inventory_hostname in groups['slave'] or inventory_hostname in groups['workers']
+
+- name: Uninstall Prerequistes Packages
+  import_tasks: uninstall-deps-pkgs.yml
+  tags: uninstall
+  when: uninstall_dep_pkgs == true and ansible_distribution == "openSUSE Leap"
 

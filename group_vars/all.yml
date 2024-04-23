@@ -3,42 +3,26 @@ ansible_become_pass: "changeme"
 k8s:
   cluster_name: jack-k8s
   major_version: "1"
-  minor_version: "2"
-  build_version: "8"
-  patch_version: ""
+  minor_version: "28"
+  patch_version: "8"
+  build_version: ""
   download_url: ""
   download: false
   base_path: /root
-  admin_user: admin
-  admin_default_pass: admin
-  admin_change_pass: "Changeme12!@"
-  bin_type: tar
   host_num: "{{ groups['workers'] | length }}"
   net:
     type: "virtual"                # or physical
-    conn: "udp"                    # dpdk or udp
     gateway: "192.168.0.1"
-    ha1: 1
-    ha2: 2
-    ipaddr0: "192.168.0.7"
-    ipaddr1: "192.168.1.7"
-    ipaddr2: "192.168.2.7"
-    data_plane: netdev
-  fs: false
-  protocol:
-    s3: false
-    nfs: false
-    smb: false
+    ipaddr0: "192.168.0.17"
+    ipaddr1: "192.168.1.17"
+    ipaddr2: "192.168.2.17"
   client:
-    smb: false
-    nfs: false
-    s3: false
     net:
       type: "virtual"               # or physical
       cores: 1
-      ipaddr0: "192.168.0.5"
-      ipaddr1: "192.168.1.5"
-      ipaddr2: "192.168.2.5"
+      ipaddr0: "192.168.0.6"
+      ipaddr1: "192.168.1.6"
+      ipaddr2: "192.168.2.6"
   ext_storage:
     net:
       ipaddr0: "192.168.0."

@@ -9,6 +9,15 @@ rh9_common_devel_pkgs: "make,perl,gcc,tcl,tk,libnl3,yum-utils,firewalld,python3-
 rh_docker_pkgs: "docker-ce,docker-ce-cli,containerd.io,docker-compose-plugin,docker-scan-plugin,container-selinux"
 # libcgroup,libcgroup-tools
 
+suse_common_pkgs: "sshpass,cifs-utils,nfs-utils,lsof,glibc-devel,rpcbind,xfsprogs,kernel-devel,jq,expect,net-tools"
+suse_common_devel_pkgs: "git"
+# libxml2-python,s3cmd
+suse15_common_devel_pkgs: "make,perl,gcc,tcl,tk,firewalld,python3,python3-policycoreutils,policycoreutils-python-utils,chrony,jq"
+suse_docker_pkgs: "docker,containerd,conntrack-tools"
+
+# suse_docker_pkgs: "docker-ce,docker-ce-cli,containerd.io,docker-compose-plugin,docker-scan-plugin,container-selinux"
+# libcgroup,libcgroup-tools
+
 # libnl,elfutils-libelf-devel,kernel-devel
 ubt_common_pkgs: "sshpass,s3cmd,cifs-utils,nfs-client,libnl-*,elfutils*,lsof,rpcbind,glibc-*,xfsprogs,linux-headers-generic,jq,expect"
 ubt_common_devel_pkgs: "git,make,gcc,tcl,tk"

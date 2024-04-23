@@ -109,6 +109,8 @@ $ make uninstall
 * https://kubernetes.io/docs/setup/production-environment/container-runtimes/#docker
 * https://medium.com/@heshani.samarasekara/installing-harbor-registry-in-centos-7-961773d155ec
 * https://serverfault.com/questions/1059073/kubernetes-trouble-var-lib-calico-nodename-no-such-file-or-directory
+* https://k21academy.com/docker-kubernetes/multi-node-kubernetes-cluster-on-suse-linux/
+
 
 ## Planing
 Fixing interaction with harbor\

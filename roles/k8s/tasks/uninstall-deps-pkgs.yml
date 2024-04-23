@@ -1,0 +1,32 @@
+---
+- name: Uninstall Kubeadm Packages for All Nodes
+  package:
+    name: "{{ item }}"
+    state: absent
+  with_items:
+    - "kubectl"
+    - "kubelet"
+    - "kubeadm"
+
+
+- name: Uninstall Docker Packages of the Latest Version in All Nodes
+  package:
+    name: "{{ item }}"
+    state: absent
+  with_items: "{{ suse_docker_pkgs }}"
+
+
+#- name: Uninstall RPM Packages of Dependenies to Need Installing Packages Regarding Kubernates
+#  package:
+#    name: "{{ item }}"
+#    state: present
+#  ignore_errors: yes
+#  with_items: "{{ install_pkgs }}"
+
+
+#- name: Remove Kubernetes Repository
+#  shell: |
+#    zypper ar -f https://pkgs.k8s.io/core:/stable:/v{{ k8s.major_version }}.{{ k8s.minor_version }}/rpm/ kubernetes
+#    rpm --import https://pkgs.k8s.io/core:/stable:/v{{ k8s.major_version }}.{{ k8s.minor_version }}/rpm/repodata/repomd.xml.key
+#  register: k8s_repo_added
+
