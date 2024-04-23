@@ -37,17 +37,26 @@
 # zypper install kubelet kubeadm kubectl
 
 
-#
+- name: Copy expect script file to change admin password
+  template: src=install-kube-pkgs.sh.j2 dest=/root/install-kube-pkgs.sh  mode=0755 owner=root group=root
+  register: expect_file_copied
+
+
 - name: Install Kubeadm Packages for All Nodes
-  zypper:
-    name: "{{ item }}"
-    state: present
-    extra_args: 
-  with_items:
-    - "kubeadm"
-    - "kubelet"
-    - "kubectl"
-    #  {{ k8s.major_version }}.{{ k8s.minor_version }}.{{ k8s.patch_version }}"
+  shell: /root/install-kube-pkgs.sh
+  register: kube_pkgs_installed
+
+#
+#- name: Install Kubeadm Packages for All Nodes
+#  zypper:
+#    name: "{{ item }}"
+#    state: present
+#    extra_args: 
+#  with_items:
+#    - "kubeadm"
+#    - "kubelet"
+#    - "kubectl"
+#    {{ k8s.major_version }}.{{ k8s.minor_version }}.{{ k8s.patch_version }}"
 
 
 # zypper addlock kubelet kubeadm kubectl

@@ -1,0 +1,17 @@
+#!/usr/bin/expect -f
+set timeout 7
+
+        spawn zypper install --no-recommends kubelet kubeadm kubectl
+
+        expect  "^Choose from above solutions by number or skip*"
+        send    "2\r"
+
+        expect  "^Choose from above solutions by number or skip*"
+        send    "2\r"
+
+        expect  "^Continue?*"
+        send    "y\r"
+
+        interact
+
+exit
