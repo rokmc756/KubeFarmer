@@ -2,10 +2,15 @@
 - hosts: all
   become: yes
   vars:
+    container_runtime: "containerd"
     print_debug: true
-    install_dep_packages: true
-    install_k8s_packages: true
+    stop_services: true
+    uninstall_pkgs: true
+    uninstall_config: true
+    disable_firewall: false
+    reboot_required: false
     calico_network: false
     k8s_network_address: "192.168.0.0/16"
   roles:
     - k8s
+

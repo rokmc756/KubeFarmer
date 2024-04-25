@@ -1,6 +1,5 @@
 ---
-#
-- name: Enable Firewalld for All Nodes
+- name: Enable Firewalld
   systemd:
     name: firewalld
     state: started
@@ -28,39 +27,42 @@
   with_items: "{{ workers_ports }}"
   when: inventory_hostname in groups['workers']
 
-#
-- name: Reload Firewalld for All Nodes
+
+- name: Reload Firewalld
   command: firewall-cmd --reload
 
-#
-- name: Stop Firewalld for All Nodes
-  systemd:
-    name: firewalld
-    state: stopped
-    enabled: yes
 
-#
+#- name: Stop Firewalld
+#  systemd:
+#    name: firewalld
+#    state: stopped
+#    enabled: yes
+
+
 - name: Disabling SELinux to be required by Kubnernates Cluster
   selinux:
     state: disabled
   register: selinux_disabled
   notify:
-    - Restart system
-    - Waiting for server to come back after reboot
+    - Restart System
+    - Waiting for Server to Come Back After Reboot
   failed_when: selinux_disabled.msg | default('ok', True) is not search('(^ok$|libselinux-python|(SELinux state changed))')
-
-#
-- debug:
-    var: selinux_disabled.stdout_lines
+- debug: msg={{ selinux_disabled }}
   when: print_debug == true
 
-#
+
+- name: Check if SELinux has been Disabled in Configurtion File
+  command: grep SELINUX /etc/selinux/config
+  register: sevalue
+  when: ansible_distribution == "openSUSE Leap"
+- debug: msg={{ sevalue }}
+  when: print_debug == true and ansible_distribution == "openSUSE Leap"
+
+
 - name: Check if SELinux has been Disabled in Configurtion File
   command: grep SELINUX /etc/sysconfig/selinux
   register: sevalue
-
-#
-- debug:
-    var: sevalue.stdout_lines
-  when: print_debug == true
+  when: ansible_distribution == "RedHat" or ansible_distribution == "CentOS" or ansible_distribution == "Rocky"
+- debug: msg={{ sevalue }}
+  when: print_debug == true and ( ansible_distribution == "RedHat" or ansible_distribution == "CentOS" or ansible_distribution == "Rocky" )
 

@@ -110,6 +110,9 @@ $ make uninstall
 * https://medium.com/@heshani.samarasekara/installing-harbor-registry-in-centos-7-961773d155ec
 * https://serverfault.com/questions/1059073/kubernetes-trouble-var-lib-calico-nodename-no-such-file-or-directory
 * https://k21academy.com/docker-kubernetes/multi-node-kubernetes-cluster-on-suse-linux/
+* https://stackoverflow.com/questions/62795930/how-to-install-kubernetes-in-suse-linux-enterprize-server-15-virtual-machines
+* https://documentation.suse.com/ko-kr/sles/15-SP2/html/SLES-all/cha-selinux.html
+* https://k21academy.com/docker-kubernetes/container-runtime-is-not-running/
 
 
 ## Planing

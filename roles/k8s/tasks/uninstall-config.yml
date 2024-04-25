@@ -1,0 +1,122 @@
+- name: Delete Kube Directories for RedHat/CentOS/Rocky
+  file:
+    path: "{{ item }}"
+    state: absent
+  register: kube_dir_removed
+  ignore_errors: true
+  with_items:
+    - "/etc/kubernetes/pki/ca.crt"
+    - "/usr/lib/systemd/system/kubelet.service"
+    - "/etc/kubernetes/kubelet.conf"
+    - "/etc/docker"
+    - "/var/lib/docker"
+    - "/etc/sysconfig/kubelet"
+    - "/etc/sysctl.d/99-kubernetes-cir.conf"
+    - "/etc/cni/net.d/*"
+    - "$HOME/.kube"
+    - "/var/lib/docker/overlay2"
+    - "/var/lib/docker/devicemapper"
+    - "/var/lib/docker/containers"
+    - "/root/.docker"
+    - "/root/calico.yaml"
+    - "/etc/containerd/config.toml"
+    - "/etc/modules-load.d/containerd.conf"
+    - "/var/lib/kubelet"
+    - "/var/lib/containerd"
+  when: ansible_distribution == "RedHat" or ansible_distribution == "CentOS" or ansible_distribution == "Rocky"
+- debug: msg={{ kube_dir_removed }}
+  when: print_debug and ( ansible_distribution == "RedHat" or ansible_distribution == "CentOS" or ansible_distribution == "Rocky" )
+
+
+- name: Delete Kube Directories for OpenSUSE
+  file:
+    path: "{{ item }}"
+    state: absent
+  register: kube_dir_removed
+  ignore_errors: true
+  with_items:
+    - "/usr/lib/systemd/system/kubelet.service"
+    - "/etc/kubernetes/kubelet.conf"
+    - "/etc/docker"
+    - "/var/lib/docker"
+    - "/etc/sysconfig/kubelet"
+    - "/etc/sysctl.d/sysctl-k8s.conf"
+    - "/etc/cni/net.d/*"
+    - "$HOME/.kube"
+    - "/var/lib/docker/overlay2"
+    - "/var/lib/docker/devicemapper"
+    - "/var/lib/docker/containers"
+    - "/root/.docker"
+    - "/root/calico.yaml"
+    - "/etc/containerd/config.toml"
+    - "/etc/modules-load.d/containerd.conf"
+    - "/var/lib/kubelet"
+    - "/var/lib/containerd"
+  when: ansible_distribution == "openSUSE Leap"
+- debug: msg={{ kube_dir_removed }}
+  when: print_debug and ansible_distribution == "openSUSE Leap"
+
+
+- name: Delete Kubernetes Repositories for RedHat/CentOS/Rocky
+  file:
+    path: "{{ item }}"
+    state: absent
+  register: kubernetes_repo_deleted
+  ignore_errors: yes
+  with_items:
+    - "/etc/yum.repos.d/kubernetes.repo"
+    - "/etc/yum.repos.d/docker-ce.repo"
+  when: ansible_distribution == "RedHat" or ansible_distribution == "CentOS" or ansible_distribution == "Rocky"
+- debug: msg={{ kubernetes_repo_deleted }}
+  when: print_debug and ( ansible_distribution == "RedHat" or ansible_distribution == "CentOS" or ansible_distribution == "Rocky" )
+
+
+- name: Delete Kubernetes Repositories for OpenSUSE
+  file:
+    path: "{{ item }}"
+    state: absent
+  register: kubernetes_repo_deleted
+  with_items:
+    - "/etc/zypp/repos.d/kubernetes.repo"
+    - "/etc/zypp/repos.d/conntrack.repo"
+    - "/etc/zypp/repos.d/public.repo"
+    - "/etc/zypp/repos.d/virt.repo"
+  when: ansible_distribution == "openSUSE Leap"
+- debug: msg={{ kubernetes_repo_deleted }}
+  when: print_debug and ansible_distribution == "openSUSE Leap"
+
+
+- name: Refresh Metadata from Zypper Repository
+  shell: |
+    zypper refresh -f
+  register: repo_metadata_refreshed
+  when: ansible_distribution == "openSUSE Leap"
+- debug: msg={{ repo_metadata_refreshed }}
+  when: print_debug and ansible_distribution == "openSUSE Leap"
+
+
+- name: Remove kubectl commnd in .bashrc
+  lineinfile:
+    path: "{{ item.file }}"
+    regexp: "{{ item.regexp }}"
+    state: "{{ item.state }}"
+  with_items:
+    - { file: "/root/.bashrc", regexp: "kubectl completion bash", state: absent }
+  register: remove_kubectl_command_bashrc
+- debug: msg={{ remove_kubectl_command_bashrc }}
+  when: print_debug
+
+
+- name: Remove Expect Scripts
+  file:
+    path: "{{ item }}"
+    state: absent
+  register: expect_scripts_removed
+  ignore_errors: true
+  with_items:
+    - "/root/zypper-refresh.sh"
+    - "/root/install-kube-pkgs.sh"
+  when: ansible_distribution == "openSUSE Leap"
+- debug: msg={{ expect_scripts_removed }}
+  when: print_debug and ansible_distribution == "openSUSE Leap"
+

@@ -1,23 +1,50 @@
-#
+# https://k21academy.com/docker-kubernetes/container-runtime-is-not-running/
+#- name: Delete config.toml
+#  file:
+#    path: "{{ item }}"
+#    state: absent
+#  register: config_toml_deleted
+#  with_items:
+#    - "/etc/containerd/config.toml"
+#  when: ansible_distribution == "openSUSE Leap"
+#- debug: msg={{ config_toml_deleted }}
+#  when: print_debug and ansible_distribution == "openSUSE Leap"
+
+
+#- name: Restart Containerd to Apply Changes in config.toml
+#  systemd:
+#    name: containerd
+#    state: restarted
+#  register: containerd_restarted
+#  until: containerd_restarted is succeeded
+#  retries: 20
+#  delay: 10
+#  when: ansible_distribution == "openSUSE Leap"
+
+
 - name: Reset Kubernetes
   command: kubeadm reset -f
   when: inventory_hostname in groups['master']
 
-#
+
+- name: Config image pull
+  command: kubeadm config images pull
+  when: inventory_hostname in groups['master']
+
+
 - name: Initialize Kubernetest Master and Create Cluster
-  command: kubeadm init --apiserver-advertise-address={{ hostvars[groups['master'][0]]['ansible_'~netdev1]['ipv4']['address'] }} --pod-network-cidr=10.142.0.0/16 --ignore-preflight-errors=all
+  shell: |
+    kubeadm init --apiserver-advertise-address={{ hostvars[groups['master'][0]]['ansible_'~netdev1]['ipv4']['address'] }} \
+    --pod-network-cidr=10.142.0.0/16 --cri-socket=unix:///run/containerd/containerd.sock --ignore-preflight-errors=all
   async: 360
   poll: 5
   register: kubeadm_init
   when: inventory_hostname in groups['master']
+- debug: msg={{ kubeadm_init }}
+  when: print_debug == true and inventory_hostname in groups['master']
   # command: kubeadm init --control-plane-endpoint={{ hostvars[groups['master'][0]].ansible_hostname }}
 
-#
-- debug:
-    msg: "{{ kubeadm_init.stdout_lines }}"
-  when: inventory_hostname in groups['master']
 
-#
 - name: Set Fact for Token CA Certificate
   set_fact:
     k8s_token_ca_cert: "{{ (kubeadm_init.stdout_lines | select('search', 'discovery-token-ca-cert-hash') | list | string | split(' '))[1] }}"
@@ -25,13 +52,10 @@
   delegate_facts: True
   with_items: "{{ groups['all'] }}"
   when: inventory_hostname in groups['master']
+- debug: msg={{ k8s_token_ca_cert }}
+  when: print_debug == true and inventory_hostname in groups['master']
 
-#
-- name: Print Fact for Token CA Certificate
-  debug:
-    msg: "{{ k8s_token_ca_cert }}"
 
-#
 - name: Set Fact for Token
   set_fact:
     k8s_token: "{{ (kubeadm_init.stdout_lines | select('search', '--token') | list | string | split(' '))[4] }}"
@@ -39,13 +63,10 @@
   delegate_facts: True
   with_items: "{{ groups['all'] }}"
   when: inventory_hostname in groups['master']
+- debug: msg={{ k8s_token }}
+  when: print_debug == true and inventory_hostname in groups['master']
 
-#
-- name: Print Fact for Token
-  debug:
-    msg: "{{ k8s_token }}"
 
-#
 - name: Enable Your User to Start Using the Cluster.
   shell: |
     mkdir -p $HOME/.kube
@@ -54,13 +75,10 @@
     chown $(id -u):$(id -g) $HOME/.kube/config
   register: start_using_cluster_enabled
   when: inventory_hostname in groups['master']
+- debug: msg={{ start_using_cluster_enabled }}
+  when: print_debug == true and inventory_hostname in groups['master']
 
-#
-- debug:
-    msg: "{{ start_using_cluster_enabled }}"
-  when: inventory_hostname in groups['master']
 
-#
 - name: Configure Kubectl Config
   shell: |
     kubectl taint nodes  {{ hostvars[groups['master'][0]].ansible_hostname }} node-role.kubernetes.io/control-plane:NoSchedule-
@@ -69,25 +87,19 @@
   retries: 10
   delay: 10
   when: inventory_hostname in groups['master']
+- debug: msg={{ kubectl_configured }}
+  when: print_debug == true and inventory_hostname in groups['master']
   # kubectl taint nodes --all node-role.kubernetes.io/master-
 
-#
-- debug:
-    msg: "{{ kubectl_configured }}"
-  when: inventory_hostname in groups['master']
 
-#
 - name: Confirm that the Kubectl Command is Activated.
   command: kubectl get nodes
   register: kubectl_get_nodes
   when: inventory_hostname in groups['master']
+- debug: msg={{ kubectl_get_nodes }}
+  when: print_debug == true and inventory_hostname in groups['master']
 
-#
-- debug:
-    msg: "{{ kubectl_get_nodes }}"
-  when: inventory_hostname in groups['master']
 
-#
 - name: Create POD for Master as well
   lineinfile:
     path: /root/.bashrc
@@ -101,13 +113,10 @@
     - { content: " fi " }
     - { content: " source <(kubectl completion bash) " }
   when: inventory_hostname in groups['master']
+- debug: msg={{ master_pod_created }}
+  when: print_debug == true and inventory_hostname in groups['master']
 
-#
-- debug:
-    msg: "{{ master_pod_created }}"
-  when: inventory_hostname in groups['master']
 
-#
 - name: Download Calico Networking
   get_url:
     url: https://raw.githubusercontent.com/projectcalico/calico/v3.25.0/manifests/calico.yaml
@@ -115,10 +124,12 @@
     mode: 0644
   register: calico_downloaded
   when: inventory_hostname in groups['master']
+- debug: msg={{ calico_downloaded }}
+  when: print_debug == true and inventory_hostname in groups['master']
   # url: https://docs.projectcalico.org/manifests/calico.yaml
   # url: https://projectcalico.docs.tigera.io/manifests/calico.yaml
 
-#
+
 - name: Modify /root/calica.yaml for CIDR
   lineinfile:
     dest: /root/calico.yaml
@@ -126,78 +137,65 @@
     line: "{{ item.line }}"
     state: "{{ item.state }}"
     backrefs: "{{ item.backrefs }}"
-  register: calica_cidr_modified
+  register: calico_cidr_modified
   with_items:
     - { regexp: "^            # - name: CALICO_IPV4POOL_CIDR", line: "            - name: CALICO_IPV4POOL_CIDR", state: present, backrefs: yes }
     - { regexp: "^            #   value: \"192.168.0.0/16\"", line: "              value: \"10.142.0.0/16\"", state: present, backrefs: yes }
   when: inventory_hostname in groups['master']
+- debug: msg={{ calico_cidr_modified }}
+  when: print_debug == true and inventory_hostname in groups['master']
 
-#
-- debug:
-    var: calica_cidr_modified
-  when: inventory_hostname in groups['master']
 
-#
 - name: Setup Networking with Calico
   command: kubectl apply -f /root/calico.yaml
   register: calico_network_setup
   when: inventory_hostname in groups['master']
+- debug: msg={{ calico_network_setup }}
+  when: print_debug == true and inventory_hostname in groups['master']
 
-#
-- debug:
-    msg: "{{ calico_network_setup }}"
-  when: inventory_hostname in groups['master']
 
 #- name: Setup Networking with Kube-Flannel
 #  command: kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
 #  register: kube_flannel_network_setup
 #  when: inventory_hostname in groups['master']
+#- debug: msg={{ kube_flannel_network_setup }}
+#  when: print_debug == true and inventory_hostname in groups['master']
 
-#
-#- debug:
-#    msg: "{{ kube_flannel_network_setup }}"
-#  when: inventory_hostname in groups['master']
 
-#
 - name: Confirm that the Kubectl Command is Activated.
   command: kubectl get nodes
   register: kubectl_get_nodes
   when: inventory_hostname in groups['master']
+- debug: msg={{ kubectl_get_nodes }}
+  when: print_debug == true and inventory_hostname in groups['master']
 
-#
-- debug:
-    msg: "{{ kubectl_get_nodes }}"
-  when: inventory_hostname in groups['master']
 
 # Initialize Workder Nodes in Kubernetes Cluster
 - name: Reset Kubernetes on Cluster Nodes
   command:  kubeadm reset -f
+  register: kube_cluster_reset
   when: inventory_hostname in groups['workers']
+- debug: msg={{ kube_cluster_reset }}
+  when: print_debug == true and inventory_hostname in groups['master']
 
-#
+
 - name: Join the Other Kubernetes Nodes to Cluster, the Command must be run on the Worker Nodes Only
   command: kubeadm join "{{ hostvars[groups['master'][0]]['ansible_'~netdev1]['ipv4']['address'] }}:6443" --token "{{ k8s_token }}" --discovery-token-ca-cert-hash "{{ k8s_token_ca_cert }}"
   register: store_it_copied
   ignore_errors: yes
   when: inventory_hostname in groups['workers']
+- debug: msg={{ store_it_copied }}
+  when: print_debug == true and inventory_hostname in groups['master']
 
-#
-- debug:
-    msg: "{{ store_it_copied }}"
-  when: inventory_hostname in groups['workers']
 
-#
 - name: Confirm that the Kubectl Command is Activated
   command: kubectl get nodes
   register: kubectl_get_nodes
   when: inventory_hostname in groups['master']
+- debug: msg={{ kubectl_get_nodes }}
+  when: print_debug == true and inventory_hostname in groups['master']
 
-#
-- debug:
-    msg: "{{ kubectl_get_nodes }}"
-  when: inventory_hostname in groups['master']
 
-#
 - name: Enable and Start Kubelet in Master Node
   systemd:
     name: kubelet
@@ -205,13 +203,10 @@
     enabled: yes
   register: master_kubelet_restarted
   when: inventory_hostname in groups['master']
+- debug: msg={{ master_kubelet_restarted }}
+  when: print_debug == true and inventory_hostname in groups['master']
 
-#
-- debug:
-    msg: "{{ master_kubelet_restarted }}"
-  when: inventory_hostname in groups['master']
 
-#
 - name: Validate if k8s Workers are all Ready
   shell: kubectl get nodes
   register: check_k8s_workers_status

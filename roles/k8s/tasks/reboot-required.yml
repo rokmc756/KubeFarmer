@@ -1,0 +1,17 @@
+- name: Clear Cache Memory
+  shell: |
+    sync && echo 3 > /proc/sys/vm/drop_caches
+  register: clear_cache_memory
+- debug: msg={{ clear_cache_memory }}
+  when: print_debug == true
+
+
+- name: Reboot required
+  shell: ( /bin/sleep 5 ; /sbin/shutdown -r now "Ansible updates triggered" ) &
+  async: 30
+  poll: 0
+  notify:
+    - Waiting for Server to Come Back After Reboot
+
+- meta: flush_handlers
+

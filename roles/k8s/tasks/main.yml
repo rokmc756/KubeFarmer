@@ -4,7 +4,7 @@
 # for now fail if it's not a Red Hat based system
 - name: Check OS ( Kubernetes )
   fail: msg="Not a Red Hat or SuSE based system!"
-  when: ansible_os_family != 'RedHat' or  ansible_os_family != 'CentOS' or  ansible_os_family != 'Rocky' or ansible_os_family != 'SUSE'
+  when: ansible_os_family != 'RedHat' or  ansible_os_family != 'CentOS' or  ansible_os_family != 'Rocky' or ansible_os_family != 'Suse'
 
 
 - name: Set facts for network and packages informations
@@ -14,51 +14,82 @@
     - uninstall
     - reinit
 
+- name: Install Prerequistes Packages for OpenSUSE
+  import_tasks: install-suse-pkgs.yml
+  tags: install
+  when: install_pkgs and ansible_distribution == "openSUSE Leap"
+
+
 
 - name: Install Prerequistes Packages for RedHat/CentOS/Rocky
-  import_tasks: rh-install-deps-pkgs.yml
+  import_tasks: install-rh-pkgs.yml
   tags: install
-  when: install_dep_pkgs == true and ( ansible_distribution == "RedHat" or ansible_distribution == "CentOS" or ansible_distribution == "Rocky" )
+  when: install_pkgs and ( ansible_distribution == "RedHat" or ansible_distribution == "CentOS" or ansible_distribution == "Rocky" )
 
 
-- name: Install Prerequistes Packages for Open SuSE
-  import_tasks: suse-install-deps-pkgs.yml
+- name: Enable Firewall
+  import_tasks: enable-firewall.yml
   tags: install
-  when: install_dep_pkgs == true and ansible_distribution == "openSUSE Leap"
-
-
-- name: Configure Firewall
-  import_tasks: firewall.yml
-  tags: install
-  when: install_dep_pkgs == false
+  when: enable_firewall
 
 
 - name: Launch Kubernetes Software
-  import_tasks: install.yml
+  import_tasks: launch-suse-kube-software.yml
   tags: install
-  when: install_dep_pkgs == false
+  when: launch_kube_software and ansible_distribution == "openSUSE Leap"
+
+
+- name: Launch Kubernetes Software
+  import_tasks: launch-rh-kube-software.yml
+  tags: install
+  when: launch_kube_software and ( ansible_distribution == "RedHat" or ansible_distribution == "CentOS" or ansible_distribution == "Rocky" )
 
 
 - name: Initialize Kubernetes Cluster
   import_tasks: init-k8s.yml
   tags: install
-  when: install_dep_pkgs == false
+  when: init_k8s
+
+
+- name: Stop Docker and Kube Services
+  import_tasks: stop-services.yml
+  tags:
+    - reinit
+    - uninstall
+  when: stop_services
 
 
 - name: Reinitialize Kubernetes Cluster
   import_tasks: reinit.yml
   tags: reinit
-  when: install_dep_pkgs == false
 
 
-- name: Destroy Kubernetes Cluster
-  import_tasks: uninstall.yml
-  tags: uninstall
-  when: uninstall_dep_pkgs == false
+#- name: Destroy Kubernetes Cluster
+#  import_tasks: uninstall.yml
+#  tags: uninstall
+#  when: uninstall_dep_pkgs == false
 
 
 - name: Uninstall Prerequistes Packages
-  import_tasks: uninstall-deps-pkgs.yml
+  import_tasks: uninstall-pkgs.yml
   tags: uninstall
-  when: uninstall_dep_pkgs == true and ansible_distribution == "openSUSE Leap"
+  when: uninstall_pkgs
+
+
+- name: Delete Kube Config Files
+  import_tasks: uninstall-config.yml
+  tags: uninstall
+  when: uninstall_config
+
+
+#- name: Disable Firewall
+#  import_tasks: disable-firewall.yml
+#  tags: uninstall
+#  when: disable_fireweall
+
+
+- name: Reboot all Systems
+  import_tasks: reboot-required.yml
+  tags: uninstall
+  when: reboot_required
 

@@ -1,0 +1,36 @@
+- name: Disable and Stop Docker
+  systemd:
+    name: docker
+    state: stopped
+    enabled: no
+  register: docker_stopped
+  ignore_errors: true
+  until: docker_stopped is succeeded
+
+
+- name: Disable and Stop Containerd
+  systemd:
+    name: containerd
+    state: stopped
+    enabled: no
+  register: containerd_stopped
+  ignore_errors: true
+  until: containerd_stopped is succeeded
+
+
+- name: Kill Processes Regarding Containerd
+  shell: |
+    kill -9 `ps -ef | grep containerd | awk '{print $2}'`
+  register: containerd_killed
+  ignore_errors: true
+
+
+- name: Disable and Stop Kubelet
+  systemd:
+    name: kubelet
+    state: stopped
+    enabled: no
+  register: kubelet_stopped
+  ignore_errors: true
+  until: kubelet_stopped is succeeded
+

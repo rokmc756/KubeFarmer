@@ -5,10 +5,12 @@ Wants=network-online.target
 After=network-online.target
 
 [Service]
-ExecStart=/usr/bin/kubelet --cgroup-driver=systemd
+EnvironmentFile=/etc/sysconfig/kubelet
+ExecStart=/usr/bin/kubelet --cgroup-driver=systemd $KUBELET_EXTRA_ARGS
 Restart=always
 StartLimitInterval=0
 RestartSec=10
 
 [Install]
 WantedBy=multi-user.target
+

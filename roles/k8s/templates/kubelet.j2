@@ -1,1 +1,6 @@
-KUBELET_EXTRA_ARGS=--cgroup-driver=systemd
+KUBELET_VER="{{ k8s.major_version }}.{{ k8s.minor_version }}"
+KUBELET_EXTRA_ARGS="--container-runtime-endpoint=/run/{{ container_runtime }}/{{ container_runtime }}.sock"
+
+# KUBELET_EXTRA_ARGS=--cgroup-driver=systemd
+# KUBELET_EXTRA_ARGS="--container-runtime=remote --container-runtime-endpoint=/run/crio/crio.sock"
+

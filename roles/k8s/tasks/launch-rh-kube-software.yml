@@ -1,0 +1,251 @@
+---
+- name: Add Line into /etc/locale.conf for LC_TYPE to Prevent Error
+  lineinfile:
+    path: /etc/locale.conf
+    line: "LC_CTYPE=en_US.UTF-8"
+  register: lctype_line_added
+
+
+- name: Unset Variables of Token and Certs Generated Previously by Kubeadm Init
+  set_fact:
+    k8s_token_ca_cert:
+    k8s_token:
+
+
+- name: Enable br_netfilter and Overlay Module for iptables
+  copy:
+    dest: /etc/modules-load.d/containerd.conf
+    content: |
+      overlay
+      br_netfilter
+
+
+- name: Enable Bridge Module for IPTables to Route Packets into Kubernetes Cluster Nodes
+  template: src=sysctl-k8s.conf.j2 dest=/etc/sysctl.d/sysctl-k8s.conf owner=root group=root mode=644 force=yes
+  register: enable_bridge_module
+
+
+- name: Apply Kernel Parameters for Kubernetes Cluster
+  command: sysctl --system
+
+
+- name: Initialize Containerd
+  shell: |
+    containerd config default > /etc/containerd/config.toml
+  # command: containerd config default | tee /etc/containerd/config.toml
+
+
+- name: Edit Containerd Configuration
+  lineinfile:
+    dest: /etc/containerd/config.toml
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    state: "{{ item.state }}"
+  with_items:
+    - { regexp: '            SystemdCgroup = false', line: '            SystemdCgroup = true', state: present, backrefs: no }
+  # - { regexp: 'runc.options', line: '            SystemdCgroup = true', state: present }
+  #   firstmatch: yes
+
+
+- name: Start Containerd to Apply SystemdCgroup in config.toml
+  systemd:
+    name: containerd
+    state: started
+    enabled: yes
+    daemon_reload: yes
+  register: containerd_started
+  until: containerd_started is succeeded
+  retries: 20
+  delay: 10
+
+
+#- name: Enable and Start Podman
+#  systemd:
+#    name: podman
+#    state: started
+#    enabled: yes
+#    daemon_reload: yes
+#  register: podman_enabled
+#  until: podman_enabled is succeeded
+#  retries: 20
+#  delay: 10
+
+
+#- name: Restart Containerd to Apply SystemdCgroup in config.toml
+#  systemd:
+#    name: containerd
+#    state: restarted
+#    enabled: yes
+#  register: containerd_restarted
+#  until: containerd_restarted is succeeded
+#  retries: 10
+#  delay: 10
+
+
+#- name: Enable and Start Docker
+#  systemd:
+#    name: docker
+#    state: started
+#    enabled: yes
+#  register: docker_enabled
+#  until: docker_enabled is succeeded
+#  retries: 20
+#  delay: 20
+
+# Working with Docker
+#- name: Creates Docker Directory Under /etc
+#  file:
+#    path: /etc/docker
+#    state: directory
+
+# Working with Docker
+#- name: Configure the Docker Daemon to Use Systemd for the Management of the Cotainer's CGroups
+#  template: src=daemon.json.j2 dest=/etc/docker/daemon.json owner=root group=root mode=644 force=yes
+#  register: cgroup_docker_configured
+
+
+#- name: Restart Docker Daemon
+#  systemd:
+#    name: docker
+#    state: restarted
+#    enabled: yes
+#  register: docker_restarted
+#  until: docker_restarted is succeeded
+#  retries: 10
+#  delay: 10
+
+
+#- name: Start Docker Daemon
+#  systemd:
+#    name: docker
+#    state: started
+#    enabled: yes
+#    daemon_reload: yes
+#  register: docker_started
+#  until: docker_started is succeeded
+#  retries: 20
+#  delay: 10
+
+
+- name: Configure the Kubelet Daemon to Use Systemd for the Management of the Cotainer's CGroups
+  template: src=kubelet.j2 dest=/etc/sysconfig/kubelet owner=root group=root mode=644 force=yes
+  register: kubernetes_repo_added
+  #  when: ansible_distribution == "RedHat" or ansible_distribution == "CentOS" or ansible_distribution == "Rocky"
+
+
+#- name: Enable and Start Kubelet
+#  systemd:
+#    name: kubelet
+#    state: restarted
+#    enabled: yes
+#    daemon_reload: yes
+#  register: kubelet_restarted
+#  until: kubelet_restarted is succeeded
+#  retries: 10
+#  delay: 10
+
+
+#- name: Enable and Start Kubelet
+#  systemd:
+#    name: kubelet
+#    state: started
+#    enabled: yes
+#    daemon_reload: yes
+#  register: kubelet_started
+#  until: kubelet_started is succeeded
+#  retries: 20
+#  delay: 10
+
+
+- name: Copy CGroup Config File
+  template: src=cgconfig.conf.j2 dest=/etc/cgconfig.conf owner=root group=root mode=644 force=yes
+  register: cgroup_config_file_copied
+  when: ansible_distribution == "openSUSE Leap" and ansible_distribution_major_version|int <= 15
+
+
+- name: Enable CGroup
+  systemd:
+    name: cgconfig
+    state: started
+    enabled: yes
+    daemon_reload: yes
+  when: ansible_distribution == "openSUSE Leap" and ansible_distribution_major_version|int <= 15
+
+
+- name: Lock Versions to Avoid Unwanted Updated YUM Updates
+  command: yum versionlock kubelet kubeadm kubectl
+  register: rh_virsions_lock
+  when: ansible_distribution == "RedHat" or ansible_distribution == "CentOS" or ansible_distribution == "Rocky"
+  # command: yum versionlock kubelet-{{ k8s_major_version }}.{{ k8s_minor_version }}.{{ k8s_patch_version }} kubectl-{{ k8s_major_version }}.{{ k8s_minor_version }}.{{ k8s_patch_version }} kubeadm-{{ k8s_major_version }}.{{ k8s_minor_version }}.{{ k8s_patch_version }}
+
+
+- name: Lock Versions to Avoid Unwanted Updated Zypper Updates
+  command: zypper addlock kubelet kubeadm kubectl
+  register: suse_virsions_lock
+  when: ansible_distribution == "openSUSE"
+
+
+- name: Create Cluster Configuration in Master Node
+  shell: |
+    kubeadm config print init-defaults | tee /root/cluster-config.yaml
+  register: cluster_config_created
+  when: inventory_hostname in groups['master']
+
+
+- name: Modify cluster-config.yaml to Replace "{{ hostvars[inventory_hostname]['ansible_'~netdev1]['ipv4']['address'] }}" with Control Plane's IP address
+  lineinfile:
+    dest: /root/cluster-config.yaml
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    state: "{{ item.state }}"
+    backrefs: "{{ item.backrefs }}"
+  with_items:
+    - { regexp: "^  name: node", line: "  name: {{ ansible_hostname }}", state: present, backrefs: yes }
+    - { regexp: "^  advertiseAddress: 1.2.3.4", line: "  advertiseAddress: {{ hostvars[inventory_hostname]['ansible_'~netdev1]['ipv4']['address'] }}", state: present, backrefs: yes }
+    - { regexp: "^  criSocket: /var/run/dockershim.sock", line: "  criSocket: /run/containerd/containerd.sock", state: present, backrefs: yes }
+  when: inventory_hostname in groups['master']
+
+
+- name: Modify cluster-config.yaml
+  lineinfile:
+    path: /root/cluster-config.yaml
+    line: "{{ item.content }}"
+    insertafter: EOF
+    create: true
+  with_items:
+    - { content: '---' }
+    - { content: 'apiVersion: kubelet.config.k8s.io/v1beta1' }
+    - { content: 'kind: KubeletConfiguration' }
+    - { content: 'cgroupDriver: systemd' }
+  when: inventory_hostname in groups['master']
+
+
+- name: Disable SWAP in Order to initialize Kubernetes Master
+  shell: |
+    swapoff -a
+    sed -i '/swap/s/^/#/g' /etc/fstab
+
+
+- name: Change Kubelet Systemd File
+  template: src=kubelet.systemd.j2 dest=/usr/lib/systemd/system/kubelet.service owner=root group=root mode=644 force=yes
+  register: kubelet_systemd_changed
+  # when: ansible_distribution == "RedHat" or ansible_distribution == "CentOS" or ansible_distribution == "Rocky"
+
+
+#- name: Move temoporary Kubelet systemd file in recursive directory of /usr/lib/systemd/system/kubelet.service.d to /tmp directory
+#  shell: mv -f /usr/lib/systemd/system/kubelet.service.d/10-kubeadm.conf /tmp/
+#  register: kubeadm_conf_moved
+
+
+- name: Enable and Start Kubelet
+  systemd:
+    name: kubelet
+    state: started
+    enabled: yes
+    daemon_reload: yes
+  register: kubelet_started
+  until: kubelet_started is succeeded
+  retries: 20
+  delay: 10
+
+

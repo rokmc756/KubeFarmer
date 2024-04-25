@@ -1,0 +1,12 @@
+#!/usr/bin/expect -f
+set timeout 300
+
+        spawn zypper refresh
+
+        expect  "^Do you want to reject the key, trust temporarily, or trust always?*"
+        send    "a\r"
+
+        interact
+
+exit
+
