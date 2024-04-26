@@ -12,7 +12,6 @@
     zypper ar -f https://pkgs.k8s.io/core:/stable:/v{{ k8s.major_version }}.{{ k8s.minor_version }}/rpm kubernetes
     rpm --import https://pkgs.k8s.io/core:/stable:/v{{ k8s.major_version }}.{{ k8s.minor_version }}/rpm/repodata/repomd.xml.key
   register: k8s_repo_added
-
 # zypper --releasever=15.5 dup --download-in-advance --allow-vendor-change -y
 # zypper --releasever=15.5 lr -duE
 
@@ -21,16 +20,12 @@
 #  packager:
 #    name: "{{ item }}"
 #    state: present
-#    extra_args: 
+#    extra_args:
 #  with_items:
 #    - "kubeadm"
 #    - "kubelet"
 #    - "kubectl"
 #    {{ k8s.major_version }}.{{ k8s.minor_version }}.{{ k8s.patch_version }}"
-
-
-# zypper addlock kubelet kubeadm kubectl
-# systemctl enable kubelet.service
 
 
 # https://stackoverflow.com/questions/62795930/how-to-install-kubernetes-in-suse-linux-enterprize-server-15-virtual-machines
@@ -39,18 +34,30 @@
 # zypper addrepo https://download.opensuse.org/repositories/Virtualization:/containers/15.6/Virtualization:containers.repo virt
 
 
-- name: Install an SELinux Policy
+- name: Add Extra Zypper Repositories
   shell: |
-    zypper ar -f  https://download.opensuse.org/repositories/security:/SELinux_legacy/15.5 SELinux-Legacy
-  register: selinux_policy_installed
+    zypper ar -f  {{ item.repo_url }} {{ item.repo_name }}
+  register: extra_repo_added
+  with_items:
+    - { repo_url: "https://download.opensuse.org/repositories/security:/SELinux_legacy/15.5", repo_name: "SELinux-Legacy" }
+    - { repo_url: "https://download.opensuse.org/distribution/leap/15.5/repo/oss", repo_name: "public" }
+    - { repo_url: "https://download.opensuse.org/repositories/Virtualization:containers/15.5", repo_name: "virt" }
+    - { repo_url: "https://download.opensuse.org/repositories/security:/netfilter/openSUSE_Leap_15.5", repo_name: "conntrack" }
+  # zypper addrepo http://download.opensuse.org/distribution/leap/15.5/repo/oss public
 
 
-- name: Add OSS and Virtualization Repository
-  shell: |
-    zypper addrepo http://download.opensuse.org/distribution/leap/15.5/repo/oss public
-    zypper addrepo https://download.opensuse.org/repositories/Virtualization:containers/15.5 virt
-    zypper addrepo https://download.opensuse.org/repositories/security:/netfilter/openSUSE_Leap_15.5 conntrack
-  register: oss_virt_repo_added
+#- name: Install an SELinux Policy
+#  shell: |
+#    zypper ar -f  https://download.opensuse.org/repositories/security:/SELinux_legacy/15.5 SELinux-Legacy
+#  register: selinux_policy_installed
+
+
+#- name: Add OSS and Virtualization Repository
+#  shell: |
+#    zypper addrepo http://download.opensuse.org/distribution/leap/15.5/repo/oss public
+#    zypper addrepo https://download.opensuse.org/repositories/Virtualization:containers/15.5 virt
+#    zypper addrepo https://download.opensuse.org/repositories/security:/netfilter/openSUSE_Leap_15.5 conntrack
+#  register: oss_virt_repo_added
 
 
 - name: Copy Expect Script to Refresh Metadata from Zypper Repository
@@ -58,15 +65,11 @@
   register: expect_file_copied
 
 
-#- name: Refresh Metadata from Zypper Repository
-#  shell: /root/zypper-refresh.sh
-#  register: repo_metadata_refreshed
-
-
 - name: Refresh Metadata from Zypper Repository
   shell: |
     zypper refresh
   register: repo_metadata_refreshed
+# shell: /root/zypper-refresh.sh
 
 
 # rpm --import https://pkgs.k8s.io/core:/stable:/v1.27/rpm/repodata/repomd.xml.key
@@ -75,9 +78,6 @@
     name: "{{ item }}"
     state: present
   with_items: "{{ suse_ce_pkgs }}"
-
-# zypper refresh
-# zypper install kubelet kubeadm kubectl
 
 
 - name: Copy Expect Script to Install Kube Packages
@@ -88,15 +88,24 @@
 - name: Install Kubeadm Packages
   shell: /root/install-kube-pkgs.sh
   register: kube_pkgs_installed
+# zypper install kubelet kubeadm kubectl
 
 
-- name: Install an SELinux Policy
-  shell: |
-    zypper install -y selinux-policy-targeted selinux-policy-devel
-    zypper install -y libseccomp-devel
-    zypper install -y libcgroup-tools libcgroup1 cpuset libcpuset1
-    zypper install -y cni cni-plugins
-  register: selinux_policy_installed
+#- name: Install an SELinux Policy
+#  shell: |
+#    zypper install -y selinux-policy-targeted selinux-policy-devel
+#    zypper install -y libseccomp-devel
+#    zypper install -y libcgroup-tools libcgroup1 cpuset libcpuset1
+#    zypper install -y cni cni-plugins
+#  register: selinux_policy_installed
+
+-
+- name: Install Extra Packages for SELinux Policy and CNI
+  package:
+    name: "{{ item }}"
+    state: present
+  ignore_errors: yes
+  with_items: "{{ suse_extra_pkgs }}"
 
 
 - name: Lock those versions to prevent them from being automatically updated
