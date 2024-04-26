@@ -6,69 +6,6 @@
     k8s_token:
 
 
-# https://k21academy.com/docker-kubernetes/container-runtime-is-not-running/
-#- name: Delete config.toml
-#  file:
-#    path: "{{ item }}"
-#    state: absent
-#  register: config_toml_deleted
-#  with_items:
-#    - "/etc/containerd/config.toml"
-#  when: ansible_distribution == "openSUSE Leap"
-#- debug: msg={{ config_toml_deleted }}
-#  when: print_debug and ansible_distribution == "openSUSE Leap"
-
-
-#- name: Initialize Containerd
-#  shell: |
-#    containerd config default > /etc/containerd/config.toml
-
-
-#- name: Edit Containerd Configuration
-#  lineinfile:
-#    dest: /etc/containerd/config.toml
-#    regexp: "{{ item.regexp }}"
-#    line: "{{ item.line }}"
-#    state: "{{ item.state }}"
-#  with_items:
-#    - { regexp: '            SystemdCgroup = false', line: '            SystemdCgroup = true', state: present, backrefs: no }
-#   - { regexp: 'runc.options', line: '            SystemdCgroup = true', state: present }
-#     firstmatch: yes
-
-
-#- name: Delete config.toml
-#  file:
-#    path: "{{ item }}"
-#    state: absent
-#  register: config_toml_deleted
-#  with_items:
-#    - "/etc/containerd/config.toml"
-#  when: ansible_distribution == "openSUSE Leap"
-#- debug: msg={{ config_toml_deleted }}
-#  when: print_debug and ansible_distribution == "openSUSE Leap"
-
-
-- name: Restart Container Runtime to Apply config.toml
-  systemd:
-    name: "{{ container_runtime }}"
-    state: restarted
-  register: cr_restarted
-  until: cr_restarted is succeeded
-  retries: 10
-  delay: 10
-
-
-- name: Restart Docker
-  systemd:
-    name: docker
-    state: restarted
-  register: docker_restarted
-  until: docker_restarted is succeeded
-  retries: 10
-  delay: 10
-  when: ansible_distribution == "openSUSE Leap"
-
-
 - name: Set SELinux Permissive Mode
   shell: |
     setenforce 0
@@ -97,7 +34,18 @@
   when: inventory_hostname in groups['master'] or inventory_hostname in groups['workers']
 
 
-- name: Reset Kubernetes Forster
+- name: Restart Containerd to Apply Changes in config.toml
+  systemd:
+    name: containerd
+    state: restarted
+  register: containerd_restarted
+  until: containerd_restarted is succeeded
+  retries: 20
+  delay: 10
+  when: ansible_distribution == "openSUSE Leap"
+
+
+- name: Reset Kubernetes
   command: kubeadm reset -f
   when: inventory_hostname in groups['master']
 
@@ -107,8 +55,16 @@
   when: inventory_hostname in groups['workers']
 
 
+- name: Config image pull
+  command: kubeadm config images pull
+  when: inventory_hostname in groups['master']
+
+#    kubeadm init --apiserver-advertise-address={{ hostvars[groups['master'][0]]['ansible_'~netdev1]['ipv4']['address'] }} \
+#    --pod-network-cidr=192.168.0.0/24 --cri-socket=unix:///run/containerd/containerd.sock --ignore-preflight-errors=all --v=5
 - name: Initialize Kubernetes Master and Create Cluster
-  command: kubeadm init --apiserver-advertise-address={{ hostvars[groups['master'][0]]['ansible_'~netdev1]['ipv4']['address'] }} --pod-network-cidr=10.142.0.0/16 --cri-socket=unix:///run/containerd/containerd.sock --ignore-preflight-errors=all
+  shell: |
+    kubeadm init --apiserver-advertise-address={{ hostvars[groups['master'][0]]['ansible_'~netdev1]['ipv4']['address'] }} \
+    --pod-network-cidr={{ calico.pod_network }} --cri-socket=unix:///run/containerd/containerd.sock --ignore-preflight-errors=all --v=5
   async: 360
   poll: 5
   register: kubeadm_init
@@ -119,10 +75,6 @@
   # command: kubeadm init --upload-certs --apiserver-advertise-address={{ hostvars[groups['master'][0]]['ansible_eth1']['ipv4']['address'] }} --pod-network-cidr=10.142.0.0/16 --ignore-preflight-errors=all
   # command: kubeadm init --config /etc/kubernetes/kubeadm.conf --upload-certs --v=5
   # command: kubeadm init --apiserver-advertise-address={{ hostvars[groups['master'][0]]['ansible_eth1']['ipv4']['address'] }} --pod-network-cidr=10.42.0.0/16 --ignore-preflight-errors=all
-  # command: kubeadm init --apiserver-advertise-address={{ hostvars[groups['master'][0]]['ansible_eth1']['ipv4']['address'] }} --pod-network-cidr=10.10.0.0/16 --ignore-preflight-errors=all   # For kube-flannel
-  # command: kubeadm init --apiserver-advertise-address={{ hostvars[groups['master'][0]]['ansible_eth1']['ipv4']['address'] }} --pod-network-cidr=10.142.0.0/16 --ignore-preflight-errors=all
-  # command: kubeadm init --apiserver-advertise-address={{ hostvars[groups['master'][0]]['ansible_eth1']['ipv4']['address'] }} --pod-network-cidr=10.244.0.0/16 --ignore-preflight-errors=all
-  # command: kubeadm init --apiserver-advertise-address={{ hostvars[groups['master'][0]]['ansible_eth1']['ipv4']['address'] }} --pod-network-cidr=192.168.0.0/16 --ignore-preflight-errors=all
 
 
 - name: Set Fact For Token CA Certificate
@@ -171,9 +123,7 @@
   when: inventory_hostname in groups['master']
 - debug: msg={{ kubectl_configured }}
   when: print_debug == true and inventory_hostname in groups['master']
-  # for k8s 1.26
-  # kubectl taint nodes  {{ hostvars[groups['master'][0]].ansible_hostname }} node-role.kubernetes.io/control-plane:NoSchedule-
-  # for k8s 1.21
+  # for k8s 1.21 and 1.26
   # kubectl taint nodes  {{ hostvars[groups['master'][0]].ansible_hostname }} node-role.kubernetes.io/control-plane:NoSchedule-
   # kubectl taint nodes --all node-role.kubernetes.io/master-
 
@@ -203,30 +153,10 @@
   when: print_debug == true and inventory_hostname in groups['master']
 
 
-#- name: Configure Tiger Operator Network
-#  command: kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/master/manifests/tigera-operator.yaml
-#  async: 360
-#  poll: 5
-#  register: test1
-#  when: inventory_hostname in groups['master']
-#- debug: msg={{ test1.stdout_lines }}
-#  when: print_debug == true and inventory_hostname in groups['master']
-#  command: kubectl create -f https://docs.projectcalico.org/manifests/tigera-operator.yaml
-
-#- name: Configure Custom Resources
-#  command: kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/master/manifests/custom-resources.yaml
-#  async: 360
-#  poll: 5
-#  register: test2
-#  when: inventory_hostname in groups['master']
-#- debug: msg={{ test2.stdout_lines }}
-#  when: print_debug == true and inventory_hostname in groups['master']
-#  command: kubectl create -f https://docs.projectcalico.org/manifests/custom-resources.yaml
-
-
+# url: https://raw.githubusercontent.com/projectcalico/calico/v3.25.0/manifests/calico.yaml
 - name: Download Calico Networking
   get_url:
-    url: https://raw.githubusercontent.com/projectcalico/calico/v3.25.0/manifests/calico.yaml
+    url: https://raw.githubusercontent.com/projectcalico/calico/v{{ calico.major_version }}.{{ calico.minor_version }}.{{ calico.patch_version }}/manifests/calico.yaml
     dest: /root/calico.yaml
     mode: 0644
   register: calico_downloaded
@@ -245,11 +175,12 @@
   register: calica_cidr_modified
   with_items:
     - { regexp: "^            # - name: CALICO_IPV4POOL_CIDR", line: "            - name: CALICO_IPV4POOL_CIDR", state: present, backrefs: yes }
-    - { regexp: "^            #   value: \"192.168.0.0/16\"", line: "              value: \"10.142.0.0/16\"", state: present, backrefs: yes }
+    - { regexp: "^            #   value: \"192.168.0.0/16\"", line: "              value: \"{{ calico.pod_network }}\"", state: present, backrefs: yes }
   when: inventory_hostname in groups['master']
 - debug: msg={{ calica_cidr_modified }}
   when: print_debug == true and inventory_hostname in groups['master']
-  #  - { regexp: "^            #   value: \"192.168.0.0/16\"", line: "              value: \"10.42.0.0/16\"", state: present, backrefs: yes }
+  #  - { regexp: "^            #   value: \"192.168.0.0/16\"", line: "              value: \"10.142.0.0/16\"", state: present, backrefs: yes }
+  #  - { regexp: "^            #   value: \"192.168.0.0/16\"", line: "              value: \"192.168.0.0/24\"", state: present, backrefs: yes }
 
 
 - name: Setup Networking with Calico
@@ -260,23 +191,27 @@
   when: print_debug == true and inventory_hostname in groups['master']
 
 
-#- name: Setup networking with kube-flannel
-#  command: kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
-#  register: kube_flannel_network_setup
-#  when: inventory_hostname in groups['master']
-#- debug: msg={{ kube_flannel_network_setup }}
-#  when: print_debug == true and inventory_hostname in groups['master']
+- name: Confirm that the Kubectl Command is Activated.
+  command: kubectl get nodes
+  register: kubectl_get_nodes
+  when: inventory_hostname in groups['master']
+- debug: msg={{ kubectl_get_nodes }}
+  when: print_debug == true and inventory_hostname in groups['master']
 
-#- name: Confirm that the kubectl command is activated.
-#  command: kubectl get nodes
-#  register: kubectl_get_nodes
-#  when: inventory_hostname in groups['master']
-#- debug: msg={{ kubectl_get_nodes }}
-#  when: print_debug == true and inventory_hostname in groups['master']
+
+# Initialize Workder Nodes in Kubernetes Cluster
+- name: Reset Kubernetes on Cluster Nodes
+  command:  kubeadm reset -f
+  register: kube_cluster_reset
+  when: inventory_hostname in groups['workers']
+- debug: msg={{ kube_cluster_reset }}
+  when: print_debug == true and inventory_hostname in groups['master']
 
 
 - name: Join the Other Kubernetes Nodes to Cluster, the Command must be Run on the Worker Nodes Only
-  command: kubeadm join "{{ hostvars[groups['master'][0]]['ansible_'~netdev1]['ipv4']['address'] }}:6443" --token "{{ k8s_token }}" --discovery-token-ca-cert-hash "{{ k8s_token_ca_cert }}"
+  shell: |
+    kubeadm join "{{ hostvars[groups['master'][0]]['ansible_'~netdev1]['ipv4']['address'] }}:6443" \
+    --token "{{ k8s_token }}" --discovery-token-ca-cert-hash "{{ k8s_token_ca_cert }}"
   register: store_it_copied
   ignore_errors: yes
   when: inventory_hostname in groups['workers']
@@ -292,20 +227,6 @@
   when: print_debug == true and inventory_hostname in groups['master']
 
 
-- name: Restart Docker Daemon in All Nodes
-  systemd:
-    name: docker
-    state: restarted
-    enabled: yes
-  register: docker_restarted
-  until: docker_restarted is succeeded
-  retries: 10
-  delay: 10
-  when: inventory_hostname in groups['master']
-- debug: msg={{ docker_restarted }}
-  when: print_debug == true and inventory_hostname in groups['master']
-
-
 - name: Restart Kubelet in Master Node
   systemd:
     name: kubelet
@@ -316,41 +237,18 @@
   when: print_debug == true and inventory_hostname in groups['master']
 
 
-#- name: Allow Kubernetes service ports for master node
-#  firewalld:
-#    permanent: yes
-#    immediate: yes
-#    port: "{{ item.port }}/{{ item.proto }}"
-#    state: "{{ item.state }}"
-#    zone: "{{ item.zone }}"
-#  with_items: "{{ master_ports }}"
-#  when: inventory_hostname in groups['master']
-#  - { port: "5432-31594", proto: "tcp", state: "enabled", zone: "public" }
-
-
-#- name: Allow Kubernetes service ports for workder nodes
-#  firewalld:
-#    permanent: yes
-#    immediate: yes
-#    port: "{{ item.port }}/{{ item.proto }}"
-#    state: "{ {item.state }}"
-#    zone: "{{ item.zone }}"
-#  with_items: "{{ workers_ports }}"
-#  when: inventory_hostname in groups['workers']
-#  # - { port: "5432-31594", proto: "tcp", state: "enabled", zone: "public" }
-
 #- name: Enable Masquerade on Master node
 #  command: firewall-cmd --zone=public --add-masquerade --permanent
 
 
-- name: Start Firewalld
-  systemd:
-    name: firewalld
-    state: restarted
-    enabled: yes
-  register: firewalld_started
-- debug: msg={{ firewalld_started }}
-  when: print_debug == true
+#- name: Start Firewalld
+#  systemd:
+#    name: firewalld
+#    state: restarted
+#    enabled: yes
+#  register: firewalld_started
+#- debug: msg={{ firewalld_started }}
+#  when: print_debug == true
 # Calico CNI
 # https://stackoverflow.com/questions/62139375/calico-ips-confusion
 # https://www.skyer9.pe.kr/wordpress/?p=7317
@@ -374,4 +272,15 @@
   when: inventory_hostname in groups['master']
 - debug: msg={{ check_k8s_workers_status }}
   when: print_debug == true and inventory_hostname in groups['master']
+
+
+- name: Validate if All Containers are Running
+  shell: kubectl get pods --all-namespaces -o wide
+  register: all_containers_running_checked
+  until: all_containers_running_checked.stdout.find("ContainerCreating") == -1
+  retries: 30
+  when: inventory_hostname in groups['master']
+- debug: msg={{ all_containers_running_checked }}
+  when: print_debug == true and inventory_hostname in groups['master']
+
 

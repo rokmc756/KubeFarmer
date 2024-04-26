@@ -117,9 +117,10 @@
   when: print_debug == true and inventory_hostname in groups['master']
 
 
+# url: https://raw.githubusercontent.com/projectcalico/calico/v3.25.0/manifests/calico.yaml
 - name: Download Calico Networking
   get_url:
-    url: https://raw.githubusercontent.com/projectcalico/calico/v3.25.0/manifests/calico.yaml
+    url: https://raw.githubusercontent.com/projectcalico/calico/v{{ calico.major_version}}.{{ calico.minor_version }}.{{ calico.patch_version }}/manifests/calico.yaml
     dest: /root/calico.yaml
     mode: 0644
   register: calico_downloaded
@@ -140,7 +141,7 @@
   register: calico_cidr_modified
   with_items:
     - { regexp: "^            # - name: CALICO_IPV4POOL_CIDR", line: "            - name: CALICO_IPV4POOL_CIDR", state: present, backrefs: yes }
-    - { regexp: "^            #   value: \"192.168.0.0/16\"", line: "              value: \"10.142.0.0/16\"", state: present, backrefs: yes }
+    - { regexp: "^            #   value: \"192.168.0.0/16\"", line: "              value: \"{{ calico.pod_network }}\"", state: present, backrefs: yes }
   when: inventory_hostname in groups['master']
 - debug: msg={{ calico_cidr_modified }}
   when: print_debug == true and inventory_hostname in groups['master']
@@ -215,4 +216,47 @@
   when: inventory_hostname in groups['master']
 - debug: msg={{ check_k8s_workers_status }}
   when: print_debug == true and inventory_hostname in groups['master']
+
+
+- name: Validate if All Containers are Running
+  shell: kubectl get pods --all-namespaces -o wide
+  register: all_containers_running_checked
+  until: all_containers_running_checked.stdout.find("ContainerCreating") == -1
+  retries: 30
+  when: inventory_hostname in groups['master']
+- debug: msg={{ all_containers_running_checked }}
+  when: print_debug == true and inventory_hostname in groups['master']
+
+
+# erinformations/default": x509: certificate signed by unknown authority 
+# (possibly because of "crypto/rsa: verification error" while trying to verify candidate authority certificate
+
+# docker login --username="rokmc756@gmail.com"
+# kubectl apply -f nginx-deploy.yml
+
+# kubectl patch svc nginx -p '{"spec":{"externalIPs":["192.168.1.194"]}}'
+# kubectl get all
+# ~~ snip
+# service/nginx        NodePort    10.96.0.2    192.168.1.194   80:30001/TCP   2m30s
+
+# kubectl port-forward service/nginx 80:80
+
+# kubectl expose deployment hello-world --type=LoadBalancer --name=nginx --external-ip=192.168.0.194
+
+# kubectl expose deployment nginx --type=NodePort
+
+# kubectl expose deployment nginx --type=LoadBalancer --name=nginx-access
+
+# https://coredns.io/manual/installation/
+
+# https://kubernetes.io/docs/tutorials/services/connect-applications-service/
+
+# https://coredns.io/manual/installation/
+
+# https://coredns.io/2018/01/29/deploying-kubernetes-with-coredns-using-kubeadm/#understanding-coredns-configuration
+# https://coredns.io/2018/01/29/deploying-kubernetes-with-coredns-using-kubeadm/#understanding-coredns-configuration
+# https://github.com/projectcalico/calico/issues/2695
+# https://tech.kakao.com/2021/03/03/network-node-manager/
+# https://deploy.live/blog/kubernetes-networking-problems-due-to-the-conntrack/
+#
 

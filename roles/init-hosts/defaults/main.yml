@@ -8,7 +8,7 @@ rh9_common_devel_pkgs: "make,perl,gcc,tcl,tk,libnl3"
 
 suse_common_pkgs: "firewalld,sshpass,cifs-utils,nfs-utils,lsof,glibc-devel,rpcbind,xfsprogs,kernel-devel,jq,expect,net-tools"
 suse_common_devel_pkgs: "git"
-suse15_common_devel_pkgs: "make,perl,gcc,tcl,tk"
+suse15_common_devel_pkgs: "make,perl,gcc,tcl,tk,helm"
 # libnl, glibc-headers, elfutils-libelf-devel - No provider
 
 # libnl,elfutils-libelf-devel,kernel-devel

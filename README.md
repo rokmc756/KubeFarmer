@@ -113,6 +113,7 @@ $ make uninstall
 * https://stackoverflow.com/questions/62795930/how-to-install-kubernetes-in-suse-linux-enterprize-server-15-virtual-machines
 * https://documentation.suse.com/ko-kr/sles/15-SP2/html/SLES-all/cha-selinux.html
 * https://k21academy.com/docker-kubernetes/container-runtime-is-not-running/
+* https://tuanpembual.wordpress.com/2020/10/15/run-opensuse-kubic-like-k8s-podman-cri-o-on-alibaba-cloud/
 
 
 ## Planing
