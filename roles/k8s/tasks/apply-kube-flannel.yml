@@ -1,0 +1,7 @@
+- name: Setup Networking with Kube-Flannel
+  shell: |
+    kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/bc79dd1505b0c8681ece4de4c0d86c5cd2643275/Documentation/kube-flannel.yml
+  register: kube_flannel_network_setup
+  when: inventory_hostname in groups['master']
+- debug: msg={{ kube_flannel_network_setup }}
+  when: print_debug == true and inventory_hostname in groups['master']

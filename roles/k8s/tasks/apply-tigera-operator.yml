@@ -1,0 +1,41 @@
+- name: Install the Tigera Calico Operator
+  shell:
+    kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v{{ k8s.cni.major_version }}.{{ k8s.cni.minor_version }}.{{ k8s.cni.patch_version }}/manifests/tigera-operator.yaml
+  register: tigera_calico_operator_installed
+  when: inventory_hostname in groups['master']
+- debug: msg={{ tigera_calico_operator_installed }}
+  when: print_debug == true and inventory_hostname in groups['master']
+
+
+- name: Download Custom Resource Definitions
+  get_url:
+    url: https://raw.githubusercontent.com/projectcalico/{{ k8s.cni.name }}/v{{ k8s.cni.major_version }}.{{ k8s.cni.minor_version }}.{{ k8s.cni.patch_version }}/manifests/custom-resources.yaml
+    dest: /root/custom_resources.yaml
+    mode: 0644
+  register: custom_resources_downloaded
+  when: inventory_hostname in groups['master']
+- debug: msg={{ custom_resources_downloaded }}
+  when: print_debug == true and inventory_hostname in groups['master']
+
+
+- name: Modify CIDR of Custom Resources
+  lineinfile:
+    dest: /root/custom_resources.yaml
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    state: "{{ item.state }}"
+    backrefs: "{{ item.backrefs }}"
+  register: custom_resources_cidr_modified
+  with_items:
+    - { regexp: "^      cidr: \"192.168.0.0/16\"", line: "      cidr: \"{{ k8s.cni.pod_network }}\"", state: present, backrefs: yes }
+  when: inventory_hostname in groups['master']
+- debug: msg={{ custom_resources_cidr_modified }}
+  when: print_debug == true and inventory_hostname in groups['master']
+
+
+- name: Apply Custom Resources
+  command: kubectl apply -f /root/custom_resources.yaml
+  register: custom_resources_applied
+  when: inventory_hostname in groups['master']
+- debug: msg={{ custom_resources_applied }}
+  when: print_debug == true and inventory_hostname in groups['master']

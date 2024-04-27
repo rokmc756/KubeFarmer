@@ -125,3 +125,8 @@ Deploy VMware-Postgres and MySQL
 iscsiadm --mode node --targetname iqn.2022-02.io.pivotal.jtest:labs.target01 --portal 192.168.0.2 -u
 iscsiadm --mode node --targetname iqn.2022-02.io.pivotal.jtest:labs.target01 --portal 192.168.0.2 -o delete
 ```
+
+## Debugging
+* DNS - https://kubernetes.io/docs/tasks/administer-cluster/dns-debugging-resolution/
+* Network - https://yandex.cloud/en/docs/managed-kubernetes/operations/calico?utm_referrer=https%3A%2F%2Fwww.google.com%2F
+

@@ -1,0 +1,37 @@
+# url: https://raw.githubusercontent.com/projectcalico/calico/v3.25.0/manifests/calico.yaml
+- name: Download Calico Networking
+  get_url:
+    url: https://raw.githubusercontent.com/projectcalico/{{ k8s.cni.name }}/v{{ k8s.cni.major_version }}.{{ k8s.cni.minor_version }}.{{ k8s.cni.patch_version }}/manifests/calico.yaml
+    dest: /root/calico.yaml
+    mode: 0644
+  register: calico_downloaded
+  when: inventory_hostname in groups['master']
+- debug: msg={{ calico_downloaded }}
+  when: print_debug == true and inventory_hostname in groups['master']
+
+
+- name: Modify /root/calica.yaml for CIDR
+  lineinfile:
+    dest: /root/calico.yaml
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    state: "{{ item.state }}"
+    backrefs: "{{ item.backrefs }}"
+  register: calica_cidr_modified
+  with_items:
+    - { regexp: "^            # - name: CALICO_IPV4POOL_CIDR", line: "            - name: CALICO_IPV4POOL_CIDR", state: present, backrefs: yes }
+    - { regexp: "^            #   value: \"192.168.0.0/16\"", line: "              value: \"{{ k8s.cni.pod_network }}\"", state: present, backrefs: yes }
+  when: inventory_hostname in groups['master']
+- debug: msg={{ calica_cidr_modified }}
+  when: print_debug == true and inventory_hostname in groups['master']
+#  #  - { regexp: "^            #   value: \"192.168.0.0/16\"", line: "              value: \"10.142.0.0/16\"", state: present, backrefs: yes }
+#  #  - { regexp: "^            #   value: \"192.168.0.0/16\"", line: "              value: \"192.168.0.0/24\"", state: present, backrefs: yes }
+
+
+- name: Setup Networking with Calico
+  command: kubectl apply -f /root/calico.yaml
+  register: calico_network_setup
+  when: inventory_hostname in groups['master']
+- debug: msg={{ calico_network_setup }}
+  when: print_debug == true and inventory_hostname in groups['master']
+
