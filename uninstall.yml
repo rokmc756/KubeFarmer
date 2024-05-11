@@ -14,13 +14,13 @@
     stop_services: true
     uninstall_pkgs: true
     uninstall_config: true
-    disable_firewall: false
+    disable_firewall: true
     reboot_required: true
     calico_network: false
     k8s_network_address: "192.168.0.0/16"
   roles:
     - k8s
-#   - init-hosts
+#    - init-hosts
 #   - dashboard
 
 
