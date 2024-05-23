@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: demo-tls
+type: kubernetes.io/tls
+data:
+  tls.crt: |
+    CHANGE_TLS_CERT
+  tls.key: |
+    CHANGE_TLS_KEY

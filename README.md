@@ -135,4 +135,7 @@ iscsiadm --mode node --targetname iqn.2022-02.io.pivotal.jtest:labs.target01 --p
 
 ## References
 * https://medium.com/@muppedaanvesh/deploying-nginx-on-kubernetes-a-quick-guide-04d533414967
+* https://kubernetes.io/docs/tasks/run-application/run-stateless-application-deployment/
+* https://aws.plainenglish.io/how-to-deploy-a-nginx-server-with-kubernetes-9228f17e399c
+* https://medium.com/@sumuduliyan/kubernetes-networking-with-calico-623f4583ae8d
 

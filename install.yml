@@ -12,7 +12,7 @@
     container_runtime: "containerd"   # crio or podman?
     print_debug: true
     install_pkgs: true
-    enable_firewall: false
+    enable_firewall: true
     launch_kube_software: true
     init_k8s: true
     calico_network: false
@@ -20,7 +20,6 @@
   roles:
     - k8s
 #    - init-hosts
-
 #    - dashboard
 
 #

@@ -1,4 +1,3 @@
----
 # Reinit Kubernetes
 - name: Unset Variables of Token and Certs Generated Previously by Kubeadm Init
   set_fact:
@@ -18,20 +17,20 @@
 #  command: firewall-cmd --reload
 
 
-- name: Start Firewalld For All Nodes
-  systemd:
-    name: firewalld
-    state: restarted
-    enabled: yes
+#- name: Start Firewalld For All Nodes
+#  systemd:
+#    name: firewalld
+#    state: restarted
+#    enabled: yes
 
 
-- name: Enable Masquerade On Master Node
-  firewalld:
-    masquerade: true
-    state: enabled
-    permanent: true
-    zone: public
-  when: inventory_hostname in groups['master'] or inventory_hostname in groups['workers']
+#- name: Enable Masquerade On Master Node
+#  firewalld:
+#    masquerade: true
+#    state: enabled
+#    permanent: true
+#    zone: public
+#  when: inventory_hostname in groups['master'] or inventory_hostname in groups['workers']
 
 
 - name: Restart Containerd to Apply Changes in config.toml
@@ -59,8 +58,9 @@
   command: kubeadm config images pull
   when: inventory_hostname in groups['master']
 
-#    kubeadm init --apiserver-advertise-address={{ hostvars[groups['master'][0]]['ansible_'~netdev1]['ipv4']['address'] }} \
-#    --pod-network-cidr=192.168.0.0/24 --cri-socket=unix:///run/containerd/containerd.sock --ignore-preflight-errors=all --v=5
+# kubeadm init --apiserver-advertise-address={{ hostvars[groups['master'][0]]['ansible_'~netdev1]['ipv4']['address'] }} \
+# --pod-network-cidr=192.168.0.0/24 --cri-socket=unix:///run/containerd/containerd.sock --ignore-preflight-errors=all --v=5
+
 - name: Initialize Kubernetes Master and Create Cluster
   shell: |
     kubeadm init --apiserver-advertise-address={{ hostvars[groups['master'][0]]['ansible_'~netdev1]['ipv4']['address'] }} \
@@ -261,3 +261,11 @@
   when: print_debug == true and inventory_hostname in groups['master']
 
 
+- name: Start Firewalld
+  systemd:
+    name: firewalld
+    state: stopped
+    enabled: no
+  register: firewalld_started
+- debug: msg={{ firewalld_started }}
+  when: print_debug == true

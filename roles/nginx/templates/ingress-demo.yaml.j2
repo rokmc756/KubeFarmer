@@ -1,0 +1,21 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-demo
+spec:
+  tls:
+  - hosts:
+    - ingress-demo.jtest.suse.com
+    secretName: demo-tls
+  rules:
+  - host: ingress-demo.jtest.suse.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: demo
+            port:
+              number: 3000
+  ingressClassName: nginx

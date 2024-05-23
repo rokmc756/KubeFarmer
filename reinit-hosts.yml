@@ -1,14 +1,32 @@
-#---
+---
+#- hosts: harbor
+#  become: yes
+#  vars:
+#    print_debug: true
+#  roles:
+#    - harbor
+
 - hosts: all
   become: yes
   vars:
+    container_runtime: "containerd"   # crio or podman?
     print_debug: true
-    install_dep_packages: true
-    install_k8s_packages: true
-    uninstall_dep_packages: true
-    uninstall_k8s_packages: true
-#    calico_network: false
-#    k8s_network_address: "192.168.0.0/16"
+    install_pkgs: true
+    enable_firewall: true
+    launch_kube_software: true
+    init_k8s: true
+    calico_network: false
+    k8s_network_address: "192.168.0.0/16"
   roles:
-    - k8s-cluster
-    - dashboard
+    - k8s
+#    - init-hosts
+#    - dashboard
+
+#
+#- hosts: ext_storages
+#minio
+#  become: yes
+#  roles:
+#    - minio
+#    - iscsi-target
+

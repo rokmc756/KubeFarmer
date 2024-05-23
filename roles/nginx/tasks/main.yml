@@ -1,0 +1,28 @@
+---
+# Deploy NGINX Web Server and Metallb
+
+# for now fail if it's not a Red Hat and SuSE based system
+- name: Check OS ( Kubernetes )
+  fail: msg="Not a Red Hat or SuSE based system!"
+  when: ansible_os_family != 'RedHat' or  ansible_os_family != 'CentOS' or  ansible_os_family != 'Rocky' or ansible_os_family != 'openSUSE Leap'
+
+
+- name: Set facts for NGINX
+  import_tasks: set-nginx-facts.yml
+  tags:
+    - install
+    - uninstall
+  when: inventory_hostname in groups['master']
+
+
+- name: Deploy NGINX Web Server
+  import_tasks: install.yml
+  tags: install
+  when: inventory_hostname in groups['master']
+
+
+- name: Destroy NGINX Web Server
+  import_tasks: uninstall.yml
+  tags: uninstall
+  when: inventory_hostname in groups['master']
+

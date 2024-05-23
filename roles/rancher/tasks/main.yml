@@ -1,0 +1,28 @@
+---
+# Deploy Kubernetes Cluster
+
+# for now fail if it's not a Red Hat based system
+- name: Check OS ( Kubernetes )
+  fail: msg="Not a Red Hat or SuSE based system!"
+  when: ansible_os_family != 'RedHat' or  ansible_os_family != 'CentOS' or  ansible_os_family != 'Rocky' or ansible_os_family != 'openSUSE Leap'
+
+
+- name: Set facts for Rancher
+  import_tasks: set-rancher-facts.yml
+  tags:
+    - install
+    - uninstall
+  when: inventory_hostname in groups['master']
+
+
+- name: Deploy Rancher
+  import_tasks: install.yml
+  tags: install
+  when: inventory_hostname in groups['master']
+
+
+- name: Destroy Rancher
+  import_tasks: uninstall.yml
+  tags: uninstall
+  when: inventory_hostname in groups['master']
+

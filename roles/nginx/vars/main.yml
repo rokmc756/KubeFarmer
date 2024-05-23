@@ -1,0 +1,20 @@
+base_path: /root/
+domain: jtest.suse.com
+
+nginx:
+  work_dir: "{{ base_path }}/nginx-k8s"
+  ssl:
+    dir: "{{ base_path }}/nginx-certs"
+    days: 3660
+    country: "KR"
+    state: "Seoul"
+    location: "Guro"
+    organization: "SUSE"
+    organization_unit: "Consulting"
+    common_name: "jtest.suse.com"
+    email: "rokmc756@gmail.com"
+
+apache:
+  work_dir: "{{ base_path }}/apache-k8s"
+
+

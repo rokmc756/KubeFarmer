@@ -1,0 +1,287 @@
+# https://blog.andreev.it/2023/10/install-metallb-on-kubernetes-cluster-running-on-vmware-vms-or-bare-metal-server/
+
+# Do this first on the master.
+# kubectl edit configmap -n kube-system kube-proxy
+# apiVersion: kubeproxy.config.k8s.io/v1alpha1
+# kind: KubeProxyConfiguration
+# mode: "ipvs"
+# ipvs:
+#  strictARP: true
+
+# Sctually apply the changes, returns nonzero returncode on errors only
+- name: X
+  shell: |
+    kubectl get configmap kube-proxy -n kube-system -o yaml | sed -e "s/strictARP: false/strictARP: true/" | kubectl apply -f - -n kube-system
+  register: X
+- debug: msg={{ X }}
+# See what changes would be made, returns nonzero returncode if different
+# kubectl get configmap kube-proxy -n kube-system -o yaml | sed -e "s/strictARP: false/strictARP: true/" | kubectl diff -f - -n kube-system
+-
+
+- name: Deploy MetalLB
+  shell: |
+    kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.13.11/config/manifests/metallb-native.yaml
+  register: deploy_metallb
+- debug: msg={{ deploy_metallb }}
+
+
+- name: Check the pods running in metallb-system namespace.
+  shell: |
+    kubectl get pods -n metallb-system
+  register: check_metallb_pods
+- debug: msg={{ check_metallb_pods }}
+
+
+# Let’s configure our load balancer to give IPs in this 192.168.0.210-192.168.0.250 range. Change to your needs accordingly in line 8.
+# Save it as a lb-config.yaml file.
+- name: Configure Metallb with the given IPs
+  shell: |
+    lb-config.yaml
+  register: config_metallb_ips
+  until: X
+- debug: msg={{ config_metallb_ips }}
+
+
+- name: Deploy Metallb with Configuration
+  shell: |
+    kubectl apply -f lb-config.yaml
+  register: deploy_metallb_config
+- debug: msg={{ deploy_metallb_config }}
+
+
+# Now, we can deploy a simple app and a load balancer. Save the file as demo.yaml.
+# This is an app that I made in Node.js that listens on port 3000 to display the IP of the pod that the load balancer hits.
+# You can use it for any type of a load balancer, not just MetalLB. It’s a super simple app that prints the IP of the pod where it’s running.
+- name: Copy Demo Yaml
+  template:
+    src: demo.yaml.j2
+    dest: /root/demo.yaml
+  register: copy_demo_yaml
+- debug: msg={{ copy_demo_yaml }}
+
+
+# Deploy the App
+- name: Deploy Simple App
+  shell: |
+    kubectl apply -f demo.yaml
+  register: deploy_simple_app
+- debug: msg={{ deploy_simple_app }}
+
+
+# Check the load balancer service.
+# …and if you go to that IP (192.168.0.210) in your browser, you’ll see the IP of the pods that the load balancer hits.
+- name: Check Load Balancer Service
+  shell: |
+    kubectl get svc
+  register: check_lb_service
+- debug: msg={{ check_lb_service }}
+
+
+# Install nginx ingress reverse proxy
+# The problem with the scenario above is that for every service you need to expose, you need a different IP from the IP pool that we’ve assigned to MetalLB (.50-.60).
+# A better solution is to install an nginx ingress that will act as a reverse proxy, but for this you’ll need a working DNS server as the services will share the same IP, but different FQDN.
+# So, in practice it looks like this.
+# Install nginx ingress first.
+
+- name: Install NGINX Ingress Reverse Proxy
+  shell: |
+    kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.8.2/deploy/static/provider/cloud/deploy.yaml
+  register: install_nginx_ingress_reverse_proxy
+- debug: msg={{ install_nginx_ingress_reverse_proxy }}
+
+
+- name: Check NGINX Ingress Reverse Proxy
+  shell: |
+    kubectl get pods -n ingress-nginx
+  register: check_nginx_ingress_reverse_proxy
+- debug: msg={{ check_nginx_ingress_reverse_proxy }}
+
+
+- name: Get NGINX Ingress Reverse Proxy
+  shell: |
+    kubectl get service ingress-nginx-controller -n=ingress-nginx
+  register: get_nginx_ingress_reverse_proxy
+- debug: msg={{ get_nginx_ingress_reverse_proxy }}
+
+
+# Don’t worry if the two nginx ports are not running and it says – “completed”.
+# It will show the external IP that’s assigned to nginx from MetalLB.
+# For some reason, nginx ingress won’t work without this line. Many people have this problem in a bare-metal environment and this is the workaround.
+- name: Apply workaround to fix NGINX Ports which is not running and "completed"
+  shell: |
+    kubectl delete -A ValidatingWebhookConfiguration ingress-nginx-admission
+  register: apply_workaround_nginx_ports
+- debug: msg={{ apply_workaround_nginx_ports }}
+
+
+# Now, let’s create an nginx web server. This has nothing to do with nginx ingress, it’s completely separate.
+# It's exposing the nginx deploymenty and creating a rule that will hit the deployment on port 80 with nginx.jtest.suse.com as FQDN.
+# NOTE: If your browser can’t resolve this URL, it won’t work. So, make sure you have a DNS or /etc/hosts file or some type of name resolution.
+- name: Create NGINX Web Server
+  shell: |
+    kubectl create deployment nginx --image=nginx --port=80
+  register: create_nginx_web_server
+- debug: msg={{ create_nginx_web_server }}
+
+
+- name: Expose NGINX Web Server
+  shell: |
+    kubectl expose deployment nginx
+  register: expose_nginx_web_server
+- debug: msg={{ expose_nginx_web_server }}
+
+
+- name: Create NGINX Ingress
+  shell: |
+    kubectl create ingress nginx --class=nginx --rule nginx.jtest.suse.com/=nginx:80
+  register: create_nginx_ingress
+- debug: msg={{ create_nginx_ingress }}
+
+
+# Then, let’s install Apache server that runs on the same IP and same port 80.
+- name: Install Apache HTTPD Server
+  shell: |
+    kubectl create deployment httpd --image=httpd --port=80
+  register: install_apache_httpd_server
+- debug: msg={{ install_apache_httpd_server }}
+
+
+- name: Expose Apache HTTPD Server
+  shell: |
+    kubectl expose deployment httpd
+  register: expose_apache_server
+- debug: msg={{ expose_apache_server }}
+
+
+- name: Create Apache HTTPD Server Ingress
+  shell: |
+    kubectl create ingress httpd --class=nginx --rule httpd.jtest.suse.com/=httpd:80
+  register: create_apache_server_ingress
+- debug: msg={{ create_apache_server_ingress }}
+
+
+# If everything is OK, you’ll be able to access both web servers using their URLs.
+# If you want to put Grafana and/or KubeCost behind nginx ingress, read these short posts here and here.
+# If you want to use yaml for deployment, here is an example of that. It creates 6 replicas of a pod that prints the IP where the pod is running.
+# The service runs on port 3000. Then it creates a ClusterIP on the same port and puts the ClusterIP behind the ingress. Change the hostname at line 39.
+- name: Copy Demo Local Yaml
+  template:
+    src: demo-local.yaml.j2
+    dest: /root/demo-local.yaml
+  register: copy_demo_local_yaml
+- debug: msg={{ copy_demo_local_yaml }}
+
+
+# SSL certificates
+# The examples above allow you to run multiple websites behind a reverse proxy on port 80, but in reality you want everything on port 443 and with SSL certificates.
+# I’ll describe two scenarios: with a valid cert and self-signed certificate.Fortunately, nginx ingress listens on port 443 and does automatic redirect from http->https
+# so you don’t have to worry about any changes. All yopu have to do now is to reference the TLS secret that we created.
+# Compare the highlighted lines in this YAML with the previous one.
+- name: Copy Ingress Demo Yaml
+  template:
+    src: ingress-demo.yaml.j2
+    dest: /root/ingress-demo.yaml
+  register: copy_ingress_demo_yaml
+- debug: msg={{ copy_ingress_demo_yaml }}
+
+
+# Change the hostname in line 11 and 14 to match your cert and you can deploy the app.
+# Self-signed certificates
+# First, we have to create a Certificate Authority (CA). I’ll use homelab.local as my domain.
+- name: Create a Certificate Authority (CA)
+  shell: |
+    openssl req -x509 -nodes -sha512 -days 365 -newkey rsa:4096 \
+    -keyout rootCA.key -out rootCA.crt -subj "/C=KR/ST=Seoul/L=Guro/O=HomeLab Org/CN=*.jtest.suse.com"
+  register: create_ca
+- debug: msg={{ create_ca }}
+
+
+# You’ll get two files, rootCA.key (the private key) and rootCA.crt.
+# Create a private key for the wildcard jtest.suse.com domain and a certificate signing request file.
+# You’ll get two files, star.jtest.suse.com.key (the private key for the domain) and star.jtest.suse.com.csr (the certificate signing request).
+- name: Create a Private Key
+  shell: |
+    openssl req -new -nodes -sha512 -days 365 -newkey rsa:4096 \
+    -keyout star.jtest.suse.com.key -out star.jtest.suse.com.csr -subj "/C=KR/ST=Seoul/L=Guro/O=HomeLab Org/CN=*.jtest.suse.com"
+  register: create_private_key
+- debug: msg={{ create_private_key }}
+
+
+# Create this file where you’ll specify your domain name and eventually your IP, but the IP is not necessary.
+- name: Copy v3 ext
+  template:
+    src: v3.ext.j2
+    dest: /root/v3.ext
+  register: copy_v3_ext
+- debug: msg={{ copy_v3_ext }}
+
+
+# Sign the certificate signing request and create the certificate file. You’ll get one certificate file star.homelab.local.crt.
+- name: Sign the certificate signing request and create the certificate file
+  shell: |
+    openssl x509 -req -sha512 -days 365 -in star.jtest.suse.com.csr -CA rootCA.crt -CAkey trootCA.key \
+    -CAcreateserial -out star.jtest.suse.com.crt -extfile v3.ext
+  register: sign_create_cert
+- debug: msg={{ sign_create_cert }}
+
+
+# Combine the certificate and the CA certificate in a single file.
+- name: Combine the certificate and the CA certificate in a single file
+  shell: |
+    cat star.jtest.suse.com.crt rootCA.crt > star.jtest.suse.com.chain.crt
+  register: combile_cert_ca
+- debug: msg={{ combile_cert_ca }}
+
+
+# Create this tls.yaml template file.
+- name: Copy TLS YAML
+  template:
+    src: tls.yaml.j2
+    dest: /root/tls.yaml
+  register: copy_tls_yaml
+- debug: msg={{ copy_tls_yaml }}
+
+
+# Encode both the domain certificate chain file and the domain private key file.
+- name: Encode Domain Certificate Chain
+  shell: |
+    base64 -w0 star.jtest.suse.com.key
+  register: encode_domain_cert_chain
+- debug: msg={{ encode_domain_cert_chain }}
+
+
+- name: Encode Doman Private Key
+  shell: |
+    base64 -w0 star.jtest.suse.com.chain.crt
+  register: encode_domain_private_key
+- debug: msg={{ encode_domain_private_key }}
+
+
+- name: Replace TLS Cert and Key
+  lineinfile:
+    path: /root/tls.yaml
+    regexp: "{{ item.org }}"
+    line: "{{ item.change}}"
+    backrefs: yes
+  with_items:
+    - { org: "CHANGE_TLS_CERT", change: "{{ encode_domain_cert_chain.stdout }}" }
+    - { org: "CHANGE_TLS_KEY", change: "{{ encode_domain_private_key.stdou }}" }
+  #  regexp: '^(.*)option domain-name-servers(.*)$'
+
+# You’ll get two very long single lines. Add these two lines to the tls.yaml template file
+# But make sure they are properly indented (see the screenshot in the previous section).
+# Now, you can create the secret.
+- name: Create Secret
+  shell: |
+    kubectl apply -f tls.yaml
+  register: create_secret
+- debug: msg={{ create_secret }}
+
+
+# You can also use kubectl to create the secret, see the previous section.
+# Save this file as demo-local.yaml and deploy it using kubectl apply -f demo-local.yaml.
+
+# + expand source
+# You’ll be able to go to your browser and check demo.homelab.local and see the page after the SSL warning.
+# But if you double-click the rootCA.crt file on your local machine, you can import the certificate in the Trusted Root Certificates store and you won’t get that warning anymore.
+

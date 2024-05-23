@@ -4,7 +4,7 @@ ansible_become_pass: "changeme"
 k8s:
   cluster_name: jack-suse-k8s
   major_version: "1"
-  minor_version: "30"
+  minor_version: "28"
   patch_version: "0"
   build_version: ""
   repo_url: ""

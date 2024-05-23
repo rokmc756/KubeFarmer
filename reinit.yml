@@ -1,16 +1,14 @@
----
 - hosts: all
   become: yes
   vars:
-    container_runtime: "containerd"
+    container_runtime: "containerd"   # crio or podman?
     print_debug: true
+    enable_firewall: false
     stop_services: true
-    uninstall_pkgs: true
-    uninstall_config: true
-    disable_firewall: false
-    reboot_required: false
+    start_services: true
     calico_network: false
     k8s_network_address: "192.168.0.0/16"
   roles:
     - k8s
-
+#    - init-hosts
+#    - dashboard
