@@ -3,6 +3,7 @@
   shell: |
     kubectl delete secret --namespace cattle-system bootstrap-secret
   register: X
+  ignore_errors: yes
 - debug: msg={{ X }}
   #  kubectl get secret --namespace cattle-system bootstrap-secret -o go-template='{{.data.bootstrapPassword|base64decode}}{{"\n"}}'
 
@@ -44,11 +45,10 @@
 - debug: msg={{ X }}
 
 
-
 # 6
 - name: X
   shell: |
-    kubectl delete -f /kubernetes_config/rancher/rancher-loadbalancer.yml
+    kubectl delete -f /root/rancher-loadbalancer.yml
   register: X
   ignore_errors: yes
 - debug: msg={{ X }}
@@ -57,12 +57,13 @@
 
 
 # 7
-#- name: X
-#  shell: |
-#    rm -f /kubernetes_config/rancher/rancher-loadbalancer.yml
-#  register: X
-#  ignore_errors: yes
-#- debug: msg={{ X }}
+- name: X
+  shell: |
+    rm -f /root/rancher-loadbalancer.yml
+  register: X
+  ignore_errors: yes
+- debug: msg={{ X }}
+  # rm -f /kubernetes_config/rancher/rancher-loadbalancer.yml
 
 
 # 8
@@ -95,13 +96,12 @@
 
 
 # 11
-- name: X
-  shell: |
-    kubectl delete namespace cert-manager
-  register: X
-  ignore_errors: yes
-- debug: msg={{ X }}
-
+#- name: X
+#  shell: |
+#    kubectl delete namespace cert-manager
+#  register: X
+#  ignore_errors: yes
+#- debug: msg={{ X }}
 
 
 # 12
@@ -115,21 +115,21 @@
 
 
 # 13
-- name: X
-  shell: |
-    kubectl delete namespace cattle-system
-  register: X
-  ignore_errors: yes
-- debug: msg={{ X }}
+#- name: X
+#  shell: |
+#    kubectl delete namespace cattle-system
+#  register: X
+#  ignore_errors: yes
+#- debug: msg={{ X }}
 
 
 # 14
-- name: X
-  shell: |
-    helm repo update
-  register: X
-  ignore_errors: yes
-- debug: msg={{ X }}
+#- name: X
+#  shell: |
+#    helm repo update
+#  register: X
+#  ignore_errors: yes
+#I- debug: msg={{ X }}
 
 
 # 15
@@ -143,18 +143,19 @@
 
 
 # 16
-- name: X
-  shell: |
-    helm upgrade nginx-ingress nginx-stable/nginx-ingress --namespace=nginx-ingress
-  register: X
-  ignore_errors: yes
-- debug: msg={{ X }}
-  #  helm upgrade nginx-ingress nginx-stable/nginx-ingress --namespace=nginx-ingress
+#- name: X
+#  shell: |
+#    helm upgrade nginx-ingress nginx-stable/nginx-ingress --namespace=nginx-ingress
+#  register: X
+#  ignore_errors: yes
+#- debug: msg={{ X }}
+#  #  helm upgrade nginx-ingress nginx-stable/nginx-ingress --namespace=nginx-ingress
 
 
 # 17
 - name: X
   shell: |
+    cd /root/kubernetes-ingress/deployments/helm-chart; \
     kubectl delete -f crds/ --namespace=nginx-ingress
   register: X
   ignore_errors: yes
@@ -191,12 +192,12 @@
 
 
 # 21
-- name: X
-  shell: |
-    helm repo update
-  register: X
-  ignore_errors: yes
-- debug: msg={{ X }}
+#- name: X
+#  shell: |
+#    helm repo update
+#  register: X
+#  ignore_errors: yes
+#- debug: msg={{ X }}
 
 
 # 22
@@ -210,12 +211,13 @@
 
 
 # 23
-- name: X
-  shell: |
-    cd kubernetes-ingress/deployments/helm-chart
-  register: X
-  ignore_errors: yes
-- debug: msg={{ X }}
+#- name: X
+#  shell: |
+#    cd kubernetes-ingress/deployments/helm-chart
+#  register: X
+#  ignore_errors: yes
+#- debug: msg={{ X }}
+
 
 # 24
 - name: X
@@ -231,9 +233,11 @@
 - name: X
   shell: |
     kubectl delete -f /metallb-config/metallb-config-vmware.yaml
+    kubectl delete -f /root/metallb-config-vmware.yaml
   register: X
   ignore_errors: yes
 - debug: msg={{ X }}
+  #  kubectl delete -f /metallb-config/metallb-config-vmware.yaml
 
 
 # 26
@@ -249,11 +253,12 @@
 # 27
 - name: X
   shell: |
-    kubectl delete secret generic -n metallb-system memberlist
+    kubectl delete secret -n metallb-system memberlist
   register: X
   ignore_errors: yes
 - debug: msg={{ X }}
   #  kubectl create secret generic -n metallb-system memberlist --from-literal=secretkey="$(openssl rand -base64 128)"
+  #  kubectl delete secret generic -n metallb-system memberlist
 
 
 # 28
@@ -273,6 +278,25 @@
 #  register: X
 #  ignore_errors: yes
 #- debug: msg={{ X }}
+
+
+# https://stackoverflow.com/questions/52369247/namespace-stucked-as-terminating-how-i-removed-it
+- name: Force Delete Namespace
+  shell: |
+    NAMESPACE={{ item }}
+    kubectl proxy & kubectl get namespace $NAMESPACE -o json | jq '.spec = {"finalizers":[]}' > /root/temp.json
+    kubectl replace --raw "/api/v1/namespaces/$NAMESPACE/finalize" -f /root/temp.json
+  register: X
+  ignore_errors: yes
+  with_items:
+    - cattle-system
+    - cattle-provisioning-capi-system
+    - cattle-fleet-local-system
+    - cert-manager
+    - metallb-system
+
+#
+- debug: msg={{ X }}
 
 
 # 30

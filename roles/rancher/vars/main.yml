@@ -34,7 +34,7 @@ nginx_ingress:
   build_version:
 
 helm:
-  major_version:
+  major_version: 3
   minor_version:
   patch_version:
   build_version:
