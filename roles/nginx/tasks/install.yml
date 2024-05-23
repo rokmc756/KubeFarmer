@@ -28,23 +28,30 @@
 - name: Check the pods running in metallb-system namespace.
   shell: |
     kubectl get pods -n metallb-system
-  register: check_metallb_pods
-- debug: msg={{ check_metallb_pods }}
+  register: all_containers_running_checked
+  until: all_containers_running_checked.stdout.find("ContainerCreating") == -1
+  retries: 30
+  when: inventory_hostname in groups['master']
+- debug: msg={{ all_containers_running_checked }}
+  when: print_debug == true and inventory_hostname in groups['master']
 
 
 # Let’s configure our load balancer to give IPs in this 192.168.0.210-192.168.0.250 range. Change to your needs accordingly in line 8.
 # Save it as a lb-config.yaml file.
-- name: Configure Metallb with the given IPs
-  shell: |
-    lb-config.yaml
-  register: config_metallb_ips
-  until: X
-- debug: msg={{ config_metallb_ips }}
+- name: Copy Metallb Config Yaml
+  template:
+    src: lb-config.yaml.j2
+    dest: /root/lb-config.yaml
+  register: copy_demo_yaml
+- debug: msg={{ copy_demo_yaml }}
 
+
+- pause:
+    seconds: 30
 
 - name: Deploy Metallb with Configuration
   shell: |
-    kubectl apply -f lb-config.yaml
+    kubectl apply -f /root/lb-config.yaml
   register: deploy_metallb_config
 - debug: msg={{ deploy_metallb_config }}
 
@@ -63,7 +70,7 @@
 # Deploy the App
 - name: Deploy Simple App
   shell: |
-    kubectl apply -f demo.yaml
+    kubectl apply -f /root/demo.yaml
   register: deploy_simple_app
 - debug: msg={{ deploy_simple_app }}
 
@@ -75,6 +82,10 @@
     kubectl get svc
   register: check_lb_service
 - debug: msg={{ check_lb_service }}
+
+
+- pause:
+    seconds: 40
 
 
 # Install nginx ingress reverse proxy
@@ -90,11 +101,16 @@
 - debug: msg={{ install_nginx_ingress_reverse_proxy }}
 
 
-- name: Check NGINX Ingress Reverse Proxy
+- name: Check NGINX Ingress Reverse Proxy is still ContainerCreating
   shell: |
     kubectl get pods -n ingress-nginx
-  register: check_nginx_ingress_reverse_proxy
-- debug: msg={{ check_nginx_ingress_reverse_proxy }}
+  register: check_all_nginx_ingress_containers
+  until: check_all_nginx_ingress_containers.stdout.find("ContainerCreating") == -1
+  retries: 30
+  when: inventory_hostname in groups['master']
+- debug: msg={{ check_all_nginx_ingress_containers }}
+  when: print_debug == true and inventory_hostname in groups['master']
+
 
 
 - name: Get NGINX Ingress Reverse Proxy
@@ -128,6 +144,7 @@
   shell: |
     kubectl expose deployment nginx
   register: expose_nginx_web_server
+  ignore_errors: yes
 - debug: msg={{ expose_nginx_web_server }}
 
 
@@ -191,7 +208,7 @@
 - name: Create a Certificate Authority (CA)
   shell: |
     openssl req -x509 -nodes -sha512 -days 365 -newkey rsa:4096 \
-    -keyout rootCA.key -out rootCA.crt -subj "/C=KR/ST=Seoul/L=Guro/O=HomeLab Org/CN=*.jtest.suse.com"
+    -keyout /root/rootCA.key -out /root/rootCA.crt -subj "/C=KR/ST=Seoul/L=Guro/O=HomeLab Org/CN=*.jtest.suse.com"
   register: create_ca
 - debug: msg={{ create_ca }}
 
@@ -202,7 +219,7 @@
 - name: Create a Private Key
   shell: |
     openssl req -new -nodes -sha512 -days 365 -newkey rsa:4096 \
-    -keyout star.jtest.suse.com.key -out star.jtest.suse.com.csr -subj "/C=KR/ST=Seoul/L=Guro/O=HomeLab Org/CN=*.jtest.suse.com"
+    -keyout /root/star.jtest.suse.com.key -out /root/star.jtest.suse.com.csr -subj "/C=KR/ST=Seoul/L=Guro/O=HomeLab Org/CN=*.jtest.suse.com"
   register: create_private_key
 - debug: msg={{ create_private_key }}
 
@@ -219,8 +236,8 @@
 # Sign the certificate signing request and create the certificate file. You’ll get one certificate file star.homelab.local.crt.
 - name: Sign the certificate signing request and create the certificate file
   shell: |
-    openssl x509 -req -sha512 -days 365 -in star.jtest.suse.com.csr -CA rootCA.crt -CAkey trootCA.key \
-    -CAcreateserial -out star.jtest.suse.com.crt -extfile v3.ext
+    openssl x509 -req -sha512 -days 365 -in /root/star.jtest.suse.com.csr -CA /root/rootCA.crt -CAkey /root/rootCA.key \
+    -CAcreateserial -out /root/star.jtest.suse.com.crt -extfile /root/v3.ext
   register: sign_create_cert
 - debug: msg={{ sign_create_cert }}
 
@@ -228,7 +245,7 @@
 # Combine the certificate and the CA certificate in a single file.
 - name: Combine the certificate and the CA certificate in a single file
   shell: |
-    cat star.jtest.suse.com.crt rootCA.crt > star.jtest.suse.com.chain.crt
+    cat /root/star.jtest.suse.com.crt /root/rootCA.crt > /root/star.jtest.suse.com.chain.crt
   register: combile_cert_ca
 - debug: msg={{ combile_cert_ca }}
 
@@ -245,14 +262,14 @@
 # Encode both the domain certificate chain file and the domain private key file.
 - name: Encode Domain Certificate Chain
   shell: |
-    base64 -w0 star.jtest.suse.com.key
+    base64 -w0 /root/star.jtest.suse.com.key
   register: encode_domain_cert_chain
 - debug: msg={{ encode_domain_cert_chain }}
 
 
 - name: Encode Doman Private Key
   shell: |
-    base64 -w0 star.jtest.suse.com.chain.crt
+    base64 -w0 /root/star.jtest.suse.com.chain.crt
   register: encode_domain_private_key
 - debug: msg={{ encode_domain_private_key }}
 
@@ -261,11 +278,12 @@
   lineinfile:
     path: /root/tls.yaml
     regexp: "{{ item.org }}"
+    regexp: "^(.*){{ item.org }}(.*)$"
     line: "{{ item.change}}"
     backrefs: yes
   with_items:
-    - { org: "CHANGE_TLS_CERT", change: "{{ encode_domain_cert_chain.stdout }}" }
-    - { org: "CHANGE_TLS_KEY", change: "{{ encode_domain_private_key.stdou }}" }
+    - { org: "CHANGE_TLS_CERT", change: "    {{ encode_domain_cert_chain.stdout }}" }
+    - { org: "CHANGE_TLS_KEY", change: "    {{ encode_domain_private_key.stdout }}" }
   #  regexp: '^(.*)option domain-name-servers(.*)$'
 
 # You’ll get two very long single lines. Add these two lines to the tls.yaml template file
@@ -273,7 +291,7 @@
 # Now, you can create the secret.
 - name: Create Secret
   shell: |
-    kubectl apply -f tls.yaml
+    kubectl apply -f /root/tls.yaml
   register: create_secret
 - debug: msg={{ create_secret }}
 
