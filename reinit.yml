@@ -12,3 +12,6 @@
     - k8s
 #    - init-hosts
 #    - dashboard
+#    - nginx
+#    - rancher
+

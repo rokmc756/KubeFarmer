@@ -1,0 +1,287 @@
+# 1
+- name: X
+  shell: |
+    kubectl delete secret --namespace cattle-system bootstrap-secret
+  register: X
+- debug: msg={{ X }}
+  #  kubectl get secret --namespace cattle-system bootstrap-secret -o go-template='{{.data.bootstrapPassword|base64decode}}{{"\n"}}'
+
+
+# 2
+- name: X
+  shell: |
+    kubectl get all -n cattle-system
+  register: X
+  ignore_errors: yes
+- debug: msg={{ X }}
+
+
+# 3
+#- name: X
+#  shell: |
+#    kubectl -n cattle-system rollout status deploy/rancher
+#  register: X
+#  ignore_errors: yes
+#- debug: msg={{ X }}
+
+
+# 4
+- name: X
+  shell: |
+    helm uninstall rancher --namespace cattle-system
+  register: X
+  ignore_errors: yes
+- debug: msg={{ X }}
+  #  helm install rancher rancher-stable/rancher --namespace cattle-system --set hostname=rancher.jtest.suse.com
+
+
+# 5
+- name: X
+  shell: |
+    kubectl get all -n cattle-system
+  register: X
+  ignore_errors: yes
+- debug: msg={{ X }}
+
+
+
+# 6
+- name: X
+  shell: |
+    kubectl delete -f /kubernetes_config/rancher/rancher-loadbalancer.yml
+  register: X
+  ignore_errors: yes
+- debug: msg={{ X }}
+  #  kubectl apply -f /kubernetes_config/rancher/rancher-loadbalancer.yml
+
+
+
+# 7
+#- name: X
+#  shell: |
+#    rm -f /kubernetes_config/rancher/rancher-loadbalancer.yml
+#  register: X
+#  ignore_errors: yes
+#- debug: msg={{ X }}
+
+
+# 8
+- name: X
+  shell: |
+    helm uninstall cert-manager -n cert-manager
+  register: X
+  ignore_errors: yes
+- debug: msg={{ X }}
+  #  helm install cert-manager jetstack/cert-manager --namespace cert-manager --version v1.7.1
+
+
+# 9
+- name: X
+  shell: |
+    helm repo update
+  register: X
+  ignore_errors: yes
+- debug: msg={{ X }}
+
+
+# 10
+- name: X
+  shell: |
+    helm repo remove jetstack
+  register: X
+  ignore_errors: yes
+- debug: msg={{ X }}
+  #  helm repo add jetstack https://charts.jetstack.io
+
+
+# 11
+- name: X
+  shell: |
+    kubectl delete namespace cert-manager
+  register: X
+  ignore_errors: yes
+- debug: msg={{ X }}
+
+
+
+# 12
+- name: X
+  shell: |
+    kubectl delete -f https://github.com/jetstack/cert-manager/releases/download/v1.7.1/cert-manager.crds.yaml
+  register: X
+  ignore_errors: yes
+- debug: msg={{ X }}
+  #  kubectl apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/v1.7.1/cert-manager.crds.yaml
+
+
+# 13
+- name: X
+  shell: |
+    kubectl delete namespace cattle-system
+  register: X
+  ignore_errors: yes
+- debug: msg={{ X }}
+
+
+# 14
+- name: X
+  shell: |
+    helm repo update
+  register: X
+  ignore_errors: yes
+- debug: msg={{ X }}
+
+
+# 15
+- name: X
+  shell: |
+    helm repo remove rancher-stable
+  register: X
+  ignore_errors: yes
+- debug: msg={{ X }}
+  # helm repo add rancher-stable https://releases.rancher.com/server-charts/stable
+
+
+# 16
+- name: X
+  shell: |
+    helm upgrade nginx-ingress nginx-stable/nginx-ingress --namespace=nginx-ingress
+  register: X
+  ignore_errors: yes
+- debug: msg={{ X }}
+  #  helm upgrade nginx-ingress nginx-stable/nginx-ingress --namespace=nginx-ingress
+
+
+# 17
+- name: X
+  shell: |
+    kubectl delete -f crds/ --namespace=nginx-ingress
+  register: X
+  ignore_errors: yes
+- debug: msg={{ X }}
+
+
+# 18
+#- name: X
+#  shell: |
+#    kubectl delete -f crds/ --namespace=nginx-ingress
+#  register: X
+#  ignore_errors: yes
+#- debug: msg={{ X }}
+
+
+
+# 19
+#- name: X
+#  shell: |
+#    kubectl apply -f crds/ --namespace=nginx-ingress
+#  register: X
+#  ignore_errors: yes
+#- debug: msg={{ X }}
+
+
+# 20
+- name: X
+  shell: |
+    helm uninstall nginx-ingress --namespace=nginx-ingress
+  register: X
+  ignore_errors: yes
+- debug: msg={{ X }}
+  # helm install nginx-ingress nginx-stable/nginx-ingress --namespace=nginx-ingress --create-namespace=true
+
+
+# 21
+- name: X
+  shell: |
+    helm repo update
+  register: X
+  ignore_errors: yes
+- debug: msg={{ X }}
+
+
+# 22
+- name: X
+  shell: |
+    helm repo remove nginx-stable
+  register: X
+  ignore_errors: yes
+- debug: msg={{ X }}
+  # helm repo add nginx-stable https://helm.nginx.com/stable
+
+
+# 23
+- name: X
+  shell: |
+    cd kubernetes-ingress/deployments/helm-chart
+  register: X
+  ignore_errors: yes
+- debug: msg={{ X }}
+
+# 24
+- name: X
+  shell: |
+    rm -rf /root/kubernetes-ingress
+  register: X
+  ignore_errors: yes
+- debug: msg={{ X }}
+  # git clone https://github.com/nginxinc/kubernetes-ingress.git --branch v3.0.2
+
+
+# 25
+- name: X
+  shell: |
+    kubectl delete -f /metallb-config/metallb-config-vmware.yaml
+  register: X
+  ignore_errors: yes
+- debug: msg={{ X }}
+
+
+# 26
+- name: X
+  shell: |
+    rm -f /root/metallb-config-vmware.yaml
+  register: X
+  ignore_errors: yes
+- debug: msg={{ X }}
+
+
+
+# 27
+- name: X
+  shell: |
+    kubectl delete secret generic -n metallb-system memberlist
+  register: X
+  ignore_errors: yes
+- debug: msg={{ X }}
+  #  kubectl create secret generic -n metallb-system memberlist --from-literal=secretkey="$(openssl rand -base64 128)"
+
+
+# 28
+- name: X
+  shell: |
+    kubectl delete -f https://raw.githubusercontent.com/metallb/metallb/v0.13.11/config/manifests/metallb-native.yaml
+  register: X
+  ignore_errors: yes
+- debug: msg={{ X }}
+  # kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.13.11/config/manifests/metallb-native.yaml
+
+
+# 29
+#- name: X
+#  shell: |
+#    kubectl get configmap kube-proxy -n kube-system -o yaml | grep strictARP
+#  register: X
+#  ignore_errors: yes
+#- debug: msg={{ X }}
+
+
+# 30
+- name: X
+  shell: |
+    kubectl get configmap kube-proxy -n kube-system -o yaml | sed -e "s/strictARP: true/strictARP: false/" | kubectl apply -f - -n kube-system
+  register: X
+  ignore_errors: yes
+- debug: msg={{ X }}
+  # kubectl get configmap kube-proxy -n kube-system -o yaml | sed -e "s/strictARP: false/strictARP: true/" | kubectl apply -f - -n kube-system
+
+

@@ -6,11 +6,13 @@
 
 
 ~~~
-$ kubectl create namespace metallb-system
+# kubectl create namespace metallb-system
+# helm repo add metallb https://metallb.github.io/metallb
+# helm install metallb metallb/metallb -n metallb-system
 
-$ helm repo add metallb https://metallb.github.io/metallb
+$ kubectl get configmap kube-proxy -n kube-system -o yaml | sed -e "s/strictARP: false/strictARP: true/" | kubectl apply -f - -n kube-system
 
-$ helm install metallb metallb/metallb -n metallb-system
+$ kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.13.11/config/manifests/metallb-native.yaml
 
 $ kubectl create secret generic -n metallb-system memberlist --from-literal=secretkey="$(openssl rand -base64 128)"
 

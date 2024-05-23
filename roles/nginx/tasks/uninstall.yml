@@ -224,14 +224,15 @@
   until: check_demo_pods.stdout.find("Terminating") == -1
   retries: 30
   when: inventory_hostname in groups['master']
-- debug: msg={{ check_demo_pods.stdout }}
-  when: print_debug == true
+#- debug: msg={{ check_demo_pods.stdout }}
+#  when: print_debug == true
 
 
 - name: Delete Remaining Services
   shell: |
     kubectl delete svc nginx
     kubectl delete svc httpd
+    kubectl delete svc demo
   register: delete_remain_services
   when: inventory_hostname in groups['master']
 - debug: msg={{ delete_remain_service }}
