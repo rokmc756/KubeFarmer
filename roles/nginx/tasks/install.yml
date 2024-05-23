@@ -296,6 +296,13 @@
 - debug: msg={{ create_secret }}
 
 
+- name: Appy Demo Local with SSL
+  shell: |
+    kubectl apply -f /root/demo-local.yaml
+  register: apply_demo_local
+- debug: msg={{ apply_demo_local }}
+
+
 # You can also use kubectl to create the secret, see the previous section.
 # Save this file as demo-local.yaml and deploy it using kubectl apply -f demo-local.yaml.
 

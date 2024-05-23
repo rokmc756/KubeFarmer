@@ -224,7 +224,7 @@
   until: check_demo_pods.stdout.find("Terminating") == -1
   retries: 30
   when: inventory_hostname in groups['master']
-- debug: msg={{ check_demo_pods }}
+- debug: msg={{ check_demo_pods.stdout }}
   when: print_debug == true
 
 
