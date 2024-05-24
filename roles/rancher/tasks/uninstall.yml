@@ -1,4 +1,6 @@
 # https://oopflow.medium.com/setup-install-rancher-onto-existing-kubernetes-cluster-for-high-availability-7351f0284592
+# https://stackoverflow.com/questions/55853312/how-to-force-delete-a-kubernetes-namespace#comment134664948_63066915
+
 #
 #- name: Check the Status of the Deployment
 #  shell: |
