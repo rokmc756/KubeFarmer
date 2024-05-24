@@ -11,6 +11,13 @@
 - debug: msg={{ install_helm }}
 
 
+- name: Add Metallb Helm Repo
+  shell: |
+    helm repo add metallb https://metallb.github.io/metallb
+  register: add_metallb_helm_repo
+- debug: msg={{ add_metallb_helm_repo }}
+
+
 - name: Add NGINX Helm Repo
   shell: |
     helm repo add nginx-stable https://helm.nginx.com/stable

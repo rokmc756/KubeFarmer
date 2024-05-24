@@ -16,12 +16,28 @@
 - debug: msg={{ check_strict_arp }}
 
 
+# helm repo add metallb https://metallb.github.io/metallb
+
+- name: Create Namespace for Metallb
+  shell: |
+    kubectl create namespace metallb-system
+  register: create_metallb_namespace
+- debug: msg={{ create_metallb_namespace }}
+
+
 - name: Apply the Metallb Native
   shell: |
-    kubectl apply -f \
-    https://raw.githubusercontent.com/metallb/metallb/v{{ metallb.major_version }}.{{ metallb.minor_version }}.{{ metallb.patch_version }}/config/manifests/metallb-native.yaml
+    helm install metallb metallb/metallb -n metallb-system
   register: apply_metallb_native_config
 - debug: msg={{ apply_metallb_native_config }}
+
+
+#- name: Apply the Metallb Native
+#  shell: |
+#    kubectl apply -f \
+#    https://raw.githubusercontent.com/metallb/metallb/v{{ metallb.major_version }}.{{ metallb.minor_version }}.{{ metallb.patch_version }}/config/manifests/metallb-native.yaml
+#  register: apply_metallb_native_config
+#- debug: msg={{ apply_metallb_native_config }}
 
 
 - name: Create Secret for Metallb Namespace

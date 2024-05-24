@@ -4,6 +4,7 @@
   shell: |
     helm repo remove nginx-stable
   register: remove_nginx_helm_repo
+  ignore_errors: yes
 - debug: msg={{ remove_nginx_helm_repo }}
 
 
@@ -11,6 +12,7 @@
   shell: |
     helm repo remove rancher-stable
   register: remove_rancher_helm_repo
+  ignore_errors: yes
 - debug: msg={{ remove_rancher_helm_repo }}
 
 
@@ -18,13 +20,22 @@
   shell: |
     helm repo remove jetstack
   register: remove_jetstack_helm_repo
+  ignore_errors: yes
 - debug: msg={{ remove_jetstack_helm_repo }}
+
+
+- name: Remove Metallb Helm Repo
+  shell: |
+    helm repo remove metallb
+  register: remove_metallb_helm_repo
+- debug: msg={{ remove_metallb_helm_repo }}
 
 
 - name: Update Helm Repo
   shell: |
     helm repo update
   register: update_helm_repo
+  ignore_errors: yes
 - debug: msg={{ update_helm_repo }}
 
 
@@ -34,5 +45,6 @@
   register: delete_helm
   args:
     chdir: /root
+  ignore_errors: yes
 - debug: msg={{ delete_helm }}
 
