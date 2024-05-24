@@ -8,13 +8,29 @@
 #  register: check_deployment_status
 #- debug: msg={{ check_deployment_status }}
 
-
 # 1
-- name: Check if Rancher is Deployed Successfully
-  shell: kubectl get all -n cattle-system
-  register: check_rancher_deployment
+#- name: Check if Rancher is Deployed Successfully
+#  shell: kubectl get all -n cattle-system
+#  register: check_rancher_deployment
+#  ignore_errors: yes
+#- debug: msg={{ check_rancher_deployment }}
+
+
+# https://cert-manager.io/v1.2-docs/installation/uninstall/kubernetes/
+- name: Get Resources before uninstalling Cert Manager
+  shell:
+    kubectl get Issuers,ClusterIssuers,Certificates,CertificateRequests,Orders,Challenges --all-namespaces | grep -v NAMESPACE | awk 'NF' | awk '{print $1","$2}'
+  register: get_remain_resources0
   ignore_errors: yes
-- debug: msg={{ check_rancher_deployment }}
+- debug: msg={{ get_remain_resources0 }}
+
+
+#- name: Set Array Facts for All Remain Resources and Namespace
+#  set_fact:
+#    all_remain_resources: "{{ all_remain_resources | default([]) + [item.split(',')] }}"
+#  with_items:
+#    - "{{ get_remain_resources0.stdout_lines }}"
+#- debug: msg={{ all_remain_resources }}
 
 
 # 2
@@ -53,37 +69,43 @@
 - debug: msg={{ remove_rancher_lb_config_yaml }}
 
 
-# 5
-- name: Unintall Cert Manager by Helm
-  shell: |
-    helm uninstall cert-manager --namespace cert-manager
-  register: uninstall_cert_manager
-  ignore_errors: yes
-- debug: msg={{ uninstall_cert_manager }}
-# helm install cert-manager jetstack/cert-manager --namespace cert-manager \
-# --version v{{ cm.major_version }}.{{ cm.minor_version }}.{{ cm.patch_version }}
-
-# 6
-- name: Delete Namespace for Cert Manager
-  shell: |
-    kubectl delete all -n cert-manager --all
-    kubectl delete namespace cert-manager
-  register: delete_cert_manager_namespace
-  ignore_errors: yes
-- debug: msg={{ delete_cert_manager_namespace }}
-
-
-# https://stackoverflow.com/questions/52369247/namespace-stucked-as-terminating-how-i-removed-it
-#- name: Force Delete Cert Manager Namespace
+# https://cert-manager.io/v1.2-docs/installation/uninstall/kubernetes/
+#- name: Delete Remain Resources Before Uninstalling Cert Manager
 #  shell: |
-#    NAMESPACE={{ item }}
-#    kubectl proxy & kubectl get namespace $NAMESPACE -o json | jq '.spec = {"finalizers":[]}' > /root/temp.json
-#    kubectl replace --raw "/api/v1/namespaces/$NAMESPACE/finalize" -f /root/temp.json
+#    kubectl delete {{ item[1] }} -n {{ item[0] }}
+#  register: delete_remain_resources
+#  ignore_errors: yes
+#  with_items: 
+#    - "{{ all_remain_resources }}"
+#- debug: msg={{ delete_remain_resources }}
+
+
+# kubectl get rolebinding,role,sa --namespace cert-manager
+# rolebinding.rbac.authorization.k8s.io/cert-manager-webhook:dynamic-serving   Role/cert-manager-webhook:dynamic-serving   59m
+# role.rbac.authorization.k8s.io/cert-manager-webhook:dynamic-serving   2024-05-24T15:51:25Z
+
+# $ kubectl get Issuers,ClusterIssuers,Certificates,CertificateRequests,Orders,Challenges --all-namespaces
+# NAMESPACE       NAME                             READY   AGE
+# cattle-system   issuer.cert-manager.io/rancher   True    119s
+# NAMESPACE       NAME                                              READY   SECRET                AGE
+# cattle-system   certificate.cert-manager.io/tls-rancher-ingress   True    tls-rancher-ingress   119s
+# NAMESPACE       NAME                                                           APPROVED   DENIED   READY   ISSUER    REQUESTOR                                         AGE
+# cattle-system   certificaterequest.cert-manager.io/tls-rancher-ingress-792f2   True                True    rancher   system:serviceaccount:cert-manager:cert-manager   119s
+
+
+
+# https://cert-manager.io/v1.2-docs/installation/uninstall/kubernetes/
+#- name: Delete Namespace for Cert Manager
+#  shell: |
+#    helm --namespace cert-manager delete cert-manager
+#    kubectl delete namespace cert-manager
 #  register: delete_cert_manager_namespace
 #  ignore_errors: yes
-#  with_items:
-#    - cert-manager
 #- debug: msg={{ delete_cert_manager_namespace }}
+#  #  kubectl delete all -n cert-manager --all
+#  #  kubectl delete namespace cert-manager
+
+
 
 
 # 7
@@ -98,37 +120,57 @@
 #    -f https://github.com/jetstack/cert-manager/releases/download/v{{ cm.major_version }}.{{ cm.minor_version }}.{{ cm.patch_version }}/cert-manager.crds.yaml
 
 
-#
-- name: Delete Namespace for Rancher
+# https://stackoverflow.com/questions/52369247/namespace-stucked-as-terminating-how-i-removed-it
+- name: Force Delete Cert Manager Namespace
   shell: |
-    kubectl delete all -n cattle-system --all
-    kubectl delete namespace cattle-system
-  register: delete_rancher_namespace
+    NAMESPACE={{ item }}
+    kubectl proxy & kubectl get namespace $NAMESPACE -o json | jq '.spec = {"finalizers":[]}' > /root/temp.json
+    kubectl replace --raw "/api/v1/namespaces/$NAMESPACE/finalize" -f /root/temp.json
+  register: delete_cert_manager_namespace
   ignore_errors: yes
-- debug: msg={{ delete_rancher_namespace }}
+  with_items:
+    - cert-manager
+- debug: msg={{ delete_cert_manager_namespace }}
+
+
+# https://cert-manager.io/v1.2-docs/installation/uninstall/kubernetes/
+#- name: Delete Namespace for Cert Manager
+#  shell: |
+#    helm --namespace cert-manager delete cert-manager
+#    kubectl delete namespace cert-manager
+#  register: delete_cert_manager_namespace
+#  ignore_errors: yes
+#- debug: msg={{ delete_cert_manager_namespace }}
+
+# Trace why namespace could not be deleted completely
+# $ kubectl get namespace cert-manager -o yaml
+
+
+
+#
+# helm --namespace cattle-system delete cattle-system
+#- name: Delete Namespace for Rancher
+#  shell: |
+#    kubectl delete namespace cattle-system
+#  register: delete_rancher_namespace
+#  ignore_errors: yes
+#- debug: msg={{ delete_rancher_namespace }}
+#  #  kubectl delete all -n cattle-system --all
+#  #  kubectl delete namespace cattle-system
+
 
 
 # https://stackoverflow.com/questions/52369247/namespace-stucked-as-terminating-how-i-removed-it
-#- name: Force Delete Cattle System Namespace
-#  shell: |
-#    NAMESPACE={{ item }}
-#    kubectl proxy & kubectl get namespace $NAMESPACE -o json | jq '.spec = {"finalizers":[]}' > /root/temp.json
-#    kubectl replace --raw "/api/v1/namespaces/$NAMESPACE/finalize" -f /root/temp.json
-#  register: delete_cattle_system_namespace
-#  ignore_errors: yes
-#  with_items:
-#    - cattle-system
-#- debug: msg={{ delete_cattle_system_namespace }}
-
-
-# 9
-#- name: Upgrade NGINX Ingress CRDs
-#  shell: |
-#    helm upgrade nginx-ingress nginx-stable/nginx-ingress --namespace=nginx-ingress
-#  register: upgrade_nginx_ingress_crds
-#  args:
-#    chdir: "{{ base_path }}/kubernetes-ingress/deployments/helm-chart"
-#- debug: msg={{ upgrade_nginx_ingress_crds }}
+- name: Force Delete Cattle System Namespace
+  shell: |
+    NAMESPACE={{ item }}
+    kubectl proxy & kubectl get namespace $NAMESPACE -o json | jq '.spec = {"finalizers":[]}' > /root/temp.json
+    kubectl replace --raw "/api/v1/namespaces/$NAMESPACE/finalize" -f /root/temp.json
+  register: delete_cattle_system_namespace
+  ignore_errors: yes
+  with_items:
+    - cattle-system
+- debug: msg={{ delete_cattle_system_namespace }}
 
 
 # 10
@@ -220,25 +262,28 @@
 
 
 #
-- name: Delete Metallb Namespace
-  shell: |
-    kubectl delete all -n metallb-system --all
-    kubectl delete namespace metallb-system
-  register: delete_metallb_system_namespace
-  ignore_errors: yes
-- debug: msg={{ delete_metallb_system_namespace }}
-
-
-#- name: Force Delete Metallb System Namespace
+#- name: Delete Metallb Namespace
 #  shell: |
-#    NAMESPACE={{ item }}
-#    kubectl proxy & kubectl get namespace $NAMESPACE -o json | jq '.spec = {"finalizers":[]}' > /root/temp.json
-#    kubectl replace --raw "/api/v1/namespaces/$NAMESPACE/finalize" -f /root/temp.json
+#    helm --namespace metallb-system delete metallb-system
+#    kubectl delete namespace metallb-system
 #  register: delete_metallb_system_namespace
 #  ignore_errors: yes
-#  with_items:
-#    - metallb-system
 #- debug: msg={{ delete_metallb_system_namespace }}
+#  # kubectl delete all -n metallb-system --all
+#  # kubectl delete namespace metallb-system
+
+
+
+- name: Force Delete Metallb System Namespace
+  shell: |
+    NAMESPACE={{ item }}
+    kubectl proxy & kubectl get namespace $NAMESPACE -o json | jq '.spec = {"finalizers":[]}' > /root/temp.json
+    kubectl replace --raw "/api/v1/namespaces/$NAMESPACE/finalize" -f /root/temp.json
+  register: delete_metallb_system_namespace
+  ignore_errors: yes
+  with_items:
+    - metallb-system
+- debug: msg={{ delete_metallb_system_namespace }}
 
 
 # 17
