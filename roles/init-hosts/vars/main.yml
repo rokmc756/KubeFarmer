@@ -8,12 +8,12 @@ ansible_become_pass: "changeme"
 sudo_user: "kubeadm"
 sudo_group: "kubeadm"
 local_sudo_user: "jomoon"
-wheel_group: "wheel"            # RHEL / CentOS / Rocky
+wheel_group: "wheel"            # RHEL / CentOS / Rocky / SUSE / OpenSUSE
 # wheel_group: "sudo"           # Debian / Ubuntu
 root_user_pass: "changeme"
 sudo_user_pass: "changeme"
 sudo_user_home_dir: "/home/{{ sudo_user }}"
-domain_name: "jtest.weka.io"
+domain_name: "jtest.suse.com"
 
 uninstall_deps_pkgs: false
 

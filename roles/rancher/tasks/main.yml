@@ -15,6 +15,12 @@
   when: inventory_hostname in groups['master']
 
 
+- name: Enable Helm Repository
+  import_tasks: enable-helm-repo.yml
+  tags: install
+  when: inventory_hostname in groups['master']
+
+
 - name: Deploy Rancher
   import_tasks: install.yml
   tags: install
@@ -23,6 +29,12 @@
 
 - name: Destroy Rancher
   import_tasks: uninstall.yml
+  tags: uninstall
+  when: inventory_hostname in groups['master']
+
+
+- name: Disable Helm Repository
+  import_tasks: disable-helm-repo.yml
   tags: uninstall
   when: inventory_hostname in groups['master']
 

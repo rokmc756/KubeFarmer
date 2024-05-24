@@ -1,7 +1,7 @@
 # 1
 - name: X
   shell: |
-    kubectl delete secret --namespace cattle-system bootstrap-secret
+    kubectl delete secret -n cattle-system bootstrap-secret
   register: X
   ignore_errors: yes
 - debug: msg={{ X }}
@@ -232,7 +232,6 @@
 # 25
 - name: X
   shell: |
-    kubectl delete -f /metallb-config/metallb-config-vmware.yaml
     kubectl delete -f /root/metallb-config-vmware.yaml
   register: X
   ignore_errors: yes
