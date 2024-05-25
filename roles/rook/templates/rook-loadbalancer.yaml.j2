@@ -1,0 +1,40 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ rook.service.metadata.name }}
+  namespace: {{ rook.service.metadata.namespace }}
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-protocol: "true"
+spec:
+  selector:
+    app: rook-ceph
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 80
+    - name: https
+      protocol: TCP
+      port: 443
+      targetPort: 443
+  type: LoadBalancer
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ rook.ingress.metadata.name }}
+  namespace: {{ rook.ingress.metadata.namespace }}
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+spec:
+  rules:
+    - host: {{ rook.ingress.hostname }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: rook-ceph-mgr
+                port:
+                  name: http

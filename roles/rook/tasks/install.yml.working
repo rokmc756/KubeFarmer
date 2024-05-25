@@ -1,0 +1,74 @@
+# https://medium.com/@rkssh-daas/setting-up-rook-ceph-on-k8s-and-safeguarding-your-data-on-an-unmanaged-ha-k8s-cluster-368ee3924cc4
+# https://danawalab.github.io/kubernetes/2020/01/28/kubernetes-rook-ceph.html
+
+
+# Hey there! Today, we’re diving into setting up Rook to manage a Ceph storage cluster on your existing unmanaged HA Kubernetes cluster.
+# Plus, we’ll throw in a neat backup and restore process to keep your data safe and sound.
+#
+# Before We Begin
+#
+# Make sure you’ve got these ready to roll:
+# * Access to your unmanaged HA Kubernetes cluster
+# * kubectl and helm on your local machine
+# * basic understanding of Kubernetes and Helm
+#
+# Step 1: Installing Rook
+# Let’s kick things off by installing Rook on your Kubernetes cluster.
+
+# Set up a namespace for Rook
+
+kubectl create namespace rook-ceph
+
+# Add the Rook Helm repo and install it
+helm repo add rook-release https://charts.rook.io/release
+helm install rook-ceph rook-release/rook-ceph --namespace rook-ceph
+
+# The Rook Operator has been installed. Check its status by running:
+#  kubectl --namespace rook-ceph get pods -l "app=rook-ceph-operator"
+# Visit https://rook.io/docs/rook/latest for instructions on how to create and configure Rook clusters
+
+
+# Step 2: Getting Rook Ready for Ceph
+# Now, let’s get Rook set up to manage your Ceph cluster.
+
+# Apply the Rook operator custom resource
+kubectl apply -f https://raw.githubusercontent.com/rook/rook/release-1.7/cluster/examples/kubernetes/ceph/operator.yaml
+
+# Apply the Ceph cluster custom resource
+kubectl apply -f https://raw.githubusercontent.com/rook/rook/release-1.7/cluster/examples/kubernetes/ceph/cluster.yaml
+
+# Step 3: Let’s Get Some Storage Going
+# We’ll create a storage pool for Ceph using Rook.
+kubectl apply -f https://raw.githubusercontent.com/rook/rook/release-1.7/cluster/examples/kubernetes/ceph/storageclass.yaml
+
+# Step 4: Making Sure Everything’s A-OK
+# Time to do a quick check to make sure everything’s running smoothly.
+
+kubectl -n rook-ceph get pod
+
+# Step 5: Backing Up and Restoring with Velero
+# For backups and restores, we’ll use Velero, a nifty Kubernetes backup and restore tool.
+#
+# Installing Velero
+velero install \
+    --provider aws \
+    --plugins velero/velero-plugin-for-aws:v1.1.0 \
+    --bucket <your-s3-bucket> \
+    --secret-file ./path/to/your/aws-credentials \
+    --use-volume-snapshots=false
+
+# Step 6: Back It Up, Bring It Back
+# Backing Up
+#
+# Creating a backup
+velero backup create my-backup --include-namespaces <namespace-to-backup>
+
+# Restoring
+# Restoring from backup
+velero restore create --from-backup my-backup
+
+# Wrapping Up
+# Nice job! You’ve now got Rook (Ceph on K8s) up and running on your existing unmanaged HA Kubernetes cluster. Plus, you’ve got a nifty backup and restore process in place to keep your data snug as a bug.
+# Remember, it’s always a good idea to regularly back up and test your restore process. That way, you can rest easy knowing your data is safe and sound.
+# Happy coding! 😊
+

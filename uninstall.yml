@@ -19,12 +19,12 @@
     calico_network: false
     k8s_network_address: "192.168.0.0/16"
   roles:
-    - rancher
+    - rook
+#    - rancher
 #    - nginx
 #    - k8s
 #    - init-hosts
 #   - dashboard
-
 
 #- hosts: minio
 #  become: yes

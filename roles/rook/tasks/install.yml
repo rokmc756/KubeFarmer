@@ -1,0 +1,116 @@
+# https://itmaya.co.kr/wboard/view.php?wb=tech&idx=35
+# Latest version 5/25, 2024
+
+# $ helm search repo rook-ceph
+
+
+- name: Clone Rook
+  shell: |
+    git -C "{{ base_path }}" clone --single-branch --branch release-1.14 https://github.com/rook/rook.git
+  register: clone_rook
+  ignore_errors: true
+- debug: msg={{ clone_rook }}
+
+
+- name: X
+  shell: |
+    kubectl create namespace rook-ceph
+  register: X
+- debug: msg={{ X }}
+  # kubectl apply -f kubernetes/ceph/common.yaml
+
+
+- name: X
+  shell: |
+    helm install --namespace rook-ceph rook-ceph rook-release/rook-ceph
+  register: X
+- debug: msg={{ X }}
+# helm install --namespace rook-ceph rook-ceph rook-release/rook-ceph
+
+
+- name: X
+  shell: |
+    kubectl get all -n rook-ceph
+  register: X
+- debug: msg={{ X }}
+
+
+- name: X
+  shell: |
+    helm install --namespace rook-ceph rook-ceph-cluster --set operatorNamespace=rook-ceph rook-release/rook-ceph-cluster
+  register: X
+- debug: msg={{ X }}
+# helm install --namespace rook-ceph rook-ceph rook-release/rook-ceph
+
+
+- name: X
+  shell: |
+    kubectl get all -n rook-ceph
+  register: X
+- debug: msg={{ X }}
+
+
+- name: X
+  shell: |
+    kubectl apply -f toolbox.yaml
+  register: X
+  args:
+    chdir: "{{ base_path }}/rook/deploy/examples/"
+- debug: msg={{ X }}
+
+
+- name: X
+  shell: |
+    kubectl get deploy rook-ceph-tools -n rook-ceph
+  register: X
+- debug: msg={{ X }}
+
+# $ kubectl -n rook-ceph exec -it $(kubectl -n rook-ceph get pod -l "app=rook-ceph-tools" -o jsonpath='{.items[0].metadata.name}') bash
+# (toolbox)$ ceph -s 
+# (toolbox)$ ceph osd status
+
+
+#- name: Check if Rook is Deployed Successfully
+#  shell: kubectl get CephFileSystem -A
+#  register: check_rook_deployment
+#  ignore_errors: yes
+#  until: check_rook_deployment.stdout.find("Progressing") == -1
+#  retries: 20
+#- debug: msg={{ check_rook_deployment }}
+# rook-ceph   myfs   1           28s   Progressing
+# rook-ceph   myfs   1           60s   Ready
+
+
+#- name: X
+#  shell: |
+#    kubectl apply -f csi/cephfs/kube-registry.yaml
+#  register: X
+#  args:
+#    chdir: "{{ base_path }}/rook/deploy/examples/"
+#- debug: msg={{ X }}
+
+
+- name: X
+  shell: |
+    kubectl apply -f dashboard-loadbalancer.yaml
+  register: X
+  args:
+    chdir: "{{ base_path }}/rook/deploy/examples/"
+- debug: msg={{ X }}
+
+
+- name: Get IP Address of Rook Load Balancer and Nginx Ingress Controller
+  shell: |
+    kubectl get all -A | grep -E "service/rook-loadbalancer|service/nginx-ingress-controller"
+  register: get_ipaddr_rook_lb
+  ignore_errors: yes
+- debug: msg={{ get_ipaddr_rook_lb }}
+
+
+# [ Check Rook and NGINX Ingress ]
+# kubectl get events --all-namespaces  --sort-by='.metadata.creationTimestamp'
+# kubectl -n cattle-system describe pods
+# kubectl -n cattle-system get all
+# kubectl -n cattle-system get pods
+# kubectl -n cattle-system logs <pod-name>
+
