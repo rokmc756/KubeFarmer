@@ -4,10 +4,17 @@
 
 # $ helm search repo rook-ceph
 
+- name: Load RBD Kernel Module
+  shell: |
+    modprobe rbd
+  register: load_rbd_kernel_module
+  ignore_errors: true
+- debug: msg={{ load_rbd_kernel_module }}
+
 
 - name: Clone Rook
   shell: |
-    git -C "{{ base_path }}" clone --single-branch --branch release-1.14 https://github.com/rook/rook.git
+    git -C "{{ base_path }}" clone --single-branch --branch release-1.14.4 https://github.com/rook/rook.git
   register: clone_rook
   ignore_errors: true
 - debug: msg={{ clone_rook }}
@@ -91,21 +98,21 @@
 #- debug: msg={{ X }}
 
 
-- name: X
-  shell: |
-    kubectl apply -f dashboard-loadbalancer.yaml
-  register: X
-  args:
-    chdir: "{{ base_path }}/rook/deploy/examples/"
-- debug: msg={{ X }}
+#- name: X
+#  shell: |
+#    kubectl apply -f dashboard-loadbalancer.yaml
+#  register: X
+#  args:
+#    chdir: "{{ base_path }}/rook/deploy/examples/"
+#- debug: msg={{ X }}
 
 
-- name: Get IP Address of Rook Load Balancer and Nginx Ingress Controller
-  shell: |
-    kubectl get all -A | grep -E "service/rook-loadbalancer|service/nginx-ingress-controller"
-  register: get_ipaddr_rook_lb
-  ignore_errors: yes
-- debug: msg={{ get_ipaddr_rook_lb }}
+#- name: Get IP Address of Rook Load Balancer and Nginx Ingress Controller
+#  shell: |
+#    kubectl get all -A | grep -E "service/rook-loadbalancer|service/nginx-ingress-controller"
+#  register: get_ipaddr_rook_lb
+#  ignore_errors: yes
+#- debug: msg={{ get_ipaddr_rook_lb }}
 
 
 # [ Check Rook and NGINX Ingress ]

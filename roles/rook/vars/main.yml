@@ -4,7 +4,7 @@ rook:
   install: true
   major_version: 1
   minor_version: 14
-  patch_version:
+  patch_version: 4
   build_version:
   k8s:
     major_version: 1
@@ -24,7 +24,7 @@ rook:
 
 
 metallb:
-  install: true
+  install: false
   major_version: 0
   minor_version: 13
   patch_version: 11

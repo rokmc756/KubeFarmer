@@ -1,49 +1,49 @@
-# https://itmaya.co.kr/wboard/view.php?wb=tech&idx=35
-# https://gcore.com/learning/deploying-highly-scalable-cloud-storage-with-rook-part-1-ceph-storage/
-# Latest version 5/25, 2024
-# https://www.digitalocean.com/community/tutorials/how-to-set-up-a-ceph-cluster-within-kubernetes-using-rook
-
 # kubectl get csidrivers
-#
-# ? kubectl logs csi-cephfsplugin-bndd8 -c driver-registrar
-#
 # kubectl logs pod/csi-rbdplugin-4jbgn -n rook-ceph
-# Defaulted container "driver-registrar" out of: driver-registrar, csi-rbdplugin
-# I0525 05:14:51.649554   20679 main.go:135] Version: v2.10.1
-# I0525 05:14:51.649626   20679 main.go:136] Running node-driver-registrar in mode=
-# W0525 05:15:01.650765   20679 connection.go:234] Still connecting to unix:///csi/csi.sock
-# W0525 05:15:11.650232   20679 connection.go:234] Still connecting to unix:///csi/csi.sock
-# W0525 05:15:21.650566   20679 connection.go:234] Still connecting to unix:///csi/csi.sock
-# E0525 05:15:21.650623   20679 main.go:160] error connecting to CSI driver: context deadline exceeded
-#
 # kubectl get csinodes
 
+# https://github.com/rook/rook/issues/5065
+# https://docs.ceph.com/en/latest/rados/configuration/network-config-ref/
+#- name: Configure IPTables for MON
+#  shell: |
+#    iptables -A INPUT -i ens192 -p tcp -s 192.168.0.0/24 --dport 6789 -j ACCEPT
+#  register: config_mon_iptables
+#- debug: msg={{ config_mon_iptables }}
+#
+#
+#- name: Configure IPTables for MDS
+#  shell: |
+#    iptables -A INPUT -i ens192 -m multiport -p tcp -s 192.168.0.0/24 --dports 6800:7568 -j ACCEPT
+#  register: config_mds_iptables
+#- debug: msg={{ config_mds_iptables }}
+#
+#
+#- name: Configure IPTables for OSD
+#  shell: |
+#    iptables -A INPUT -i ens192  -m multiport -p tcp -s 192.168.0.0/24 --dports 6800:7568 -j ACCEPT
+#  register: config_osd_iptables
+#- debug: msg={{ config_osd_iptables }}
 
-- name: Clone Rook
+
+# Rook in GCP
+# https://ashish932.medium.com/f3abe23d9e79
+
+
+# If it's not loaded, rbd csiplugin containers will be running and it's Error and Crash
+- name: Load RBD Kernel Module
+  shell: |
+    modprobe rbd
+  register: load_rbd_kernel_module
+  ignore_errors: true
+- debug: msg={{ load_rbd_kernel_module }}
+
+
+- name: Clone Rook Source Code
   shell: |
     git -C "{{ base_path }}" clone --single-branch --branch release-1.14 https://github.com/rook/rook.git
-  register: clone_rook
+  register: git_clone_rook
   ignore_errors: true
-- debug: msg={{ clone_rook }}
-
-
-- name: X
-  shell: |
-    kubectl apply -f common.yaml
-  register: X
-  args:
-    chdir: "{{ base_path }}/rook/deploy/examples/"
-- debug: msg={{ X }}
-  # kubectl apply -f kubernetes/ceph/common.yaml
-
-
-- name: X
-  shell: |
-    kubectl apply -f operator.yaml
-  register: X
-  args:
-    chdir: "{{ base_path }}/rook/deploy/examples/"
-- debug: msg={{ X }}
+- debug: msg={{ git_clone_rook }}
 
 
 - name: X
@@ -57,6 +57,34 @@
 
 - name: X
   shell: |
+    kubectl apply -f common.yaml
+  register: X
+  args:
+    chdir: "{{ base_path }}/rook/deploy/examples/"
+- debug: msg={{ X }}
+
+
+- name: Enable ROOK Discovery Daemon
+  lineinfile:
+    dest: "{{ base_path }}/rook/deploy/examples/operator.yaml"
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    state: "{{ item.state }}"
+  with_items:
+    - { regexp: '^  ROOK_ENABLE_DISCOVERY_DAEMON:*', line: '  ROOK_ENABLE_DISCOVERY_DAEMON: "true"', state: present }
+
+
+- name: X
+  shell: |
+    kubectl apply -f operator.yaml
+  register: X
+  args:
+    chdir: "{{ base_path }}/rook/deploy/examples/"
+- debug: msg={{ X }}
+
+
+- name: Cluster Settings for a Production Cluster Running in a Dynamic Cloud Environment including VMware
+  shell: |
     kubectl apply -f cluster.yaml
   register: X
   args:
@@ -64,80 +92,94 @@
 - debug: msg={{ X }}
 
 
-- name: X
+- name: Cluster Settings for a Production Cluster Running in a Dynamic Cloud Environment including VMware
   shell: |
-    kubectl apply -f filesystem.yaml
+    kubectl apply -f storageclass.yaml
   register: X
   args:
     chdir: "{{ base_path }}/rook/deploy/examples/"
 - debug: msg={{ X }}
+  #  kubectl apply -f cluster.yaml
 
 
-- name: X
-  shell: |
-    kubectl apply -f csi/cephfs/storageclass.yaml
-  register: X
-  args:
-    chdir: "{{ base_path }}/rook/deploy/examples/"
-- debug: msg={{ X }}
+#- name: X
+#  shell: |
+#    kubectl apply -f filesystem.yaml
+#  register: X
+#  args:
+#    chdir: "{{ base_path }}/rook/deploy/examples/"
+#- debug: msg={{ X }}
+
+
+#- name: X
+#  shell: |
+#    kubectl apply -f csi/cephfs/storageclass.yaml
+#  register: X
+#  args:
+#    chdir: "{{ base_path }}/rook/deploy/examples/"
+#- debug: msg={{ X }}
 # rook/deploy/examples/csi/cephfs/storageclass.yaml
 # rook/deploy/examples/csi/nfs/storageclass.yaml
 # rook/deploy/examples/csi/rbd/storageclass.yaml
 
-- name: X
-  shell: |
-    kubectl apply -f toolbox.yaml
-  register: X
-  args:
-    chdir: "{{ base_path }}/rook/deploy/examples/"
-- debug: msg={{ X }}
+#- name: X
+#  shell: |
+#    kubectl apply -f toolbox.yaml
+#  register: X
+#  args:
+#    chdir: "{{ base_path }}/rook/deploy/examples/"
+#- debug: msg={{ X }}
 
-- name: X
-  shell: |
-    kubectl get deploy rook-ceph-tools -n rook-ceph
-  register: X
-- debug: msg={{ X }}
+
+#- name: X
+#  shell: |
+#    kubectl get deploy rook-ceph-tools -n rook-ceph
+#  register: X
+#- debug: msg={{ X }}
 
 # $ kubectl -n rook-ceph exec -it $(kubectl -n rook-ceph get pod -l "app=rook-ceph-tools" -o jsonpath='{.items[0].metadata.name}') bash
 # (toolbox)$ ceph -s
 # (toolbox)$ ceph osd status
 #
 
-- name: Check if Rook is Deployed Successfully
-  shell: kubectl get CephFileSystem -A
-  register: check_rook_deployment
-  ignore_errors: yes
-  until: check_rook_deployment.stdout.find("Progressing") == -1
-  retries: 20
-- debug: msg={{ check_rook_deployment }}
-# rook-ceph   myfs   1           28s   Progressing
-# rook-ceph   myfs   1           60s   Ready
+#- name: Check if Rook is Deployed Successfully
+#  shell: kubectl get CephFileSystem -A
+#  register: check_rook_deployment
+#  ignore_errors: yes
+#  until: check_rook_deployment.stdout.find("Progressing") == -1
+#  retries: 30
+#- debug: msg={{ check_rook_deployment }}
 
 
-- name: X
-  shell: |
-    kubectl apply -f csi/cephfs/kube-registry.yaml
-  register: X
-  args:
-    chdir: "{{ base_path }}/rook/deploy/examples/"
-- debug: msg={{ X }}
+#- name: X
+#  shell: |
+#    kubectl apply -f csi/cephfs/kube-registry.yaml
+#  register: X
+#  args:
+#    chdir: "{{ base_path }}/rook/deploy/examples/"
+#- debug: msg={{ X }}
 
 
-- name: X
-  shell: |
-    kubectl apply -f dashboard-loadbalancer.yaml
-  register: X
-  args:
-    chdir: "{{ base_path }}/rook/deploy/examples/"
-- debug: msg={{ X }}
+#- name: X
+#  shell: |
+#    kubectl apply -f dashboard-loadbalancer.yaml
+#  register: X
+#  args:
+#    chdir: "{{ base_path }}/rook/deploy/examples/"
+#- debug: msg={{ X }}
 
 
-- name: Get IP Address of Rook Load Balancer and Nginx Ingress Controller
-  shell: |
-    kubectl get all -A | grep -E "service/rook-loadbalancer|service/nginx-ingress-controller"
-  register: get_ipaddr_rook_lb
-  ignore_errors: yes
-- debug: msg={{ get_ipaddr_rook_lb }}
+#- name: Get IP Address of Rook Load Balancer and Nginx Ingress Controller
+#  shell: |
+#    kubectl get all -A | grep -E "service/rook-loadbalancer|service/nginx-ingress-controller"
+#  register: get_ipaddr_rook_lb
+#  ignore_errors: yes
+#- debug: msg={{ get_ipaddr_rook_lb }}
+
+
+# Need to check why OSD and MGR is not running
+# kubectl -n rook-ceph get pods -o wide
+# kubectl -n rook-ceph logs    rook-ceph-operator-775cf575c5-5mn4c
 
 
 # [ Check Rook and NGINX Ingress ]
@@ -147,3 +189,7 @@
 # kubectl -n cattle-system get pods
 # kubectl -n cattle-system logs <pod-name>
 
+# OSD or OSD Prepare can not be created
+# https://github.com/rook/rook/issues/2916
+# https://stackoverflow.com/questions/62045052/why-cant-find-osd-pod-in-kubernetes-after-deploying-rook-ceph
+# https://1week.tistory.com/16
