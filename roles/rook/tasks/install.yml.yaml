@@ -1,5 +1,23 @@
 # https://itmaya.co.kr/wboard/view.php?wb=tech&idx=35
+# https://gcore.com/learning/deploying-highly-scalable-cloud-storage-with-rook-part-1-ceph-storage/
 # Latest version 5/25, 2024
+# https://www.digitalocean.com/community/tutorials/how-to-set-up-a-ceph-cluster-within-kubernetes-using-rook
+
+# kubectl get csidrivers
+#
+# ? kubectl logs csi-cephfsplugin-bndd8 -c driver-registrar
+#
+# kubectl logs pod/csi-rbdplugin-4jbgn -n rook-ceph
+# Defaulted container "driver-registrar" out of: driver-registrar, csi-rbdplugin
+# I0525 05:14:51.649554   20679 main.go:135] Version: v2.10.1
+# I0525 05:14:51.649626   20679 main.go:136] Running node-driver-registrar in mode=
+# W0525 05:15:01.650765   20679 connection.go:234] Still connecting to unix:///csi/csi.sock
+# W0525 05:15:11.650232   20679 connection.go:234] Still connecting to unix:///csi/csi.sock
+# W0525 05:15:21.650566   20679 connection.go:234] Still connecting to unix:///csi/csi.sock
+# E0525 05:15:21.650623   20679 main.go:160] error connecting to CSI driver: context deadline exceeded
+#
+# kubectl get csinodes
+
 
 - name: Clone Rook
   shell: |
@@ -66,6 +84,24 @@
 # rook/deploy/examples/csi/nfs/storageclass.yaml
 # rook/deploy/examples/csi/rbd/storageclass.yaml
 
+- name: X
+  shell: |
+    kubectl apply -f toolbox.yaml
+  register: X
+  args:
+    chdir: "{{ base_path }}/rook/deploy/examples/"
+- debug: msg={{ X }}
+
+- name: X
+  shell: |
+    kubectl get deploy rook-ceph-tools -n rook-ceph
+  register: X
+- debug: msg={{ X }}
+
+# $ kubectl -n rook-ceph exec -it $(kubectl -n rook-ceph get pod -l "app=rook-ceph-tools" -o jsonpath='{.items[0].metadata.name}') bash
+# (toolbox)$ ceph -s
+# (toolbox)$ ceph osd status
+#
 
 - name: Check if Rook is Deployed Successfully
   shell: kubectl get CephFileSystem -A
