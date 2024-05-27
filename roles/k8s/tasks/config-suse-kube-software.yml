@@ -79,7 +79,7 @@
     daemon_reload: yes
   register: docker_started
   until: docker_started is succeeded
-  retries: 20
+  retries: 10
   delay: 10
 
 

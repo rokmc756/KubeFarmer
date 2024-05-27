@@ -15,15 +15,13 @@
     uninstall_pkgs: true
     uninstall_config: true
     disable_firewall: true
-    reboot_required: true
-    calico_network: false
-    k8s_network_address: "192.168.0.0/16"
+    reboot_required: false
   roles:
     - rook
-#    - rancher
-#    - nginx
 #    - k8s
 #    - init-hosts
+#    - rancher
+#    - nginx
 #   - dashboard
 
 #- hosts: minio

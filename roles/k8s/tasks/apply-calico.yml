@@ -35,3 +35,17 @@
 - debug: msg={{ calico_network_setup }}
   when: print_debug == true and inventory_hostname in groups['master']
 
+
+# curl -o /root/calicoctl -O -L https://github.com/projectcalico/calicoctl/releases/download/v{{ k8s.cni.calicoctl.major_version }}.{{ k8s.cni.calicoctl.minor_version }}.{{ k8s.cni.calicoctl.patch_version }}/calicoctl
+# curl -L https://github.com/projectcalico/calico/releases/download/v3.27.3/calicoctl-linux-amd64 -o /root/calicoctl
+- name: Install Calicoctl
+  shell: |
+    curl -o /root/calicoctl -O -L https://github.com/projectcalico/calico/releases/download/v{{ k8s.cni.major_version }}.{{ k8s.cni.minor_version }}.{{ k8s.cni.patch_version }}/calicoctl-linux-amd64
+    chmod +x /root/calicoctl
+    mv /root/calicoctl /usr/local/bin
+  register: install_calicoctl
+  when: inventory_hostname in groups['master']
+- debug: msg={{ install_calicoctl }}
+  when: print_debug == true and inventory_hostname in groups['master']
+
+

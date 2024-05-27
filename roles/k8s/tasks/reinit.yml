@@ -255,7 +255,7 @@
   shell: kubectl get pods --all-namespaces -o wide
   register: all_containers_running_checked
   until: all_containers_running_checked.stdout.find("ContainerCreating") == -1
-  retries: 30
+  retries: 60
   when: inventory_hostname in groups['master']
 - debug: msg={{ all_containers_running_checked }}
   when: print_debug == true and inventory_hostname in groups['master']

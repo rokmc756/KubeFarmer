@@ -17,13 +17,13 @@
 - name: Install Prerequistes Packages for OpenSUSE
   import_tasks: install-suse-pkgs.yml
   tags: install
-  when: install_pkgs and ansible_distribution == "openSUSE Leap"
+  when: install_pkgs == true and ansible_distribution == "openSUSE Leap"
 
 
 - name: Install Prerequistes Packages for RedHat/CentOS/Rocky
   import_tasks: install-rh-pkgs.yml
   tags: install
-  when: install_pkgs and ( ansible_distribution == "RedHat" or ansible_distribution == "CentOS" or ansible_distribution == "Rocky" )
+  when: install_pkgs == true and ( ansible_distribution == "RedHat" or ansible_distribution == "CentOS" or ansible_distribution == "Rocky" )
 
 
 - name: Enable Firewall
@@ -31,25 +31,25 @@
   tags:
     - install
     - reinit
-  when: enable_firewall
+  when: enable_firewall == true
 
 
 - name: Launch Kubernetes Software
-  import_tasks: config-suse-kube-software.yml
+  import_tasks: launch-suse-kube-software.yml
   tags: install
-  when: config_kube_software and ansible_distribution == "openSUSE Leap"
+  when: launch_kube_software == true and ansible_distribution == "openSUSE Leap"
 
 
 - name: Launch Kubernetes Software
-  import_tasks: config-rh-kube-software.yml
+  import_tasks: launch-rh-kube-software.yml
   tags: install
-  when: config_kube_software and ( ansible_distribution == "RedHat" or ansible_distribution == "CentOS" or ansible_distribution == "Rocky" )
+  when: launch_kube_software == true and ( ansible_distribution == "RedHat" or ansible_distribution == "CentOS" or ansible_distribution == "Rocky" )
 
 
 - name: Initialize Kubernetes Cluster
   import_tasks: init-k8s.yml
   tags: install
-  when: init_k8s
+  when: init_k8s == true
 
 
 - name: Stop Docker and Kube Services
@@ -57,7 +57,7 @@
   tags:
     - reinit
     - uninstall
-  when: stop_services
+  when: stop_services == true
 
 
 - name: Reinitialize Kubernetes Cluster
@@ -69,7 +69,7 @@
   import_tasks: start-services.yml
   tags:
     - reinit
-  when: start_services
+  when: start_services == true
 
 
 #- name: Destroy Kubernetes Cluster
@@ -81,13 +81,13 @@
 - name: Uninstall Prerequistes Packages
   import_tasks: uninstall-pkgs.yml
   tags: uninstall
-  when: uninstall_pkgs
+  when: uninstall_pkgs == true
 
 
 - name: Delete Kube Config Files
   import_tasks: uninstall-config.yml
   tags: uninstall
-  when: uninstall_config
+  when: uninstall_config == true
 
 
 #- name: Disable Firewall
@@ -99,5 +99,5 @@
 - name: Reboot all Systems
   import_tasks: reboot-required.yml
   tags: uninstall
-  when: reboot_required
+  when: reboot_required == true
 

@@ -23,8 +23,43 @@
 - https://ashish932.medium.com/f3abe23d9e79
 - https://github.com/kubernetes/community/blob/master/contributors/devel/sig-storage/flexvolume.md#prerequisites
 - https://1week.tistory.com/16
+- https://www.talos.dev/v1.7/kubernetes-guides/configuration/ceph-with-rook/
+
 
 * 6789, 3000 Port Check
 - Server nc -l 6789 or 3000
 - Client nc 192.168.0.x 6789
   type "hi" and check server return "hi"
+
+
+* On VMware - 
+
+Enabling disk UUID on virtual machines
+You must set the disk.EnableUUID parameter for each VM to "TRUE". This step is necessary so that the VMDK always presents a consistent UUID to the VM,
+thus allowing the disk to be mounted properly. For each of the virtual machine nodes (VMs) that will be participating in the cluster, follow the steps below from the vSphere client:
+
+To enable disk UUID on a virtual machine
+
+Power off the guest.
+Select the guest and select Edit Settings.
+Select the Options tab on top.
+Select General under the Advanced section.
+Select the Configuration Parameters... on right hand side.
+Check to see if the parameter disk.EnableUUID is set, if it is there then make sure it is set to TRUE.
+If the parameter is not there, select Add Row and add it.
+
+Power on the guest.
+
+
+* OSD is not created
+https://www.juniper.net/documentation/us/en/software/paragon-automation23.2/paragon-automation-troubleshooting-guide/topics/topic-map/tg-troubleshoot-ceph-rook.html
+
+
+* KubeVirt
+- https://kubevirt.io/2019/KubeVirt_storage_rook_ceph.html
+
+* On Oracle Cloud
+- https://blogs.oracle.com/cloud-infrastructure/post/running-ceph-clusters-with-rook-in-oracle-container-engine-for-kubernetes
+- https://blog.rook.io/run-your-own-high-performance-ebs-wherever-kubernetes-runs-798a136bd808
+
+

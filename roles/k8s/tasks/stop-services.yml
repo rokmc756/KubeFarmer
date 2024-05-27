@@ -33,4 +33,3 @@
   register: kubelet_stopped
   ignore_errors: true
   until: kubelet_stopped is succeeded
-
