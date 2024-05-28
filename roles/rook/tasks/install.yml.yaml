@@ -39,55 +39,55 @@
   when: print_debug == true
 
 
-- name: Clone Rook Source Code
-  shell: |
-    git -C "{{ base_path }}" clone --single-branch --branch release-1.14 https://github.com/rook/rook.git
-  register: git_clone_rook
-  ignore_errors: true
-- debug: msg={{ git_clone_rook }}
-  when: print_debug == true
+#- name: Clone Rook Source Code
+#  shell: |
+#    git -C "{{ base_path }}" clone --single-branch --branch release-1.14 https://github.com/rook/rook.git
+#  register: git_clone_rook
+#  ignore_errors: true
+#- debug: msg={{ git_clone_rook }}
+#  when: print_debug == true
 
 
-- name: X
+- name: Creae CRDs
   shell: |
-    kubectl apply -f crds.yaml
-  register: X
+    kubectl create -f crds.yaml
+  register: create_crds
   args:
     chdir: "{{ base_path }}/rook/deploy/examples/"
-- debug: msg={{ X }}
+- debug: msg={{ create_crds }}
   when: print_debug == true
 
 
-- name: X
+- name: Create Common
   shell: |
-    kubectl apply -f common.yaml
-  register: X
+    kubectl create -f common.yaml
+  register: create_common
   args:
     chdir: "{{ base_path }}/rook/deploy/examples/"
-- debug: msg={{ X }}
+- debug: msg={{ create_common }}
   when: print_debug == true
 
 
-- name: Enable ROOK Discovery Daemon
-  lineinfile:
-    dest: "{{ base_path }}/rook/deploy/examples/operator.yaml"
-    regexp: "{{ item.regexp }}"
-    line: "{{ item.line }}"
-    state: "{{ item.state }}"
-  register: enable_rook_discovery_daemon
-  with_items:
-    - { regexp: '^  ROOK_ENABLE_DISCOVERY_DAEMON:*', line: '  ROOK_ENABLE_DISCOVERY_DAEMON: "true"', state: present }
-- debug: msg={{ enable_rook_discovery_daemon }}
-  when: print_debug == true
+#- name: Enable ROOK Discovery Daemon
+#  lineinfile:
+#    dest: "{{ base_path }}/rook/deploy/examples/operator.yaml"
+#    regexp: "{{ item.regexp }}"
+#    line: "{{ item.line }}"
+#    state: "{{ item.state }}"
+#  register: enable_rook_discovery_daemon
+#  with_items:
+#    - { regexp: '^  ROOK_ENABLE_DISCOVERY_DAEMON:*', line: '  ROOK_ENABLE_DISCOVERY_DAEMON: "true"', state: present }
+#- debug: msg={{ enable_rook_discovery_daemon }}
+#  when: print_debug == true
 
 
-- name: X
+- name: Create Operator
   shell: |
     kubectl apply -f operator.yaml
-  register: X
+  register: create_operator
   args:
     chdir: "{{ base_path }}/rook/deploy/examples/"
-- debug: msg={{ X }}
+- debug: msg={{ create_operator }}
   when: print_debug == true
 
 
@@ -102,12 +102,13 @@
 
 - name: Cluster Settings for a Production Cluster Running in a Dynamic Cloud Environment including VMware
   shell: |
-    kubectl apply -f cluster.yaml
-  register: X
+    kubectl create -f cluster-on-local-pvc.yaml
+  register: create_ceph_cluster
   args:
     chdir: "{{ base_path }}/rook/deploy/examples/"
-- debug: msg={{ X }}
+- debug: msg={{ create_ceph_cluster }}
   when: print_debug == true
+ #  kubectl apply -f cluster.yaml
 
 
 - name: Validate if All Containers are Running
@@ -126,21 +127,79 @@
 - debug: msg={{ check_create_containers }}
 
 
-- name: Create Toolbox Pod
-  shell: |
-    kubectl apply -f toolbox.yaml
-  register: create_toolbox_pod
-  args:
-    chdir: "{{ base_path }}/rook/deploy/examples/"
-- debug: msg={{ create_toolbox_pod }}
+- name: Validate if All Containers are Running
+  shell: kubectl -n rook-ceph get all
+  register: check_create_containers
+  until: check_create_containers.stdout.find("Init") == -1
+  retries: 5
+- debug: msg={{ check_create_containers }}
 
 
 - name: Validate if All Containers are Running
-  shell: kubectl -n rook-ceph get pods | grep tool
-  register: check_tools_containers
-  until: check_tools_containers.stdout.find("ContainerCreating") == -1
-  retries: 10
-- debug: msg={{ check_tools_containers }}
+  shell: kubectl -n rook-ceph get all
+  register: check_create_containers
+  until: check_create_containers.stdout.find("Terminating") == -1
+  retries: 20
+- debug: msg={{ check_create_containers }}
+
+
+- name: Validate if All Containers are Running
+  shell: kubectl -n rook-ceph get all
+  register: check_create_containers
+  until: check_create_containers.stdout.find("ContainerCreating") == -1
+  retries: 60
+- debug: msg={{ check_create_containers }}
+
+
+- name: Validate if All Containers are Running
+  shell: kubectl -n rook-ceph get all
+  register: check_create_containers
+  until: check_create_containers.stdout.find("Terminating") == -1
+  retries: 20
+- debug: msg={{ check_create_containers }}
+
+
+- name: Validate if All Containers are Running
+  shell: kubectl -n rook-ceph get all
+  register: check_create_containers
+  until: check_create_containers.stdout.find("PodInitializing") == -1
+  retries: 20
+- debug: msg={{ check_create_containers }}
+
+
+- name: Validate if All Containers are Running
+  shell: kubectl -n rook-ceph get all
+  register: check_create_containers
+  until: check_create_containers.stdout.find("ContainerCreating") == -1
+  retries: 60
+- debug: msg={{ check_create_containers }}
+
+- pause:
+    seconds: 100
+
+- name: Validate if All Containers are Running
+  shell: kubectl -n rook-ceph get all
+  register: check_create_containers
+  until: check_create_containers.stdout.find("ContainerCreating") == -1
+  retries: 60
+- debug: msg={{ check_create_containers }}
+
+
+#- name: Create Toolbox Pod
+#  shell: |
+#    kubectl create -f toolbox.yaml
+#  register: create_toolbox_pod
+#  args:
+#    chdir: "{{ base_path }}/rook/deploy/examples/"
+#- debug: msg={{ create_toolbox_pod }}
+
+
+#- name: Validate if All Containers are Running
+#  shell: kubectl -n rook-ceph get pods | grep tool
+#  register: check_tools_containers
+#  until: check_tools_containers.stdout.find("ContainerCreating") == -1
+#  retries: 10
+#- debug: msg={{ check_tools_containers }}
 
 
 # toolbox=$(kubectl -n rook-ceph get pods -o custom-columns=NAME:.metadata.name --no-headers | grep tools)
@@ -179,6 +238,7 @@
 # rook/deploy/examples/csi/cephfs/storageclass.yaml
 # rook/deploy/examples/csi/nfs/storageclass.yaml
 # rook/deploy/examples/csi/rbd/storageclass.yaml
+
 
 #- name: X
 #  shell: |

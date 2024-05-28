@@ -1,4 +1,17 @@
 
+[ Prerequiests ]
+* OSD need jumbo frame with MTU 9000
+* Kubernetes Network should be with jumbo frame with MTU 9000
+
+
+## Need to check Port is working
+* 6789, 3000 Port Check
+- Server nc -l 6789 or 3000
+- Client nc 192.168.0.x 6789
+  type "hi" and check server return "hi"
+
+
+
 [ References ]
 
 - https://danawalab.github.io/kubernetes/2020/01/28/kubernetes-rook-ceph.html
@@ -26,12 +39,6 @@
 - https://www.talos.dev/v1.7/kubernetes-guides/configuration/ceph-with-rook/
 
 
-* 6789, 3000 Port Check
-- Server nc -l 6789 or 3000
-- Client nc 192.168.0.x 6789
-  type "hi" and check server return "hi"
-
-
 * On VMware - 
 
 Enabling disk UUID on virtual machines
@@ -53,6 +60,7 @@ Power on the guest.
 
 * OSD is not created
 https://www.juniper.net/documentation/us/en/software/paragon-automation23.2/paragon-automation-troubleshooting-guide/topics/topic-map/tg-troubleshoot-ceph-rook.html
+https://www.dbi-services.com/blog/kubernetes-extension-of-disk-in-rook-ceph/
 
 
 * KubeVirt
@@ -63,3 +71,15 @@ https://www.juniper.net/documentation/us/en/software/paragon-automation23.2/para
 - https://blog.rook.io/run-your-own-high-performance-ebs-wherever-kubernetes-runs-798a136bd808
 
 
+
+* Host Storage Cluster
+- https://rook.io/docs/rook/latest-release/CRDs/Cluster/host-cluster/#specific-nodes-and-devices
+
+
+* Architecture
+https://www.jacobbaek.com/1102
+https://rook.io/docs/rook/latest-release/Getting-Started/storage-architecture/
+
+
+* NVME
+https://github.com/rook/rook/issues/7858

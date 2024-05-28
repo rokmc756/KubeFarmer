@@ -7,7 +7,7 @@
   when: ansible_os_family != 'RedHat' or  ansible_os_family != 'CentOS' or  ansible_os_family != 'Rocky' or ansible_os_family != 'openSUSE Leap'
 
 
-- name: Set facts for Rook
+- name: Set facts for Rook Ceph
   import_tasks: set-rook-facts.yml
   tags:
     - install
@@ -27,16 +27,15 @@
   when: metallb.install == true and inventory_hostname in groups['master']
 
 
-- name: Deploy Rook
+- name: Deploy Rook Ceph
   import_tasks: install.yml
   tags: install
   when: rook.install == true and inventory_hostname in groups['master']
 
 
-- name: Destroy Rook
+- name: Destroy Rook Ceph
   import_tasks: uninstall.yml
   tags: uninstall
-  when: inventory_hostname in groups['master']
   when: rook.install == true and inventory_hostname in groups['master']
 
 
@@ -50,5 +49,4 @@
   import_tasks: disable-helm-repo.yml
   tags: uninstall
   when: helm.enable_repo == true and inventory_hostname in groups['master']
-
 

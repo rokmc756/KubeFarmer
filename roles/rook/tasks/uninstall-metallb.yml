@@ -1,0 +1,188 @@
+# 1
+#- name: Check Rook Pods
+#  shell: kubectl get all -n cattle-system
+#  register: check_rook_pods
+#  ignore_errors: yes
+#  until: check_rook_pods.stdout.find("pending") == -1
+#  retries: 10
+#- debug: msg={{ check_rook_pods }}
+
+
+# 2
+- name: Apply Rook Load Balancer
+  shell: |
+    kubectl delete -f "{{ base_path }}"/rook-loadbalancer.yaml
+  register: delete_rook_lb
+  ignore_errors: yes
+- debug: msg={{ delete_rook_lb }}
+
+
+# 3
+- name: Remove Rook Loadbalancer Config Yaml
+  shell: |
+    rm -f "{{ base_path }}/rook-loadbalancer.yaml"
+  register: remove_rook_lb_config_yaml
+  ignore_errors: yes
+- debug: msg={{ remove_rook_lb_config_yaml }}
+
+
+# 4
+#- name: Unintall Cert Manager by Helm
+#  shell: |
+#    helm uninstall cert-manager --namespace cert-manager
+#  register: uninstall_cert_manager
+#  ignore_errors: yes
+#- debug: msg={{ uninstall_cert_manager }}
+
+
+# 5
+#- name: Delete Namespace for Cert Manager
+#  shell: |
+#    kubectl delete namespace cert-manager
+#  register: delete_cert_manager_namespace
+#  ignore_errors: yes
+#- debug: msg={{ delete_cert_manager_namespace }}
+
+
+# 6
+#- name: Delete Cert Manager CRDs
+#  shell: |
+#    kubectl delete --validate=false \
+#    -f https://github.com/jetstack/cert-manager/releases/download/v{{ cm.major_version }}.{{ cm.minor_version }}.{{ cm.patch_version }}/cert-manager.crds.yaml
+#  register: delete_cert_manager_crds
+#  ignore_errors: yes
+#- debug: msg={{ delete_cert_manager_crds }}
+
+
+# 7
+- name: Delete Namespace for Rook
+  shell: |
+    kubectl delete namespace cattle-system
+  register: delete_rook_namespace
+  ignore_errors: yes
+- debug: msg={{ delete_rook_namespace }}
+
+
+# 8
+- name: Uninstall NGINX Ingress
+  shell: |
+    helm uninstall nginx-ingress --namespace=nginx-ingress
+  register: uninstall_nginx_ingress
+  ignore_errors: yes
+  args:
+    chdir: "{{ base_path }}/kubernetes-ingress/deployments/helm-chart"
+- debug: msg={{ uninstall_nginx_ingress }}
+
+
+# 9
+- name: Delete NGINX Ingress CRDs
+  shell: |
+    kubectl delete -f crds/ --namespace=nginx-ingress
+  register: delete_nginx_ingress_crds
+  ignore_errors: yes
+  args:
+    chdir: "{{ base_path }}/kubernetes-ingress/deployments/helm-chart"
+- debug: msg={{ delete_nginx_ingress_crds }}
+
+
+# 10
+- name: Remove Kubernetest Ingress Directory
+  shell: |
+    rm -rf "{{ base_path }}"/kubernetes-ingress
+  register: clone_k8s_ingress_dir
+  ignore_errors: true
+- debug: msg={{ clone_k8s_ingress_dir }}
+
+
+# 11
+- name: Delete the Metallb Config for VMware
+  shell: |
+    kubectl delete -f "{{ base_path }}"/metallb-config-vmware.yaml
+  register: delete_metallb_config
+  ignore_errors: yes
+  until: delete_metallb_config is succeeded
+- debug: msg={{ delete_metallb_config }}
+
+
+# 12
+- name: Remove Metallb Config Yaml for VMware
+  shell: |
+    rm -f "{{ base_path }}/metallb-config-vmware.yaml"
+  register: remove_metallb_vmware_yaml
+  ignore_errors: yes
+- debug: msg={{ remove_metallb_vmware_yaml }}
+
+
+# 13
+- name: Delete Secret for Metallb Namespace
+  shell: |
+    kubectl delete secret generic -n metallb-system memberlist
+  register: delete_metallb_secret
+  ignore_errors: yes
+- debug: msg={{ delete_metallb_secret }}
+
+
+# 14
+#- name: Delete the Metallb Native
+#  shell: |
+#    kubectl delete -f \
+#    https://raw.githubusercontent.com/metallb/metallb/v{{ metallb.major_version }}.{{ metallb.minor_version }}.{{ metallb.patch_version }}/config/manifests/metallb-native.yaml
+#  register: apply_metallb_native_config
+#- debug: msg={{ apply_metallb_native_config }}
+
+
+# 15
+- name: Uninstall the Metallb Native
+  shell: |
+    helm uninstall metallb -n metallb-system
+  register: uninstall_metallb_native_config
+  ignore_errors: yes
+- debug: msg={{ uninstall_metallb_native_config }}
+
+
+# helm repo add metallb https://metallb.github.io/metallb
+# 16
+- name: Delete Namespace for Metallb
+  shell: |
+    kubectl delete namespace metallb-system
+  register: delete_metallb_namespace
+  ignore_errors: yes
+- debug: msg={{ delete_metallb_namespace }}
+
+
+# 17
+- name: Check strictARP
+  shell: |
+    kubectl get configmap kube-proxy -n kube-system -o yaml | grep strictARP
+  register: check_strict_arp
+  ignore_errors: yes
+- debug: msg={{ check_strict_arp }}
+
+
+# 18
+- name: Rollback strictARP for VMWare or Cloud
+  shell: |
+    kubectl get configmap kube-proxy -n kube-system -o yaml | \
+    sed -e "s/strictARP: true/strictARP: false/" | kubectl apply -f - -n kube-system
+  register: rollback_strict_arp
+  ignore_errors: yes
+- debug: msg={{ rollback_strict_arp }}
+
+
+# 19
+- name: Check strictARP
+  shell: |
+    kubectl get configmap kube-proxy -n kube-system -o yaml | grep strictARP
+  register: check_strict_arp
+  ignore_errors: yes
+- debug: msg={{ check_strict_arp }}
+
+
+# [ Check Rook and NGINX Ingress ]
+# kubectl get events --all-namespaces  --sort-by='.metadata.creationTimestamp'
+# kubectl -n cattle-system describe pods
+# kubectl -n cattle-system get all
+# kubectl -n cattle-system get pods
+# kubectl -n cattle-system logs <pod-name>
+
+

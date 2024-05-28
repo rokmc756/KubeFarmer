@@ -35,6 +35,6 @@ k8s:
     major_version: 3
     minor_version: 27
     patch_version: 3
-    pod_network: "192.168.0.0/16"
-    # pod_network: "10.142.0.0/16"
+    pod_network: "10.142.0.0/16"
+    # pod_network: "192.168.0.0/16"
     # pod_network: "192.167.0.0/16"

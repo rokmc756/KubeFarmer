@@ -1,7 +1,7 @@
 base_path: /root
 
 rook:
-  install: true
+  install: false
   major_version: 1
   minor_version: 14
   patch_version: 4
@@ -24,7 +24,7 @@ rook:
 
 
 metallb:
-  install: false
+  install: true
   major_version: 0
   minor_version: 13
   patch_version: 11
@@ -35,7 +35,7 @@ metallb:
           name: first-pool
           namespace: metallb-system
         spec:
-          ips_range: 192.168.0.210-192.168.0.250
+          ips_range: 192.168.1.210-192.168.1.250
       l2advertise:
         metadata:
           name: example
@@ -51,7 +51,7 @@ metallb:
             ipaddr_pools:
               name: default
               protocol: layer2
-              ips_range: 192.168.0.210-192.168.0.250
+              ips_range: 192.168.1.210-192.168.1.250
 
 
 nginx:

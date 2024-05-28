@@ -140,21 +140,21 @@
 #- debug: msg={{ install_cert_manager }}
 
 
-#- name: Copy Rook Loadbalancer Config Yaml
-#  template:
-#    src: rook-loadbalancer.yaml.j2
-#    dest: "{{ base_path }}/rook-loadbalancer.yaml"
-#  register: copy_rook_lb_config_yaml
-#  ignore_errors: yes
-#- debug: msg={{ copy_rook_lb_config_yaml }}
+- name: Copy Rook Loadbalancer Config Yaml
+  template:
+    src: rook-loadbalancer.yaml.j2
+    dest: "{{ base_path }}/rook-loadbalancer.yaml"
+  register: copy_rook_lb_config_yaml
+  ignore_errors: yes
+- debug: msg={{ copy_rook_lb_config_yaml }}
 
 
-#- name: Apply Rook Load Balancer
-#  shell: |
-#    kubectl apply -f "{{ base_path }}"/rook-loadbalancer.yaml
-#  register: apply_rook_lb
-#  ignore_errors: yes
-#- debug: msg={{ apply_rook_lb }}
+- name: Apply Rook Load Balancer
+  shell: |
+    kubectl apply -f "{{ base_path }}"/rook-loadbalancer.yaml
+  register: apply_rook_lb
+  ignore_errors: yes
+- debug: msg={{ apply_rook_lb }}
 
 
 - name: Check Rook Pods

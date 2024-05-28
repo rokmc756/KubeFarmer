@@ -58,9 +58,7 @@
   command: kubeadm config images pull
   when: inventory_hostname in groups['master']
 
-# kubeadm init --apiserver-advertise-address={{ hostvars[groups['master'][0]]['ansible_'~netdev1]['ipv4']['address'] }} \
 # --pod-network-cidr=192.168.0.0/24 --cri-socket=unix:///run/containerd/containerd.sock --ignore-preflight-errors=all --v=5
-
 - name: Initialize Kubernetes Master and Create Cluster
   shell: |
     kubeadm init --apiserver-advertise-address={{ hostvars[groups['master'][0]]['ansible_'~netdev1]['ipv4']['address'] }} \
