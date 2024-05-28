@@ -7,7 +7,7 @@ metadata:
     nginx.ingress.kubernetes.io/proxy-protocol: "true"
 spec:
   selector:
-    app: rook-ceph
+    app: rook-ceph-mgr                                      # cattle-system         deployment.apps/rancher                    2/3     3            2           5m16s
   ports:
     - name: http
       protocol: TCP
@@ -16,7 +16,7 @@ spec:
     - name: https
       protocol: TCP
       port: 443
-      targetPort: 443
+      targetPort: 443          #   Ceph Mgr Dashboard Port
   type: LoadBalancer
 ---
 apiVersion: networking.k8s.io/v1
@@ -35,6 +35,6 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: rook-ceph-mgr-dashboard
+                name: rook-ceph-mgr-dashboard               # cattle-system         service/rancher                    ClusterIP      10.107.200.10    <none>          80/TCP,443/TCP               5m16s
                 port:
-                  name: http
+                  name: http   # or http

@@ -35,7 +35,7 @@ metallb:
           name: first-pool
           namespace: metallb-system
         spec:
-          ips_range: 192.168.0.210-192.168.0.250
+          ips_range: 192.168.1.210-192.168.1.250
       l2advertise:
         metadata:
           name: example
@@ -51,7 +51,7 @@ metallb:
             ipaddr_pools:
               name: default
               protocol: layer2
-              ips_range: 192.168.0.210-192.168.0.250
+              ips_range: 192.168.1.210-192.168.1.250
 
 
 nginx:

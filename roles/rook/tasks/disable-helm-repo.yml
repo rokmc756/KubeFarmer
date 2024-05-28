@@ -28,6 +28,7 @@
   shell: |
     helm repo remove metallb
   register: remove_metallb_helm_repo
+  ignore_errors: yes
 - debug: msg={{ remove_metallb_helm_repo }}
 
 

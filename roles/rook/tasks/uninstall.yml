@@ -2,6 +2,7 @@
   shell: |
     kubectl delete -f toolbox.yaml
   register: delete_toolbox
+  ignore_errors: true
   args:
     chdir: "{{ base_path }}/rook/deploy/examples/"
 - debug: msg={{ delete_toolbox }}
