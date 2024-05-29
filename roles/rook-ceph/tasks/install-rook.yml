@@ -4,29 +4,28 @@
 
 # https://github.com/rook/rook/issues/5065
 # https://docs.ceph.com/en/latest/rados/configuration/network-config-ref/
-#- name: Configure IPTables for MON
-#  shell: |
-#    iptables -A INPUT -i ens192 -p tcp -s 192.168.0.0/24 --dport 6789 -j ACCEPT
-#  register: config_mon_iptables
-#- debug: msg={{ config_mon_iptables }}
 #
-#
-#- name: Configure IPTables for MDS
-#  shell: |
-#    iptables -A INPUT -i ens192 -m multiport -p tcp -s 192.168.0.0/24 --dports 6800:7568 -j ACCEPT
-#  register: config_mds_iptables
-#- debug: msg={{ config_mds_iptables }}
-#
-#
-#- name: Configure IPTables for OSD
-#  shell: |
-#    iptables -A INPUT -i ens192  -m multiport -p tcp -s 192.168.0.0/24 --dports 6800:7568 -j ACCEPT
-#  register: config_osd_iptables
-#- debug: msg={{ config_osd_iptables }}
+# MON, MDS, OSD
+# iptables -A INPUT -i ens192 -p tcp -s 192.168.0.0/24 --dport 6789 -j ACCEPT
+# iptables -A INPUT -i ens192  -m multiport -p tcp -s 192.168.0.0/24 --dports 6800:7568 -j ACCEPT
+# iptables -A INPUT -i ens192 -m multiport -p tcp -s 192.168.0.0/24 --dports 6800:7568 -j ACCEPT
 
 
-# Rook in GCP
+# Rook for GCP
 # https://ashish932.medium.com/f3abe23d9e79
+
+- name: Enable Rados Block Device Kernel Module
+  copy:
+    dest: /etc/modules-load.d/rbd.conf
+    content: |
+      rbd
+  register: enable_rbd_kernel_module
+  delegate_to: "{{ item }}"
+  delegate_facts: True
+  ignore_errors: true
+  with_items: "{{ groups['all'] }}"
+- debug: msg={{ enable_rbd_kernel_module }}
+  when: print_debug == true
 
 
 # If it's not loaded, rbd csiplugin containers will be running and it's Error and Crash
@@ -42,13 +41,14 @@
   when: print_debug == true
 
 
-#- name: Clone Rook Source Code
-#  shell: |
-#    git -C "{{ base_path }}" clone --single-branch --branch release-1.14 https://github.com/rook/rook.git
-#  register: git_clone_rook
-#  ignore_errors: true
-#- debug: msg={{ git_clone_rook }}
-#  when: print_debug == true
+- name: Clone Rook Source Code
+  shell: |
+    git -C "{{ base_path }}" clone --single-branch --branch release-1.14 https://github.com/rook/rook.git
+  register: git_clone_rook
+  ignore_errors: true
+  when: rook.clone_git == true
+- debug: msg={{ git_clone_rook }}
+  when: rook.clone_git == true and print_debug == true
 
 
 - name: Creae CRDs
@@ -71,17 +71,18 @@
   when: print_debug == true
 
 
-#- name: Enable ROOK Discovery Daemon
-#  lineinfile:
-#    dest: "{{ base_path }}/rook/deploy/examples/operator.yaml"
-#    regexp: "{{ item.regexp }}"
-#    line: "{{ item.line }}"
-#    state: "{{ item.state }}"
-#  register: enable_rook_discovery_daemon
-#  with_items:
-#    - { regexp: '^  ROOK_ENABLE_DISCOVERY_DAEMON:*', line: '  ROOK_ENABLE_DISCOVERY_DAEMON: "true"', state: present }
-#- debug: msg={{ enable_rook_discovery_daemon }}
-#  when: print_debug == true
+- name: Enable ROOK Discovery Daemon
+  lineinfile:
+    dest: "{{ base_path }}/rook/deploy/examples/operator.yaml"
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    state: "{{ item.state }}"
+  register: enable_rook_discovery_daemon
+  with_items:
+    - { regexp: '^  ROOK_ENABLE_DISCOVERY_DAEMON:*', line: '  ROOK_ENABLE_DISCOVERY_DAEMON: "true"', state: present }
+  when: rook.enable_discovery_daemon == true
+- debug: msg={{ enable_rook_discovery_daemon }}
+  when: rook.enable_discovery_daemon == true and print_debug == true
 
 
 - name: Create Operator
@@ -220,46 +221,15 @@
 # ceph status
 
 
-#- name: Cluster Settings for a Production Cluster Running in a Dynamic Cloud Environment including VMware
-#  shell: |
-#    kubectl apply -f storageclass.yaml
-#  register: X
-#  args:
-#    chdir: "{{ base_path }}/rook/deploy/examples/"
-#- debug: msg={{ X }}
-#  when: print_debug == true
-#  #  kubectl apply -f cluster.yaml
 
 
-
-#- name: X
+#- name: Create Ceph Filesystem
 #  shell: |
 #    kubectl apply -f filesystem.yaml
-#  register: X
+#  register: create_cephfs
 #  args:
 #    chdir: "{{ base_path }}/rook/deploy/examples/"
-#- debug: msg={{ X }}
-
-
-#- name: X
-#  shell: |
-#    kubectl apply -f csi/cephfs/storageclass.yaml
-#  register: X
-#  args:
-#    chdir: "{{ base_path }}/rook/deploy/examples/"
-#- debug: msg={{ X }}
-# rook/deploy/examples/csi/cephfs/storageclass.yaml
-# rook/deploy/examples/csi/nfs/storageclass.yaml
-# rook/deploy/examples/csi/rbd/storageclass.yaml
-
-
-#- name: X
-#  shell: |
-#    kubectl apply -f toolbox.yaml
-#  register: X
-#  args:
-#    chdir: "{{ base_path }}/rook/deploy/examples/"
-#- debug: msg={{ X }}
+#- debug: msg={{ create_cephfs }}
 
 
 #- name: X
@@ -271,7 +241,7 @@
 # $ kubectl -n rook-ceph exec -it $(kubectl -n rook-ceph get pod -l "app=rook-ceph-tools" -o jsonpath='{.items[0].metadata.name}') bash
 # (toolbox)$ ceph -s
 # (toolbox)$ ceph osd status
-#
+
 
 #- name: Check if Rook is Deployed Successfully
 #  shell: kubectl get CephFileSystem -A
@@ -291,13 +261,8 @@
 #- debug: msg={{ X }}
 
 
-#- name: X
-#  shell: |
-#    kubectl apply -f dashboard-loadbalancer.yaml
-#  register: X
-#  args:
-#    chdir: "{{ base_path }}/rook/deploy/examples/"
-#- debug: msg={{ X }}
+# Restart All Processes in rook-ceph namespace
+# kubectl rollout restart deployment -n rook-ceph
 
 
 #- name: Get IP Address of Rook Load Balancer and Nginx Ingress Controller
@@ -320,7 +285,9 @@
 # kubectl -n cattle-system get pods
 # kubectl -n cattle-system logs <pod-name>
 
+
 # OSD or OSD Prepare can not be created
 # https://github.com/rook/rook/issues/2916
 # https://stackoverflow.com/questions/62045052/why-cant-find-osd-pod-in-kubernetes-after-deploying-rook-ceph
 # https://1week.tistory.com/16
+

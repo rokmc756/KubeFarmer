@@ -1,6 +1,6 @@
 ---
 # Deploy Rancher with Metallb
-
+#
 # for now fail if it's not a Red Hat and SuSE based system
 - name: Check OS ( Kubernetes )
   fail: msg="Not a Red Hat or SUSE based System!"
@@ -40,13 +40,13 @@
 
 
 - name: Deploy Rook Ceph
-  import_tasks: install.yml
+  import_tasks: install-rook.yml
   tags: install
   when: rook.install == true and inventory_hostname in groups['master']
 
 
 - name: Destroy Rook Ceph
-  import_tasks: uninstall.yml
+  import_tasks: uninstall-rook.yml
   tags: uninstall
   when: rook.install == true and inventory_hostname in groups['master']
 

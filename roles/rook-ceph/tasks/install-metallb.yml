@@ -112,3 +112,4 @@
 # kubectl -n cattle-system get all
 # kubectl -n cattle-system get pods
 # kubectl -n cattle-system logs <pod-name>
+

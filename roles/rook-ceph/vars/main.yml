@@ -6,6 +6,8 @@ rook:
   minor_version: 14
   patch_version: 4
   build_version:
+  enable_discovery_daemon: false
+  clone_git: true
   k8s:
     major_version: 1
     minor_version: 28
