@@ -15,8 +15,6 @@
 - debug: msg={{ check_strict_arp }}
 
 
-# helm repo add metallb https://metallb.github.io/metallb
-
 - name: Create Namespace for Metallb
   shell: |
     kubectl create namespace metallb-system
@@ -60,7 +58,7 @@
 
 - name: Apply the Metallb Config for VMware
   shell: |
-    kubectl apply -f "{{ base_path }}"/metallb-config-vmware.yaml
+    kubectl create -f "{{ base_path }}"/metallb-config-vmware.yaml
   register: apply_metallb_config
   ignore_errors: yes
   until: apply_metallb_config is succeeded
@@ -78,7 +76,7 @@
 
 - name: Apply NGINX Ingress CRDs
   shell: |
-    kubectl apply -f crds/ --namespace=nginx-ingress
+    kubectl create -f crds/ --namespace=nginx-ingress
   register: apply_nginx_ingress_crds
   ignore_errors: yes
   args:

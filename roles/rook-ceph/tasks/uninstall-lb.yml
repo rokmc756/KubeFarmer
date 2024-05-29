@@ -5,6 +5,5 @@
   ignore_errors: yes
   args:
     chdir: "{{ base_path }}/rook/deploy/examples/"
-  ignore_errors: yes
 - debug: msg={{ delete_rook_lb }}
 

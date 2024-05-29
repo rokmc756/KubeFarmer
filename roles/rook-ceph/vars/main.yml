@@ -1,7 +1,7 @@
 base_path: /root
 
 rook:
-  install: false
+  install: true
   major_version: 1
   minor_version: 14
   patch_version: 4

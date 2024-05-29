@@ -4,15 +4,27 @@
 
 # https://github.com/rook/rook/issues/5065
 # https://docs.ceph.com/en/latest/rados/configuration/network-config-ref/
-#
 # MON, MDS, OSD
 # iptables -A INPUT -i ens192 -p tcp -s 192.168.0.0/24 --dport 6789 -j ACCEPT
 # iptables -A INPUT -i ens192  -m multiport -p tcp -s 192.168.0.0/24 --dports 6800:7568 -j ACCEPT
 # iptables -A INPUT -i ens192 -m multiport -p tcp -s 192.168.0.0/24 --dports 6800:7568 -j ACCEPT
 
 
-# Rook for GCP
-# https://ashish932.medium.com/f3abe23d9e79
+- name: Cleanup the Ceph Block Devices
+  shell: |
+    lsblk
+    for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do nvme format /dev/$nb --force ;done
+    for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do wipefs -a /dev/$nb ;done
+    for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do sgdisk --zap-all /dev/$nb ;done
+    for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do dd if=/dev/zero of=/dev/$nb bs=10M count=10 ;done
+  delegate_to: "{{ item }}"
+  delegate_facts: True
+  register: cleanup_ceph_block_devices
+  ignore_errors: true
+  with_items: "{{ groups['all'] }}"
+- debug: msg={{ cleanup_ceph_block_devices }}
+  when: print_debug == true
+
 
 - name: Enable Rados Block Device Kernel Module
   copy:
@@ -43,9 +55,8 @@
 
 - name: Clone Rook Source Code
   shell: |
-    git -C "{{ base_path }}" clone --single-branch --branch release-1.14 https://github.com/rook/rook.git
+    git -C "{{ base_path }}" clone --single-branch --branch release-{{ rook.major_version }}.{{ rook.minor_version }} https://github.com/rook/rook.git
   register: git_clone_rook
-  ignore_errors: true
   when: rook.clone_git == true
 - debug: msg={{ git_clone_rook }}
   when: rook.clone_git == true and print_debug == true
@@ -124,158 +135,85 @@
   # kubectl apply -f cluster.yaml
   # chdir: "{{ base_path }}/rook/deploy/examples/"
 
-
-- name: Validate if All Containers are Running
-  shell: kubectl -n rook-ceph get all
-  register: check_init_pod
-  until: check_init_pod.stdout.find("PodInitializing") == -1
-  retries: 60
-- debug: msg={{ check_init_pod }}
-
-
-- name: Validate if All Containers are Running
-  shell: kubectl -n rook-ceph get all
-  register: check_create_containers
-  until: check_create_containers.stdout.find("ContainerCreating") == -1
-  retries: 60
-- debug: msg={{ check_create_containers }}
-
-
-- name: Validate if All Containers are Running
-  shell: kubectl -n rook-ceph get all
-  register: check_create_containers
-  until: check_create_containers.stdout.find("Init") == -1
-  retries: 5
-- debug: msg={{ check_create_containers }}
-
-
-- name: Validate if All Containers are Running
-  shell: kubectl -n rook-ceph get all
-  register: check_create_containers
-  until: check_create_containers.stdout.find("Terminating") == -1
-  retries: 20
-- debug: msg={{ check_create_containers }}
-
-
-- name: Validate if All Containers are Running
-  shell: kubectl -n rook-ceph get all
-  register: check_create_containers
-  until: check_create_containers.stdout.find("ContainerCreating") == -1
-  retries: 60
-- debug: msg={{ check_create_containers }}
-
-
-- name: Validate if All Containers are Running
-  shell: kubectl -n rook-ceph get all
-  register: check_create_containers
-  until: check_create_containers.stdout.find("Terminating") == -1
-  retries: 20
-- debug: msg={{ check_create_containers }}
-
-
-- name: Validate if All Containers are Running
-  shell: kubectl -n rook-ceph get all
-  register: check_create_containers
-  until: check_create_containers.stdout.find("PodInitializing") == -1
-  retries: 20
-- debug: msg={{ check_create_containers }}
-
-
-- name: Validate if All Containers are Running
-  shell: kubectl -n rook-ceph get all
-  register: check_create_containers
-  until: check_create_containers.stdout.find("ContainerCreating") == -1
-  retries: 60
-- debug: msg={{ check_create_containers }}
-
-- pause:
-    seconds: 100
-
-- name: Validate if All Containers are Running
-  shell: kubectl -n rook-ceph get all
-  register: check_create_containers
-  until: check_create_containers.stdout.find("ContainerCreating") == -1
-  retries: 60
-- debug: msg={{ check_create_containers }}
-
-
-#- name: Create Toolbox Pod
-#  shell: |
-#    kubectl create -f toolbox.yaml
-#  register: create_toolbox_pod
-#  args:
-#    chdir: "{{ base_path }}/rook/deploy/examples/"
-#- debug: msg={{ create_toolbox_pod }}
-
-
+# Need to add each item to create containers and check them
 #- name: Validate if All Containers are Running
-#  shell: kubectl -n rook-ceph get pods | grep tool
-#  register: check_tools_containers
-#  until: check_tools_containers.stdout.find("ContainerCreating") == -1
-#  retries: 10
-#- debug: msg={{ check_tools_containers }}
+#  shell: kubectl -n rook-ceph get all
+#  register: check_create_containers
+#  until: check_create_containers.stdout.find("Terminating") == -1
+#  retries: 60
+#- debug: msg={{ check_create_containers }}
+#  until: check_create_containers.stdout.find("PodInitializing") == -1
+#  until: check_create_containers.stdout.find("ContainerCreating") == -1
+#  until: check_create_containers.stdout.find("Init") == -1
 
 
-# toolbox=$(kubectl -n rook-ceph get pods -o custom-columns=NAME:.metadata.name --no-headers | grep tools)
-# kubectl -n rook-ceph exec -it $toolbox sh
-# ceph status
+- name: Check if OSD Pod are Running Normally
+  shell: kubectl -n rook-ceph get all | grep pod/rook-ceph-osd-0
+  register: check_osd_pod
+  ignore_errors: yes
+  until: check_osd_pod.stdout.find("Running") != -1
+  retries: 100
+- debug: msg={{ check_osd_pod }}
 
 
+- name: Create Toolbox Pod
+  shell: |
+    kubectl create -f toolbox.yaml
+  register: create_toolbox_pod
+  args:
+    chdir: "{{ base_path }}/rook/deploy/examples/"
+- debug: msg={{ create_toolbox_pod }}
 
 
-#- name: Create Ceph Filesystem
-#  shell: |
-#    kubectl apply -f filesystem.yaml
-#  register: create_cephfs
-#  args:
-#    chdir: "{{ base_path }}/rook/deploy/examples/"
-#- debug: msg={{ create_cephfs }}
+- name: Validate if Toolbox Container is Running Normally
+  shell: kubectl -n rook-ceph get pods | grep tool
+  register: check_toolbox_containers
+  until: check_toolbox_containers.stdout.find("ContainerCreating") == -1
+  retries: 10
+- debug: msg={{ check_toolbox_containers }}
 
 
-#- name: X
-#  shell: |
-#    kubectl get deploy rook-ceph-tools -n rook-ceph
-#  register: X
-#- debug: msg={{ X }}
+- name: Create Ceph Filesystem
+  shell: |
+    kubectl create -f filesystem.yaml
+  register: create_cephfs
+  args:
+    chdir: "{{ base_path }}/rook/deploy/examples/"
+- debug: msg={{ create_cephfs }}
+
+
+- name: Print Rook Ceph Tools
+  shell: |
+    kubectl get deploy rook-ceph-tools -n rook-ceph
+  register: print_rook_ceph_tools
+- debug: msg={{ print_rook_ceph_tools }}
+
 
 # $ kubectl -n rook-ceph exec -it $(kubectl -n rook-ceph get pod -l "app=rook-ceph-tools" -o jsonpath='{.items[0].metadata.name}') bash
 # (toolbox)$ ceph -s
 # (toolbox)$ ceph osd status
 
 
-#- name: Check if Rook is Deployed Successfully
-#  shell: kubectl get CephFileSystem -A
-#  register: check_rook_deployment
-#  ignore_errors: yes
-#  until: check_rook_deployment.stdout.find("Progressing") == -1
-#  retries: 30
-#- debug: msg={{ check_rook_deployment }}
+- name: Check if Rook Ceph is Deployed Successfully
+  shell: kubectl get CephFileSystem -A
+  register: check_rook_deployment
+  ignore_errors: yes
+  until: check_rook_deployment.stdout.find("Progressing") == -1
+  retries: 30
+- debug: msg={{ check_rook_deployment }}
 
 
-#- name: X
+#- name: Apply Kube Registry
 #  shell: |
 #    kubectl apply -f csi/cephfs/kube-registry.yaml
-#  register: X
+#  register: apply_kube_registry
 #  args:
 #    chdir: "{{ base_path }}/rook/deploy/examples/"
-#- debug: msg={{ X }}
+#- debug: msg={{ apply_kube_registry }}
 
-
+#
 # Restart All Processes in rook-ceph namespace
 # kubectl rollout restart deployment -n rook-ceph
-
-
-#- name: Get IP Address of Rook Load Balancer and Nginx Ingress Controller
-#  shell: |
-#    kubectl get all -A | grep -E "service/rook-loadbalancer|service/nginx-ingress-controller"
-#  register: get_ipaddr_rook_lb
-#  ignore_errors: yes
-#- debug: msg={{ get_ipaddr_rook_lb }}
-
-
-# Need to check why OSD and MGR is not running
-# kubectl -n rook-ceph get pods -o wide
-# kubectl -n rook-ceph logs    rook-ceph-operator-775cf575c5-5mn4c
 
 
 # [ Check Rook and NGINX Ingress ]
@@ -284,7 +222,6 @@
 # kubectl -n cattle-system get all
 # kubectl -n cattle-system get pods
 # kubectl -n cattle-system logs <pod-name>
-
 
 # OSD or OSD Prepare can not be created
 # https://github.com/rook/rook/issues/2916

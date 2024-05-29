@@ -8,7 +8,6 @@
 #- debug: msg={{ check_rook_pods }}
 
 
-#
 - name: Uninstall NGINX Ingress
   shell: |
     helm uninstall nginx-ingress --namespace=nginx-ingress
@@ -102,18 +101,6 @@
   register: rollback_strict_arp
   ignore_errors: yes
 - debug: msg={{ rollback_strict_arp }}
-
-
-- name: Check strictARP
-  shell: |
-    kubectl get configmap kube-proxy -n kube-system -o yaml | grep strictARP
-  register: check_strict_arp
-  ignore_errors: yes
-- debug: msg={{ check_strict_arp }}
-
-# Terminating
-# kubectl get all -A | grep nginx-ingress
-# nginx-ingress   pod/nginx-ingress-controller-68cb48d756-wwks5                  0/1     Terminating   0                   5m45s
 
 
 # [ Check Rook and NGINX Ingress ]
