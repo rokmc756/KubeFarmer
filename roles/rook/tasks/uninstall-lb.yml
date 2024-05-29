@@ -1,40 +1,9 @@
-#- name: Check Rook Pods
-#  shell: kubectl get all -n cattle-system
-#  register: check_rook_pods
-#  ignore_errors: yes
-#  until: check_rook_pods.stdout.find("pending") == -1
-#  retries: 10
-#- debug: msg={{ check_rook_pods }}
-
-
 - name: Delete Rook Load Balancer
   shell: |
-    kubectl delete -f "{{ base_path }}"/rook-loadbalancer.yaml
+    kubectl delete -f dashboard-loadbalancer.yaml
   register: delete_rook_lb
   ignore_errors: yes
+  args:
+    chdir: "{{ base_path }}/rook/deploy/examples/"
+  ignore_errors: yes
 - debug: msg={{ delete_rook_lb }}
-
-
-- name: Delete Namespace for Rook
-  shell: |
-    kubectl delete namespace cattle-system
-  register: delete_rook_namespace
-  ignore_errors: yes
-- debug: msg={{ delete_rook_namespace }}
-
-
-- name: Delete Rook Loadbalancer Config Yaml
-  shell: |
-    rm -f {{ base_path }}/rook-loadbalancer.yaml
-  register: delete_rook_lb_config_yaml
-  ignore_errors: yes
-- debug: msg={{ delete_rook_lb_config_yaml }}
-
-
-# [ Check Rook and NGINX Ingress ]
-# kubectl get events --all-namespaces  --sort-by='.metadata.creationTimestamp'
-# kubectl -n cattle-system describe pods
-# kubectl -n cattle-system get all
-# kubectl -n cattle-system get pods
-# kubectl -n cattle-system logs <pod-name>
-

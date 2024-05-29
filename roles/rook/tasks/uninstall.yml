@@ -114,7 +114,10 @@
 #  shell: |
 #    rmmod rbd
 #  register: remove_rbd_kernel_module
+#  delegate_to: "{{ item }}"
+#  delegate_facts: True
 #  ignore_errors: true
+#  with_items: "{{ groups['all'] }}"
 #- debug: msg={{ remove_rbd_kernel_module }}
 #  when: print_debug == true
 
@@ -151,4 +154,3 @@
 #    for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do wipefs -a /dev/$nb ;done
 #    for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do sgdisk --zap-all /dev/$nb ;done
 #    for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do dd if=/dev/zero of=/dev/$nb bs=512 count=1 ;done
-

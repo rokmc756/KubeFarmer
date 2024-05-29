@@ -1,4 +1,10 @@
 ---
+- name: Reset Kubernetes
+  command: kubeadm reset -f
+  ignore_errors: yes
+  when: inventory_hostname in groups['master']
+
+
 - name: Unlock those versions to prevent them from being automatically updated
   shell: |
     zypper removelock kubelet kubeadm kubectl

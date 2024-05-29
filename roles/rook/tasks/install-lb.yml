@@ -1,40 +1,8 @@
-- name: Create Namespace for Rook
-  shell: |
-    kubectl create namespace cattle-system
-  register: create_rook_namespace
-  ignore_errors: yes
-- debug: msg={{ create_rook_namespace }}
-
-
-- name: Copy Rook Loadbalancer Config Yaml
-  template:
-    src: rook-loadbalancer.yaml.j2
-    dest: "{{ base_path }}/rook-loadbalancer.yaml"
-  register: copy_rook_lb_config_yaml
-  ignore_errors: yes
-- debug: msg={{ copy_rook_lb_config_yaml }}
-
-
 - name: Apply Rook Load Balancer
   shell: |
-    kubectl apply -f "{{ base_path }}"/rook-loadbalancer.yaml
+    kubectl apply -f dashboard-loadbalancer.yaml
   register: apply_rook_lb
   ignore_errors: yes
+  args:
+    chdir: "{{ base_path }}/rook/deploy/examples/"
 - debug: msg={{ apply_rook_lb }}
-
-
-- name: Check Rook Pods
-  shell: kubectl get all -n cattle-system
-  register: check_rook_pods
-  ignore_errors: yes
-  until: check_rook_pods.stdout.find("pending") == -1
-  retries: 10
-- debug: msg={{ check_rook_pods }}
-
-
-# [ Check Rook and NGINX Ingress ]
-# kubectl get events --all-namespaces  --sort-by='.metadata.creationTimestamp'
-# kubectl -n cattle-system describe pods
-# kubectl -n cattle-system get all
-# kubectl -n cattle-system get pods
-# kubectl -n cattle-system logs <pod-name>

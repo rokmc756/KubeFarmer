@@ -21,6 +21,9 @@
 #    - firewalld
 #  when: uninstall_dep_packages
 
+- name: Reset Kubernetes
+  command: kubeadm reset -f
+  when: inventory_hostname in groups['master']
 
 - name: Disable and Stop Docker
   systemd:
