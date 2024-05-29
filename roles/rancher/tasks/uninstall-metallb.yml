@@ -1,0 +1,195 @@
+# https://docs.vmware.com/en/VMware-Bare-Metal-Automation-for-VMware-Telco-Cloud-Platform/3.1/bma-install-guide-31/GUID-E49E1411-9F9C-436D-9B25-6C0302FFAB95.html
+
+#- name: Check Rook Pods
+#  shell: kubectl get all -n cattle-system
+#  register: check_rook_pods
+#  ignore_errors: yes
+#  until: check_rook_pods.stdout.find("pending") == -1
+#  retries: 10
+#- debug: msg={{ check_rook_pods }}
+
+
+- name: Uninstall NGINX Ingress
+  shell: |
+    helm uninstall nginx-ingress --namespace=nginx-ingress
+  register: uninstall_nginx_ingress
+  ignore_errors: yes
+  args:
+    chdir: "{{ base_path }}/kubernetes-ingress/deployments/helm-chart"
+- debug: msg={{ uninstall_nginx_ingress }}
+
+
+- name: Delete NGINX Ingress CRDs
+  shell: |
+    kubectl delete -f crds/ --namespace=nginx-ingress
+  register: delete_nginx_ingress_crds
+  ignore_errors: yes
+  args:
+    chdir: "{{ base_path }}/kubernetes-ingress/deployments/helm-chart"
+- debug: msg={{ delete_nginx_ingress_crds }}
+
+
+- name: Remove Kubernetest Ingress Directory
+  shell: |
+    rm -rf "{{ base_path }}"/kubernetes-ingress
+  register: clone_k8s_ingress_dir
+  ignore_errors: true
+- debug: msg={{ clone_k8s_ingress_dir }}
+
+
+- name: Delete the Metallb Config for VMware
+  shell: |
+    kubectl delete -f "{{ base_path }}"/metallb-config-vmware.yaml
+  register: delete_metallb_config
+  ignore_errors: yes
+  until: delete_metallb_config is succeeded
+- debug: msg={{ delete_metallb_config }}
+
+
+- name: Remove Metallb Config Yaml for VMware
+  shell: |
+    rm -f "{{ base_path }}"/metallb-config-vmware.yaml
+  register: remove_metallb_vmware_yaml
+  ignore_errors: yes
+- debug: msg={{ remove_metallb_vmware_yaml }}
+
+
+- name: Delete Secret for Metallb Namespace
+  shell: |
+    kubectl delete secret -n metallb-system memberlist
+  register: delete_metallb_secret
+  ignore_errors: yes
+- debug: msg={{ delete_metallb_secret }}
+  #  kubectl delete secret generic -n metallb-system memberlist
+
+
+#- name: Delete the Metallb Native
+#  shell: |
+#    kubectl delete -f \
+#    https://raw.githubusercontent.com/metallb/metallb/v{{ metallb.major_version }}.{{ metallb.minor_version }}.{{ metallb.patch_version }}/config/manifests/metallb-native.yaml
+#  register: apply_metallb_native_config
+#- debug: msg={{ apply_metallb_native_config }}
+
+
+- name: Get the list of Metallb Kubernetes CRDs
+  shell: |
+    kubectl get crds | grep metallb | awk '{print $1}'
+  register: get_metallb_crds
+  ignore_errors: yes
+- debug: msg={{ get_metallb_crds }}
+
+
+- name: Delete each Metallb Kubernetes CRDs
+  shell: |
+    kubectl delete crds {{ item }}
+  register: delete_metallb_crds
+  ignore_errors: yes
+  with_items: "{{ get_metallb_crds.stdout_lines }}"
+- debug: msg={{ delete_metallb_crds }}
+
+
+- name: Get the list of Metallb Kubernetesa ClusterRoleBindings
+  shell: |
+    kubectl get clusterrolebindings | grep metallb | awk '{print $1}'
+  register: get_metallb_clusterrolebindings
+  ignore_errors: yes
+- debug: msg={{ get_metallb_clusterrolebindings }}
+
+
+- name: Delete each Metallb Kubernetes ClusterRoleBindings
+  shell: |
+    kubectl delete clusterrolebinding {{ item }}
+  register: delete_metallb_clusterrolebindings
+  ignore_errors: yes
+  with_items: "{{ get_metallb_clusterrolebindings.stdout_lines }}"
+- debug: msg={{ delete_metallb_clusterrolebindings }}
+
+
+- name: Get the list of Metallb Kubernetesa ClusterRole
+  shell: |
+    kubectl get clusterrole | grep metallb | awk '{print $1}'
+  register: get_metallb_clusterrole
+  ignore_errors: yes
+- debug: msg={{ get_metallb_clusterrole }}
+
+
+- name: Delete each Metallb Kubernetes ClusterRole
+  shell: |
+    kubectl delete clusterrole {{ item }}
+  register: delete_metallb_clusterrolebindings
+  ignore_errors: yes
+  with_items: "{{ get_metallb_clusterrole.stdout_lines }}"
+- debug: msg={{ delete_metallb_clusterrolebindings }}
+
+
+- name: Get the list of Metallb Kubernetes ValidatingWebHookConfiguration
+  shell: |
+    kubectl get validatingwebhookconfiguration | awk '{print $1}'
+  register: get_metallb_validate_webhook_config
+  ignore_errors: yes
+- debug: msg={{ get_metallb_validate_webhook_config }}
+
+
+- name: Delete each Metallb Kubernetes ValidatingWebHookConfiguration
+  shell: |
+    kubectl delete validatingwebhookconfiguration {{ item }}
+  register: delete_metallb_validate_webhook_config
+  ignore_errors: yes
+  with_items: "{{ get_metallb_validate_webhook_config.stdout_lines }}"
+- debug: msg={{ delete_metallb_validate_webhook_config }}
+
+
+- name: Uninstall the Metallb
+  shell: |
+    helm uninstall metallb -n metallb-system
+  register: uninstall_metallb_native_config
+  ignore_errors: yes
+- debug: msg={{ uninstall_metallb_native_config }}
+
+
+# https://stackoverflow.com/questions/52369247/namespace-stucked-as-terminating-how-i-removed-it
+#- name: Force Delete Metallb Namespace
+#  shell: |
+#    NAMESPACE={{ item }}
+#    kubectl proxy & kubectl get namespace $NAMESPACE -o json | jq '.spec = {"finalizers":[]}' > /root/temp.json
+#    kubectl replace --raw "/api/v1/namespaces/$NAMESPACE/finalize" -f /root/temp.json
+#  register: delete_metallb_namespace
+#  ignore_errors: yes
+#  with_items:
+#    - metallb-system
+#- debug: msg={{ delete_metallb_namespace }}
+
+
+- name: Delete Namespace for Metallb
+  shell: |
+    kubectl delete namespace metallb-system
+  register: delete_metallb_namespace
+  ignore_errors: yes
+- debug: msg={{ delete_metallb_namespace }}
+  # kubectl delete namespace metallb-system --force --grace-period=0
+
+
+- name: Check strictARP
+  shell: |
+    kubectl get configmap kube-proxy -n kube-system -o yaml | grep strictARP
+  register: check_strict_arp
+  ignore_errors: yes
+- debug: msg={{ check_strict_arp }}
+
+
+- name: Rollback strictARP for VMWare or Cloud
+  shell: |
+    kubectl get configmap kube-proxy -n kube-system -o yaml | \
+    sed -e "s/strictARP: true/strictARP: false/" | kubectl apply -f - -n kube-system
+  register: rollback_strict_arp
+  ignore_errors: yes
+- debug: msg={{ rollback_strict_arp }}
+
+
+# [ Check Rook and NGINX Ingress ]
+# kubectl get events --all-namespaces  --sort-by='.metadata.creationTimestamp'
+# kubectl -n cattle-system describe pods
+# kubectl -n cattle-system get all
+# kubectl -n cattle-system get pods
+# kubectl -n cattle-system logs <pod-name>
+

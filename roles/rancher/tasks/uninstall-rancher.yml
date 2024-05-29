@@ -1,0 +1,113 @@
+- name: Clone Rancher Cleanup
+  shell: |
+    git -C "{{ base_path }}" clone https://github.com/rancher/rancher-cleanup.git
+  register: clone_rancher_cleanup
+  ignore_errors: true
+- debug: msg={{ clone_rancher_cleanup }}
+  # --branch v{{ nginx.k8s_ingress.major_version }}.{{ nginx.k8s_ingress.minor_version }}.{{ nginx.k8s_ingress.patch_version }}
+
+
+- name: Cleanup Rancher
+  shell: |
+    kubectl create -f rancher-cleanup.yaml
+  register: cleanup_rancher
+  ignore_errors: yes
+  args:
+    chdir: "{{ base_path }}/rancher-cleanup/deploy/"
+- debug: msg={{ cleanup_rancher }}
+
+#- name: Watch Cleanup Logs
+#  shell: |
+#    kubectl -n kube-system logs -l job-name=cleanup-job -f
+#  register: watch_cleanup_logs
+#- debug: msg={{ watch_cleanup_logs }}
+
+
+- name: Check if Rancher Namespaces are Still Active
+  shell: kubectl get namespaces | grep -E 'cattle|fleet'
+  register: check_active_namespaces
+  until: check_active_namespaces.stdout.find("Active") == -1
+  retries: 100
+  ignore_errors: true
+- debug: msg={{ check_active_namespaces }}
+
+
+- name: Check if Rancher Namespaces are Still Terminating
+  shell: kubectl get namespaces | grep -E 'cattle|fleet'
+  register: check_terminating_namespaces
+  until: check_terminating_namespaces.stdout.find("Terminating") == -1
+  retries: 10
+  ignore_errors: true
+- debug: msg={{ check_terminating_namespaces }}
+
+
+- name: Remove Rancher Cleanup Directory
+  shell: |
+    rm -rf /root/rancher-cleanup
+  register: remove_rancher_cleanup_dir
+  ignore_errors: true
+- debug: msg={{ remove_rancher_cleanup_dir }}
+
+
+#- name: Validate if Toolbox Pod are still Terminating
+#  shell: kubectl -n rook-ceph get all | grep tool
+#  register: check_toolbox
+#  ignore_errors: true
+#  until: check_toolbox.stdout.find("") != -1
+#  retries: 30
+#- debug: msg={{ check_toolbox }}
+# until: check_toolbos.stdout.find("Terminating") == -1
+
+
+#- name: Uninstall Rancher
+#  shell: |
+#    helm uninstall rancher --namespace cattle-system
+#  register: uninstall_rancher
+#  ignore_errors: yes
+#- debug: msg={{ uninstall_rancher }}
+#
+#
+#- name: Check if Rancher is Deployed Successfully
+#  shell: kubectl get all -n cattle-system
+#  register: check_rancher_deployment
+#  ignore_errors: yes
+#  until: check_rancher_deployment.stdout.find("Terminating") == -1
+#  retries: 20
+#- debug: msg={{ check_rancher_deployment }}
+#
+#
+## https://stackoverflow.com/questions/52369247/namespace-stucked-as-terminating-how-i-removed-it
+#- name: Force Delete Rancher Namespace
+#  shell: |
+#    NAMESPACE={{ item }}
+#    kubectl proxy & kubectl get namespace $NAMESPACE -o json | jq '.spec = {"finalizers":[]}' > /root/temp.json
+#    kubectl replace --raw "/api/v1/namespaces/$NAMESPACE/finalize" -f /root/temp.json
+#  register: delete_rancher_namespace
+#  ignore_errors: yes
+#  with_items:
+#    - cattle-system
+#- debug: msg={{ delete_rancher_namespace }}
+#
+#
+#- name: Delete Namespace for Rancher
+#  shell: |
+#    kubectl delete namespace cattle-system --force --grace-period=0
+#  register: delete_rancher_namespace
+#- debug: msg={{ delete_rancher_namespace }}
+#
+#
+#
+#- name: Get IP Address of Rancher Load Balancer and Nginx Ingress Controller
+#  shell: |
+#    kubectl get all -A | grep -E "service/rancher-loadbalancer|service/nginx-ingress-controller"
+#  register: get_ipaddr_rancher_lb
+#  ignore_errors: yes
+#- debug: msg={{ get_ipaddr_rancher_lb }}
+
+# [ Check Rancher and NGINX Ingress ]
+# kubectl get events --all-namespaces  --sort-by='.metadata.creationTimestamp'
+# kubectl -n cattle-system describe pods
+# kubectl -n cattle-system get all
+# kubectl -n cattle-system get pods
+# kubectl -n cattle-system logs <pod-name>
+

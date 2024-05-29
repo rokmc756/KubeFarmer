@@ -1,0 +1,373 @@
+# 1
+#- name: X
+#  shell: |
+#    kubectl delete secret -n cattle-system bootstrap-secret
+#  register: X
+#  ignore_errors: yes
+#- debug: msg={{ X }}
+#  kubectl get secret --namespace cattle-system bootstrap-secret -o go-template='{{.data.bootstrapPassword|base64decode}}{{"\n"}}'
+
+
+# 2
+- name: X
+  shell: |
+    kubectl get all -n cattle-system
+  register: X
+  ignore_errors: yes
+- debug: msg={{ X }}
+
+
+# 6
+- name: X
+  shell: |
+    kubectl delete -f /root/rancher-loadbalancer.yaml
+  register: X
+  ignore_errors: yes
+- debug: msg={{ X }}
+  #  kubectl apply -f /kubernetes_config/rancher/rancher-loadbalancer.yaml
+
+
+# 7
+#- name: X
+#  shell: |
+#    rm -f /root/rancher-loadbalancer.yaml
+#  register: X
+#  ignore_errors: yes
+#- debug: msg={{ X }}
+#  # rm -f /kubernetes_config/rancher/rancher-loadbalancer.yaml
+
+
+# 4
+- name: X
+  shell: |
+    helm uninstall rancher --namespace cattle-system
+  register: X
+  ignore_errors: yes
+- debug: msg={{ X }}
+  #  helm install rancher rancher-stable/rancher --namespace cattle-system --set hostname=rancher.jtest.suse.com
+
+
+# 5
+- name: X
+  shell: |
+    kubectl get all -n cattle-system
+  register: X
+  ignore_errors: yes
+- debug: msg={{ X }}
+
+
+# 6
+#- name: X
+#  shell: |
+#    kubectl delete -f /root/rancher-loadbalancer.yaml
+#  register: X
+#  ignore_errors: yes
+#- debug: msg={{ X }}
+#  #  kubectl apply -f /kubernetes_config/rancher/rancher-loadbalancer.yaml
+
+
+
+# 7
+#- name: X
+#  shell: |
+#    rm -f /root/rancher-loadbalancer.yaml
+#  register: X
+#  ignore_errors: yes
+#- debug: msg={{ X }}
+#  # rm -f /kubernetes_config/rancher/rancher-loadbalancer.yaml
+
+
+
+# 11
+#- name: X
+#  shell: |
+#    kubectl delete namespace cert-manager
+#  register: X
+#  ignore_errors: yes
+#- debug: msg={{ X }}
+
+
+
+# 13
+#- name: X
+#  shell: |
+#    kubectl delete namespace cattle-system
+#  register: X
+#  ignore_errors: yes
+#- debug: msg={{ X }}
+
+
+# 16
+#- name: X
+#  shell: |
+#    helm upgrade nginx-ingress nginx-stable/nginx-ingress --namespace=nginx-ingress
+#  register: X
+#  ignore_errors: yes
+#- debug: msg={{ X }}
+#  #  helm upgrade nginx-ingress nginx-stable/nginx-ingress --namespace=nginx-ingress
+
+
+# 17
+- name: X
+  shell: |
+    kubectl delete -f crds/ --namespace=nginx-ingress
+  register: X
+  args:
+    chdir: "{{ base_path }}/kubernetes-ingress/deployments/helm-chart"
+  ignore_errors: yes
+- debug: msg={{ X }}
+
+
+# 20
+- name: X
+  shell: |
+    helm uninstall nginx-ingress --namespace=nginx-ingress
+  register: X
+  ignore_errors: yes
+- debug: msg={{ X }}
+  # helm install nginx-ingress nginx-stable/nginx-ingress --namespace=nginx-ingress --create-namespace=true
+
+
+# 23
+#- name: X
+#  shell: |
+#    cd kubernetes-ingress/deployments/helm-chart
+#  register: X
+#  ignore_errors: yes
+#- debug: msg={{ X }}
+
+
+
+# 25
+#- name: X
+#  shell: |
+#    kubectl delete -f /root/metallb-config-vmware.yaml
+#  register: X
+#  ignore_errors: yes
+#- debug: msg={{ X }}
+#  #  kubectl delete -f /metallb-config/metallb-config-vmware.yaml
+
+
+# 26
+#- name: X
+#  shell: |
+#    rm -f /root/metallb-config-vmware.yaml
+#  register: X
+#  ignore_errors: yes
+#- debug: msg={{ X }}
+
+
+
+# 27
+#- name: X
+#  shell: |
+#    kubectl delete secret -n metallb-system memberlist
+#  register: X
+#  ignore_errors: yes
+#- debug: msg={{ X }}
+#  #  kubectl create secret generic -n metallb-system memberlist --from-literal=secretkey="$(openssl rand -base64 128)"
+#  #  kubectl delete secret generic -n metallb-system memberlist
+
+
+# 29
+#- name: X
+#  shell: |
+#    kubectl get configmap kube-proxy -n kube-system -o yaml | grep strictARP
+#  register: X
+#  ignore_errors: yes
+#- debug: msg={{ X }}
+
+
+# 12
+- name: X
+  shell: |
+    kubectl delete -f https://github.com/jetstack/cert-manager/releases/download/v1.7.1/cert-manager.crds.yaml
+  register: X
+  ignore_errors: yes
+- debug: msg={{ X }}
+  #  kubectl apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/v1.7.1/cert-manager.crds.yaml
+
+
+# 8
+- name: X
+  shell: |
+    helm uninstall cert-manager -n cert-manager
+  register: X
+  ignore_errors: yes
+- debug: msg={{ X }}
+  #  helm install cert-manager jetstack/cert-manager --namespace cert-manager --version v1.7.1
+
+
+
+# 30
+- name: X
+  shell: |
+    kubectl get configmap kube-proxy -n kube-system -o yaml | sed -e "s/strictARP: true/strictARP: false/" | kubectl apply -f - -n kube-system
+  register: X
+  ignore_errors: yes
+- debug: msg={{ X }}
+  # kubectl get configmap kube-proxy -n kube-system -o yaml | sed -e "s/strictARP: false/strictARP: true/" | kubectl apply -f - -n kube-system
+
+
+# 25
+- name: X
+  shell: |
+    kubectl delete -f /root/metallb-config-vmware.yaml
+  register: X
+  ignore_errors: yes
+- debug: msg={{ X }}
+  #  kubectl delete -f /metallb-config/metallb-config-vmware.yaml
+
+
+# 28
+#- name: Delete Metallib Native
+#  shell: |
+#    kubectl delete -f https://raw.githubusercontent.com/metallb/metallb/v0.13.11/config/manifests/metallb-native.yaml
+#  register: delete_metallb_native
+#  ignore_errors: yes
+#- debug: msg={{ delete_metallb_native }}
+#  # kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.13.11/config/manifests/metallb-native.yaml
+
+
+# 28
+- name: Delete Metallib Native
+  shell: |
+    kubectl delete deployment.apps/controller -n metallb-system
+    kubectl delete daemonset.apps/speaker -n metallb-system
+    kubectl delete service/webhook-service -n metallb-system
+  register: delete_metallb_native
+  ignore_errors: yes
+- debug: msg={{ delete_metallb_native }}
+  # kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.13.11/config/manifests/metallb-native.yaml
+
+# 28
+- name: Delete Metallib Native
+  shell: |
+    kubectl delete -f https://raw.githubusercontent.com/metallb/metallb/v0.13.11/config/manifests/metallb-native.yaml
+  register: delete_metallb_native
+  ignore_errors: yes
+- debug: msg={{ delete_metallb_native }}
+  # kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.13.11/config/manifests/metallb-native.yaml
+
+
+
+# root@osuse15-node01:~# kubectl get all -n metallb-system
+# NAME                              READY   STATUS    RESTARTS   AGE
+# pod/controller-7d56b4f464-l6vpv   1/1     Running   0          74s
+# pod/speaker-46c5w                 1/1     Running   0          74s
+# pod/speaker-4j5h9                 1/1     Running   0          74s
+# pod/speaker-h4k57                 1/1     Running   0          74s
+# pod/speaker-mhl8t                 1/1     Running   0          74s
+
+# NAME                      TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)   AGE
+# service/webhook-service   ClusterIP   10.101.101.38   <none>        443/TCP   74s
+
+# NAME                     DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR            AGE
+# daemonset.apps/speaker   4         4         4       4            4           kubernetes.io/os=linux   74s
+
+# NAME                         READY   UP-TO-DATE   AVAILABLE   AGE
+# deployment.apps/controller   1/1     1            1           74s
+
+# NAME                                    DESIRED   CURRENT   READY   AGE
+# replicaset.apps/controller-7d56b4f464   1         1         1       74s
+
+# 1
+- name: X
+  shell: |
+    kubectl delete secret -n cattle-system bootstrap-secret
+  register: X
+  ignore_errors: yes
+- debug: msg={{ X }}
+  #  kubectl get secret --namespace cattle-system bootstrap-secret -o go-template='{{.data.bootstrapPassword|base64decode}}{{"\n"}}'
+
+
+# 27
+- name: X
+  shell: |
+    kubectl delete secret -n metallb-system memberlist
+  register: X
+  ignore_errors: yes
+- debug: msg={{ X }}
+  #  kubectl create secret generic -n metallb-system memberlist --from-literal=secretkey="$(openssl rand -base64 128)"
+  #  kubectl delete secret generic -n metallb-system memberlist
+
+
+# https://stackoverflow.com/questions/52369247/namespace-stucked-as-terminating-how-i-removed-it
+- name: Force Delete Namespace
+  shell: |
+    NAMESPACE={{ item }}
+    kubectl proxy & kubectl get namespace $NAMESPACE -o json | jq '.spec = {"finalizers":[]}' > /root/temp.json
+    kubectl replace --raw "/api/v1/namespaces/$NAMESPACE/finalize" -f /root/temp.json
+  register: X
+  ignore_errors: yes
+  with_items:
+    - cattle-fleet-local-system
+#    - cattle-system
+#    - cattle-provisioning-capi-system
+#    - cert-manager
+#    - metallb-system
+- debug: msg={{ X }}
+
+
+#- name: X
+#  shell: |
+#    kubectl delete deployment.apps/fleet-agent -n cattle-fleet-local-system
+#    kubectl delete deployment.apps/capi-controller-manager -n cattle-provisioning-capi-system
+#    kubectl delete eployment.apps/fleet-controller -n cattle-fleet-system
+#    kubectl delete eployment.apps/gitjob -n cattle-fleet-system
+#  register: X
+#  ignore_errors: yes
+#- debug: msg={{ X }}
+
+
+
+
+#- name: Force Delete Namespace
+#  shell: |
+#    kubectl delete namespace {{ item }}
+#  register: X
+#  ignore_errors: yes
+#  with_items:
+#    - cattle-fleet-local-system
+
+#    - cattle-provisioning-capi-system
+#    - cattle-fleet-system
+#    - cattle-system
+#    - cert-manager
+#    - metallb-system
+
+
+
+# 30
+- name: X
+  shell: |
+    kubectl get configmap kube-proxy -n kube-system -o yaml | sed -e "s/strictARP: true/strictARP: false/" | kubectl apply -f - -n kube-system
+  register: X
+  ignore_errors: yes
+- debug: msg={{ X }}
+  # kubectl get configmap kube-proxy -n kube-system -o yaml | sed -e "s/strictARP: false/strictARP: true/" | kubectl apply -f - -n kube-system
+
+
+# 24
+- name: X
+  shell: |
+    rm -rf /root/kubernetes-ingress
+  register: X
+  ignore_errors: yes
+- debug: msg={{ X }}
+  # git clone https://github.com/nginxinc/kubernetes-ingress.git --branch v3.0.2
+
+
+
+# 7
+#- name: X
+#  shell: |
+#    rm -f /root/rancher-loadbalancer.yaml
+#  register: X
+#  ignore_errors: yes
+#- debug: msg={{ X }}
+#  # rm -f /kubernetes_config/rancher/rancher-loadbalancer.yaml
+
+
+
+

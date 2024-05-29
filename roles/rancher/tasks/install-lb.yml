@@ -1,0 +1,21 @@
+- name: Copy Rancher Loadbalancer Config Yaml
+  template:
+    src: rancher-loadbalancer.yaml.j2
+    dest: "{{ base_path }}/rancher-loadbalancer.yaml"
+  register: copy_rancher_lb_config_yaml
+- debug: msg={{ copy_rancher_lb_config_yaml }}
+
+
+- name: Apply Rancher Load Balancer
+  shell: |
+    kubectl apply -f "{{ base_path }}"/rancher-loadbalancer.yaml
+  register: apply_rancher_lb
+- debug: msg={{ apply_rancher_lb }}
+
+
+- name: Check Racher Pods
+  shell: kubectl get all -n cattle-system
+  register: check_rancher_pods
+  until: check_rancher_pods.stdout.find("pending") == -1
+  retries: 20
+- debug: msg={{ check_rancher_pods }}
