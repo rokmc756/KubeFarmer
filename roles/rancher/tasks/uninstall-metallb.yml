@@ -2,13 +2,15 @@
 # https://docs.vmware.com/en/VMware-Bare-Metal-Automation-for-VMware-Telco-Cloud-Platform/3.1/bma-install-guide-31/GUID-E49E1411-9F9C-436D-9B25-6C0302FFAB95.html
 # https://stackoverflow.com/questions/52369247/namespace-stucked-as-terminating-how-i-removed-it
 
-#- name: Check Rancher Pods
-#  shell: kubectl get all -n cattle-system
-#  register: check_rook_pods
-#  ignore_errors: yes
-#  until: check_rook_pods.stdout.find("pending") == -1
-#  retries: 10
-#- debug: msg={{ check_rook_pods }}
+
+- name: Delete NGINX Ingress CRDs
+  shell: |
+    kubectl delete -f crds/ --namespace=nginx-ingress
+  register: delete_nginx_ingress_crds
+  ignore_errors: yes
+  args:
+    chdir: "{{ base_path }}/kubernetes-ingress/deployments/helm-chart"
+- debug: msg={{ delete_nginx_ingress_crds }}
 
 
 - name: Uninstall NGINX Ingress
@@ -21,14 +23,22 @@
 - debug: msg={{ uninstall_nginx_ingress }}
 
 
-- name: Delete NGINX Ingress CRDs
+- name: Delete Namespace for NGINX Ingress
   shell: |
-    kubectl delete -f crds/ --namespace=nginx-ingress
-  register: delete_nginx_ingress_crds
+    kubectl delete ns nginx-ingress --grace-period=0 --force &
+    sleep 10
+  register: delete_nginx_ingress_namespace
   ignore_errors: yes
-  args:
-    chdir: "{{ base_path }}/kubernetes-ingress/deployments/helm-chart"
-- debug: msg={{ delete_nginx_ingress_crds }}
+- debug: msg={{ delete_nginx_ingress_namespace }}
+
+
+- name: Force Delete Namespace for NGINX Ingress
+  shell: |
+    kubectl get namespace "nginx-ingress" -o json   | tr -d "\n" | sed "s/\"finalizers\": \[[^]]\+\]/\"finalizers\": []/" | \
+    kubectl replace --raw /api/v1/namespaces/nginx-ingress/finalize -f -
+  register: force_delete_nginx_ingress_namespace
+  ignore_errors: yes
+- debug: msg={{ force_delete_nginx_ingress_namespace }}
 
 
 - name: Remove Kubernetest Ingress Directory
@@ -62,7 +72,6 @@
   register: delete_metallb_secret
   ignore_errors: yes
 - debug: msg={{ delete_metallb_secret }}
-  #  kubectl delete secret generic -n metallb-system memberlist
 
 
 #- name: Delete the Metallb Native
@@ -72,13 +81,14 @@
 #  register: apply_metallb_native_config
 #- debug: msg={{ apply_metallb_native_config }}
 
-#
+
 - name: Uninstall the Metallb
   shell: |
-    helm uninstall metallb -n metallb-system --no-hooks
+    helm uninstall metallb -n metallb-system
   register: uninstall_metallb_native_config
   ignore_errors: yes
 - debug: msg={{ uninstall_metallb_native_config }}
+  # helm uninstall metallb -n metallb-system --no-hooks
 
 
 - name: Delete Namespace for Metallb
@@ -96,12 +106,11 @@
     kubectl replace --raw /api/v1/namespaces/metallb-system/finalize -f -
   register: force_delete_metallb_namespace
   ignore_errors: yes
+- debug: msg={{ force_delete_metallb_namespace }}
+
   # until: force_delete_metallb_namespace is succeeded
   # retries: 20
   # delay: 30
-- debug: msg={{ force_delete_metallb_namespace }}
-# kubectl delete namespace metallb-system --force --grace-period=0
-#    kubectl get ns ${NAMESPACE} -o json | jq '.spec.finalizers = []' | kubectl replace --raw "/api/v1/namespaces/${NAMESPACE}/finalize" -f -
 
 
 # 1
@@ -173,6 +182,7 @@
 #- debug: msg={{ get_metallb_validate_webhook_config }}
 
 
+#
 #- name: Delete each Metallb Kubernetes ValidatingWebHookConfiguration
 #  shell: |
 #    kubectl delete validatingwebhookconfiguration {{ item }}
@@ -192,33 +202,6 @@
 #- debug: msg={{ uninstall_metallb_native_config }}
 
 
-# 5
-#- name: Uninstall the Metallb
-#  shell: |
-#    helm uninstall metallb -n metallb-system
-#  register: uninstall_metallb_native_config
-#  ignore_errors: yes
-#- debug: msg={{ uninstall_metallb_native_config }}
-
-
-
-#- name: Delete Namespace for Metallb
-#  shell: |
-#    kubectl delete namespace metallb-system
-#  register: delete_metallb_namespace
-#  ignore_errors: yes
-#- debug: msg={{ delete_metallb_namespace }}
-#  # kubectl delete namespace metallb-system --force --grace-period=0
-
-
-- name: Check strictARP
-  shell: |
-    kubectl get configmap kube-proxy -n kube-system -o yaml | grep strictARP
-  register: check_strict_arp
-  ignore_errors: yes
-- debug: msg={{ check_strict_arp }}
-
-
 - name: Rollback strictARP for VMWare or Cloud
   shell: |
     kubectl get configmap kube-proxy -n kube-system -o yaml | \
@@ -228,14 +211,10 @@
 - debug: msg={{ rollback_strict_arp }}
 
 
-# [ Check Rook and NGINX Ingress ]
+# [ Check Rancher and NGINX Ingress ]
 # kubectl get events --all-namespaces  --sort-by='.metadata.creationTimestamp'
 # kubectl -n cattle-system describe pods
 # kubectl -n cattle-system get all
 # kubectl -n cattle-system get pods
 # kubectl -n cattle-system logs <pod-name>
 
-
-#- pause: 
-#    seconds: 30
-#

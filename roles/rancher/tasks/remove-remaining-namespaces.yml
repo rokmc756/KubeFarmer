@@ -7,6 +7,7 @@
   with_items:
     - cert-manager
     - metallb-system
+    - nginx-ingress
 - debug: msg={{ force_delete_namespaces }}
   # until: force_delete_namespaces is succeeded
   # retries: 10
@@ -28,4 +29,40 @@
   ignore_errors: yes
   with_items: "{{ get_terminating_namespaces.stdout_lines }}"
 - debug: msg={{ delete_terminating_namespaces }}
+
+
+- name: Delete Verify Job to Cleanup Rancher Pods
+  shell: |
+    kubectl delete $(kubectl get all -n kube-system | grep job.batch/verify-job | awk '{print $1}') -n kube-system
+  register: delete_cleanup_verify_job_rancher_pods
+  ignore_errors: yes
+- debug: msg={{ delete_cleanup_verify_job_rancher_pods }}
+
+
+# 1
+#- name: Delete Service Accounts / ClusterRoleBindings for Cleanup Jobs
+#  shell: |
+#    kubectl delete serviceaccounts cleanup-service-account -n kube-system
+#    kubectl delete clusterrolebindings.rbac.authorization.k8s.io cleanup-admin -n kube-system
+#  register: delete_cleanup_rancher_pod
+#  ignore_errors: yes
+#- debug: msg={{ delete_cleanup_rancher_pod }}
+
+
+#---
+#apiVersion: v1
+#kind: ServiceAccount
+#metadata:
+#  name: cleanup-service-account
+#  namespace: kube-system
+
+
+#apiVersion: rbac.authorization.k8s.io/v1
+#kind: ClusterRoleBinding
+#metadata:
+#  name: cleanup-admin
+#subjects:
+#- kind: ServiceAccount
+#  name: cleanup-service-account
+#  namespace: kube-system
 

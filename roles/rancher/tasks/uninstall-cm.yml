@@ -26,7 +26,6 @@
   register: delete_cert_manager_namespace
   ignore_errors: yes
 - debug: msg={{ delete_cert_manager_namespace }}
-  # kubectl delete namespace cert-manager
 
 
 - name: Delete Namespace for Cert Manager
@@ -35,20 +34,11 @@
     kubectl replace --raw /api/v1/namespaces/cert-manager/finalize -f -
   register: delete_cert_manager_namespace
   ignore_errors: yes
+- debug: msg={{ delete_cert_manager_namespace }}
   # until: delete_cert_manager_namespace is succeeded
   # retries: 20
   # delay: 30
   # ignore_errors: yes
-- debug: msg={{ delete_cert_manager_namespace }}
-
-
-#- name: Delete Namespace for Cert Manager
-#  shell: |
-#    kubectl delete namespace cert-manager
-#  register: delete_cert_manager_namespace
-#  ignore_errors: yes
-#- debug: msg={{ delete_cert_manager_namespace }}
-#  # kubectl delete namespace cert-manager --force --grace-period=0
 
 
 - name: Delete Cert Manager CRDs
@@ -58,20 +48,4 @@
   register: delete_cert_manager_crds
   ignore_errors: yes
 - debug: msg={{ delete_cert_manager_crds }}
-
-
-#- pause:
-#    seconds: 30
-#
-#
-#- name: Delete Namespace for Cert Manager
-#  shell: |
-#    kubectl get namespace "cert-manager" -o json   | tr -d "\n" | sed "s/\"finalizers\": \[[^]]\+\]/\"finalizers\": []/" | \
-#    kubectl replace --raw /api/v1/namespaces/cert-manager/finalize -f -
-#  register: delete_cert_manager_namespace
-#  until: delete_cert_manager_namespace is succeeded
-#  retries: 20
-#  delay: 30
-#  ignore_errors: yes
-#- debug: msg={{ delete_cert_manager_namespace }}
 
