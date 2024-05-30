@@ -1,4 +1,44 @@
+# https://stackoverflow.com/questions/57031505/metallb-with-nginx-ingress-controller-on-minkube-keeps-resetting-external-ip-for
+#
+# Inbound
+# traffic
+#   ++     +---------+
+#   ||     |ConfigMap|
+#   ||     +--+------+
+#   ||        |
+#   ||        | CIDR range to provision
+#   ||        v
+#   ||     +--+----------+
+#   ||     |MetalLB      |               +-------+
+#   ||     |Load balancer|               |Ingress|
+#   ||     +-+-----------+               +---+---+
+#   ||       |                               |
+#   ||       |  External IP assigned         |Rules described in spec
+#   ||       |  to service                   |
+#   ||       v                               v
+#   ||    +--+--------------------+      +---+------------------+
+#   ||    |                       |      |  Ingress Controller  |
+#   |---->+ ingress-nginx service +----->+      (NGINX pod)     |
+#   +---->|                       +----->+                      |
+#         +-----------------------+      +----------------------+
+#                                                    ||
+#                                                    VV
+#                                          +-----------------+
+#                                          | Backend service |
+#                                          | (app-lb)        |
+#                                          |                 |
+#                                          +-----------------+
+#                                                   ||
+#                                                   VV
+#                                          +--------------------+
+#                                          | Backend pod        |
+#                                          | (httpbin)          |
+#                                          |                    |
+#                                          +--------------------+
+
+
 # https://blog.andreev.it/2023/10/install-metallb-on-kubernetes-cluster-running-on-vmware-vms-or-bare-metal-server/
+
 
 # Do this first on the master.
 # kubectl edit configmap -n kube-system kube-proxy
@@ -16,7 +56,7 @@
 - debug: msg={{ X }}
 # See what changes would be made, returns nonzero returncode if different
 # kubectl get configmap kube-proxy -n kube-system -o yaml | sed -e "s/strictARP: false/strictARP: true/" | kubectl diff -f - -n kube-system
--
+
 
 - name: Deploy MetalLB
   shell: |
@@ -48,6 +88,7 @@
 
 - pause:
     seconds: 30
+
 
 - name: Deploy Metallb with Configuration
   shell: |
@@ -94,6 +135,7 @@
 # So, in practice it looks like this.
 # Install nginx ingress first.
 
+
 - name: Install NGINX Ingress Reverse Proxy
   shell: |
     kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.8.2/deploy/static/provider/cloud/deploy.yaml
@@ -110,7 +152,6 @@
   when: inventory_hostname in groups['master']
 - debug: msg={{ check_all_nginx_ingress_containers }}
   when: print_debug == true and inventory_hostname in groups['master']
-
 
 
 - name: Get NGINX Ingress Reverse Proxy

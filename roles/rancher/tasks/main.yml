@@ -63,16 +63,22 @@
   when: rancher.install == true and inventory_hostname in groups['master']
 
 
+- name: Uninstall Cert Manager
+  import_tasks: uninstall-cm.yml
+  tags: uninstall
+  when: cm.install == true and inventory_hostname in groups['master']
+
+
 - name: Uninstall Metallb
   import_tasks: uninstall-metallb.yml
   tags: uninstall
   when: metallb.install == true and inventory_hostname in groups['master']
 
 
-- name: Uninstall Cert Manager
-  import_tasks: uninstall-cm.yml
+- name: Remove Remaining Namespaces
+  import_tasks: remove-remaining-namespaces.yml
   tags: uninstall
-  when: cm.install == true and inventory_hostname in groups['master']
+  when: metallb.install == true and inventory_hostname in groups['master']
 
 
 - name: Disable Helm Repository

@@ -28,6 +28,7 @@
   register: check_active_namespaces
   until: check_active_namespaces.stdout.find("Active") == -1
   retries: 100
+  delay: 10
   ignore_errors: true
 - debug: msg={{ check_active_namespaces }}
 
@@ -37,8 +38,31 @@
   register: check_terminating_namespaces
   until: check_terminating_namespaces.stdout.find("Terminating") == -1
   retries: 10
+  delay: 10
   ignore_errors: true
 - debug: msg={{ check_terminating_namespaces }}
+
+
+- name: Delete Cleanup Rancher Pod and Service Accounts
+  shell: |
+    kubectl delete $(kubectl get all -n kube-system | grep job.batch/cleanup-job | awk '{print $1}') -n kube-system
+    kubectl delete serviceaccounts cleanup-service-account -n kube-system
+  register: delete_cleanup_rancher_pod
+  ignore_errors: yes
+  args:
+    chdir: "{{ base_path }}/rancher-cleanup/deploy/"
+- debug: msg={{ delete_cleanup_rancher_pod }}
+# kubectl delete ClusterRole/cluster-admin --force
+
+
+#- name: Verify Cleanup Rancher
+#  shell: |
+#    kubectl create -f verify.yaml
+#  register: verify_cleanup_rancher
+#  ignore_errors: yes
+#  args:
+#    chdir: "{{ base_path }}/rancher-cleanup/deploy/"
+#- debug: msg={{ verify_cleanup_rancher }}
 
 
 - name: Remove Rancher Cleanup Directory
@@ -49,24 +73,6 @@
 - debug: msg={{ remove_rancher_cleanup_dir }}
 
 
-#- name: Validate if Toolbox Pod are still Terminating
-#  shell: kubectl -n rook-ceph get all | grep tool
-#  register: check_toolbox
-#  ignore_errors: true
-#  until: check_toolbox.stdout.find("") != -1
-#  retries: 30
-#- debug: msg={{ check_toolbox }}
-# until: check_toolbos.stdout.find("Terminating") == -1
-
-
-#- name: Uninstall Rancher
-#  shell: |
-#    helm uninstall rancher --namespace cattle-system
-#  register: uninstall_rancher
-#  ignore_errors: yes
-#- debug: msg={{ uninstall_rancher }}
-#
-#
 #- name: Check if Rancher is Deployed Successfully
 #  shell: kubectl get all -n cattle-system
 #  register: check_rancher_deployment
@@ -74,29 +80,9 @@
 #  until: check_rancher_deployment.stdout.find("Terminating") == -1
 #  retries: 20
 #- debug: msg={{ check_rancher_deployment }}
-#
-#
-## https://stackoverflow.com/questions/52369247/namespace-stucked-as-terminating-how-i-removed-it
-#- name: Force Delete Rancher Namespace
-#  shell: |
-#    NAMESPACE={{ item }}
-#    kubectl proxy & kubectl get namespace $NAMESPACE -o json | jq '.spec = {"finalizers":[]}' > /root/temp.json
-#    kubectl replace --raw "/api/v1/namespaces/$NAMESPACE/finalize" -f /root/temp.json
-#  register: delete_rancher_namespace
-#  ignore_errors: yes
-#  with_items:
-#    - cattle-system
-#- debug: msg={{ delete_rancher_namespace }}
-#
-#
-#- name: Delete Namespace for Rancher
-#  shell: |
-#    kubectl delete namespace cattle-system --force --grace-period=0
-#  register: delete_rancher_namespace
-#- debug: msg={{ delete_rancher_namespace }}
-#
-#
-#
+
+
+# https://stackoverflow.com/questions/52369247/namespace-stucked-as-terminating-how-i-removed-it
 #- name: Get IP Address of Rancher Load Balancer and Nginx Ingress Controller
 #  shell: |
 #    kubectl get all -A | grep -E "service/rancher-loadbalancer|service/nginx-ingress-controller"
@@ -104,10 +90,51 @@
 #  ignore_errors: yes
 #- debug: msg={{ get_ipaddr_rancher_lb }}
 
+
 # [ Check Rancher and NGINX Ingress ]
 # kubectl get events --all-namespaces  --sort-by='.metadata.creationTimestamp'
 # kubectl -n cattle-system describe pods
 # kubectl -n cattle-system get all
 # kubectl -n cattle-system get pods
 # kubectl -n cattle-system logs <pod-name>
+
+
+# 1
+- name: Get the list of Remaining ServiceAccounts for Rancher NameSpace
+  shell: |
+    kubectl get ServiceAccount -A | grep cattle | awk '{print $1}'
+  register: get_service_accounts_ns
+  ignore_errors: yes
+- debug: msg={{ get_service_accounts_ns }}
+
+
+- name: Delete Rancher NameSpaces for Serivce Accounts
+  shell: |
+    kubectl delete ServiceAccount default -n {{ item }}
+  register: delete_service_accounts_ns
+  ignore_errors: yes
+  with_items: "{{ get_service_accounts_ns.stdout_lines }}"
+- debug: msg={{ delete_service_accounts_ns }}
+
+
+- name: Delete Rancher NameSpaces
+  shell: |
+    kubectl delete namespace {{ item }}
+  register: delete_rancher_namespaces
+  ignore_errors: yes
+  with_items: "{{ get_service_accounts_ns.stdout_lines }}"
+- debug: msg={{ delete_rancher_namespaces }}
+
+
+# "Error from server (AlreadyExists): error when creating \"rancher-cleanup.yaml\": serviceaccounts \"cleanup-service-account\" already exists",
+# "Error from server (AlreadyExists): error when creating \"rancher-cleanup.yaml\": clusterrolebindings.rbac.authorization.k8s.io \"cleanup-admin\" already exists"
+
+
+# clusterrolebindings.rbac.authorization.k8s.io \"cleanup-admin\" already exists"
+# clusterrolebindings.rbac.authorization.k8s.io \"cleanup-admin\" already exists"
+# serviceaccount/cleanup-service-account created\njob.batch/cleanup-job created"
+# serviceaccount/cleanup-service-account created", "job.batch/cleanup-job created"
+
+# 2024/05/30 11:48:05 [ERROR] defaultSvcAccountHandler: Sync: error handling default ServiceAccount of namespace key=cattle-fleet-local-system, err=Operation cannot be fulfilled on namespaces "cattle-fleet-local-system": the object has been modified; please apply your changes to the latest version and try again
+# 2024/05/30 11:48:05 [ERROR] defaultSvcAccountHandler: Sync: error handling default ServiceAccount of namespace key=cattle-fleet-local-system, err=Operation cannot be fulfilled on namespaces "cattle-fleet-local-system": the object has been modified; please apply your changes to the latest version and try again
 

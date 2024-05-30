@@ -1,6 +1,8 @@
+# https://www.redhat.com/sysadmin/troubleshooting-terminating-namespaces
 # https://docs.vmware.com/en/VMware-Bare-Metal-Automation-for-VMware-Telco-Cloud-Platform/3.1/bma-install-guide-31/GUID-E49E1411-9F9C-436D-9B25-6C0302FFAB95.html
+# https://stackoverflow.com/questions/52369247/namespace-stucked-as-terminating-how-i-removed-it
 
-#- name: Check Rook Pods
+#- name: Check Rancher Pods
 #  shell: kubectl get all -n cattle-system
 #  register: check_rook_pods
 #  ignore_errors: yes
@@ -70,103 +72,143 @@
 #  register: apply_metallb_native_config
 #- debug: msg={{ apply_metallb_native_config }}
 
-
-- name: Get the list of Metallb Kubernetes CRDs
-  shell: |
-    kubectl get crds | grep metallb | awk '{print $1}'
-  register: get_metallb_crds
-  ignore_errors: yes
-- debug: msg={{ get_metallb_crds }}
-
-
-- name: Delete each Metallb Kubernetes CRDs
-  shell: |
-    kubectl delete crds {{ item }}
-  register: delete_metallb_crds
-  ignore_errors: yes
-  with_items: "{{ get_metallb_crds.stdout_lines }}"
-- debug: msg={{ delete_metallb_crds }}
-
-
-- name: Get the list of Metallb Kubernetesa ClusterRoleBindings
-  shell: |
-    kubectl get clusterrolebindings | grep metallb | awk '{print $1}'
-  register: get_metallb_clusterrolebindings
-  ignore_errors: yes
-- debug: msg={{ get_metallb_clusterrolebindings }}
-
-
-- name: Delete each Metallb Kubernetes ClusterRoleBindings
-  shell: |
-    kubectl delete clusterrolebinding {{ item }}
-  register: delete_metallb_clusterrolebindings
-  ignore_errors: yes
-  with_items: "{{ get_metallb_clusterrolebindings.stdout_lines }}"
-- debug: msg={{ delete_metallb_clusterrolebindings }}
-
-
-- name: Get the list of Metallb Kubernetesa ClusterRole
-  shell: |
-    kubectl get clusterrole | grep metallb | awk '{print $1}'
-  register: get_metallb_clusterrole
-  ignore_errors: yes
-- debug: msg={{ get_metallb_clusterrole }}
-
-
-- name: Delete each Metallb Kubernetes ClusterRole
-  shell: |
-    kubectl delete clusterrole {{ item }}
-  register: delete_metallb_clusterrolebindings
-  ignore_errors: yes
-  with_items: "{{ get_metallb_clusterrole.stdout_lines }}"
-- debug: msg={{ delete_metallb_clusterrolebindings }}
-
-
-- name: Get the list of Metallb Kubernetes ValidatingWebHookConfiguration
-  shell: |
-    kubectl get validatingwebhookconfiguration | awk '{print $1}'
-  register: get_metallb_validate_webhook_config
-  ignore_errors: yes
-- debug: msg={{ get_metallb_validate_webhook_config }}
-
-
-- name: Delete each Metallb Kubernetes ValidatingWebHookConfiguration
-  shell: |
-    kubectl delete validatingwebhookconfiguration {{ item }}
-  register: delete_metallb_validate_webhook_config
-  ignore_errors: yes
-  with_items: "{{ get_metallb_validate_webhook_config.stdout_lines }}"
-- debug: msg={{ delete_metallb_validate_webhook_config }}
-
-
+#
 - name: Uninstall the Metallb
   shell: |
-    helm uninstall metallb -n metallb-system
+    helm uninstall metallb -n metallb-system --no-hooks
   register: uninstall_metallb_native_config
   ignore_errors: yes
 - debug: msg={{ uninstall_metallb_native_config }}
 
 
-# https://stackoverflow.com/questions/52369247/namespace-stucked-as-terminating-how-i-removed-it
-#- name: Force Delete Metallb Namespace
-#  shell: |
-#    NAMESPACE={{ item }}
-#    kubectl proxy & kubectl get namespace $NAMESPACE -o json | jq '.spec = {"finalizers":[]}' > /root/temp.json
-#    kubectl replace --raw "/api/v1/namespaces/$NAMESPACE/finalize" -f /root/temp.json
-#  register: delete_metallb_namespace
-#  ignore_errors: yes
-#  with_items:
-#    - metallb-system
-#- debug: msg={{ delete_metallb_namespace }}
-
-
 - name: Delete Namespace for Metallb
   shell: |
-    kubectl delete namespace metallb-system
+    kubectl delete ns metallb-system --grace-period=0 --force &
+    sleep 10
   register: delete_metallb_namespace
   ignore_errors: yes
 - debug: msg={{ delete_metallb_namespace }}
-  # kubectl delete namespace metallb-system --force --grace-period=0
+
+
+- name: Force Delete Namespace for Metallb
+  shell: |
+    kubectl get namespace "metallb-system" -o json   | tr -d "\n" | sed "s/\"finalizers\": \[[^]]\+\]/\"finalizers\": []/" | \
+    kubectl replace --raw /api/v1/namespaces/metallb-system/finalize -f -
+  register: force_delete_metallb_namespace
+  ignore_errors: yes
+  # until: force_delete_metallb_namespace is succeeded
+  # retries: 20
+  # delay: 30
+- debug: msg={{ force_delete_metallb_namespace }}
+# kubectl delete namespace metallb-system --force --grace-period=0
+#    kubectl get ns ${NAMESPACE} -o json | jq '.spec.finalizers = []' | kubectl replace --raw "/api/v1/namespaces/${NAMESPACE}/finalize" -f -
+
+
+# 1
+#- name: Get the list of Metallb Kubernetes CRDs
+#  shell: |
+#    kubectl get crds | grep metallb | awk '{print $1}'
+#  register: get_metallb_crds
+#  ignore_errors: yes
+#- debug: msg={{ get_metallb_crds }}
+
+
+#- name: Delete each Metallb Kubernetes CRDs
+#  shell: |
+#    kubectl delete crds {{ item }}
+#  register: delete_metallb_crds
+#  ignore_errors: yes
+#  with_items: "{{ get_metallb_crds.stdout_lines }}"
+#- debug: msg={{ delete_metallb_crds }}
+
+
+# 2
+#- name: Get the list of Metallb Kubernetesa ClusterRoleBindings
+#  shell: |
+#    kubectl get clusterrolebindings | grep metallb | awk '{print $1}'
+#  register: get_metallb_clusterrolebindings
+#  ignore_errors: yes
+#- debug: msg={{ get_metallb_clusterrolebindings }}
+
+
+#- name: Delete each Metallb Kubernetes ClusterRoleBindings
+#  shell: |
+#    kubectl delete clusterrolebinding {{ item }}
+#  register: delete_metallb_clusterrolebindings
+#  ignore_errors: yes
+#  with_items: "{{ get_metallb_clusterrolebindings.stdout_lines }}"
+#- debug: msg={{ delete_metallb_clusterrolebindings }}
+
+
+# 3
+#- name: Get the list of Metallb Kubernetesa ClusterRole
+#  shell: |
+#    kubectl get clusterrole | grep metallb | awk '{print $1}'
+#  register: get_metallb_clusterrole
+#  ignore_errors: yes
+#- debug: msg={{ get_metallb_clusterrole }}
+
+
+#
+#- name: Delete each Metallb Kubernetes ClusterRole
+#  shell: |
+#    kubectl delete clusterrole {{ item }}
+#  register: delete_metallb_clusterrolebindings
+#  ignore_errors: yes
+#  with_items: "{{ get_metallb_clusterrole.stdout_lines }}"
+#- debug: msg={{ delete_metallb_clusterrolebindings }}
+
+
+# kubectl delete deployment metallb-controller --namespace metallb-system
+# kubectl delete service metallb-webhook-service -n metallb-system
+# kubectl delete daemonset.apps metallb-speaker -n metallb-system
+
+
+# 4
+#- name: Get the list of Metallb Kubernetes ValidatingWebHookConfiguration
+#  shell: |
+#    kubectl get validatingwebhookconfiguration | sed 1d | awk '{print $1}'
+#  register: get_metallb_validate_webhook_config
+#  ignore_errors: yes
+#- debug: msg={{ get_metallb_validate_webhook_config }}
+
+
+#- name: Delete each Metallb Kubernetes ValidatingWebHookConfiguration
+#  shell: |
+#    kubectl delete validatingwebhookconfiguration {{ item }}
+#  register: delete_metallb_validate_webhook_config
+#  ignore_errors: yes
+#  with_items: "{{ get_metallb_validate_webhook_config.stdout_lines }}"
+#- debug: msg={{ delete_metallb_validate_webhook_config }}
+
+
+#- name: Uninstall Remaining Metallb
+#  shell: |
+#    kubectl delete deployment metallb-controller --namespace metallb-system
+#    kubectl delete service metallb-webhook-service -n metallb-system
+#    kubectl delete daemonset.apps metallb-speaker -n metallb-system
+#  register: uninstall_metallb_native_config
+#  ignore_errors: yes
+#- debug: msg={{ uninstall_metallb_native_config }}
+
+
+# 5
+#- name: Uninstall the Metallb
+#  shell: |
+#    helm uninstall metallb -n metallb-system
+#  register: uninstall_metallb_native_config
+#  ignore_errors: yes
+#- debug: msg={{ uninstall_metallb_native_config }}
+
+
+
+#- name: Delete Namespace for Metallb
+#  shell: |
+#    kubectl delete namespace metallb-system
+#  register: delete_metallb_namespace
+#  ignore_errors: yes
+#- debug: msg={{ delete_metallb_namespace }}
+#  # kubectl delete namespace metallb-system --force --grace-period=0
 
 
 - name: Check strictARP
@@ -193,3 +235,7 @@
 # kubectl -n cattle-system get pods
 # kubectl -n cattle-system logs <pod-name>
 
+
+#- pause: 
+#    seconds: 30
+#

@@ -294,3 +294,16 @@
   register: rollback_strict_arp
 - debug: msg={{ rollback_strict_arp }}
 
+
+# https://stackoverflow.com/questions/52369247/namespace-stucked-as-terminating-how-i-removed-it
+- name: Force Delete Cert Manager Namespace
+  shell: |
+    NAMESPACE={{ item }}
+    kubectl proxy & kubectl get namespace $NAMESPACE -o json | jq '.spec = {"finalizers":[]}' > /root/temp.json
+    kubectl replace --raw "/api/v1/namespaces/$NAMESPACE/finalize" -f /root/temp.json
+  register: delete_cert_manager_namespace
+  ignore_errors: yes
+  with_items:
+    - cert-manager
+- debug: msg={{ delete_cert_manager_namespace }}
+

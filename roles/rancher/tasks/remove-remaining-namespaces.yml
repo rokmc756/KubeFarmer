@@ -1,0 +1,31 @@
+- name: Force Delete Namespaces for Metallb and Cert Manager
+  shell: |
+    kubectl get namespace "{{ item }}" -o json   | tr -d "\n" | sed "s/\"finalizers\": \[[^]]\+\]/\"finalizers\": []/" | \
+    kubectl replace --raw /api/v1/namespaces/{{ item }}/finalize -f -
+  register: force_delete_namespaces
+  ignore_errors: yes
+  with_items:
+    - cert-manager
+    - metallb-system
+- debug: msg={{ force_delete_namespaces }}
+  # until: force_delete_namespaces is succeeded
+  # retries: 10
+  # delay: 10
+
+
+- name: Get the Remaining Namespaces still Terminating
+  shell: |
+    kubectl get namespaces | grep Terminating | awk '{print $1}'
+  register: get_terminating_namespaces
+  ignore_errors: yes
+- debug: msg={{ get_terminating_namespaces }}
+
+
+- name: Delete the Remaining Namespaces still Terminating
+  shell: |
+    kubectl delete namespace {{ item }}
+  register: delete_terminating_namespaces
+  ignore_errors: yes
+  with_items: "{{ get_terminating_namespaces.stdout_lines }}"
+- debug: msg={{ delete_terminating_namespaces }}
+
