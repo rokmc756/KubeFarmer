@@ -77,14 +77,14 @@
 
 
 # 1
-- name: Delete Cleanup Rancher Pod and Service Accounts / ClusterRoleBindings
-  shell: |
-    kubectl delete $(kubectl get all -n kube-system | grep job.batch/cleanup-job | awk '{print $1}') -n kube-system
-  register: delete_cleanup_rancher_pod
-  ignore_errors: yes
-  args:
-    chdir: "{{ base_path }}/rancher-cleanup/deploy/"
-- debug: msg={{ delete_cleanup_rancher_pod }}
+#- name: Delete Cleanup Rancher Pod and Service Accounts / ClusterRoleBindings
+#  shell: |
+#    kubectl delete $(kubectl get all -n kube-system | grep job.batch/cleanup-job | awk '{print $1}') -n kube-system
+#  register: delete_cleanup_rancher_pod
+#  ignore_errors: yes
+#  args:
+#    chdir: "{{ base_path }}/rancher-cleanup/deploy/"
+#- debug: msg={{ delete_cleanup_rancher_pod }}
 
 
 - name: Check if Cleanup Pod is Still Terminating
@@ -105,13 +105,6 @@
 #    chdir: "{{ base_path }}/rancher-cleanup/deploy/"
 #- debug: msg={{ delete_verify_cleanup_rancher }}
 
-
-- name: Remove Rancher Cleanup Directory
-  shell: |
-    rm -rf /root/rancher-cleanup
-  register: remove_rancher_cleanup_dir
-  ignore_errors: true
-- debug: msg={{ remove_rancher_cleanup_dir }}
 
 
 #- name: Check if Rancher is Deployed Successfully
@@ -140,23 +133,52 @@
 # kubectl -n cattle-system get pods
 # kubectl -n cattle-system logs <pod-name>
 
+#
+- name: Verify Cleanup Rancher
+  shell: |
+    kubectl create -f verify.yaml
+  register: verify_cleanup_rancher
+  ignore_errors: yes
+  args:
+    chdir: "{{ base_path }}/rancher-cleanup/deploy/"
+- debug: msg={{ verify_cleanup_rancher }}
 
-# 1
-#- name: Get the list of Remaining ServiceAccounts for Rancher NameSpace
-#  shell: |
-#    kubectl get ServiceAccount -A | grep cattle | awk '{print $1}'
-#  register: get_service_accounts_ns
-#  ignore_errors: yes
-#- debug: msg={{ get_service_accounts_ns }}
+
+#
+- name: Delete Cleanup Rancher Pod and Service Accounts / ClusterRoleBindings
+  shell: |
+    kubectl delete $(kubectl get all -n kube-system | grep job.batch/cleanup-job | awk '{print $1}') -n kube-system
+  register: delete_cleanup_rancher_pod
+  ignore_errors: yes
+  args:
+    chdir: "{{ base_path }}/rancher-cleanup/deploy/"
+- debug: msg={{ delete_cleanup_rancher_pod }}
 
 
-#- name: Delete Rancher NameSpaces for Serivce Accounts
-#  shell: |
-#    kubectl delete ServiceAccount default -n {{ item }}
-#  register: delete_service_accounts_ns
-#  ignore_errors: yes
-#  with_items: "{{ get_service_accounts_ns.stdout_lines }}"
-#- debug: msg={{ delete_service_accounts_ns }}
+- name: Remove Rancher Cleanup Directory
+  shell: |
+    rm -rf /root/rancher-cleanup
+  register: remove_rancher_cleanup_dir
+  ignore_errors: true
+- debug: msg={{ remove_rancher_cleanup_dir }}
+
+
+#
+- name: Get the list of Remaining ServiceAccounts for Rancher NameSpace
+  shell: |
+    kubectl get ServiceAccount -A | grep cattle | awk '{print $1}'
+  register: get_service_accounts_ns
+  ignore_errors: yes
+- debug: msg={{ get_service_accounts_ns }}
+
+
+- name: Delete Rancher NameSpaces for Serivce Accounts
+  shell: |
+    kubectl delete ServiceAccount default -n {{ item }}
+  register: delete_service_accounts_ns
+  ignore_errors: yes
+  with_items: "{{ get_service_accounts_ns.stdout_lines }}"
+- debug: msg={{ delete_service_accounts_ns }}
 
 
 # kubectl delete clusterrolebindings.rbac.authorization.k8s.io cleanup-admin

@@ -5,14 +5,10 @@
   register: force_delete_namespaces
   ignore_errors: yes
   with_items:
-    - cert-manager
-    - metallb-system
     - nginx-ingress
 - debug: msg={{ force_delete_namespaces }}
-  # until: force_delete_namespaces is succeeded
-  # retries: 10
-  # delay: 10
-
+  #  - cert-manager
+  #  - metallb-system
 
 - name: Get the Remaining Namespaces still Terminating
   shell: |

@@ -1,22 +1,12 @@
+# https://stackoverflow.com/questions/52369247/namespace-stucked-as-terminating-how-i-removed-it
+# https://cert-manager.io/v1.6-docs/installation/helm/
+
 - name: Unintall Cert Manager by Helm
   shell: |
     helm uninstall cert-manager --namespace cert-manager
   register: uninstall_cert_manager
   ignore_errors: yes
 - debug: msg={{ uninstall_cert_manager }}
-
-
-# https://stackoverflow.com/questions/52369247/namespace-stucked-as-terminating-how-i-removed-it
-#- name: Force Delete Cert Manager Namespace
-#  shell: |
-#    NAMESPACE={{ item }}
-#    kubectl proxy & kubectl get namespace $NAMESPACE -o json | jq '.spec = {"finalizers":[]}' > /root/temp.json
-#    kubectl replace --raw "/api/v1/namespaces/$NAMESPACE/finalize" -f /root/temp.json
-#  register: delete_cert_manager_namespace
-#  ignore_errors: yes
-#  with_items:
-#    - cert-manager
-#- debug: msg={{ delete_cert_manager_namespace }}
 
 
 - name: Delete Namespace for Cert Manager
@@ -35,17 +25,13 @@
   register: delete_cert_manager_namespace
   ignore_errors: yes
 - debug: msg={{ delete_cert_manager_namespace }}
-  # until: delete_cert_manager_namespace is succeeded
-  # retries: 20
-  # delay: 30
-  # ignore_errors: yes
 
 
-- name: Delete Cert Manager CRDs
-  shell: |
-    kubectl delete \
-    -f https://github.com/jetstack/cert-manager/releases/download/v{{ cm.major_version }}.{{ cm.minor_version }}.{{ cm.patch_version }}/cert-manager.crds.yaml
-  register: delete_cert_manager_crds
-  ignore_errors: yes
-- debug: msg={{ delete_cert_manager_crds }}
+#- name: Delete Cert Manager CRDs
+#  shell: |
+#    kubectl delete \
+#    -f https://github.com/jetstack/cert-manager/releases/download/v{{ cm.major_version }}.{{ cm.minor_version }}.{{ cm.patch_version }}/cert-manager.crds.yaml
+#  register: delete_cert_manager_crds
+#  ignore_errors: yes
+#- debug: msg={{ delete_cert_manager_crds }}
 

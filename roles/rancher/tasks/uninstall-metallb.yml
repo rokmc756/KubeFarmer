@@ -3,14 +3,14 @@
 # https://stackoverflow.com/questions/52369247/namespace-stucked-as-terminating-how-i-removed-it
 
 
-- name: Delete NGINX Ingress CRDs
-  shell: |
-    kubectl delete -f crds/ --namespace=nginx-ingress
-  register: delete_nginx_ingress_crds
-  ignore_errors: yes
-  args:
-    chdir: "{{ base_path }}/kubernetes-ingress/deployments/helm-chart"
-- debug: msg={{ delete_nginx_ingress_crds }}
+#- name: Delete NGINX Ingress CRDs
+#  shell: |
+#    kubectl delete -f crds/ --namespace=nginx-ingress
+#  register: delete_nginx_ingress_crds
+#  ignore_errors: yes
+#  args:
+#    chdir: "{{ base_path }}/kubernetes-ingress/deployments/helm-chart"
+#- debug: msg={{ delete_nginx_ingress_crds }}
 
 
 - name: Uninstall NGINX Ingress
@@ -107,10 +107,6 @@
   register: force_delete_metallb_namespace
   ignore_errors: yes
 - debug: msg={{ force_delete_metallb_namespace }}
-
-  # until: force_delete_metallb_namespace is succeeded
-  # retries: 20
-  # delay: 30
 
 
 # 1

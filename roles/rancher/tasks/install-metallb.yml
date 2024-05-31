@@ -1,5 +1,15 @@
 # https://oopflow.medium.com/setup-install-rancher-onto-existing-kubernetes-cluster-for-high-availability-7351f0284592
-#
+
+- name: Flush IP Route Cache
+  shell: |
+    ip route flush cache
+  register: flush_ip_route_cache
+  delegate_to: "{{ item }}"
+  delegate_facts: True
+  with_items: "{{ groups['all'] }}"
+- debug: msg={{ flush_ip_route_cache }}
+
+
 - name: Apply strictARP for VMWare or Cloud
   shell: |
     kubectl get configmap kube-proxy -n kube-system -o yaml | \
@@ -8,26 +18,11 @@
 - debug: msg={{ apply_strict_arp }}
 
 
-- name: Check strictARP
-  shell: |
-    kubectl get configmap kube-proxy -n kube-system -o yaml | grep strictARP
-  register: check_strict_arp
-  ignore_errors: yes
-- debug: msg={{ check_strict_arp }}
-
-
-- name: Create Namespace for Metallb
-  shell: |
-    kubectl create namespace metallb-system
-  register: create_metallb_namespace
-  ignore_errors: yes
-- debug: msg={{ create_metallb_namespace }}
-
-
 - name: Apply the Metallb Native
   shell: |
-    helm install metallb metallb/metallb -n metallb-system
+    helm install metallb metallb/metallb -n metallb-system --create-namespace=true
   register: apply_metallb_native_config
+  ignore_errors: yes
 - debug: msg={{ apply_metallb_native_config }}
 
 
@@ -68,17 +63,17 @@
     git -C "{{ base_path }}" clone https://github.com/nginxinc/kubernetes-ingress.git \
     --branch v{{ nginx.k8s_ingress.major_version }}.{{ nginx.k8s_ingress.minor_version }}.{{ nginx.k8s_ingress.patch_version }}
   register: clone_k8s_ingress
-  ignore_errors: true
+  ignore_errors: yes
 - debug: msg={{ clone_k8s_ingress }}
 
 
-- name: Apply NGINX Ingress CRDs
-  shell: |
-    kubectl apply -f crds/ --namespace=nginx-ingress
-  register: apply_nginx_ingress_crds
-  args:
-    chdir: "{{ base_path }}/kubernetes-ingress/deployments/helm-chart"
-- debug: msg={{ apply_nginx_ingress_crds }}
+#- name: Apply NGINX Ingress CRDs
+#  shell: |
+#    kubectl apply -f crds/ --namespace=nginx-ingress
+#  register: apply_nginx_ingress_crds
+#  args:
+#    chdir: "{{ base_path }}/kubernetes-ingress/deployments/helm-chart"
+#- debug: msg={{ apply_nginx_ingress_crds }}
 
 
 - name: Install NGINX Ingress

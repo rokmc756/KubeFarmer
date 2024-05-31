@@ -6,6 +6,7 @@ rancher:
   minor_version:
   patch_version:
   build_version:
+  admin_password: "Changeme123!@#"
   k8s:
     major_version: 1
     minor_version: 28
@@ -21,7 +22,8 @@ rancher:
       name: rancher-ingress
       namespace: cattle-system
     hostname: "rancher.jtest.suse.com"
-
+  kernel_parameters:
+    - "net.ipv4.neigh.default.gc_thresh1 = 0"   # For ARP Cache
 
 metallb:
   install: true
@@ -35,7 +37,7 @@ metallb:
           name: first-pool
           namespace: metallb-system
         spec:
-          ips_range: 192.168.1.210-192.168.1.250
+          ips_range: 192.168.1.191-200.168.1.250
       l2advertise:
         metadata:
           name: example
