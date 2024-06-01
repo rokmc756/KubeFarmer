@@ -14,7 +14,7 @@
 
 - name: Uninstall NGINX Ingress
   shell: |
-    helm uninstall nginx-ingress --namespace=nginx-ingress
+    /usr/local/bin/helm uninstall nginx-ingress --namespace=nginx-ingress
   register: uninstall_nginx_ingress
   ignore_errors: yes
   args:
@@ -67,7 +67,7 @@
 
 - name: Uninstall the Metallb
   shell: |
-    helm uninstall metallb -n metallb-system
+    /usr/local/bin/helm uninstall metallb -n metallb-system
   register: uninstall_metallb_native_config
   ignore_errors: yes
 - debug: msg={{ uninstall_metallb_native_config }}

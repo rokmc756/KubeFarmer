@@ -63,7 +63,7 @@ helm:
   build_version:
 
 
-cm:
+cert_manager:
   install: true
   major_version: 1
   minor_version: 7

@@ -34,9 +34,9 @@
 - debug: msg={{ create_metallb_namespace }}
 
 
-- name: Apply the Metallb Native
+- name: Apply the Metallb
   shell: |
-    helm install metallb metallb/metallb --namespace metallb-system
+    /usr/local/bin/helm install metallb metallb/metallb --namespace metallb-system
   register: apply_metallb_native_config
   ignore_errors: yes
 - debug: msg={{ apply_metallb_native_config }}
@@ -73,6 +73,7 @@
   register: apply_metallb_config
   ignore_errors: yes
   until: apply_metallb_config is succeeded
+  retries: 20
 - debug: msg={{ apply_metallb_config }}
 
 
@@ -103,7 +104,7 @@
 
 - name: Install NGINX Ingress
   shell: |
-    helm install nginx-ingress nginx-stable/nginx-ingress --namespace=nginx-ingress --create-namespace
+    /usr/local/bin/helm install nginx-ingress nginx-stable/nginx-ingress --namespace=nginx-ingress --create-namespace
   register: install_nginx_ingress
   ignore_errors: yes
   args:
@@ -114,7 +115,7 @@
 
 - name: Upgrade NGINX Ingress CRDs
   shell: |
-    helm upgrade nginx-ingress nginx-stable/nginx-ingress --namespace=nginx-ingress
+    /usr/local/bin/helm upgrade nginx-ingress nginx-stable/nginx-ingress --namespace=nginx-ingress
   register: upgrade_nginx_ingress_crds
   ignore_errors: yes
   args:

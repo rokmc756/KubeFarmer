@@ -9,7 +9,7 @@
 
 - name: Unintall Cert Manager by Helm
   shell: |
-    helm uninstall cert-manager --namespace cert-manager
+    /usr/local/bin/helm uninstall cert-manager --namespace cert-manager
   register: uninstall_cert_manager
   ignore_errors: yes
 - debug: msg={{ uninstall_cert_manager }}
@@ -36,8 +36,9 @@
 #- name: Delete Cert Manager CRDs
 #  shell: |
 #    kubectl delete \
-#    -f https://github.com/jetstack/cert-manager/releases/download/v{{ cm.major_version }}.{{ cm.minor_version }}.{{ cm.patch_version }}/cert-manager.crds.yaml
+#    -f https://github.com/jetstack/cert-manager/releases/download/v{{ cert_manager.major_version }}.{{ cert_manager.minor_version }}.{{ cert_manager.patch_version }}/cert-manager.crds.yaml
 #  register: delete_cert_manager_crds
 #  ignore_errors: yes
 #- debug: msg={{ delete_cert_manager_crds }}
+
 

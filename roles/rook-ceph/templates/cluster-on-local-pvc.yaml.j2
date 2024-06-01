@@ -38,7 +38,7 @@ spec:
             - key: kubernetes.io/hostname
               operator: In
               values:
-                - osuse15-node03
+                - {{ hostvars[groups['workers'][0]].ansible_hostname }}
 ---
 kind: PersistentVolume
 apiVersion: v1
@@ -62,7 +62,7 @@ spec:
             - key: kubernetes.io/hostname
               operator: In
               values:
-                - osuse15-node03
+                - {{ hostvars[groups['workers'][0]].ansible_hostname }}
 ---
 kind: PersistentVolume
 apiVersion: v1
@@ -85,7 +85,7 @@ spec:
             - key: kubernetes.io/hostname
               operator: In
               values:
-                - osuse15-node04
+                - {{ hostvars[groups['workers'][1]].ansible_hostname }}
 ---
 kind: PersistentVolume
 apiVersion: v1
@@ -108,7 +108,7 @@ spec:
             - key: kubernetes.io/hostname
               operator: In
               values:
-                - osuse15-node04
+                - {{ hostvars[groups['workers'][1]].ansible_hostname }}
 ---
 kind: PersistentVolume
 apiVersion: v1
@@ -131,7 +131,7 @@ spec:
             - key: kubernetes.io/hostname
               operator: In
               values:
-                - osuse15-node05
+                - {{ hostvars[groups['workers'][2]].ansible_hostname }}
 ---
 kind: PersistentVolume
 apiVersion: v1
@@ -154,7 +154,7 @@ spec:
             - key: kubernetes.io/hostname
               operator: In
               values:
-                - osuse15-node05
+                - {{ hostvars[groups['workers'][2]].ansible_hostname }}
 ---
 apiVersion: ceph.rook.io/v1
 kind: CephCluster

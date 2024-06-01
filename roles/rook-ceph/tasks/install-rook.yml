@@ -155,11 +155,12 @@
 
 
 - name: Check if OSD Pod are Running Normally
-  shell: kubectl -n rook-ceph get all | grep pod/rook-ceph-osd-0
+  shell: kubectl -n rook-ceph get all | grep pod/rook-ceph-osd-{{ item }}
   register: check_osd_pod
   ignore_errors: yes
   until: check_osd_pod.stdout.find("Running") != -1
   retries: 100
+  with_sequence: start=0 end=2
 - debug: msg={{ check_osd_pod }}
 
 
@@ -180,15 +181,6 @@
 - debug: msg={{ check_toolbox_containers }}
 
 
-- name: Create Ceph Filesystem
-  shell: |
-    kubectl create -f filesystem.yaml
-  register: create_cephfs
-  args:
-    chdir: "{{ base_path }}/rook/deploy/examples/"
-- debug: msg={{ create_cephfs }}
-
-
 - name: Print Rook Ceph Tools
   shell: |
     kubectl get deploy rook-ceph-tools -n rook-ceph
@@ -201,13 +193,22 @@
 # (toolbox)$ ceph osd status
 
 
-- name: Check if Rook Ceph is Deployed Successfully
-  shell: kubectl get CephFileSystem -A
-  register: check_rook_deployment
-  ignore_errors: yes
-  until: check_rook_deployment.stdout.find("Progressing") == -1
-  retries: 30
-- debug: msg={{ check_rook_deployment }}
+#- name: Create Ceph Filesystem
+#  shell: |
+#    kubectl create -f filesystem.yaml
+#  register: create_cephfs
+#  args:
+#    chdir: "{{ base_path }}/rook/deploy/examples/"
+#- debug: msg={{ create_cephfs }}
+
+
+#- name: Check if Rook Ceph is Deployed Successfully
+#  shell: kubectl get CephFileSystem -n rook-ceph
+#  register: check_rook_deployment
+#  ignore_errors: yes
+#  until: check_rook_deployment.stdout.find("Progressing") == -1
+#  retries: 100
+#- debug: msg={{ check_rook_deployment }}
 
 
 #- name: Apply Kube Registry

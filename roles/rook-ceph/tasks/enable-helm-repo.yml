@@ -1,9 +1,9 @@
 # https://oopflow.medium.com/setup-install-rancher-onto-existing-kubernetes-cluster-for-high-availability-7351f0284592
 - name: Download and Install Helm
   shell: |
-    curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
-    chmod 700 get_helm.sh
-    ./get_helm.sh
+    curl -fsSL -o {{ base_path }}/get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+    chmod 700 {{ base_path }}/get_helm.sh
+    export PATH=$PATH:/usr/local/bin ; sh {{ base_path }}/get_helm.sh
   register: install_helm
   args:
     chdir: /root
@@ -12,35 +12,35 @@
 
 - name: Add Metallb Helm Repo
   shell: |
-    helm repo add metallb https://metallb.github.io/metallb
+    /usr/local/bin/helm repo add metallb https://metallb.github.io/metallb
   register: add_metallb_helm_repo
 - debug: msg={{ add_metallb_helm_repo }}
 
 
 - name: Add NGINX Helm Repo
   shell: |
-    helm repo add nginx-stable https://helm.nginx.com/stable
+    /usr/local/bin/helm repo add nginx-stable https://helm.nginx.com/stable
   register: add_nginx_helm_repo
 - debug: msg={{ add_nginx_helm_repo }}
 
 
 - name: Add Rook Helm Repo
   shell: |
-    helm repo add rook-release https://charts.rook.io/release
+    /usr/local/bin/helm repo add rook-release https://charts.rook.io/release
   register: add_rook_helm_repo
 - debug: msg={{ add_rook_helm_repo }}
 
 
 - name: Add Jetstack Helm Repo
   shell: |
-    helm repo add jetstack https://charts.jetstack.io
+    /usr/local/bin/helm repo add jetstack https://charts.jetstack.io
   register: add_jetstack_helm_repo
 - debug: msg={{ add_jetstack_helm_repo }}
 
 
 - name: Update Helm Repo
   shell: |
-    helm repo update
+    /usr/local/bin/helm repo update
   register: update_helm_repo
 - debug: msg={{ update_helm_repo }}
 

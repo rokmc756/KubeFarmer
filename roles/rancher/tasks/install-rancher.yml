@@ -19,7 +19,7 @@
 
 - name: Install Rancher by Helm
   shell: |
-    helm install rancher rancher-stable/rancher --namespace cattle-system --create-namespace=true \
+    /usr/local/bin/helm install rancher rancher-stable/rancher --namespace cattle-system --create-namespace=true \
     --set hostname={{ rancher.hostname }} --set bootstrapPassword={{ rancher.admin_password }}
   register: install_rancher
 - debug: msg={{ install_rancher }}

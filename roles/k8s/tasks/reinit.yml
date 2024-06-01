@@ -19,7 +19,7 @@
   until: containerd_restarted is succeeded
   retries: 20
   delay: 10
-  when: ansible_distribution == "openSUSE Leap"
+  # when: ansible_distribution == "openSUSE Leap"
 
 
 - name: Reset Kubernetes
@@ -30,6 +30,17 @@
 - name: Reset Kubernetes for Workers
   command: kubeadm reset -f
   when: inventory_hostname in groups['workers']
+
+
+#- name: Restart Containerd to Apply Changes in config.toml
+#  systemd:
+#    name: containerd
+#    state: restarted
+#  register: containerd_restarted
+#  until: containerd_restarted is succeeded
+#  retries: 20
+#  delay: 10
+#  # when: ansible_distribution == "openSUSE Leap"
 
 
 - name: Config image pull

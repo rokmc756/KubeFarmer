@@ -36,11 +36,11 @@
 # 2
 - name: Uninstall Rancher by Helm
   shell: |
-    helm uninstall rancher --namespace cattle-system
+    /usr/local/bin/helm uninstall rancher --namespace cattle-system
   register: uninstall_rancher
   ignore_errors: yes
 - debug: msg={{ uninstall_rancher }}
-  # helm unistall rancher rancher-stable/rancher --namespace cattle-system --set hostname={{ rancher.hostname }}
+  # /usr/local/bin/helm unistall rancher rancher-stable/rancher --namespace cattle-system --set hostname={{ rancher.hostname }}
 
 
 # 3
@@ -97,7 +97,7 @@
 # https://cert-manager.io/v1.2-docs/installation/uninstall/kubernetes/
 #- name: Delete Namespace for Cert Manager
 #  shell: |
-#    helm --namespace cert-manager delete cert-manager
+#    /usr/local/bin/helm --namespace cert-manager delete cert-manager
 #    kubectl delete namespace cert-manager
 #  register: delete_cert_manager_namespace
 #  ignore_errors: yes
@@ -112,12 +112,12 @@
 - name: Delete Cert Manager CRDs
   shell: |
     kubectl delete -f \
-    https://github.com/jetstack/cert-manager/releases/download/v{{ cm.major_version }}.{{ cm.minor_version }}.{{ cm.patch_version }}/cert-manager.crds.yaml
+    https://github.com/jetstack/cert-manager/releases/download/v{{ cert_manager.major_version }}.{{ cert_manager.minor_version }}.{{ cert_manager.patch_version }}/cert-manager.crds.yaml
   register: delete_cert_manager_crds
   ignore_errors: yes
 - debug: msg={{ delete_cert_manager_crds }}
 #    kubectl apply --validate=false \
-#    -f https://github.com/jetstack/cert-manager/releases/download/v{{ cm.major_version }}.{{ cm.minor_version }}.{{ cm.patch_version }}/cert-manager.crds.yaml
+#    -f https://github.com/jetstack/cert-manager/releases/download/v{{ cert_manager.major_version }}.{{ cert_manager.minor_version }}.{{ cert_manager.patch_version }}/cert-manager.crds.yaml
 
 
 # https://stackoverflow.com/questions/52369247/namespace-stucked-as-terminating-how-i-removed-it
@@ -136,7 +136,7 @@
 # https://cert-manager.io/v1.2-docs/installation/uninstall/kubernetes/
 #- name: Delete Namespace for Cert Manager
 #  shell: |
-#    helm --namespace cert-manager delete cert-manager
+#    /usr/local/bin/helm --namespace cert-manager delete cert-manager
 #    kubectl delete namespace cert-manager
 #  register: delete_cert_manager_namespace
 #  ignore_errors: yes
@@ -176,13 +176,13 @@
 # 10
 - name: Uninstall NGINX Ingress
   shell: |
-    helm uninstall nginx-ingress --namespace=nginx-ingress
+    /usr/local/bin/helm uninstall nginx-ingress --namespace=nginx-ingress
   register: uninstall_nginx_ingress
   ignore_errors: yes
   args:
     chdir: "{{ base_path }}/kubernetes-ingress/deployments/helm-chart"
 - debug: msg={{ uninstall_nginx_ingress }}
-  #  helm install nginx-ingress nginx-stable/nginx-ingress --namespace=nginx-ingress --create-namespace=true
+  #  /usr/local/bin/helm install nginx-ingress nginx-stable/nginx-ingress --namespace=nginx-ingress --create-namespace=true
 
 
 # 11
@@ -255,7 +255,7 @@
 # 5
 - name: Unintall Metallb by Helm
   shell: |
-    helm uninstall metallb --namespace metallb-system
+    /usr/local/bin/helm uninstall metallb --namespace metallb-system
   register: uninstall_metallb
   ignore_errors: yes
 - debug: msg={{ uninstall_metallb }}

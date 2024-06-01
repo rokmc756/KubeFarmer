@@ -20,7 +20,7 @@
 
 - name: Apply the Metallb Native
   shell: |
-    helm install metallb metallb/metallb -n metallb-system --create-namespace=true
+    /usr/local/bin/helm install metallb metallb/metallb -n metallb-system --create-namespace=true
   register: apply_metallb_native_config
   ignore_errors: yes
 - debug: msg={{ apply_metallb_native_config }}
@@ -55,6 +55,7 @@
     kubectl apply -f "{{ base_path }}"/metallb-config-vmware.yaml
   register: apply_metallb_config
   until: apply_metallb_config is succeeded
+  retries: 20
 - debug: msg={{ apply_metallb_config }}
 
 
@@ -86,7 +87,7 @@
 
 - name: Install NGINX Ingress
   shell: |
-    helm install nginx-ingress nginx-stable/nginx-ingress --namespace=nginx-ingress --create-namespace=true
+    /usr/local/bin/helm install nginx-ingress nginx-stable/nginx-ingress --namespace=nginx-ingress --create-namespace=true
   register: install_nginx_ingress
   args:
     chdir: "{{ base_path }}/kubernetes-ingress/deployments/helm-chart"
@@ -95,7 +96,7 @@
 
 - name: Upgrade NGINX Ingress CRDs
   shell: |
-    helm upgrade nginx-ingress nginx-stable/nginx-ingress --namespace=nginx-ingress
+    /usr/local/bin/helm upgrade nginx-ingress nginx-stable/nginx-ingress --namespace=nginx-ingress
   register: upgrade_nginx_ingress_crds
   args:
     chdir: "{{ base_path }}/kubernetes-ingress/deployments/helm-chart"

@@ -8,23 +8,23 @@
 #- debug: msg={{ delete_kube_registry }}
 
 
-- name: Delete Ceph Filesystem
-  shell: |
-    kubectl delete -f filesystem.yaml
-  register: delete_cephfs
-  ignore_errors: true
-  args:
-    chdir: "{{ base_path }}/rook/deploy/examples/"
-- debug: msg={{ delete_cephfs }}
+#- name: Delete Ceph Filesystem
+#  shell: |
+#    kubectl delete -f filesystem.yaml
+#  register: delete_cephfs
+#  ignore_errors: true
+#  args:
+#    chdir: "{{ base_path }}/rook/deploy/examples/"
+#- debug: msg={{ delete_cephfs }}
 
 
-- name: Check if Rook is Deployed Successfully
-  shell: kubectl get CephFileSystem -A
-  register: check_rook_deployment
-  ignore_errors: yes
-  until: check_rook_deployment.stdout.find("Terminating") == -1
-  retries: 30
-- debug: msg={{ check_rook_deployment }}
+#- name: Check if Rook is Deployed Successfully
+#  shell: kubectl get CephFileSystem -A
+#  register: check_rook_deployment
+#  ignore_errors: yes
+#  until: check_rook_deployment.stdout.find("Terminating") == -1
+#  retries: 30
+#- debug: msg={{ check_rook_deployment }}
 
 
 - name: Print Rook Ceph Tools

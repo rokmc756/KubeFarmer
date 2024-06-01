@@ -63,7 +63,3 @@
     install_pkgs: "{{ suse_install_pkgs }}"
   when: ansible_distribution == "openSUSE Leap"
 
-#- debug: msg={{ ansible_distribution }}
-#- debug: msg={{ ansible_os_family }}
-# - meta: end_play
-

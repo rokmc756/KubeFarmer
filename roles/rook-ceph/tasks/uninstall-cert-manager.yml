@@ -1,6 +1,6 @@
 - name: Unintall Cert Manager by Helm
   shell: |
-    helm uninstall cert-manager --namespace cert-manager
+    /usr/local/bin/helm uninstall cert-manager --namespace cert-manager
   register: uninstall_cert_manager
   ignore_errors: yes
 - debug: msg={{ uninstall_cert_manager }}
