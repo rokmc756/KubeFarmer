@@ -7,11 +7,10 @@
     disable_firewall: true
     stop_services: true
     calico_network: false
-    k8s_network_address: "192.168.0.0/16"
   roles:
     - k8s
 #    - init-hosts
 #    - dashboard
 #    - nginx
 #    - rancher
-
+#    - rook-ceph

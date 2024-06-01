@@ -17,8 +17,8 @@
     init_k8s: true
     stop_services: true
   roles:
-    -  rancher
-#    -  rook-ceph
+    -  rook-ceph
+#    -  rancher
 #    - k8s
 #    - init-hosts
 #    - nginx
