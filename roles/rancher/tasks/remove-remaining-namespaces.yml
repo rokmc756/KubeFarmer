@@ -9,6 +9,8 @@
     - metallb-system
     - nginx-ingress
 - debug: msg={{ force_delete_namespaces }}
+
+
 - name: Get the Remaining Namespaces still Terminating
   shell: |
     kubectl get namespaces | grep Terminating | awk '{print $1}'
@@ -24,14 +26,6 @@
   ignore_errors: yes
   with_items: "{{ get_terminating_namespaces.stdout_lines }}"
 - debug: msg={{ delete_terminating_namespaces }}
-
-
-- name: Delete Verify Job to Cleanup Rancher Pods
-  shell: |
-    kubectl delete $(kubectl get all -n kube-system | grep job.batch/verify-job | awk '{print $1}') -n kube-system
-  register: delete_cleanup_verify_job_rancher_pods
-  ignore_errors: yes
-- debug: msg={{ delete_cleanup_verify_job_rancher_pods }}
 
 
 # 1

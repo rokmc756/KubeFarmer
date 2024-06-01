@@ -17,8 +17,8 @@
     disable_firewall: true
     reboot_required: false
   roles:
-    - rook-ceph
-#    - rancher
+    - rancher
+#    - rook-ceph
 #    - k8s
 #    - init-hosts
 #    - nginx

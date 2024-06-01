@@ -2,7 +2,6 @@
 # https://docs.vmware.com/en/VMware-Bare-Metal-Automation-for-VMware-Telco-Cloud-Platform/3.1/bma-install-guide-31/GUID-E49E1411-9F9C-436D-9B25-6C0302FFAB95.html
 # https://stackoverflow.com/questions/52369247/namespace-stucked-as-terminating-how-i-removed-it
 
-
 #- name: Delete NGINX Ingress CRDs
 #  shell: |
 #    kubectl delete -f crds/ --namespace=nginx-ingress
@@ -41,7 +40,6 @@
 - debug: msg={{ force_delete_nginx_ingress_namespace }}
 
 
-
 - name: Delete the Metallb Config for VMware
   shell: |
     kubectl delete -f "{{ base_path }}"/metallb-config-vmware.yaml
@@ -49,8 +47,6 @@
   ignore_errors: yes
   until: delete_metallb_config is succeeded
 - debug: msg={{ delete_metallb_config }}
-
-
 
 
 - name: Delete Secret for Metallb Namespace

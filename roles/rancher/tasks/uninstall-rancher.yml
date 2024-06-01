@@ -1,9 +1,17 @@
+- name: Check if the Rancher Cleanup is Already Downloaded
+  stat: path={{ base_path }}/rancher-cleanup
+  register: rancher_cleanup_dir_existed
+- debug: msg={{ rancher_cleanup_dir_existed }}
+
+
 - name: Clone Rancher Cleanup
   shell: |
     git -C "{{ base_path }}" clone https://github.com/rancher/rancher-cleanup.git
   register: clone_rancher_cleanup
   ignore_errors: true
+  when: rancher_cleanup_dir_existed.stat.exists != True
 - debug: msg={{ clone_rancher_cleanup }}
+  when: rancher_cleanup_dir_existed.stat.exists != True
   # --branch v{{ nginx.k8s_ingress.major_version }}.{{ nginx.k8s_ingress.minor_version }}.{{ nginx.k8s_ingress.patch_version }}
 
 
@@ -25,22 +33,22 @@
 
 
 - name: Check if Rancher Namespaces are Still Active
-  shell: kubectl get namespaces | grep -E 'cattle|fleet'
+  shell: kubectl get namespaces | grep -E 'cattle|fleet' | awk '{print $1}'
   register: check_active_namespaces
   ignore_errors: true
   until: check_active_namespaces.stdout.find("Active") == -1
   retries: 100
-  delay: 10
 - debug: msg={{ check_active_namespaces }}
 
 
 - name: Check if Rancher Namespaces are Still Terminating
-  shell: kubectl get namespaces | grep -E 'cattle|fleet'
+  shell: kubectl get namespaces | grep -E 'cattle|fleet' | awk '{print $1}'
   register: check_terminating_namespaces
   ignore_errors: true
-  until: check_terminating_namespaces.stdout.find("Terminating") == -1
+  until: check_terminating_namespaces.stdout.find("") != -1
   retries: 20
   delay: 10
+  changed_when: check_terminating_namespaces.rc != 1 and check_terminating_namespaces.rc != 0
 - debug: msg={{ check_terminating_namespaces }}
 
 
@@ -53,14 +61,24 @@
 - debug: msg={{ check_cleanup_job_pod }}
 
 
-- name: Verify Cleanup Rancher
-  shell: |
-    kubectl create -f verify.yaml
-  register: verify_cleanup_rancher
-  ignore_errors: yes
-  args:
-    chdir: "{{ base_path }}/rancher-cleanup/deploy/"
-- debug: msg={{ verify_cleanup_rancher }}
+#- name: Delete Cleanup Rancher
+#  shell: |
+#    kubectl delete -f rancher-cleanup.yaml
+#  register: delete_cleanup_rancher
+#  ignore_errors: yes
+#  args:
+#    chdir: "{{ base_path }}/rancher-cleanup/deploy/"
+#- debug: msg={{ delete_cleanup_rancher }}
+
+
+#- name: Verify Cleanup Rancher
+#  shell: |
+#    kubectl create -f verify.yaml
+#  register: verify_cleanup_rancher
+#  ignore_errors: yes
+#  args:
+#    chdir: "{{ base_path }}/rancher-cleanup/deploy/"
+#- debug: msg={{ verify_cleanup_rancher }}
 
 
 - name: Delete Cleanup Rancher Pod and Service Accounts / ClusterRoleBindings
@@ -150,29 +168,10 @@
 #- debug: msg={{ delete_verify_cleanup_rancher }}
 
 
-#- name: Check if Rancher is Deployed Successfully
-#  shell: kubectl get all -n cattle-system
-#  register: check_rancher_deployment
-#  ignore_errors: yes
-#  until: check_rancher_deployment.stdout.find("Terminating") == -1
-#  retries: 20
-#- debug: msg={{ check_rancher_deployment }}
-
-
 # [ Check Rancher and NGINX Ingress ]
 # kubectl get events --all-namespaces  --sort-by='.metadata.creationTimestamp'
 # kubectl -n cattle-system describe pods
 # kubectl -n cattle-system get all
 # kubectl -n cattle-system get pods
 # kubectl -n cattle-system logs <pod-name>
-
-
-# kubectl delete clusterrolebindings.rbac.authorization.k8s.io cleanup-admin
-# [ Errors ]
-
-# "Error from server (AlreadyExists): error when creating \"rancher-cleanup.yaml\": serviceaccounts \"cleanup-service-account\" already exists",
-# "Error from server (AlreadyExists): error when creating \"rancher-cleanup.yaml\": clusterrolebindings.rbac.authorization.k8s.io \"cleanup-admin\" already exists"
-
-# 2024/05/30 11:48:05 [ERROR] defaultSvcAccountHandler: Sync: error handling default ServiceAccount of namespace key=cattle-fleet-local-system, err=Operation cannot be fulfilled on namespaces "cattle-fleet-local-system": the object has been modified; please apply your changes to the latest version and try again
-# 2024/05/30 11:48:05 [ERROR] defaultSvcAccountHandler: Sync: error handling default ServiceAccount of namespace key=cattle-fleet-local-system, err=Operation cannot be fulfilled on namespaces "cattle-fleet-local-system": the object has been modified; please apply your changes to the latest version and try again
 

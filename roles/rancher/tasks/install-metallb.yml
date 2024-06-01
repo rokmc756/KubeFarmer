@@ -58,13 +58,21 @@
 - debug: msg={{ apply_metallb_config }}
 
 
+- name: Check if the Kube Ingress is Already Downloaded
+  stat: path={{ base_path }}/kubernetes-ingress
+  register: kube_ingress_dir_existed
+- debug: msg={{ kube_ingress_dir_existed }}
+
+
 - name: Clone Kubernetest Ingress
   shell: |
     git -C "{{ base_path }}" clone https://github.com/nginxinc/kubernetes-ingress.git \
     --branch v{{ nginx.k8s_ingress.major_version }}.{{ nginx.k8s_ingress.minor_version }}.{{ nginx.k8s_ingress.patch_version }}
   register: clone_k8s_ingress
   ignore_errors: yes
+  when: kube_ingress_dir_existed.stat.exists != True
 - debug: msg={{ clone_k8s_ingress }}
+  when: kube_ingress_dir_existed.stat.exists != True
 
 
 #- name: Apply NGINX Ingress CRDs

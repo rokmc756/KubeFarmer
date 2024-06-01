@@ -31,20 +31,12 @@
 - debug: msg={{ remove_metallb_helm_repo }}
 
 
-- name: Update Helm Repo
-  shell: |
-    helm repo update
-  register: update_helm_repo
-  ignore_errors: yes
-- debug: msg={{ update_helm_repo }}
-
-
-- name: Delete Helm
-  shell: |
-    rm -f get_helm.sh
-  register: delete_helm
-  args:
-    chdir: /root
-  ignore_errors: yes
-- debug: msg={{ delete_helm }}
+- name: Delete Helm Install Script
+  file:
+    path: "{{ item }}"
+    state: absent
+  register: delete_helm_install_script
+  with_items:
+    - "{{ base_path }}/get_helm.sh"
+- debug: msg={{ delete_helm_install_script }}
 
