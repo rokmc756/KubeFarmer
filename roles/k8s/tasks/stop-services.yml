@@ -18,11 +18,11 @@
   until: containerd_stopped is succeeded
 
 
-- name: Kill Processes Regarding Containerd
-  shell: |
-    kill -9 `ps -ef | grep containerd | awk '{print $2}'`
-  register: containerd_killed
-  ignore_errors: true
+#- name: Kill Processes Regarding Containerd
+#  shell: |
+#    kill -9 `ps -ef | grep containerd | awk '{print $2}'`
+#  register: containerd_killed
+#  ignore_errors: true
 
 
 - name: Disable and Stop Kubelet

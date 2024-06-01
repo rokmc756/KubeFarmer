@@ -11,28 +11,6 @@
     sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config
 
 
-#- name: Enable Masquerade on Master node
-#  command: firewall-cmd --zone=public --add-masquerade --permanent
-#- name: Reload firewalld for all nodes
-#  command: firewall-cmd --reload
-
-
-#- name: Start Firewalld For All Nodes
-#  systemd:
-#    name: firewalld
-#    state: restarted
-#    enabled: yes
-
-
-#- name: Enable Masquerade On Master Node
-#  firewalld:
-#    masquerade: true
-#    state: enabled
-#    permanent: true
-#    zone: public
-#  when: inventory_hostname in groups['master'] or inventory_hostname in groups['workers']
-
-
 - name: Restart Containerd to Apply Changes in config.toml
   systemd:
     name: containerd
@@ -58,8 +36,8 @@
   command: kubeadm config images pull
   when: inventory_hostname in groups['master']
 
-# --pod-network-cidr=192.168.0.0/24 --cri-socket=unix:///run/containerd/containerd.sock --ignore-preflight-errors=all --v=5
-- name: Initialize Kubernetes Master and Create Cluster
+
+- name: Initialize Kubernetes Master to Create Cluster
   shell: |
     kubeadm init --apiserver-advertise-address={{ hostvars[groups['master'][0]]['ansible_'~netdev1]['ipv4']['address'] }} \
     --pod-network-cidr={{ k8s.cni.pod_network }} --cri-socket=unix:///run/containerd/containerd.sock --ignore-preflight-errors=all --v=5
@@ -69,10 +47,6 @@
   when: inventory_hostname in groups['master']
 - debug: msg={{ kubeadm_init }}
   when: print_debug == true and inventory_hostname in groups['master']
-  # command: kubeadm init --apiserver-advertise-address={{ hostvars[groups['master'][0]]['ansible_eth1']['ipv4']['address'] }} --pod-network-cidr=192.168.0.0/16 --upload-certs --v=5 --ignore-preflight-errors=all
-  # command: kubeadm init --upload-certs --apiserver-advertise-address={{ hostvars[groups['master'][0]]['ansible_eth1']['ipv4']['address'] }} --pod-network-cidr=10.142.0.0/16 --ignore-preflight-errors=all
-  # command: kubeadm init --config /etc/kubernetes/kubeadm.conf --upload-certs --v=5
-  # command: kubeadm init --apiserver-advertise-address={{ hostvars[groups['master'][0]]['ansible_eth1']['ipv4']['address'] }} --pod-network-cidr=10.42.0.0/16 --ignore-preflight-errors=all
 
 
 - name: Set Fact For Token CA Certificate
@@ -99,8 +73,8 @@
 
 - name: Enable Your User to Start Using the Cluster.
   shell: |
-    rm -f $HOME/.kube
-    rm -rf /root/calico.yaml
+    rm -rf $HOME/.kube
+    rm -rf "{{ k8s.base_path }}"/calico.yaml
     mkdir -p $HOME/.kube
     rm -f $HOME/.kube/config
     cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
@@ -113,7 +87,7 @@
 
 - name: Configure Kubectl Config
   shell: |
-    kubectl taint nodes  {{ hostvars[groups['master'][0]].ansible_hostname }} node-role.kubernetes.io/control-plane:NoSchedule-
+    kubectl taint nodes {{ hostvars[groups['master'][0]].ansible_hostname }} node-role.kubernetes.io/control-plane:NoSchedule-
   register: kubectl_configured
   until: kubectl_configured is succeeded
   retries: 10
@@ -121,8 +95,9 @@
   when: inventory_hostname in groups['master']
 - debug: msg={{ kubectl_configured }}
   when: print_debug == true and inventory_hostname in groups['master']
-  # for k8s 1.21 and 1.26
+  # for higher versions than 1.26
   # kubectl taint nodes  {{ hostvars[groups['master'][0]].ansible_hostname }} node-role.kubernetes.io/control-plane:NoSchedule-
+  # for earlier versions than 1.21
   # kubectl taint nodes --all node-role.kubernetes.io/master-
 
 
@@ -136,7 +111,7 @@
 
 - name: Create POD for Master as well
   lineinfile:
-    path: /root/.bashrc
+    path: "{{ k8s.base_path }}/.bashrc"
     line: "{{ item.content }}"
     insertafter: EOF
     create: true
@@ -212,33 +187,6 @@
   when: print_debug == true and inventory_hostname in groups['master']
 
 
-#- name: Enable Masquerade on Master node
-#  command: firewall-cmd --zone=public --add-masquerade --permanent
-
-
-#- name: Start Firewalld
-#  systemd:
-#    name: firewalld
-#    state: restarted
-#    enabled: yes
-#  register: firewalld_started
-#- debug: msg={{ firewalld_started }}
-#  when: print_debug == true
-# Calico CNI
-# https://stackoverflow.com/questions/62139375/calico-ips-confusion
-# https://www.skyer9.pe.kr/wordpress/?p=7317
-
-# https://github.com/projectcalico/calico/issues/5711
-# This is to do with the settings on kube-proxy. If your pod-cidr isn't in the range that's configured on kube-proxy,
-# kube-proxy will NAT pod-pod traffic between different nodes, which will break network policy (though connectivity will appear to work)
-# Typically you have to re-create the cluster with the correct pod-cidr defined.
-# Fundamentally:
-# kube-proxy and calico pod-cidr settings must agree (calico pod-cidr must be wholly within the kube-proxy cluster-cidr)
-# host-cidr, pod-cidr and service-cidrs need to be disjoint (i.e. separate and non-overlapping)
-#
-# https://www.centlinux.com/2022/11/install-kubernetes-master-node-rocky-linux.html
-
-
 - name: Validate if Kubernetes Workers are all Ready
   shell: kubectl get nodes
   register: check_k8s_workers_status
@@ -259,7 +207,7 @@
   when: print_debug == true and inventory_hostname in groups['master']
 
 
-- name: Start Firewalld
+- name: Stop and Disable Firewalld
   systemd:
     name: firewalld
     state: stopped
@@ -267,3 +215,19 @@
   register: firewalld_started
 - debug: msg={{ firewalld_started }}
   when: print_debug == true
+
+
+# Calico CNI
+# https://stackoverflow.com/questions/62139375/calico-ips-confusion
+# https://www.skyer9.pe.kr/wordpress/?p=7317
+
+# https://github.com/projectcalico/calico/issues/5711
+# This is to do with the settings on kube-proxy. If your pod-cidr isn't in the range that's configured on kube-proxy,
+# kube-proxy will NAT pod-pod traffic between different nodes, which will break network policy (though connectivity will appear to work)
+# Typically you have to re-create the cluster with the correct pod-cidr defined.
+# Fundamentally:
+# kube-proxy and calico pod-cidr settings must agree (calico pod-cidr must be wholly within the kube-proxy cluster-cidr)
+# host-cidr, pod-cidr and service-cidrs need to be disjoint (i.e. separate and non-overlapping)
+#
+# https://www.centlinux.com/2022/11/install-kubernetes-master-node-rocky-linux.html
+

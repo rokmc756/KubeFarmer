@@ -1,7 +1,6 @@
 ---
 # Destroy Kubernetes Cluster
 
-
 #- name: YUM Version Clear
 #  command: yum versionlock clear
 #  register: yum_version_clear
@@ -21,9 +20,11 @@
 #    - firewalld
 #  when: uninstall_dep_packages
 
+
 - name: Reset Kubernetes
   command: kubeadm reset -f
   when: inventory_hostname in groups['master']
+
 
 - name: Disable and Stop Docker
   systemd:
@@ -43,12 +44,12 @@
   until: containerd_stopped is succeeded
 
 
-- name: Kill Processes Regarding Containerd
-  shell: |
-    kill -9 `ps -ef | grep containerd | awk '{print $2}'`
-  register: containerd_killed
-  ignore_errors: yes
-- debug: msg={{ containerd_killed }}
+#- name: Kill Processes Regarding Containerd
+#  shell: |
+#    kill -9 `ps -ef | grep containerd | awk '{print $2}'`
+#  register: containerd_killed
+#  ignore_errors: yes
+#- debug: msg={{ containerd_killed }}
 
 
 - name: Disable and Stop Kubelet
@@ -59,7 +60,7 @@
   register: kubelet_stopped
   until: kubelet_stopped is succeeded
 
-#
+
 # Uninstall Containerd.io Package to Manages the Complete Container Lifecycle from Image Transfer
 # and Storage to Container Execution and Supervision to Low-Level Storage
 - name: Uninstall the Latest Version of Docker-CE Package.
@@ -67,13 +68,29 @@
     name: "{{ item }}"
     state: absent
   with_items: "{{ rh_docker_pkgs }}"
-  when: uninstall_dep_pkgs
+  when: uninstall_dep_pkgs and ( ansible_distribution == "RedHat" or ansible_distribution == "CentOS" or ansible_distribution == "Rocky" )
+
+
+- name: Uninstall the Latest Version of Docker-CE Package.
+  yum:
+    name: "{{ item }}"
+    state: absent
+  with_items: "{{ suse_ce_pkgs }}"
+  when: uninstall_dep_pkgs and ansible_distribution == "openSUSE Leap"
+
+
+#- name: Launch Kubernetes Software
+#  import_tasks: config-rh-kube-software.yml
+#  tags: install
+#  when: config_kube_software and ( ansible_distribution == "RedHat" or ansible_distribution == "CentOS" or ansible_distribution == "Rocky" )
 
 
 - name: Uninstall Kubeadm Package
   yum:
     name: "{{ item }}"
     state: absent
+  register: kube_pkgs_uninstalled
+  until: kube_pkgs_uninstalled is succeeded
   with_items:
     - "kubeadm"
     - "kubelet"
@@ -100,7 +117,7 @@
     - "/var/lib/docker/overlay2"
     - "/var/lib/docker/devicemapper"
     - "/var/lib/docker/containers"
-    - "/root/.docker"
+    - "{{ k8s.base_path }}/.docker"
     - "/root/calico.yaml"
     - "/etc/containerd/config.toml"
     - "/etc/modules-load.d/containerd.conf"
@@ -119,8 +136,9 @@
   with_items:
     - "/etc/yum.repos.d/kubernetes.repo"
     - "/etc/yum.repos.d/docker-ce.repo"
+  when: config_kube_software == true and ( ansible_distribution == "RedHat" or ansible_distribution == "CentOS" or ansible_distribution == "Rocky" )
 - debug: msg={{ kubernetes_repo_deleted }}
-  when: print_debug == true
+  when: print_debug == true and config_kube_software == true and ( ansible_distribution == "RedHat" or ansible_distribution == "CentOS" or ansible_distribution == "Rocky" )
 
 
 - name: Remove kubectl commnd in .bashrc
@@ -134,14 +152,14 @@
 - debug: msg={{ remove_kubectl_command_bashrc }}
   when: print_debug == true
 
-#
+
 - name: Reboot required
   shell: ( /bin/sleep 5 ; /sbin/shutdown -r now "Ansible updates triggered" ) &
-  async: 30
+  async: 120
   poll: 0
   notify:
-    - Waiting for server to come back after reboot
-#  when: selinux_enabled.reboot_required == true
+    - Waiting for Server to Come Back After Reboot
+
 
 - meta: flush_handlers
 

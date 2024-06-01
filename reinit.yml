@@ -5,7 +5,6 @@
     print_debug: true
     enable_firewall: false
     stop_services: true
-    start_services: true
     calico_network: false
     k8s_network_address: "192.168.0.0/16"
   roles:

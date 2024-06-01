@@ -5,10 +5,11 @@
   when: inventory_hostname in groups['master']
 
 
-- name: Unlock those versions to prevent them from being automatically updated
+- name: Unlock those versions to prevent them from being automatically updated for openSUSE Leap
   shell: |
     zypper removelock kubelet kubeadm kubectl
   register: kube_command_lock_removed
+  when: ansible_distribution == "openSUSE Leap"
 
 
 # Common

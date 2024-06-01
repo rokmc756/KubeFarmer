@@ -29,9 +29,16 @@
 - name: Enable Firewall
   import_tasks: enable-firewall.yml
   tags:
+    - uninstall
+  when: enable_firewall
+
+
+- name: Disable Firewall
+  import_tasks: disable-firewall.yml
+  tags:
     - install
     - reinit
-  when: enable_firewall
+  when: disable_firewall
 
 
 - name: Launch Kubernetes Software
@@ -44,6 +51,7 @@
   import_tasks: config-rh-kube-software.yml
   tags: install
   when: config_kube_software and ( ansible_distribution == "RedHat" or ansible_distribution == "CentOS" or ansible_distribution == "Rocky" )
+
 
 
 - name: Initialize Kubernetes Cluster
@@ -65,13 +73,6 @@
   tags: reinit
 
 
-- name: Start Docker
-  import_tasks: start-services.yml
-  tags:
-    - reinit
-  when: start_services
-
-
 #- name: Destroy Kubernetes Cluster
 #  import_tasks: uninstall.yml
 #  tags: uninstall
@@ -88,12 +89,6 @@
   import_tasks: uninstall-config.yml
   tags: uninstall
   when: uninstall_config
-
-
-#- name: Disable Firewall
-#  import_tasks: disable-firewall.yml
-#  tags: uninstall
-#  when: disable_fireweall
 
 
 - name: Reboot all Systems

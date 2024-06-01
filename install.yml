@@ -9,26 +9,18 @@
 - hosts: all
   become: yes
   vars:
-    container_runtime: "containerd"   # crio or podman?
+    container_runtime: "containerd"   # crio or podman
     print_debug: true
     install_pkgs: true
-    enable_firewall: false
+    disable_firewall: true
     config_kube_software: true
     init_k8s: true
     stop_services: true
   roles:
-    -  rancher
-#    -  rook-ceph
+    -  rook-ceph
 #    - k8s
 #    - init-hosts
+#    -  rancher
 #    - nginx
 #    - dashboard
-
-#
-#- hosts: ext_storages
-#minio
-#  become: yes
-#  roles:
-#    - minio
-#    - iscsi-target
 

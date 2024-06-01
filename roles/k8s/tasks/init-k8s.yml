@@ -21,6 +21,13 @@
 #  delay: 10
 #  when: ansible_distribution == "openSUSE Leap"
 
+- name: Load Kernel Modules for Kurbernetes
+  shell: |
+    modprobe {{ item }}
+  with_items:
+    - overlay
+    - br_netfilter
+
 
 - name: Reset Kubernetes
   command: kubeadm reset -f
@@ -213,11 +220,8 @@
 # service/nginx        NodePort    10.96.0.2    192.168.1.194   80:30001/TCP   2m30s
 
 # kubectl port-forward service/nginx 80:80
-
 # kubectl expose deployment hello-world --type=LoadBalancer --name=nginx --external-ip=192.168.0.194
-
 # kubectl expose deployment nginx --type=NodePort
-
 # kubectl expose deployment nginx --type=LoadBalancer --name=nginx-access
 
 
@@ -226,5 +230,4 @@
 # https://github.com/projectcalico/calico/issues/2695
 # https://tech.kakao.com/2021/03/03/network-node-manager/
 # https://deploy.live/blog/kubernetes-networking-problems-due-to-the-conntrack/
-#
 

@@ -5,13 +5,13 @@ remote_machine_password="changeme"
 ansible_python_interpreter=/usr/bin/python3
 
 [master]
-rk9-master ansible_ssh_host=192.168.0.91
+rk9-master ansible_ssh_host=192.168.1.71
 
 [slave]
-rk9-slave ansible_ssh_host=192.168.0.92
+rk9-slave ansible_ssh_host=192.168.1.72
 
 [workers]
-rk9-node01 ansible_ssh_host=192.168.0.93
-rk9-node02 ansible_ssh_host=192.168.0.94
-rk9-node03 ansible_ssh_host=192.168.0.95
+rk9-node01 ansible_ssh_host=192.168.1.73
+rk9-node02 ansible_ssh_host=192.168.1.74
+rk9-node03 ansible_ssh_host=192.168.1.75
 

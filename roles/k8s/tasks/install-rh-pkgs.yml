@@ -3,21 +3,19 @@
 #
 - name: Install RPM Packages of Dependenies to Need Installing Packages Regarding Kubernates
   package:
-    name: "{{ item }}"
+    name: "{{ install_pkgs }}"
     state: present
   ignore_errors: yes
-  with_items: "{{ install_pkgs }}"
-  when: install_dep_packages
+  when: install_pkgs
 #  and hostvars[inventory_hostname].ansible_distribution_major_version|int >= 9
 
 #
 - name: Install RPM Packages of Dependenies to Need Installing Packages Regarding Kubernates
   package:
-    name: "{{ item }}"
+    name: "{{ rh8_common_devel_pkgs }}"
     state: present
   register: selinux_policy_installed
-  with_items: "{{ rh8_common_devel_pkgs }}"
-  when: install_dep_packages and ( ansible_distribution == "RedHat" or ansible_distribution == "CentOS" or ansible_distribution == "Rocky" ) and ansible_distribution_major_version|int <= 8
+  when: install_pkgs and ( ansible_distribution == "RedHat" or ansible_distribution == "CentOS" or ansible_distribution == "Rocky" ) and ansible_distribution_major_version|int <= 8
 #
 - debug:
     var: selinux_policy_installed
@@ -32,29 +30,28 @@
     gpgcheck: "no"
   when: ( ansible_distribution == "RedHat" or ansible_distribution == "CentOS" or ansible_distribution == "Rocky" ) and ansible_distribution_major_version|int >= 9
 
-#
+
 - name: Install Docker-CE Packages of the Latest Version in All Nodes
   package:
-    name: "{{ item }}"
+    name: "{{ rh_docker_pkgs }}"
     state: present
-  with_items: "{{ rh_docker_pkgs }}"
-  when: install_dep_packages and ( ansible_distribution == "RedHat" or ansible_distribution == "CentOS" or ansible_distribution == "Rocky" ) and ansible_distribution_major_version|int >= 9
+  when: install_pkgs and ( ansible_distribution == "RedHat" or ansible_distribution == "CentOS" or ansible_distribution == "Rocky" ) and ansible_distribution_major_version|int >= 9
 
-#
+
 - name: Add Kubernetes Repositories in All Nodes
   template: src=kubernetes.repo.j2 dest=/etc/yum.repos.d/kubernetes.repo owner=root group=root mode=644 force=yes
   register: kubernetes_repo_added
 
-#
+
 - name: Install Kubeadm Packages for All Nodes
   package:
     name: "{{ item }}"
     state: present
   with_items:
-    - "kubectl-{{ k8s_major_version }}.{{ k8s_minor_version }}.{{ k8s_patch_version }}"
-    - "kubelet-{{ k8s_major_version }}.{{ k8s_minor_version }}.{{ k8s_patch_version }}"
-    - "kubeadm-{{ k8s_major_version }}.{{ k8s_minor_version }}.{{ k8s_patch_version }}"
-  when: install_k8s_packages
+    - "kubectl-{{ k8s.major_version }}.{{ k8s.minor_version }}.{{ k8s.patch_version }}"
+    - "kubelet-{{ k8s.major_version }}.{{ k8s.minor_version }}.{{ k8s.patch_version }}"
+    - "kubeadm-{{ k8s.major_version }}.{{ k8s.minor_version }}.{{ k8s.patch_version }}"
+  when: install_pkgs
 
 #
 - name: Install Cgroup Packages in All Nodes
@@ -64,5 +61,5 @@
   with_items:
     - libcgroup
     - libcgroup-tools
-  when: install_dep_packages and hostvars[inventory_hostname].ansible_distribution_major_version|int < 9
+  when: install_pkgs and hostvars[inventory_hostname].ansible_distribution_major_version|int < 9
 

@@ -1,19 +1,12 @@
 ---
 #
-major_version: "8"
-minor_version: "5"
-patch_version: ""
-rhel_version: "7"
-
-#k8s:
-#  major_version: "1"
-#  minor_version: "28"
-#  patch_version: "8"
+#major_version: "8"
+#minor_version: "5"
+#patch_version: ""
+#rhel_version: "7"
 
 dashboard_port: "10443"
 
-# k8s_patch_version: "14"
-# k8s version for gpdb : 1.21.1
 # latest k8s version : 1.26.2
 
 master_ports:

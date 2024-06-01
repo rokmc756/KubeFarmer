@@ -98,6 +98,7 @@
 #    path: /etc/docker
 #    state: directory
 
+
 # Working with Docker
 #- name: Configure the Docker Daemon to Use Systemd for the Management of the Cotainer's CGroups
 #  template: src=daemon.json.j2 dest=/etc/docker/daemon.json owner=root group=root mode=644 force=yes
@@ -187,14 +188,14 @@
 
 - name: Create Cluster Configuration in Master Node
   shell: |
-    kubeadm config print init-defaults | tee /root/cluster-config.yaml
+    kubeadm config print init-defaults | tee {{ k8s.base_path }}/cluster-config.yaml
   register: cluster_config_created
   when: inventory_hostname in groups['master']
 
 
-- name: Modify cluster-config.yaml to Replace "{{ hostvars[inventory_hostname]['ansible_'~netdev1]['ipv4']['address'] }}" with Control Plane's IP address
+- name: Modify cluster-config.yaml to Replace Cluster IP Address with Control Plane's IP address
   lineinfile:
-    dest: /root/cluster-config.yaml
+    dest: "{{ k8s.base_path }}/cluster-config.yaml"
     regexp: "{{ item.regexp }}"
     line: "{{ item.line }}"
     state: "{{ item.state }}"
@@ -208,7 +209,7 @@
 
 - name: Modify cluster-config.yaml
   lineinfile:
-    path: /root/cluster-config.yaml
+    path: "{{ k8s.base_path }}/cluster-config.yaml"
     line: "{{ item.content }}"
     insertafter: EOF
     create: true
@@ -247,5 +248,4 @@
   until: kubelet_started is succeeded
   retries: 20
   delay: 10
-
 

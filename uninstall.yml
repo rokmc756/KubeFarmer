@@ -1,4 +1,3 @@
-#
 #- hosts: harbor
 #  become: yes
 #  vars:
@@ -14,25 +13,20 @@
     stop_services: true
     uninstall_pkgs: true
     uninstall_config: true
-    disable_firewall: true
+    enable_firewall: false
     reboot_required: false
   roles:
-    - rancher
-#    - rook-ceph
+    - rook-ceph
 #    - k8s
 #    - init-hosts
+#    - rancher
 #    - nginx
-#   - dashboard
+#    - dashboard
+
 
 #- hosts: minio
 #  become: yes
 #  roles:
 #    - minio
 #    - iscsi-target
-
-
-#- hosts: workers
-#  become: yes
-#  roles:
-#    - iscsi-initiator
 
