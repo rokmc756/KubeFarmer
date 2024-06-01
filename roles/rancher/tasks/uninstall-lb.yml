@@ -16,11 +16,12 @@
 
 
 - name: Delete Rancher Loadbalancer Config Yaml
-  shell: |
-    rm -f rancher-loadbalancer.yaml
-  ignore_errors: yes
+  file:
+    path: "{{ item }}"
+    state: absent
   register: delete_rancher_lb_config_yaml
-  args:
-    chdir: "{{ base_path }}/"
+  ignore_errors: yes
+  with_items:
+    - "{{ base_path }}/rancher-loadbalancer.yaml"
 - debug: msg={{ delete_rancher_lb_config_yaml }}
 

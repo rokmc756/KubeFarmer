@@ -1,4 +1,3 @@
-# 
 #- name: Check Rook Pods
 #  shell: kubectl get all -n cattle-system
 #  register: check_rook_pods
@@ -28,14 +27,6 @@
 - debug: msg={{ delete_nginx_ingress_crds }}
 
 
-- name: Remove Kubernetest Ingress Directory
-  shell: |
-    rm -rf "{{ base_path }}"/kubernetes-ingress
-  register: clone_k8s_ingress_dir
-  ignore_errors: true
-- debug: msg={{ clone_k8s_ingress_dir }}
-
-
 - name: Delete the Metallb Config for VMware
   shell: |
     kubectl delete -f "{{ base_path }}"/metallb-config-vmware.yaml
@@ -45,21 +36,12 @@
 - debug: msg={{ delete_metallb_config }}
 
 
-- name: Remove Metallb Config Yaml for VMware
-  shell: |
-    rm -f "{{ base_path }}"/metallb-config-vmware.yaml
-  register: remove_metallb_vmware_yaml
-  ignore_errors: yes
-- debug: msg={{ remove_metallb_vmware_yaml }}
-
-
 - name: Delete Secret for Metallb Namespace
   shell: |
     kubectl delete secret -n metallb-system memberlist
   register: delete_metallb_secret
   ignore_errors: yes
 - debug: msg={{ delete_metallb_secret }}
-  #  kubectl delete secret generic -n metallb-system memberlist
 
 
 #- name: Delete the Metallb Native
@@ -101,6 +83,18 @@
   register: rollback_strict_arp
   ignore_errors: yes
 - debug: msg={{ rollback_strict_arp }}
+
+
+- name: Remove Metallb Config Yaml File and Kubernetes-ingress
+  file:
+    path: "{{ item }}"
+    state: absent
+  register: remove_config_yaml_and_kube_ingress_dir
+  with_items:
+    - "{{ base_path }}/metallb-config-vmware.yaml"
+    - "{{ base_path }}/kubernetes-ingress"
+- debug: msg={{ remove_config_yaml_and_kube_ingress_dir }}
+
 
 
 # [ Check Rook and NGINX Ingress ]

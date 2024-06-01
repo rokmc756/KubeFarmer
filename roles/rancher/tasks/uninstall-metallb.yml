@@ -41,13 +41,6 @@
 - debug: msg={{ force_delete_nginx_ingress_namespace }}
 
 
-- name: Remove Kubernetest Ingress Directory
-  shell: |
-    rm -rf "{{ base_path }}"/kubernetes-ingress
-  register: clone_k8s_ingress_dir
-  ignore_errors: true
-- debug: msg={{ clone_k8s_ingress_dir }}
-
 
 - name: Delete the Metallb Config for VMware
   shell: |
@@ -58,12 +51,6 @@
 - debug: msg={{ delete_metallb_config }}
 
 
-- name: Remove Metallb Config Yaml for VMware
-  shell: |
-    rm -f "{{ base_path }}"/metallb-config-vmware.yaml
-  register: remove_metallb_vmware_yaml
-  ignore_errors: yes
-- debug: msg={{ remove_metallb_vmware_yaml }}
 
 
 - name: Delete Secret for Metallb Namespace
@@ -109,7 +96,26 @@
 - debug: msg={{ force_delete_metallb_namespace }}
 
 
-# 1
+- name: Rollback strictARP for VMWare or Cloud
+  shell: |
+    kubectl get configmap kube-proxy -n kube-system -o yaml | \
+    sed -e "s/strictARP: true/strictARP: false/" | kubectl apply -f - -n kube-system
+  register: rollback_strict_arp
+  ignore_errors: yes
+- debug: msg={{ rollback_strict_arp }}
+
+
+- name: Remove Metallb Config Yaml File and Kubernetes-ingress
+  file:
+    path: "{{ item }}"
+    state: absent
+  register: remove_config_yaml_and_kube_ingress_dir
+  with_items:
+    - "{{ base_path }}/metallb-config-vmware.yaml"
+    - "{{ base_path }}/kubernetes-ingress"
+- debug: msg={{ remove_config_yaml_and_kube_ingress_dir }}
+
+
 #- name: Get the list of Metallb Kubernetes CRDs
 #  shell: |
 #    kubectl get crds | grep metallb | awk '{print $1}'
@@ -127,7 +133,6 @@
 #- debug: msg={{ delete_metallb_crds }}
 
 
-# 2
 #- name: Get the list of Metallb Kubernetesa ClusterRoleBindings
 #  shell: |
 #    kubectl get clusterrolebindings | grep metallb | awk '{print $1}'
@@ -145,7 +150,6 @@
 #- debug: msg={{ delete_metallb_clusterrolebindings }}
 
 
-# 3
 #- name: Get the list of Metallb Kubernetesa ClusterRole
 #  shell: |
 #    kubectl get clusterrole | grep metallb | awk '{print $1}'
@@ -154,7 +158,6 @@
 #- debug: msg={{ get_metallb_clusterrole }}
 
 
-#
 #- name: Delete each Metallb Kubernetes ClusterRole
 #  shell: |
 #    kubectl delete clusterrole {{ item }}
@@ -169,7 +172,6 @@
 # kubectl delete daemonset.apps metallb-speaker -n metallb-system
 
 
-# 4
 #- name: Get the list of Metallb Kubernetes ValidatingWebHookConfiguration
 #  shell: |
 #    kubectl get validatingwebhookconfiguration | sed 1d | awk '{print $1}'
@@ -178,7 +180,6 @@
 #- debug: msg={{ get_metallb_validate_webhook_config }}
 
 
-#
 #- name: Delete each Metallb Kubernetes ValidatingWebHookConfiguration
 #  shell: |
 #    kubectl delete validatingwebhookconfiguration {{ item }}
@@ -196,21 +197,4 @@
 #  register: uninstall_metallb_native_config
 #  ignore_errors: yes
 #- debug: msg={{ uninstall_metallb_native_config }}
-
-
-- name: Rollback strictARP for VMWare or Cloud
-  shell: |
-    kubectl get configmap kube-proxy -n kube-system -o yaml | \
-    sed -e "s/strictARP: true/strictARP: false/" | kubectl apply -f - -n kube-system
-  register: rollback_strict_arp
-  ignore_errors: yes
-- debug: msg={{ rollback_strict_arp }}
-
-
-# [ Check Rancher and NGINX Ingress ]
-# kubectl get events --all-namespaces  --sort-by='.metadata.creationTimestamp'
-# kubectl -n cattle-system describe pods
-# kubectl -n cattle-system get all
-# kubectl -n cattle-system get pods
-# kubectl -n cattle-system logs <pod-name>
 

@@ -53,13 +53,20 @@
   when: print_debug == true
 
 
+- name: Check if the Rook Ceph Source Code is already downloaded
+  stat: path={{ base_path }}/rook
+  register: rook_dir_existed
+- debug: msg={{ rook_dir_existed }}
+
+
 - name: Clone Rook Source Code
   shell: |
     git -C "{{ base_path }}" clone --single-branch --branch release-{{ rook.major_version }}.{{ rook.minor_version }} https://github.com/rook/rook.git
   register: git_clone_rook
-  when: rook.clone_git == true
+  ignore_errors: true
+  when: rook.clone_git == true and rook_dir_existed.stat.exists != True
 - debug: msg={{ git_clone_rook }}
-  when: rook.clone_git == true and print_debug == true
+  when: print_debug == true and rook.clone_git == true and rook_dir_existed.stat.exists != True
 
 
 - name: Creae CRDs

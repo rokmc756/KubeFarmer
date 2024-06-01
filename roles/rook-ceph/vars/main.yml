@@ -23,7 +23,8 @@ rook:
       name: rook-ingress
       namespace: cattle-system
     hostname: "rook.jtest.suse.com"
-
+  kernel_parameters:
+    - "net.ipv4.neigh.default.gc_thresh1 = 0"   # For ARP Cache
 
 metallb:
   install: true
@@ -37,7 +38,7 @@ metallb:
           name: first-pool
           namespace: metallb-system
         spec:
-          ips_range: 192.168.1.210-192.168.1.250
+          ips_range: 192.168.1.200-192.168.1.250
       l2advertise:
         metadata:
           name: example
@@ -56,14 +57,14 @@ metallb:
               ips_range: 192.168.1.210-192.168.1.250
 
 helm:
-  enable_repo: false
+  enable_repo: true
   major_version: 3
   minor_version:
   patch_version:
   build_version:
 
 
-cm:
+cert_manager:
   install: false
   major_version: 1
   minor_version: 7

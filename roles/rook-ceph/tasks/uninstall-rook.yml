@@ -133,16 +133,6 @@
   when: print_debug == true
 
 
-- name: Remove Rook Source Code
-  shell: |
-    rm -rf /root/rook
-  register: remove_git_rook
-  ignore_errors: true
-  when: rook.clone_git == true
-- debug: msg={{ remove_git_rook }}
-  when: rook.clone_git == true and print_debug == true
-
-
 - name: Remove RBD Kernel Module
   shell: |
     rmmod rbd
@@ -155,16 +145,15 @@
   when: print_debug == true
 
 
-- name: Disable Rados Block Device Kernel Module
-  shell:
-    rm -f /etc/modules-load.d/rbd.conf
-  register: disable_rbd_kernel_module
-  delegate_to: "{{ item }}"
-  delegate_facts: True
-  ignore_errors: true
-  with_items: "{{ groups['all'] }}"
-- debug: msg={{ disable_rbd_kernel_module }}
-  when: print_debug == true
+- name: Remove Rook Source Code and RBD Kernel Module Config
+  file:
+    path: "{{ item }}"
+    state: absent
+  register: remove_rook_source_n_rbd_kernel_module_config
+  with_items:
+    - "/etc/modules-load.d/rbd.conf"
+    - "{{ base_path }}/rook"
+- debug: msg={{ remove_rook_source_n_rbd_kernel_module_config }}
 
 
 # for j in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do dd if=/dev/zero of=/dev/$j bs=1M count=1000; done

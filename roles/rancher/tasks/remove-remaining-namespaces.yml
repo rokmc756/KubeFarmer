@@ -5,11 +5,10 @@
   register: force_delete_namespaces
   ignore_errors: yes
   with_items:
+    - cert-manager
+    - metallb-system
     - nginx-ingress
 - debug: msg={{ force_delete_namespaces }}
-  #  - cert-manager
-  #  - metallb-system
-
 - name: Get the Remaining Namespaces still Terminating
   shell: |
     kubectl get namespaces | grep Terminating | awk '{print $1}'

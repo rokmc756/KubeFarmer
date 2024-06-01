@@ -34,15 +34,21 @@
 
 
 - name: Install Cert Manager
-  import_tasks: install-cm.yml
+  import_tasks: install-cert-manager.yml
   tags: install
-  when: cm.install == true and inventory_hostname in groups['master']
+  when: cert_manager.install == true and inventory_hostname in groups['master']
 
 
 - name: Install Load Balancer
   import_tasks: install-lb.yml
   tags: install
   when: metallb.install == true and inventory_hostname in groups['master']
+
+
+- name: Print Ceph Connection Info
+  import_tasks: print-ceph-connection-info.yml
+  tags: install
+  when: rook.install == true and inventory_hostname in groups['master']
 
 
 - name: Uninstall Load Balancer
@@ -52,9 +58,9 @@
 
 
 - name: Uninstall Cert Manager
-  import_tasks: uninstall-cm.yml
+  import_tasks: uninstall-cert-manager.yml
   tags: uninstall
-  when: cm.install == true and inventory_hostname in groups['master']
+  when: cert_manager.install == true and inventory_hostname in groups['master']
 
 
 - name: Uninstall Metallb
