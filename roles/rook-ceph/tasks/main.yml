@@ -12,7 +12,6 @@
   tags:
     - install
     - uninstall
-  when: inventory_hostname in groups['master']
 
 
 - name: Enable Helm Repository

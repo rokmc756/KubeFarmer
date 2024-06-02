@@ -8,6 +8,7 @@ rook:
   build_version:
   enable_discovery_daemon: false
   clone_git: true
+  nvme: true
   k8s:
     major_version: 1
     minor_version: 28

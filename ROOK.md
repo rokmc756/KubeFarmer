@@ -4,12 +4,19 @@
 * Kubernetes Network should be with jumbo frame with MTU 9000
 
 
+[ Useful Commands ]
+* How to change admin password
+~~~
+$
+~~~
+
+
+
 ## Need to check Port is working
 * 6789, 3000 Port Check
 - Server nc -l 6789 or 3000
 - Client nc 192.168.0.x 6789
   type "hi" and check server return "hi"
-
 
 
 [ References ]
@@ -39,7 +46,7 @@
 - https://www.talos.dev/v1.7/kubernetes-guides/configuration/ceph-with-rook/
 
 
-* On VMware - 
+* On VMware
 
 Enabling disk UUID on virtual machines
 You must set the disk.EnableUUID parameter for each VM to "TRUE". This step is necessary so that the VMDK always presents a consistent UUID to the VM,

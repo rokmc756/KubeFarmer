@@ -14,11 +14,14 @@ metadata:
   name: local-storage
 provisioner: kubernetes.io/no-provisioner
 volumeBindingMode: WaitForFirstConsumer
----
+{% for arr1 in all_nvme_info %}
+{% for arr2 in arr1 -%}
+{% for dinfo in arr2.devinfo %}
+{{ "---" }}
 kind: PersistentVolume
 apiVersion: v1
 metadata:
-  name: local0-0
+  name: {{ dinfo[1] }}-{{ arr2.hostname }}
 spec:
   storageClassName: local-storage
   capacity:
@@ -26,11 +29,11 @@ spec:
   accessModes:
     - ReadWriteOnce
   persistentVolumeReclaimPolicy: Retain
-  # PV for mon must be a filesystem volume.
-  volumeMode: Filesystem
+  # PV for OSD must be a block volume - volumeMode: Block
+  # PV for mon must be a filesystem volume - volumeMode: Filesystem
+  volumeMode: {{ dinfo[0] }}
   local:
-    # If you want to use dm devices like logical volume, please replace `/dev/sdb` with their device names like `/dev/vg-name/lv-name`.
-    path: /dev/nvme0n1
+    path: /dev/{{ dinfo[1] }}
   nodeAffinity:
     required:
       nodeSelectorTerms:
@@ -38,123 +41,11 @@ spec:
             - key: kubernetes.io/hostname
               operator: In
               values:
-                - {{ hostvars[groups['workers'][0]].ansible_hostname }}
----
-kind: PersistentVolume
-apiVersion: v1
-metadata:
-  name: local0-1
-spec:
-  storageClassName: local-storage
-  capacity:
-    storage: 10Gi
-  accessModes:
-    - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Retain
-  # PV for OSD must be a block volume.
-  volumeMode: Block
-  local:
-    path: /dev/nvme0n2
-  nodeAffinity:
-    required:
-      nodeSelectorTerms:
-        - matchExpressions:
-            - key: kubernetes.io/hostname
-              operator: In
-              values:
-                - {{ hostvars[groups['workers'][0]].ansible_hostname }}
----
-kind: PersistentVolume
-apiVersion: v1
-metadata:
-  name: local1-0
-spec:
-  storageClassName: local-storage
-  capacity:
-    storage: 10Gi
-  accessModes:
-    - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Retain
-  volumeMode: Filesystem
-  local:
-    path: /dev/nvme0n1
-  nodeAffinity:
-    required:
-      nodeSelectorTerms:
-        - matchExpressions:
-            - key: kubernetes.io/hostname
-              operator: In
-              values:
-                - {{ hostvars[groups['workers'][1]].ansible_hostname }}
----
-kind: PersistentVolume
-apiVersion: v1
-metadata:
-  name: local1-1
-spec:
-  storageClassName: local-storage
-  capacity:
-    storage: 10Gi
-  accessModes:
-    - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Retain
-  volumeMode: Block
-  local:
-    path: /dev/nvme0n2
-  nodeAffinity:
-    required:
-      nodeSelectorTerms:
-        - matchExpressions:
-            - key: kubernetes.io/hostname
-              operator: In
-              values:
-                - {{ hostvars[groups['workers'][1]].ansible_hostname }}
----
-kind: PersistentVolume
-apiVersion: v1
-metadata:
-  name: local2-0
-spec:
-  storageClassName: local-storage
-  capacity:
-    storage: 10Gi
-  accessModes:
-    - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Retain
-  volumeMode: Filesystem
-  local:
-    path: /dev/nvme0n1
-  nodeAffinity:
-    required:
-      nodeSelectorTerms:
-        - matchExpressions:
-            - key: kubernetes.io/hostname
-              operator: In
-              values:
-                - {{ hostvars[groups['workers'][2]].ansible_hostname }}
----
-kind: PersistentVolume
-apiVersion: v1
-metadata:
-  name: local2-1
-spec:
-  storageClassName: local-storage
-  capacity:
-    storage: 10Gi
-  accessModes:
-    - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Retain
-  volumeMode: Block
-  local:
-    path: /dev/nvme0n2
-  nodeAffinity:
-    required:
-      nodeSelectorTerms:
-        - matchExpressions:
-            - key: kubernetes.io/hostname
-              operator: In
-              values:
-                - {{ hostvars[groups['workers'][2]].ansible_hostname }}
+                - {{ arr2.hostname }}
+{{ ""|safe }}
+{%- endfor -%}
+{%- endfor -%}
+{%- endfor -%}
 ---
 apiVersion: ceph.rook.io/v1
 kind: CephCluster
@@ -187,7 +78,7 @@ spec:
   storage:
     storageClassDeviceSets:
       - name: set1
-        count: 3
+        count: 4
         portable: false
         tuneDeviceClass: true
         tuneFastDeviceClass: false
