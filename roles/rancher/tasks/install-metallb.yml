@@ -18,9 +18,16 @@
 - debug: msg={{ apply_strict_arp }}
 
 
-- name: Apply the Metallb Native
+- name: Create Namespace for Metallb
   shell: |
-    /usr/local/bin/helm install metallb metallb/metallb -n metallb-system --create-namespace=true
+    kubectl create namespace metallb-system
+  register: create_metallb_namespace
+- debug: msg={{ create_metallb_namespace }}
+
+
+- name: Apply the Metallb
+  shell:
+    /usr/local/bin/helm install metallb metallb/metallb -n metallb-system
   register: apply_metallb_native_config
   ignore_errors: yes
 - debug: msg={{ apply_metallb_native_config }}
@@ -76,18 +83,18 @@
   when: kube_ingress_dir_existed.stat.exists != True
 
 
-#- name: Apply NGINX Ingress CRDs
-#  shell: |
-#    kubectl apply -f crds/ --namespace=nginx-ingress
-#  register: apply_nginx_ingress_crds
-#  args:
-#    chdir: "{{ base_path }}/kubernetes-ingress/deployments/helm-chart"
-#- debug: msg={{ apply_nginx_ingress_crds }}
+- name: Apply NGINX Ingress CRDs
+  shell: |
+    kubectl apply -f crds/ --namespace=nginx-ingress
+  register: apply_nginx_ingress_crds
+  args:
+    chdir: "{{ base_path }}/kubernetes-ingress/deployments/helm-chart"
+- debug: msg={{ apply_nginx_ingress_crds }}
 
 
 - name: Install NGINX Ingress
   shell: |
-    /usr/local/bin/helm install nginx-ingress nginx-stable/nginx-ingress --namespace=nginx-ingress --create-namespace=true
+    /usr/local/bin/helm install nginx-ingress nginx-stable/nginx-ingress --namespace=nginx-ingress --create-namespace
   register: install_nginx_ingress
   args:
     chdir: "{{ base_path }}/kubernetes-ingress/deployments/helm-chart"

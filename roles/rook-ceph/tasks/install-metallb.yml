@@ -110,7 +110,6 @@
   args:
     chdir: "{{ base_path }}/kubernetes-ingress/deployments/helm-chart"
 - debug: msg={{ install_nginx_ingress }}
-  # helm install nginx-ingress nginx-stable/nginx-ingress --namespace=nginx-ingress --create-namespace=true
 
 
 - name: Upgrade NGINX Ingress CRDs

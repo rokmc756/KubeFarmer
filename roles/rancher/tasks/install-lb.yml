@@ -20,3 +20,16 @@
   retries: 30
 - debug: msg={{ check_rancher_pods }}
 
+
+- pause:
+    seconds: 15
+
+
+- name: Check if the status of ContainerCreating is still existing
+  shell: kubectl get all -A | grep cattle-
+  register: check_container_creating
+  until: check_container_creating.stdout.find("ContainerCreating") == -1
+  retries: 30
+  delay: 10
+- debug: msg={{ check_container_creating }}
+

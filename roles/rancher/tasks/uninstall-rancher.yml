@@ -1,3 +1,4 @@
+
 - name: Check if the Rancher Cleanup is Already Downloaded
   stat: path={{ base_path }}/rancher-cleanup
   register: rancher_cleanup_dir_existed
@@ -33,16 +34,17 @@
 
 
 - name: Check if Rancher Namespaces are Still Active
-  shell: kubectl get namespaces | grep -E 'cattle|fleet' | awk '{print $1}'
+  shell: kubectl get namespaces | grep -E 'cattle|fleet'
   register: check_active_namespaces
   ignore_errors: true
   until: check_active_namespaces.stdout.find("Active") == -1
   retries: 100
+  delay: 10
 - debug: msg={{ check_active_namespaces }}
 
 
 - name: Check if Rancher Namespaces are Still Terminating
-  shell: kubectl get namespaces | grep -E 'cattle|fleet' | awk '{print $1}'
+  shell: kubectl get namespaces | grep -E 'cattle|fleet'
   register: check_terminating_namespaces
   ignore_errors: true
   until: check_terminating_namespaces.stdout.find("") != -1
@@ -58,6 +60,7 @@
   ignore_errors: yes
   until: check_cleanup_job_pod.stdout.find("Terminating") == -1
   retries: 20
+  delay: 5
 - debug: msg={{ check_cleanup_job_pod }}
 
 
@@ -174,4 +177,3 @@
 # kubectl -n cattle-system get all
 # kubectl -n cattle-system get pods
 # kubectl -n cattle-system logs <pod-name>
-

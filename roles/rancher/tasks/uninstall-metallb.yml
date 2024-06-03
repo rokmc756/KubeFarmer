@@ -2,14 +2,14 @@
 # https://docs.vmware.com/en/VMware-Bare-Metal-Automation-for-VMware-Telco-Cloud-Platform/3.1/bma-install-guide-31/GUID-E49E1411-9F9C-436D-9B25-6C0302FFAB95.html
 # https://stackoverflow.com/questions/52369247/namespace-stucked-as-terminating-how-i-removed-it
 
-#- name: Delete NGINX Ingress CRDs
-#  shell: |
-#    kubectl delete -f crds/ --namespace=nginx-ingress
-#  register: delete_nginx_ingress_crds
-#  ignore_errors: yes
-#  args:
-#    chdir: "{{ base_path }}/kubernetes-ingress/deployments/helm-chart"
-#- debug: msg={{ delete_nginx_ingress_crds }}
+- name: Delete NGINX Ingress CRDs
+  shell: |
+    kubectl delete -f crds/ --namespace=nginx-ingress
+  register: delete_nginx_ingress_crds
+  ignore_errors: yes
+  args:
+    chdir: "{{ base_path }}/kubernetes-ingress/deployments/helm-chart"
+- debug: msg={{ delete_nginx_ingress_crds }}
 
 
 - name: Uninstall NGINX Ingress
@@ -193,4 +193,3 @@
 #  register: uninstall_metallb_native_config
 #  ignore_errors: yes
 #- debug: msg={{ uninstall_metallb_native_config }}
-
