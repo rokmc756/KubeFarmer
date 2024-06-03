@@ -39,7 +39,5 @@
     -f https://github.com/jetstack/cert-manager/releases/download/v{{ cert_manager.major_version }}.{{ cert_manager.minor_version }}.{{ cert_manager.patch_version }}/cert-manager.crds.yaml
   register: delete_cert_manager_crds
   ignore_errors: yes
-  # until: delete_cert_manager_crds is succeeded
-  # retries: 20
 - debug: msg={{ delete_cert_manager_crds }}
 

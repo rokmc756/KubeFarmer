@@ -112,23 +112,6 @@
 - debug: msg={{ remove_config_yaml_and_kube_ingress_dir }}
 
 
-#- name: Get the list of Metallb Kubernetes CRDs
-#  shell: |
-#    kubectl get crds | grep metallb | awk '{print $1}'
-#  register: get_metallb_crds
-#  ignore_errors: yes
-#- debug: msg={{ get_metallb_crds }}
-
-
-#- name: Delete each Metallb Kubernetes CRDs
-#  shell: |
-#    kubectl delete crds {{ item }}
-#  register: delete_metallb_crds
-#  ignore_errors: yes
-#  with_items: "{{ get_metallb_crds.stdout_lines }}"
-#- debug: msg={{ delete_metallb_crds }}
-
-
 #- name: Get the list of Metallb Kubernetesa ClusterRoleBindings
 #  shell: |
 #    kubectl get clusterrolebindings | grep metallb | awk '{print $1}'
@@ -163,11 +146,6 @@
 #- debug: msg={{ delete_metallb_clusterrolebindings }}
 
 
-# kubectl delete deployment metallb-controller --namespace metallb-system
-# kubectl delete service metallb-webhook-service -n metallb-system
-# kubectl delete daemonset.apps metallb-speaker -n metallb-system
-
-
 #- name: Get the list of Metallb Kubernetes ValidatingWebHookConfiguration
 #  shell: |
 #    kubectl get validatingwebhookconfiguration | sed 1d | awk '{print $1}'
@@ -183,13 +161,3 @@
 #  ignore_errors: yes
 #  with_items: "{{ get_metallb_validate_webhook_config.stdout_lines }}"
 #- debug: msg={{ delete_metallb_validate_webhook_config }}
-
-
-#- name: Uninstall Remaining Metallb
-#  shell: |
-#    kubectl delete deployment metallb-controller --namespace metallb-system
-#    kubectl delete service metallb-webhook-service -n metallb-system
-#    kubectl delete daemonset.apps metallb-speaker -n metallb-system
-#  register: uninstall_metallb_native_config
-#  ignore_errors: yes
-#- debug: msg={{ uninstall_metallb_native_config }}
