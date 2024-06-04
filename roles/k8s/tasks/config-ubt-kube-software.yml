@@ -1,7 +1,7 @@
 ---
 - name: Add Line into /etc/locale.conf for LC_TYPE to Prevent Error
   lineinfile:
-    path: /etc/locale.conf
+    path: /etc/default/locale
     line: "LC_CTYPE=en_US.UTF-8"
   register: lctype_line_added
 
@@ -31,8 +31,8 @@
 
 - name: Initialize Containerd
   shell: |
+    mkdir /etc/containerd
     containerd config default > /etc/containerd/config.toml
-  # command: containerd config default | tee /etc/containerd/config.toml
 
 
 - name: Edit Containerd Configuration
@@ -43,7 +43,7 @@
     state: "{{ item.state }}"
   with_items:
     - { regexp: '            SystemdCgroup = false', line: '            SystemdCgroup = true', state: present, backrefs: no }
-    # firstmatch: yes
+  # firstmatch: yes
 
 
 - name: Start Container Runtime to Apply Changes in config.toml
@@ -58,16 +58,14 @@
   delay: 10
 
 
-# Working with Docker
 - name: Creates Docker Directory Under /etc
   file:
     path: /etc/docker
     state: directory
 
 
-# Working with Docker
 - name: Configure the Docker Daemon to Use Systemd for the Management of the Cotainer's CGroups
-  template: src=daemon.json.j2 dest=/etc/docker/daemon.json owner=root group=root mode=644 force=yes
+  template: src=daemon.ubt.json.j2 dest=/etc/docker/daemon.json owner=root group=root mode=644 force=yes
   register: cgroup_docker_configured
 
 
@@ -83,39 +81,39 @@
   delay: 10
 
 
-#- name: Configure the Kubelet Daemon to Use Systemd for the Management of the Cotainer's CGroups
-#  template: src=kubelet.j2 dest=/etc/sysconfig/kubelet owner=root group=root mode=644 force=yes
-#  register: kubernetes_repo_added
+- name: Configure the Kubelet Daemon to Use Systemd for the Management of the Cotainer's CGroups
+  template: src=kubelet.ubt.j2 dest=/etc/default/kubelet owner=root group=root mode=644 force=yes
+  register: config_kubelet
 
 
-#- name: Enable and Start Kubelet
-#  systemd:
-#    name: kubelet
-#    state: started
-#    enabled: yes
-#    daemon_reload: yes
-#  register: kubelet_started
-#  until: kubelet_started is succeeded
-#  retries: 20
-#  delay: 10
-
-
-- name: Copy CGroup Config File
-  template: src=cgconfig.conf.j2 dest=/etc/cgconfig.conf owner=root group=root mode=644 force=yes
-  register: cgroup_config_file_copied
-
-
-- name: Enable CGroup
+- name: Enable and Start Kubelet
   systemd:
-    name: cgconfig
+    name: kubelet
     state: started
     enabled: yes
     daemon_reload: yes
+  register: kubelet_started
+  until: kubelet_started is succeeded
+  retries: 20
+  delay: 10
+
+
+#- name: Copy CGroup Config File
+#  template: src=cgconfig.conf.j2 dest=/etc/cgconfig.conf owner=root group=root mode=644 force=yes
+#  register: cgroup_config_file_copied
+
+
+#- name: Enable CGroup
+#  systemd:
+#    name: cgconfig
+#    state: started
+#    enabled: yes
+#    daemon_reload: yes
 
 
 - name: Lock Versions to Avoid Unwanted Updated Zypper Updates
-  command: zypper addlock kubelet kubeadm kubectl
-  register: suse_virsions_lock
+  command: apt-mark hold kubeadm kubelet kubectl
+  register: ubt_virsions_lock
 
 
 - name: Create Cluster Configuration in Master Node
@@ -157,12 +155,30 @@
   shell: |
     swapoff -a
     sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
-  #  sed -i '/swap/s/^/#/g' /etc/fstab
 
 
 #- name: Move temoporary Kubelet systemd file in recursive directory of /usr/lib/systemd/system/kubelet.service.d to /tmp directory
 #  shell: mv -f /usr/lib/systemd/system/kubelet.service.d/10-kubeadm.conf /tmp/
 #  register: kubeadm_conf_moved
+
+
+- name: Add Line
+  lineinfile:
+    dest: /usr/lib/systemd/system/kubelet.service.d/10-kubeadm.conf
+    line: "Environment=\"KUBELET_EXTRA_ARGS=--fail-swap-on=false\""
+    state: present
+
+
+- name: Enable and Start Kubelet
+  systemd:
+    name: kubelet
+    state: started
+    enabled: yes
+    daemon_reload: yes
+  register: kubelet_started
+  until: kubelet_started is succeeded
+  retries: 20
+  delay: 10
 
 
 #- name: Change Kubelet Systemd File
@@ -180,16 +196,4 @@
   until: cr_started is succeeded
   retries: 20
   delay: 10
-
-
-#- name: Enable and Start Kubelet
-#  systemd:
-#    name: kubelet
-#    state: started
-#    enabled: yes
-#    daemon_reload: yes
-#  register: kubelet_restarted
-#  until: kubelet_restarted is succeeded
-#  retries: 20
-#  delay: 10
 

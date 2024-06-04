@@ -24,12 +24,14 @@ suse_extra_pkgs: "selinux-policy-targeted,selinux-policy-devel,libseccomp-devel,
 # libcgroup,libcgroup-tools
 
 # libnl,elfutils-libelf-devel,kernel-devel
-ubt_common_pkgs: "sshpass,s3cmd,cifs-utils,nfs-client,libnl-*,elfutils*,lsof,rpcbind,glibc-*,xfsprogs,linux-headers-generic,jq,expect"
+ubt_common_pkgs: "sshpass,s3cmd,cifs-utils,nfs-client,libnl-*,elfutils*,lsof,rpcbind,glibc-*,xfsprogs,linux-headers-generic,jq,expect,nvme-cli,selinux-utils"
 ubt_common_devel_pkgs: "git,make,gcc,tcl,tk"
 
 ubt20_common_devel_pkgs: "perl"
 ubt22_common_devel_pkgs: "perl"
 ubt23_common_devel_pkgs: "perl"
+
+ubt_docker_pkgs: "docker.io,containerd"
 
 official_rh_pkgs: "pdsh"
 official_ubt_pkgs: "pdsh"

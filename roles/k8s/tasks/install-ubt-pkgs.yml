@@ -1,0 +1,80 @@
+---
+- name: Copy Change APT Repostory Script to Kakao Mirror
+  template:
+    src: change-ubuntu-mirror.sh.j2
+    dest: "/root/change-ubuntu-mirror.sh"
+    owner: root
+    group: root
+    mode: '0755'
+  register: copy_change_apt_repo_script
+- debug: msg={{ copy_change_apt_repo_script }}
+
+
+- name: Change APT Repostory to Kakao Mirror
+  shell: |
+    /root/change-ubuntu-mirror.sh -k
+  register: change_apt_repo
+- debug: msg={{ change_apt_repo }}
+
+
+- name: Install RPM Packages of Dependenies to Need Installing Packages Regarding Kubernates
+  package:
+    name: "{{ item }}"
+    state: present
+  ignore_errors: yes
+  with_items: "{{ install_pkgs }}"
+
+
+- name: Download Kubernetes Repository
+  shell: |
+    rm -f /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+    curl -fsSL https://pkgs.k8s.io/core:/stable:/v{{ k8s.major_version }}.{{ k8s.minor_version }}/deb/Release.key \
+    | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+  register: download_k8s_repo
+  ignore_errors: true
+
+
+- name: Add Kubernetes Repositories
+  shell: |
+    rm -f tee /etc/apt/sources.list.d/kubernetes.list
+    echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v{{ k8s.major_version }}.{{ k8s.minor_version }}/deb/ /' \
+    | sudo tee /etc/apt/sources.list.d/kubernetes.list
+  register: extra_repo_added
+  ignore_errors: true
+
+
+- name: Update APT Repository
+  shell: |
+    apt update
+  register: apt_repo_updated
+  ignore_errors: true
+
+
+- name: Install Kubeadm Packages
+  package:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - "kubeadm"
+    - "kubelet"
+    - "kubectl"
+
+
+- name: Mark the Packages as Held Back to Prevent Automatic Installation or Upgrade or Removal
+  shell: |
+    apt-mark hold kubeadm kubelet kubectl
+  register: apt_hold_version
+
+
+
+- name: Install Container Engine Packages
+  package:
+    name: "{{ item }}"
+    state: present
+  with_items: "{{ ubt_docker_pkgs }}"
+
+
+- name: Start the kubelet service
+  shell: |
+    systemctl enable --now kubelet
+  register: kubelet_enabled

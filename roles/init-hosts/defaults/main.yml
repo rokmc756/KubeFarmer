@@ -12,7 +12,7 @@ suse15_common_devel_pkgs: "make,perl,gcc,tcl,tk,helm"
 # libnl, glibc-headers, elfutils-libelf-devel - No provider
 
 # libnl,elfutils-libelf-devel,kernel-devel
-ubt_common_pkgs: "sshpass,s3cmd,cifs-utils,nfs-client,libnl-*,elfutils*,lsof,rpcbind,glibc-*,xfsprogs,linux-headers-generic,jq,expect,ipvsadm,lvm2"
+ubt_common_pkgs: "firewalld,sshpass,s3cmd,cifs-utils,nfs-client,libnl-*,elfutils*,lsof,rpcbind,glibc-*,xfsprogs,linux-headers-generic,jq,expect,ipvsadm,lvm2"
 ubt_common_devel_pkgs: "git,make,gcc,tcl,tk"
 
 ubt20_common_devel_pkgs: "perl"

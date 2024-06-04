@@ -25,6 +25,17 @@
 - debug: msg={{ cleanup_rancher }}
 
 
+- name: Check if Cleanup Container is still Creating
+  shell: |
+    kubectl get all -n kube-system | grep "pod/cleanup-job"
+  register: check_cleanup_container
+  ignore_errors: true
+  until: check_cleanup_container.stdout.find("ContainerCreating") == -1
+  retries: 100
+  delay: 10
+- debug: msg={{ check_cleanup_container }}
+
+
 #- name: Watch Cleanup Logs
 #  shell: |
 #    kubectl -n kube-system logs -l job-name=cleanup-job -f

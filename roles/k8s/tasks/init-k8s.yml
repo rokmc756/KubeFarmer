@@ -168,6 +168,16 @@
   when: print_debug == true and inventory_hostname in groups['master']
 
 
+- name: Disable and Stop Docker
+  systemd:
+    name: docker
+    state: stopped
+    enabled: no
+  register: docker_stopped
+  ignore_errors: true
+  until: docker_stopped is succeeded
+
+
 - name: Enable and Start Kubelet in Master Node
   systemd:
     name: kubelet
@@ -206,6 +216,26 @@
   when: inventory_hostname in groups['master']
 - debug: msg={{ check_calico_node_status }}
   when: print_debug == true and inventory_hostname in groups['master']
+
+
+- name: Enable and Restart Docker
+  systemd:
+    name: docker
+    state: restarted
+    enabled: yes
+  register: docker_restarted
+  ignore_errors: true
+  until: docker_restarted is succeeded
+
+
+- name: Enable and Restart Containerd
+  systemd:
+    name: containerd
+    state: restarted
+    enabled: yes
+  register: containerd_restarted
+  ignore_errors: true
+  until: containerd_restarted is succeeded
 
 
 # erinformations/default": x509: certificate signed by unknown authority 

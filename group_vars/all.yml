@@ -15,9 +15,9 @@ k8s:
   net:
     type: "virtual"                # or physical
     gateway: "192.168.0.1"
-    ipaddr0: "192.168.0.17"
-    ipaddr1: "192.168.1.17"
-    ipaddr2: "192.168.2.17"
+    ipaddr0: "192.168.0.6"
+    ipaddr1: "192.168.1.6"
+    ipaddr2: "192.168.2.6"
   client:
     net:
       type: "virtual"               # or physical
@@ -38,3 +38,4 @@ k8s:
     pod_network: "10.142.0.0/16"
     # pod_network: "192.168.0.0/16"
     # pod_network: "192.167.0.0/16"
+

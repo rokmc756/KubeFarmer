@@ -9,6 +9,7 @@
   shell: |
     setenforce 0
     sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config
+  when: ansible_distribution == "RedHat" or ansible_distribution == "CentOS" or ansible_distribution == "Rocky"
 
 
 - name: Restart Containerd to Apply Changes in config.toml
@@ -226,6 +227,26 @@
   register: firewalld_started
 - debug: msg={{ firewalld_started }}
   when: print_debug == true
+
+
+- name: Enable and Restart Docker
+  systemd:
+    name: docker
+    state: restarted
+    enabled: yes
+  register: docker_restarted
+  ignore_errors: true
+  until: docker_restarted is succeeded
+
+
+- name: Enable and Restart Containerd
+  systemd:
+    name: containerd
+    state: restarted
+    enabled: yes
+  register: containerd_restarted
+  ignore_errors: true
+  until: containerd_restarted is succeeded
 
 
 # Calico CNI

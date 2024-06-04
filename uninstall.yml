@@ -17,8 +17,8 @@
     reboot_required: false
   roles:
     - rancher
-#    - rook-ceph
 #    - k8s
+#    - rook-ceph
 #    - init-hosts
 #    - nginx
 #    - dashboard

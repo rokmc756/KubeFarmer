@@ -14,6 +14,13 @@
     - uninstall
     - reinit
 
+
+- name: Install Prerequistes Packages for Ubuntu
+  import_tasks: install-ubt-pkgs.yml
+  tags: install
+  when: install_pkgs and ( ansible_distribution == "Ubuntu" or ansible_distribution == "Debian" )
+
+
 - name: Install Prerequistes Packages for OpenSUSE
   import_tasks: install-suse-pkgs.yml
   tags: install
@@ -41,17 +48,22 @@
   when: disable_firewall
 
 
-- name: Launch Kubernetes Software
+- name: Launch Kubernetes Software for SuSE
   import_tasks: config-suse-kube-software.yml
   tags: install
   when: config_kube_software and ansible_distribution == "openSUSE Leap"
 
 
-- name: Launch Kubernetes Software
+- name: Launch Kubernetes Software for Red Hat
   import_tasks: config-rh-kube-software.yml
   tags: install
   when: config_kube_software and ( ansible_distribution == "RedHat" or ansible_distribution == "CentOS" or ansible_distribution == "Rocky" )
 
+
+- name: Launch Kubernetes Software for Ubuntu
+  import_tasks: config-ubt-kube-software.yml
+  tags: install
+  when: config_kube_software and ( ansible_distribution == "Ubuntu" or ansible_distribution == "Debian" )
 
 
 - name: Initialize Kubernetes Cluster
