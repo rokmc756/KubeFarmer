@@ -1,4 +1,4 @@
-- name: Force Delete Namespaces for Metallb and Cert Manager
+- name: Force Remaining Delete Namespaces
   shell: |
     kubectl get namespace "{{ item }}" -o json   | tr -d "\n" | sed "s/\"finalizers\": \[[^]]\+\]/\"finalizers\": []/" | \
     kubectl replace --raw /api/v1/namespaces/{{ item }}/finalize -f -
@@ -54,3 +54,4 @@
 #- kind: ServiceAccount
 #  name: cleanup-service-account
 #  namespace: kube-system
+

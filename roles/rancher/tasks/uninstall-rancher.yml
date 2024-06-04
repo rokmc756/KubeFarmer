@@ -13,7 +13,6 @@
   when: rancher_cleanup_dir_existed.stat.exists != True
 - debug: msg={{ clone_rancher_cleanup }}
   when: rancher_cleanup_dir_existed.stat.exists != True
-  # --branch v{{ nginx.k8s_ingress.major_version }}.{{ nginx.k8s_ingress.minor_version }}.{{ nginx.k8s_ingress.patch_version }}
 
 
 - name: Cleanup Rancher
@@ -64,14 +63,14 @@
 - debug: msg={{ check_cleanup_job_pod }}
 
 
-- name: Delete Cleanup Rancher Pod and Service Accounts / ClusterRoleBindings
-  shell: |
-    kubectl delete $(kubectl get all -n kube-system | grep job.batch/cleanup-job | awk '{print $1}') -n kube-system
-  register: delete_cleanup_rancher_pod
-  ignore_errors: yes
-  args:
-    chdir: "{{ base_path }}/rancher-cleanup/deploy/"
-- debug: msg={{ delete_cleanup_rancher_pod }}
+#- name: Delete Cleanup Rancher Pod and Service Accounts / ClusterRoleBindings
+#  shell: |
+#    kubectl delete $(kubectl get all -n kube-system | grep job.batch/cleanup-job | awk '{print $1}') -n kube-system
+#  register: delete_cleanup_rancher_pod
+#  ignore_errors: yes
+#  args:
+#    chdir: "{{ base_path }}/rancher-cleanup/deploy/"
+#- debug: msg={{ delete_cleanup_rancher_pod }}
 
 
 #- name: Copy Rancher Cleanup Config Yaml
@@ -80,16 +79,6 @@
 #    dest: "{{ base_path }}/rancher-cleanup.yaml"
 #  register: copy_rancher_cleanup_yaml
 #- debug: msg={{ copy_rancher_cleanup_yaml }}
-
-
-#- name: Delete Cleanup Rancher
-#  shell: |
-#    kubectl delete -f rancher-cleanup.yaml
-#  register: delete_cleanup_rancher
-#  ignore_errors: yes
-#  args:
-#    chdir: "{{ base_path }}/"
-#- debug: msg={{ delete_cleanup_rancher }}
 
 
 #- name: Verify Cleanup Rancher
@@ -119,14 +108,24 @@
 - debug: msg={{ delete_service_accounts_ns }}
 
 
-- name: Remove Rancher Cleanup Directory
-  file:
-    path: "{{ item }}"
-    state: absent
-  register: remove_rancher_cleanup_dir
-  with_items:
-    - "{{ base_path }}/rancher-cleanup"
-- debug: msg={{ remove_rancher_cleanup_dir }}
+- name: Delete Cleanup Rancher
+  shell: |
+    kubectl delete -f rancher-cleanup.yaml &
+  register: delete_cleanup_rancher
+  ignore_errors: yes
+  args:
+    chdir: "{{ base_path }}/rancher-cleanup/deploy/"
+- debug: msg={{ delete_cleanup_rancher }}
+
+
+#- name: Remove Rancher Cleanup Directory
+#  file:
+#    path: "{{ item }}"
+#    state: absent
+#  register: remove_rancher_cleanup_dir
+#  with_items:
+#    - "{{ base_path }}/rancher-cleanup"
+#- debug: msg={{ remove_rancher_cleanup_dir }}
 
 
 # [ Check Rancher and NGINX Ingress ]
