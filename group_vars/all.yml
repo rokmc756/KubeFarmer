@@ -4,7 +4,7 @@ ansible_become_pass: "changeme"
 k8s:
   cluster_name: jack-suse-k8s
   major_version: "1"
-  minor_version: "28"
+  minor_version: "28"               # Rancher does not support higher than kubernetes 1.28.x versions currently
   patch_version: "0"
   build_version: ""
   repo_url: ""
@@ -13,14 +13,14 @@ k8s:
   base_path: /root
   host_num: "{{ groups['workers'] | length }}"
   net:
-    type: "virtual"                # or physical
+    type: "virtual"                # Or Physical
     gateway: "192.168.0.1"
-    ipaddr0: "192.168.0.6"
-    ipaddr1: "192.168.1.6"
-    ipaddr2: "192.168.2.6"
+    ipaddr0: "192.168.0.7"
+    ipaddr1: "192.168.1.7"
+    ipaddr2: "192.168.2.7"
   client:
     net:
-      type: "virtual"               # or physical
+      type: "virtual"              # Or Physical
       cores: 1
       ipaddr0: "192.168.0.6"
       ipaddr1: "192.168.1.6"
@@ -38,4 +38,3 @@ k8s:
     pod_network: "10.142.0.0/16"
     # pod_network: "192.168.0.0/16"
     # pod_network: "192.167.0.0/16"
-

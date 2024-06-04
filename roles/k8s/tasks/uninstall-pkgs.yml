@@ -1,36 +1,34 @@
 ---
 - name: Reset Kubernetes
   command: kubeadm reset -f
+  register: reset_kube
   ignore_errors: yes
   when: inventory_hostname in groups['master']
+- debug: msg={{ reset_kube }}
+  when: print_debug == true and inventory_hostname in groups['master']
 
 
-- name: Unlock those versions to prevent them from being automatically updated for openSUSE Leap
+- name: Unlock Those Versions to Prevent Them from Being Automatically Updated
   shell: |
-    zypper removelock kubelet kubeadm kubectl
-  register: kube_command_lock_removed
-  when: ansible_distribution == "openSUSE Leap"
+    {{ unlock_kube_cmds }}
+  register: unlock_kube_cmds
+  ignore_errors: yes
+- debug: msg={{ unlock_kube_cmds }}
+  when: print_debug == true
 
 
-# Common
-- name: Uninstall Kubeadm Packages for RedHat/CentOS/Rocky
+- name: Uninstall Kubeadm Packages
   package:
     name: "{{ item }}"
     state: absent
+  register: uninstall_kube_pkgs
+  ignore_errors: yes
   with_items:
     - "kubectl"
     - "kubelet"
     - "kubeadm"
-  # when: ansible_distribution == "RedHat" or ansible_distribution == "CentOS" or ansible_distribution == "Rocky"
-
-
-# SuSE
-- name: Uninstall Docker Packages for OpenSUSE
-  package:
-    name: "{{ item }}"
-    state: absent
-  with_items: "{{ suse_ce_pkgs }}"
-  when: ansible_distribution == "openSUSE Leap"
+- debug: msg={{ uninstall_kube_pkgs }}
+  when: print_debug == true
 
 
 #- name: Uninstall RPM Packages of Dependenies to Need Installing Packages Regarding Kubernates
@@ -39,38 +37,21 @@
 #    state: absent
 #  ignore_errors: yes
 #  with_items: "{{ install_pkgs }}"
+
 #- name: Remove Kubernetes Repository
 #  shell: |
 #    zypper ar -f https://pkgs.k8s.io/core:/stable:/v{{ k8s.major_version }}.{{ k8s.minor_version }}/rpm/ kubernetes
 #    rpm --import https://pkgs.k8s.io/core:/stable:/v{{ k8s.major_version }}.{{ k8s.minor_version }}/rpm/repodata/repomd.xml.key
-#  register: k8s_repo_added
 
 
-# Uninstall Containerd.io Package to Manages the Complete Container Lifecycle from Image Transfer
-# and Storage to Container Execution and Supervision to Low-Level Storage
-# RHEL
-- name: Uninstall Docker Packages for RedHat/CentOS/Rocky
+- name: Uninstall Docker Packages
   package:
     name: "{{ item }}"
     state: absent
-  with_items: "{{ rh_docker_pkgs }}"
-  when: ansible_distribution == "RedHat" or ansible_distribution == "CentOS" or ansible_distribution == "Rocky"
-
-
-- name: Remove SELinux Legacy Repository
-  shell: |
-    rm -f /etc/zypp/repos.d/SELinux-Legacy.repo
-  register: selinux_repo_removed
-- debug: msg={{ selinux_repo_removed }}
+  register: uninstall_docker_pkgs
+  ignore_errors: yes
+  with_items:
+    - "{{ docker_pkgs }}"
+- debug: msg={{ uninstall_docker_pkgs }}
   when: print_debug == true
-
-
-- name: Copy Expect Script to Refresh Metadata from Zypper Repository
-  template: src=zypper-refresh.sh.j2 dest=/root/zypper-refresh.sh  mode=0755 owner=root group=root
-  register: expect_file_copied
-
-
-#- name: Refresh Metadata from Zypper Repository
-#  shell: /root/zypper-refresh.sh
-#  register: repo_metadata_refreshed
 

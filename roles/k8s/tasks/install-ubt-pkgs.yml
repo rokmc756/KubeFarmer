@@ -21,60 +21,70 @@
   package:
     name: "{{ item }}"
     state: present
-  ignore_errors: yes
+  register: install_ubt_dep_pkgs
   with_items: "{{ install_pkgs }}"
+- debug: msg={{ install_ubt_dep_pkgs }}
 
 
-- name: Download Kubernetes Repository
+- name: Download Kubernetes APT Repository
   shell: |
-    rm -f /etc/apt/keyrings/kubernetes-apt-keyring.gpg
     curl -fsSL https://pkgs.k8s.io/core:/stable:/v{{ k8s.major_version }}.{{ k8s.minor_version }}/deb/Release.key \
     | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
   register: download_k8s_repo
   ignore_errors: true
+- debug: msg={{ download_k8s_repo }}
 
 
 - name: Add Kubernetes Repositories
   shell: |
-    rm -f tee /etc/apt/sources.list.d/kubernetes.list
     echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v{{ k8s.major_version }}.{{ k8s.minor_version }}/deb/ /' \
     | sudo tee /etc/apt/sources.list.d/kubernetes.list
-  register: extra_repo_added
+  register: add_extra_repo
   ignore_errors: true
+- debug: msg={{ add_extra_repo }}
 
 
 - name: Update APT Repository
   shell: |
     apt update
-  register: apt_repo_updated
+  register: update_apt_repo
   ignore_errors: true
+- debug: msg={{ update_apt_repo }}
 
 
 - name: Install Kubeadm Packages
   package:
     name: "{{ item }}"
     state: present
+  register: install_kube_pkgs
+  ignore_errors: true
   with_items:
     - "kubeadm"
     - "kubelet"
     - "kubectl"
+- debug: msg={{ install_kube_pkgs }}
 
 
 - name: Mark the Packages as Held Back to Prevent Automatic Installation or Upgrade or Removal
   shell: |
     apt-mark hold kubeadm kubelet kubectl
   register: apt_hold_version
-
+- debug: msg={{ apt_hold_version }}
 
 
 - name: Install Container Engine Packages
   package:
     name: "{{ item }}"
     state: present
+  register: install_container_engine
   with_items: "{{ ubt_docker_pkgs }}"
+- debug: msg={{ install_container_engine }}
 
 
 - name: Start the kubelet service
   shell: |
     systemctl enable --now kubelet
-  register: kubelet_enabled
+  register: enable_kubelet
+- debug: msg={{ enable_kubelet }}
+
+

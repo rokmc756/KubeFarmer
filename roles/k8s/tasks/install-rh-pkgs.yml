@@ -1,6 +1,6 @@
 ---
 # Install Kubernetes Software
-#
+
 - name: Install RPM Packages of Dependenies to Need Installing Packages Regarding Kubernates
   package:
     name: "{{ install_pkgs }}"

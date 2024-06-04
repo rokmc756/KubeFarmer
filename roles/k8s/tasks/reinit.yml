@@ -20,7 +20,6 @@
   until: containerd_restarted is succeeded
   retries: 20
   delay: 10
-  # when: ansible_distribution == "openSUSE Leap"
 
 
 - name: Reset Kubernetes
@@ -31,17 +30,6 @@
 - name: Reset Kubernetes for Workers
   command: kubeadm reset -f
   when: inventory_hostname in groups['workers']
-
-
-#- name: Restart Containerd to Apply Changes in config.toml
-#  systemd:
-#    name: containerd
-#    state: restarted
-#  register: containerd_restarted
-#  until: containerd_restarted is succeeded
-#  retries: 20
-#  delay: 10
-#  # when: ansible_distribution == "openSUSE Leap"
 
 
 - name: Config image pull
@@ -107,9 +95,9 @@
   when: inventory_hostname in groups['master']
 - debug: msg={{ kubectl_configured }}
   when: print_debug == true and inventory_hostname in groups['master']
-  # for higher versions than 1.26
+  # For higher versions than 1.26
   # kubectl taint nodes  {{ hostvars[groups['master'][0]].ansible_hostname }} node-role.kubernetes.io/control-plane:NoSchedule-
-  # for earlier versions than 1.21
+  # For earlier versions than 1.21
   # kubectl taint nodes --all node-role.kubernetes.io/master-
 
 
@@ -216,6 +204,19 @@
   retries: 60
   when: inventory_hostname in groups['master']
 - debug: msg={{ all_containers_running_checked }}
+  when: print_debug == true and inventory_hostname in groups['master']
+
+
+- name: Validate if All Calico Nodes are Running
+  shell: |
+    kubectl get all -n kube-system | grep "pod/calico-node" |  grep -v Running | awk '{print $3}'
+  register: check_all_calico_nodes
+  ignore_errors: true
+  until: check_all_calico_nodes.stdout.find("") != -1
+  retries: 100
+  delay: 10
+  when: inventory_hostname in groups['master']
+- debug: msg={{ check_all_calico_nodes }}
   when: print_debug == true and inventory_hostname in groups['master']
 
 

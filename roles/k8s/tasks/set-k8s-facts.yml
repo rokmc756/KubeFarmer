@@ -63,3 +63,28 @@
     install_pkgs: "{{ suse_install_pkgs }}"
   when: ansible_distribution == "openSUSE Leap"
 
+
+# Define Variables for Docker Packages of each Linux Distributions
+#
+- set_fact:
+    update_repo_cache: "dnf makecache"
+    docker_pkgs: "{{ rh_docker_pkgs }}"
+    lock_kube_cmds: "yum versionlock kubelet kubeadm kubectl"
+    unlock_kube_cmds: "yum versionlock clear kubelet kubeadm kubectl"
+  when: ( ansible_distribution == "RedHat" or ansible_distribution == "CentOS" or ansible_distribution == "Rocky" )
+
+- set_fact:
+    update_repo_cache: "apt update"
+    docker_pkgs: "{{ ubt_docker_pkgs }}"
+    lock_kube_cmds: "apt-mark hold kubelet kubeadm kubectl"
+    unlock_kube_cmds: "apt-mark unhold kubelet kubeadm kubectl"
+  when: ( ansible_distribution == "Ubuntu" or ansible_distribution == "Debian" )
+
+- set_fact:
+    update_repo_cache: "zypper refresh -B"
+    docker_pkgs: "{{ suse_docker_pkgs }}"
+    lock_kube_cmds: "zypper addlock kubelet kubeadm kubectl"
+    unlock_kube_cmds: "zypper removelock kubelet kubeadm kubectl"
+  when: ansible_distribution == "openSUSE Leap"
+
+

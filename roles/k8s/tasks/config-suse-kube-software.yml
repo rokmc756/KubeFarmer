@@ -32,7 +32,6 @@
 - name: Initialize Containerd
   shell: |
     containerd config default > /etc/containerd/config.toml
-  # command: containerd config default | tee /etc/containerd/config.toml
 
 
 - name: Edit Containerd Configuration
@@ -43,7 +42,6 @@
     state: "{{ item.state }}"
   with_items:
     - { regexp: '            SystemdCgroup = false', line: '            SystemdCgroup = true', state: present, backrefs: no }
-    # firstmatch: yes
 
 
 - name: Start Container Runtime to Apply Changes in config.toml
@@ -157,7 +155,6 @@
   shell: |
     swapoff -a
     sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
-  #  sed -i '/swap/s/^/#/g' /etc/fstab
 
 
 #- name: Move temoporary Kubelet systemd file in recursive directory of /usr/lib/systemd/system/kubelet.service.d to /tmp directory

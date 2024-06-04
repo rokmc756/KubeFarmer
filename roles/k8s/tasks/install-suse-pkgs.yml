@@ -16,48 +16,22 @@
 # zypper --releasever=15.5 lr -duE
 
 
-#- name: Install Kubeadm Packages for All Nodes
-#  package:
-#    name: "{{ item }}"
-#    state: present
-#    extra_args:
-#  with_items:
-#    - "kubeadm"
-#    - "kubelet"
-#    - "kubectl"
-#    {{ k8s.major_version }}.{{ k8s.minor_version }}.{{ k8s.patch_version }}"
-
-
 # https://stackoverflow.com/questions/62795930/how-to-install-kubernetes-in-suse-linux-enterprize-server-15-virtual-machines
 # zypper -n install --force kubelet
 # https://download.opensuse.org/repositories/Virtualization:/containers/15.6/
 # zypper addrepo https://download.opensuse.org/repositories/Virtualization:/containers/15.6/Virtualization:containers.repo virt
-
-
 - name: Add Extra Zypper Repositories
   shell: |
     zypper ar -f  {{ item.repo_url }} {{ item.repo_name }}
   register: extra_repo_added
+  ignore_errors: yes
   with_items:
     - { repo_url: "https://download.opensuse.org/repositories/security:/SELinux_legacy/15.5", repo_name: "SELinux-Legacy" }
     - { repo_url: "https://download.opensuse.org/distribution/leap/15.5/repo/oss", repo_name: "public" }
     - { repo_url: "https://download.opensuse.org/repositories/Virtualization:containers/15.5", repo_name: "virt" }
     - { repo_url: "https://download.opensuse.org/repositories/security:/netfilter/openSUSE_Leap_15.5", repo_name: "conntrack" }
-  # zypper addrepo http://download.opensuse.org/distribution/leap/15.5/repo/oss public
-
-
-#- name: Install an SELinux Policy
-#  shell: |
-#    zypper ar -f  https://download.opensuse.org/repositories/security:/SELinux_legacy/15.5 SELinux-Legacy
-#  register: selinux_policy_installed
-
-
-#- name: Add OSS and Virtualization Repository
-#  shell: |
-#    zypper addrepo http://download.opensuse.org/distribution/leap/15.5/repo/oss public
-#    zypper addrepo https://download.opensuse.org/repositories/Virtualization:containers/15.5 virt
-#    zypper addrepo https://download.opensuse.org/repositories/security:/netfilter/openSUSE_Leap_15.5 conntrack
-#  register: oss_virt_repo_added
+# zypper addrepo http://download.opensuse.org/distribution/leap/15.5/repo/oss public
+# zypper ar -f  https://download.opensuse.org/repositories/security:/SELinux_legacy/15.5 SELinux-Legacy
 
 
 - name: Copy Expect Script to Refresh Metadata from Zypper Repository
@@ -67,8 +41,9 @@
 
 - name: Refresh Metadata from Zypper Repository
   shell: |
-    zypper refresh
+    zypper refresh -B
   register: repo_metadata_refreshed
+  ignore_errors: true
   # shell: /root/zypper-refresh.sh
 
 
@@ -77,7 +52,7 @@
   package:
     name: "{{ item }}"
     state: present
-  with_items: "{{ suse_ce_pkgs }}"
+  with_items: "{{ suse_docker_pkgs }}"
 
 
 - name: Copy Expect Script to Install Kube Packages
@@ -118,5 +93,4 @@
   shell: |
     systemctl enable --now kubelet
   register: kubelet_enabled
-
 

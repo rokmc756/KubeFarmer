@@ -24,8 +24,6 @@
   when: inventory_hostname in groups['master']
 - debug: msg={{ calica_cidr_modified }}
   when: print_debug == true and inventory_hostname in groups['master']
-#  #  - { regexp: "^            #   value: \"192.168.0.0/16\"", line: "              value: \"10.142.0.0/16\"", state: present, backrefs: yes }
-#  #  - { regexp: "^            #   value: \"192.168.0.0/16\"", line: "              value: \"192.168.0.0/24\"", state: present, backrefs: yes }
 
 
 - name: Setup Networking with Calico
@@ -47,5 +45,3 @@
   when: inventory_hostname in groups['master']
 - debug: msg={{ install_calicoctl }}
   when: print_debug == true and inventory_hostname in groups['master']
-
-

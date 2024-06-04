@@ -3,7 +3,7 @@
   shell: |
     curl -fsSL -o {{ base_path }}/get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
     chmod 700 {{ base_path }}/get_helm.sh
-    export PATH=$PATH:/usr/local/bin ; sh {{ base_path }}/get_helm.sh
+    export PATH=$PATH:/usr/local/bin ; {{ base_path }}/get_helm.sh
   register: install_helm
   args:
     chdir: /root

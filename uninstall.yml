@@ -14,11 +14,11 @@
     uninstall_pkgs: true
     uninstall_config: true
     enable_firewall: false
-    reboot_required: false
+    reboot_required: true
   roles:
-    - rancher
-#    - k8s
+    - k8s
 #    - rook-ceph
+#    - rancher
 #    - init-hosts
 #    - nginx
 #    - dashboard

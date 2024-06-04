@@ -7,10 +7,8 @@ ansible_python_interpreter=/usr/bin/python3
 [master]
 rk9-node01 ansible_ssh_host=192.168.1.71
 
-[slave]
-rk9-node02 ansible_ssh_host=192.168.1.72
-
 [workers]
 rk9-node03 ansible_ssh_host=192.168.1.73
 rk9-node04 ansible_ssh_host=192.168.1.74
 rk9-node05 ansible_ssh_host=192.168.1.75
+
