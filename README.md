@@ -296,7 +296,7 @@ $ make reinit
 * https://medium.com/@sumuduliyan/kubernetes-networking-with-calico-623f4583ae8d
 
 
-## TODO Planing
+## TODO
 * Fixing interaction with harbor
 * Deploy VMware-Postgres and MySQL
 
