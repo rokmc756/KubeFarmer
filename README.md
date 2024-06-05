@@ -31,7 +31,7 @@ $ zypper install ansible
 ```
 
 ## How to deploy and destroy Kubernetes Cluster
-#### 1) Configure Inventory with hostnames, ip addresses, sudo username and password for VMs
+#### 1) Configure Variablbes and Inventory with hostnames, ip addresses, sudo username and password
 ```
 $ vi ansible-hosts
 [all:vars]
@@ -48,6 +48,54 @@ rk9-node01 ansible_ssh_host=192.168.0.93
 rk9-node02 ansible_ssh_host=192.168.0.94
 rk9-node03 ansible_ssh_host=192.168.0.95
 ```
+
+```
+$ vi roles/init-hosts/vars/main.yml
+ansible_ssh_pass: "changeme"
+ansible_become_pass: "changeme"
+sudo_user: "kubeadm"
+sudo_group: "kubeadm"
+local_sudo_user: "jomoon"
+wheel_group: "wheel"            # RHEL / CentOS / Rocky / SUSE / OpenSUSE
+root_user_pass: "changeme"
+sudo_user_pass: "changeme"
+sudo_user_home_dir: "/home/{{ sudo_user }}"
+domain_name: "jtest.suse.com"
+~~ snip
+
+~~~
+$ vi group_vars/all.yml
+ansible_ssh_pass: "changeme"
+ansible_become_pass: "changeme"
+
+k8s:
+  cluster_name: jack-suse-k8s
+  major_version: "1"
+  minor_version: "28"               # Rancher does not support higher than kubernetes 1.28.x versions currently
+  patch_version: "0"
+  build_version: ""
+  repo_url: ""
+  download_url: ""
+  download: false
+  base_path: /root
+  host_num: "{{ groups['workers'] | length }}"
+  net:
+    type: "virtual"                # Or Physical
+    gateway: "192.168.0.1"
+    ipaddr0: "192.168.0.7"
+    ipaddr1: "192.168.1.7"
+    ipaddr2: "192.168.2.7"
+~~ snip
+  cni:
+    name: calico # kube-flannel
+    operator: ""
+    major_version: 3
+    minor_version: 27
+    patch_version: 3
+    pod_network: "10.142.0.0/16"
+~~ snip
+```
+
 
 #### 2) Initialize Linux Hosts to exchanges ssh keys for passwordless login and install neccessary packages as well as configure /etc/hosts file
 ```
@@ -100,13 +148,13 @@ $ vi uninstall.yml
 - hosts: all
   become: yes
   vars:
-    container_runtime: "containerd"   # crio or podman
+    container_runtime: "containerd"   # containerd
     print_debug: true
-    install_pkgs: true
-    disable_firewall: true
-    config_kube_software: true
-    init_k8s: true
     stop_services: true
+    uninstall_pkgs: true
+    uninstall_config: true
+    enable_firewall: false
+    reboot_required: true
   roles:
     - k8s
 
@@ -146,13 +194,13 @@ $ vi uninstall.yml
 - hosts: all
   become: yes
   vars:
-    container_runtime: "containerd"   # crio or podman
+    container_runtime: "containerd"   # containerd
     print_debug: true
-    install_pkgs: true
-    disable_firewall: true
-    config_kube_software: true
-    init_k8s: true
     stop_services: true
+    uninstall_pkgs: true
+    uninstall_config: true
+    enable_firewall: false
+    reboot_required: true
   roles:
     - rancher
 
@@ -192,13 +240,13 @@ $ vi uninstall.yml
 - hosts: all
   become: yes
   vars:
-    container_runtime: "containerd"   # crio or podman
+    container_runtime: "containerd"   # containerd
     print_debug: true
-    install_pkgs: true
-    disable_firewall: true
-    config_kube_software: true
-    init_k8s: true
     stop_services: true
+    uninstall_pkgs: true
+    uninstall_config: true
+    enable_firewall: false
+    reboot_required: true
   roles:
     - rook-ceph
 
