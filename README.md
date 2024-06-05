@@ -280,19 +280,13 @@ $ make reinit
 
 
 ## Reference
-* https://www.tecmint.com/install-a-kubernetes-cluster-on-centos-8/
-* https://kubernetes.io/docs/setup/production-environment/container-runtimes/#docker
-* https://medium.com/@heshani.samarasekara/installing-harbor-registry-in-centos-7-961773d155ec
 * https://k21academy.com/docker-kubernetes/multi-node-kubernetes-cluster-on-suse-linux/
-* https://documentation.suse.com/ko-kr/sles/15-SP2/html/SLES-all/cha-selinux.html
-* https://k21academy.com/docker-kubernetes/container-runtime-is-not-running/
 * https://tuanpembual.wordpress.com/2020/10/15/run-opensuse-kubic-like-k8s-podman-cri-o-on-alibaba-cloud/
 * https://github.com/rokmc756/kubefarmer/blob/main/roles/k8s/files/kubernetes-cluster-architecture.svg
 * https://medium.com/@muppedaanvesh/deploying-nginx-on-kubernetes-a-quick-guide-04d533414967
 * https://kubernetes.io/docs/tasks/run-application/run-stateless-application-deployment/
 * https://aws.plainenglish.io/how-to-deploy-a-nginx-server-with-kubernetes-9228f17e399c
 * https://medium.com/@sumuduliyan/kubernetes-networking-with-calico-623f4583ae8d
-* https://serverfault.com/questions/1059073/kubernetes-trouble-var-lib-calico-nodename-no-such-file-or-directory
 * https://stackoverflow.com/questions/62795930/how-to-install-kubernetes-in-suse-linux-enterprize-server-15-virtual-machines
 
 
