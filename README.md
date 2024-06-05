@@ -30,8 +30,9 @@ $ apt install ansible
 $ zypper install ansible
 ```
 
-## How to deploy and destroy Kubernetes Cluster
-#### 1) Configure Variablbes and Inventory with hostnames, ip addresses, sudo username and password
+## How to Deploy and Destroy Kubernetes Cluster
+#### 1) Configure Variables and Inventory with Hostnames, IP Addresses, sudo Username and Password
+##### Configure Inventory
 ```
 $ vi ansible-hosts
 [all:vars]
@@ -49,6 +50,7 @@ rk9-node02 ansible_ssh_host=192.168.0.94
 rk9-node03 ansible_ssh_host=192.168.0.95
 ```
 
+##### Configure Variables
 ```
 $ vi roles/init-hosts/vars/main.yml
 ansible_ssh_pass: "changeme"
@@ -64,6 +66,7 @@ domain_name: "jtest.suse.com"
 ~~ snip
 ```
 
+##### Configure Global Variables
 ```
 $ vi group_vars/all.yml
 ansible_ssh_pass: "changeme"
