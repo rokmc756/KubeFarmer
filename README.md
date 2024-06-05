@@ -261,7 +261,7 @@ $ make uninstall
 
 ### 9) Reinitialize Kubernetes Cluster
 The make reinit will reinitialize k8s cluster referring reinit.yml playbook if you are struggle the uncertain situation such as stuck or panic
-~~~
+```
 $ vi reinit.yml
 - hosts: all
   become: yes
@@ -299,7 +299,7 @@ $ make reinit
 ## TODO Planing
 * Fixing interaction with harbor
 * Deploy VMware-Postgres and MySQL
-* 
+
 
 ## Debugging
 * DNS - https://kubernetes.io/docs/tasks/administer-cluster/dns-debugging-resolution/

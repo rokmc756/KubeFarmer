@@ -16,11 +16,11 @@
     enable_firewall: false
     reboot_required: true
   roles:
-    - init-hosts
+    - nginx
+#    - init-hosts
 #    - k8s
 #    - rancher
 #    - rook-ceph
-#    - nginx
 #    - dashboard
 
 
