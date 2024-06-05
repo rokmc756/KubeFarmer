@@ -163,7 +163,6 @@ $ vi uninstall.yml
     - k8s
 
 $ make uninstall
-~~~
 ```
 [![YouTube](http://i.ytimg.com/vi/OW_NdpsjJSg/hqdefault.jpg)](https://www.youtube.com/watch?v=OW_NdpsjJSg)
 
