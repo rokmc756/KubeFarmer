@@ -1,7 +1,7 @@
 ## What is KubeFarmer
 The KubeFarmer is Ansible Playbook to deploy Native Kubernetes Cluster and deploy bunch of K8S Softwares and Applications on it such as Rancher, Rook Ceph, Postgres, Kubeflow, Kafka and so an.
 
-## Kubernetes Cluster Architecutre
+## Kubernetes Architecutre
 ![alt text](https://github.com/rokmc756/kubefarmer/blob/main/roles/k8s/files/kubernetes_architecture.webp)
 
 ## Supported Platform and OS
