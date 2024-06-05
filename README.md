@@ -1,17 +1,21 @@
 ## What is KubeFarmer
-KubeFamer is ansible playbook to deploy kubernetes cluster on Rocky Linux 9 in order to deploy bunch of k8s software and application on it such as postgres,kubeflow,kafka and so an.
+The KubeFarmer is ansible playbook to deploy Native Kubernetes Cluster in order to deploy bunch of k8s software and application on it such as rancher,rook ceph,postgres,kubeflow,kafka and so an.
 
 ## Kubernetes Cluster Architecutre
-![alt text](https://github.com/rokmc756/kubefarmer/blob/main/roles/k8s-cluster/files/kubernetes_architecture.webp)
+![alt text](https://github.com/rokmc756/kubefarmer/blob/main/roles/k8s/files/kubernetes_architecture.webp)
+
+kubernetes-cluster-architecture.svg
 
 ## Supported Platform and OS
 Virtual Machines\
 Baremetal\
-RHEL and CentOS 9\
+RHEL and CentOS 9 and Rocky Linux 9.x\
+OpenSUSE 15.x\
+Ubuntu 22.x
 
 ## Prerequisite for ansible host
-MacOS or Fedora/CentOS/RHEL should have installed ansible as ansible host.\
-Supported OS for ansible target host should be prepared with package repository configured such as yum, dnf and apt\
+MacOS or Windows Linux Subsysetm or Many kind of Linux Distributions should have ansible as ansible host.\
+Supported OS for ansible target host should be prepared with package repository configured such as yum, dnf and apt as well as zypper\
 
 ## Prepare ansible host to run gpfarmer
 * MacOS
