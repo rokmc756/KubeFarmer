@@ -3,7 +3,6 @@ The KubeFarmer is ansible playbook to deploy Native Kubernetes Cluster in order 
 
 ## Kubernetes Cluster Architecutre
 ![alt text](https://github.com/rokmc756/kubefarmer/blob/main/roles/k8s/files/kubernetes_architecture.webp)
-
 ![alt text](https://github.com/rokmc756/kubefarmer/blob/main/roles/k8s/files/kubernetes-cluster-architecture.svg)
 
 ## Supported Platform and OS
@@ -25,9 +24,11 @@ $ brew install ansible
 $ brew install https://raw.githubusercontent.com/kadwanev/bigboybrew/master/Library/Formula/sshpass.rb
 ```
 
-* Fedora/CentOS/RHEL
+* Fedora/CentOS/RHEL, Ubuntu, OpenSUSE
 ```
-$ sudo yum install ansible
+$ yum install ansible
+$ apt install ansible
+$ zypper install ansible
 ```
 
 ## How to deploy and destroy Kubernetes Cluster
@@ -43,70 +44,190 @@ ansible_python_interpreter=/usr/bin/python3
 [master]
 rk9-master ansible_ssh_host=192.168.0.91
 
-[slave]
-rk9-slave ansible_ssh_host=192.168.0.92
-
 [workers]
 rk9-node01 ansible_ssh_host=192.168.0.93
 rk9-node02 ansible_ssh_host=192.168.0.94
 rk9-node03 ansible_ssh_host=192.168.0.95
-
-[docker-repo]
-rk9-harbor ansible_ssh_host=192.168.0.99
-
-[minio]
-rk9-minio ansible_ssh_host=192.168.0.98
 ```
 
-#### 2) Configure KubeFarmer ansible playbook and deploy harbor, kubernetes cluster and dashboard
+#### 2) Initialize Linux Hosts to exchanges ssh keys for passwordless login and install neccessary packages as well as configure /etc/hosts file
 ```
-$ vi install-hosts.yml
+$ vi install.yml
 ---
-- hosts: rk9-slave
-  roles:
-    - harbor
-
 - hosts: all
   become: yes
   vars:
+    container_runtime: "containerd"   # crio or podman
     print_debug: true
-    install_dep_packages: false
-    install_k8s_packages: false
+    install_pkgs: true
+    disable_firewall: true
+    config_kube_software: true
+    init_k8s: true
+    stop_services: true
   roles:
-    - k8s-cluster
-    - dashboard
+    - init-hosts
 
 $ make install
 ```
+[![YouTube](http://i.ytimg.com/vi/mFp3oi2-sb0/hqdefault.jpg)](https://www.youtube.com/watch?v=mFp3oi2-sb0)
 
-#### 3) Reinitialize Kubernetes Cluster
-The make reinit will reinitialize k8s cluster referring install-hosts.yml playbook same as initial deployment
-```
-$ make reinit
-```
 
-#### 4) Configure KubeFarmer ansible playbook and destroy harbor, dashboard and kubenetes cluster
+#### 3) Deploy Kubernetes Cluster
 ```
-$ vi uninstall-hosts.yml
-- hosts: rk9-harbor
-  become: yes
-  roles:
-    - harbor
-
+$ vi install.yml
+---
 - hosts: all
   become: yes
   vars:
+    container_runtime: "containerd"   # crio or podman
     print_debug: true
-    uninstall_dep_packages: true
-    uninstall_k8s_packages: true
-    calico_network: false
-    k8s_network_address: "192.168.0.0/16"
+    install_pkgs: true
+    disable_firewall: true
+    config_kube_software: true
+    init_k8s: true
+    stop_services: true
   roles:
-    - dashboard
-    - k8s-cluster
+    - k8s
+
+$ make install
+```
+[![YouTube](http://i.ytimg.com/vi/ZAYEYPk-NEk/hqdefault.jpg)](https://www.youtube.com/watch?v=ZAYEYPk-NEk)
+
+
+#### 4) Destroy Kubernetes Cluster
+```
+$ vi uninstall.yml
+---
+- hosts: all
+  become: yes
+  vars:
+    container_runtime: "containerd"   # crio or podman
+    print_debug: true
+    install_pkgs: true
+    disable_firewall: true
+    config_kube_software: true
+    init_k8s: true
+    stop_services: true
+  roles:
+    - k8s
 
 $ make uninstall
+~~~
 ```
+[![YouTube](http://i.ytimg.com/vi/OW_NdpsjJSg/hqdefault.jpg)](https://www.youtube.com/watch?v=OW_NdpsjJSg)
+
+
+#### 5) Deploy Rancher
+```
+$ vi install.yml
+---
+- hosts: all
+  become: yes
+  vars:
+    container_runtime: "containerd"   # crio or podman
+    print_debug: true
+    install_pkgs: true
+    disable_firewall: true
+    config_kube_software: true
+    init_k8s: true
+    stop_services: true
+  roles:
+    - rancher
+
+$ make install
+~~~
+```
+[![YouTube](http://i.ytimg.com/vi/8a8S0V1Gs4E/hqdefault.jpg)](https://www.youtube.com/watch?v=8a8S0V1Gs4E)
+
+
+#### 6) Destroy Rancher
+```
+$ vi uninstall.yml
+---
+- hosts: all
+  become: yes
+  vars:
+    container_runtime: "containerd"   # crio or podman
+    print_debug: true
+    install_pkgs: true
+    disable_firewall: true
+    config_kube_software: true
+    init_k8s: true
+    stop_services: true
+  roles:
+    - rancher
+
+$ make uninstall
+~~~
+```
+[![YouTube](http://i.ytimg.com/vi/QTmhB9awxY8/hqdefault.jpg)](https://www.youtube.com/watch?v=QTmhB9awxY8)
+
+
+#### 7) Deploy Rook Ceph
+```
+$ vi install.yml
+---
+- hosts: all
+  become: yes
+  vars:
+    container_runtime: "containerd"   # crio or podman
+    print_debug: true
+    install_pkgs: true
+    disable_firewall: true
+    config_kube_software: true
+    init_k8s: true
+    stop_services: true
+  roles:
+    - rook-ceph
+
+$ make install
+~~~
+```
+[![YouTube](http://i.ytimg.com/vi/fw0qFdploNQ/hqdefault.jpg)](https://www.youtube.com/watch?v=fw0qFdploNQ)
+
+
+#### 8) Destroy Rook Ceph
+```
+$ vi uninstall.yml
+---
+- hosts: all
+  become: yes
+  vars:
+    container_runtime: "containerd"   # crio or podman
+    print_debug: true
+    install_pkgs: true
+    disable_firewall: true
+    config_kube_software: true
+    init_k8s: true
+    stop_services: true
+  roles:
+    - rook-ceph
+
+$ make uninstall
+~~~
+```
+[![YouTube](http://i.ytimg.com/vi/jSCiGs7OCFg/hqdefault.jpg)](https://www.youtube.com/watch?v=jSCiGs7OCFg)
+
+
+### 9) Reinitialize Kubernetes Cluster
+The make reinit will reinitialize k8s cluster referring reinit.yml playbook if you are struggle the uncertain situation such as stuck or panic
+~~~
+$ vi reinit.yml
+- hosts: all
+  become: yes
+  vars:
+    container_runtime: "containerd"   # crio or podman?
+    print_debug: true
+    enable_firewall: false
+    disable_firewall: true
+    stop_services: true
+    calico_network: false
+  roles:
+    - k8s
+
+$ make reinit
+```
+
 
 ## Reference
 * https://www.tecmint.com/install-a-kubernetes-cluster-on-centos-8/
