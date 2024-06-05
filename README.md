@@ -4,7 +4,7 @@ The KubeFarmer is ansible playbook to deploy Native Kubernetes Cluster in order 
 ## Kubernetes Cluster Architecutre
 ![alt text](https://github.com/rokmc756/kubefarmer/blob/main/roles/k8s/files/kubernetes_architecture.webp)
 
-kubernetes-cluster-architecture.svg
+![alt text](https://github.com/rokmc756/kubefarmer/blob/main/roles/k8s/files/kubernetes-cluster-architecture.svg)
 
 ## Supported Platform and OS
 Virtual Machines\
