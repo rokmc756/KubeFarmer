@@ -86,7 +86,7 @@
 
 
 - name: Configure the Docker Daemon to Use Systemd for the Management of the Cotainer's CGroups
-  template: src=daemon.ubt.json.j2 dest=/etc/docker/daemon.json owner=root group=root mode=644 force=yes
+  template: src=daemon.json.j2 dest=/etc/docker/daemon.json owner=root group=root mode=644 force=yes
   register: config_cgroup_docker
 - debug: msg={{ config_cgroup_docker }}
   when: print_debug == true
@@ -199,11 +199,6 @@
   when: print_debug == true
 
 
-#- name: Move temoporary Kubelet systemd file in recursive directory of /usr/lib/systemd/system/kubelet.service.d to /tmp directory
-#  shell: mv -f /usr/lib/systemd/system/kubelet.service.d/10-kubeadm.conf /tmp/
-#  register: kubeadm_conf_moved
-
-
 #- name: Change Kubelet Systemd File
 #  template: src=kubelet.systemd.j2 dest=/usr/lib/systemd/system/kubelet.service owner=root group=root mode=644 force=yes
 #  register: kubelet_systemd_changed
@@ -231,7 +226,6 @@
   delay: 10
 - debug: msg={{ start_kubelet }}
   when: print_debug == true
-
 
 
 - name: Start Container Runtime to Apply Changes in config.toml

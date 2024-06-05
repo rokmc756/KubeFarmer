@@ -18,8 +18,6 @@
 
 # https://stackoverflow.com/questions/62795930/how-to-install-kubernetes-in-suse-linux-enterprize-server-15-virtual-machines
 # zypper -n install --force kubelet
-# https://download.opensuse.org/repositories/Virtualization:/containers/15.6/
-# zypper addrepo https://download.opensuse.org/repositories/Virtualization:/containers/15.6/Virtualization:containers.repo virt
 - name: Add Extra Zypper Repositories
   shell: |
     zypper ar -f  {{ item.repo_url }} {{ item.repo_name }}
@@ -32,6 +30,7 @@
     - { repo_url: "https://download.opensuse.org/repositories/security:/netfilter/openSUSE_Leap_15.5", repo_name: "conntrack" }
 # zypper addrepo http://download.opensuse.org/distribution/leap/15.5/repo/oss public
 # zypper ar -f  https://download.opensuse.org/repositories/security:/SELinux_legacy/15.5 SELinux-Legacy
+# zypper addrepo https://download.opensuse.org/repositories/Virtualization:/containers/15.6/Virtualization:containers.repo virt
 
 
 - name: Copy Expect Script to Refresh Metadata from Zypper Repository
@@ -39,15 +38,14 @@
   register: expect_file_copied
 
 
+# /root/zypper-refresh.sh
 - name: Refresh Metadata from Zypper Repository
   shell: |
     zypper refresh -B
   register: repo_metadata_refreshed
   ignore_errors: true
-  # shell: /root/zypper-refresh.sh
 
 
-# rpm --import https://pkgs.k8s.io/core:/stable:/v1.27/rpm/repodata/repomd.xml.key
 - name: Install Container Engine Packages
   package:
     name: "{{ item }}"
@@ -63,7 +61,6 @@
 - name: Install Kubeadm Packages
   shell: /root/install-kube-pkgs.sh
   register: kube_pkgs_installed
-# zypper install kubelet kubeadm kubectl
 
 
 #- name: Install an SELinux Policy
@@ -74,7 +71,7 @@
 #    zypper install -y cni cni-plugins
 #  register: selinux_policy_installed
 
--
+
 - name: Install Extra Packages for SELinux Policy and CNI
   package:
     name: "{{ item }}"
@@ -85,7 +82,7 @@
 
 - name: Lock those versions to prevent them from being automatically updated
   shell: |
-    zypper addlock kubelet kubeadm kubectl
+    {{ lock_kube_cmds }}
   register: kube_command_locked
 
 

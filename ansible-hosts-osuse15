@@ -7,9 +7,6 @@ ansible_python_interpreter=/usr/bin/python3
 [master]
 osuse15-node01 ansible_ssh_host=192.168.0.171
 
-[slave]
-osuse15-node02 ansible_ssh_host=192.168.0.172
-
 [workers]
 osuse15-node03 ansible_ssh_host=192.168.0.173
 osuse15-node04 ansible_ssh_host=192.168.0.174

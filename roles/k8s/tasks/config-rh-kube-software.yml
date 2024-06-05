@@ -50,108 +50,39 @@
     state: started
     enabled: yes
     daemon_reload: yes
-  register: containerd_started
-  until: containerd_started is succeeded
+  register: start_containerd
+  until: start_containerd is succeeded
   retries: 20
   delay: 10
 
 
-#- name: Enable and Start Podman
-#  systemd:
-#    name: podman
-#    state: started
-#    enabled: yes
-#    daemon_reload: yes
-#  register: podman_enabled
-#  until: podman_enabled is succeeded
-#  retries: 20
-#  delay: 10
+- name: Creates Docker Directory Under /etc
+  file:
+    path: /etc/docker
+    state: directory
+  ignore_errors: true
 
 
-#- name: Restart Containerd to Apply SystemdCgroup in config.toml
-#  systemd:
-#    name: containerd
-#    state: restarted
-#    enabled: yes
-#  register: containerd_restarted
-#  until: containerd_restarted is succeeded
-#  retries: 10
-#  delay: 10
+- name: Configure the Docker Daemon to Use Systemd for the Management of the Cotainer's CGroups
+  template: src=daemon.json.j2 dest=/etc/docker/daemon.json owner=root group=root mode=644 force=yes
+  register: cgroup_docker_configured
 
 
-#- name: Enable and Start Docker
-#  systemd:
-#    name: docker
-#    state: started
-#    enabled: yes
-#  register: docker_enabled
-#  until: docker_enabled is succeeded
-#  retries: 20
-#  delay: 20
-
-# Working with Docker
-#- name: Creates Docker Directory Under /etc
-#  file:
-#    path: /etc/docker
-#    state: directory
-
-
-# Working with Docker
-#- name: Configure the Docker Daemon to Use Systemd for the Management of the Cotainer's CGroups
-#  template: src=daemon.json.j2 dest=/etc/docker/daemon.json owner=root group=root mode=644 force=yes
-#  register: cgroup_docker_configured
-
-
-#- name: Restart Docker Daemon
-#  systemd:
-#    name: docker
-#    state: restarted
-#    enabled: yes
-#  register: docker_restarted
-#  until: docker_restarted is succeeded
-#  retries: 10
-#  delay: 10
-
-
-#- name: Start Docker Daemon
-#  systemd:
-#    name: docker
-#    state: started
-#    enabled: yes
-#    daemon_reload: yes
-#  register: docker_started
-#  until: docker_started is succeeded
-#  retries: 20
-#  delay: 10
+- name: Start Docker Daemon
+  systemd:
+    name: docker
+    state: started
+    enabled: yes
+    daemon_reload: yes
+  register: start_docker
+  until: start_docker is succeeded
+  retries: 20
+  delay: 10
 
 
 - name: Configure the Kubelet Daemon to Use Systemd for the Management of the Cotainer's CGroups
   template: src=kubelet.j2 dest=/etc/sysconfig/kubelet owner=root group=root mode=644 force=yes
   register: kubernetes_repo_added
-
-
-#- name: Enable and Start Kubelet
-#  systemd:
-#    name: kubelet
-#    state: restarted
-#    enabled: yes
-#    daemon_reload: yes
-#  register: kubelet_restarted
-#  until: kubelet_restarted is succeeded
-#  retries: 10
-#  delay: 10
-
-
-#- name: Enable and Start Kubelet
-#  systemd:
-#    name: kubelet
-#    state: started
-#    enabled: yes
-#    daemon_reload: yes
-#  register: kubelet_started
-#  until: kubelet_started is succeeded
-#  retries: 20
-#  delay: 10
 
 
 - name: Copy CGroup Config File
@@ -219,9 +150,28 @@
   register: kubelet_systemd_changed
 
 
-#- name: Move temoporary Kubelet systemd file in recursive directory of /usr/lib/systemd/system/kubelet.service.d to /tmp directory
-#  shell: mv -f /usr/lib/systemd/system/kubelet.service.d/10-kubeadm.conf /tmp/
-#  register: kubeadm_conf_moved
+- name: Add Kubelet Args Line
+  lineinfile:
+    dest: /usr/lib/systemd/system/kubelet.service.d/10-kubeadm.conf
+    line: "Environment=\"KUBELET_EXTRA_ARGS=--fail-swap-on=false\""
+    state: present
+  register: add_kubelet_args_line
+- debug: msg={{ add_kubelet_args_line }}
+  when: print_debug == true
+
+
+- name: Start Container Runtime to Apply Changes in config.toml
+  systemd:
+    name: "{{ container_runtime }}"
+    state: started
+    enabled: yes
+    daemon_reload: yes
+  register: start_cr
+  until: start_cr is succeeded
+  retries: 20
+  delay: 10
+- debug: msg={{ start_cr }}
+  when: print_debug == true
 
 
 - name: Enable and Start Kubelet
@@ -230,8 +180,11 @@
     state: started
     enabled: yes
     daemon_reload: yes
-  register: kubelet_started
-  until: kubelet_started is succeeded
+  register: start_kubelet
+  until: start_kubelet is succeeded
   retries: 20
   delay: 10
+- debug: msg={{ start_kubelet }}
+  when: print_debug == true
+
 

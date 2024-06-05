@@ -1,5 +1,12 @@
+#!/bin/bash
 
-# ssh root@192.168.0.90 "shutdown -h now"
+UBT_NET=6
+RH_NET=7
+SUSE_NET=17
 
-for i in `seq 1 5`; do ssh root@192.168.17$i "shutdown -h now" ;done
+_NET=$SUSE_NET
+
+ssh root@192.168.0.90 "shutdown -h now"
+
+for i in `seq 1 5`; do ssh root@192.168.$_NET$i "shutdown -h now" ;done
 
