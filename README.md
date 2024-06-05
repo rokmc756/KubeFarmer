@@ -62,8 +62,9 @@ sudo_user_pass: "changeme"
 sudo_user_home_dir: "/home/{{ sudo_user }}"
 domain_name: "jtest.suse.com"
 ~~ snip
+```
 
-~~~
+```
 $ vi group_vars/all.yml
 ansible_ssh_pass: "changeme"
 ansible_become_pass: "changeme"
