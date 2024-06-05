@@ -279,7 +279,7 @@ $ make reinit
 ```
 
 
-## Reference
+## References
 * https://k21academy.com/docker-kubernetes/multi-node-kubernetes-cluster-on-suse-linux/
 * https://tuanpembual.wordpress.com/2020/10/15/run-opensuse-kubic-like-k8s-podman-cri-o-on-alibaba-cloud/
 * https://github.com/rokmc756/kubefarmer/blob/main/roles/k8s/files/kubernetes-cluster-architecture.svg
