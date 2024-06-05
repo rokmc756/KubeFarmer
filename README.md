@@ -3,7 +3,6 @@ The KubeFarmer is ansible playbook to deploy Native Kubernetes Cluster in order 
 
 ## Kubernetes Cluster Architecutre
 ![alt text](https://github.com/rokmc756/kubefarmer/blob/main/roles/k8s/files/kubernetes_architecture.webp)
-![alt text](https://github.com/rokmc756/kubefarmer/blob/main/roles/k8s/files/kubernetes-cluster-architecture.svg)
 
 ## Supported Platform and OS
 Virtual Machines\
@@ -239,28 +238,19 @@ $ make reinit
 * https://documentation.suse.com/ko-kr/sles/15-SP2/html/SLES-all/cha-selinux.html
 * https://k21academy.com/docker-kubernetes/container-runtime-is-not-running/
 * https://tuanpembual.wordpress.com/2020/10/15/run-opensuse-kubic-like-k8s-podman-cri-o-on-alibaba-cloud/
-
-
-## Planing
-Fixing interaction with harbor\
-Deploy VMware-Postgres and MySQL
-
-
-## Testing
-```
-iscsiadm --mode node --targetname iqn.2022-02.io.pivotal.jtest:labs.target01 --portal 192.168.0.2 -u
-iscsiadm --mode node --targetname iqn.2022-02.io.pivotal.jtest:labs.target01 --portal 192.168.0.2 -o delete
-```
-
-
-## Debugging
-* DNS - https://kubernetes.io/docs/tasks/administer-cluster/dns-debugging-resolution/
-* Network - https://yandex.cloud/en/docs/managed-kubernetes/operations/calico?utm_referrer=https%3A%2F%2Fwww.google.com%2F
-
-
-## References
+* https://github.com/rokmc756/kubefarmer/blob/main/roles/k8s/files/kubernetes-cluster-architecture.svg
 * https://medium.com/@muppedaanvesh/deploying-nginx-on-kubernetes-a-quick-guide-04d533414967
 * https://kubernetes.io/docs/tasks/run-application/run-stateless-application-deployment/
 * https://aws.plainenglish.io/how-to-deploy-a-nginx-server-with-kubernetes-9228f17e399c
 * https://medium.com/@sumuduliyan/kubernetes-networking-with-calico-623f4583ae8d
+
+
+## TODO Planing
+* Fixing interaction with harbor
+* Deploy VMware-Postgres and MySQL
+* 
+
+## Debugging
+* DNS - https://kubernetes.io/docs/tasks/administer-cluster/dns-debugging-resolution/
+* Network - https://yandex.cloud/en/docs/managed-kubernetes/operations/calico?utm_referrer=https%3A%2F%2Fwww.google.com%2F
 
