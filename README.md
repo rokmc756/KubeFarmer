@@ -68,7 +68,7 @@ $ vi install.yml
 
 $ make install
 ```
-* Youtube Link
+Youtube Link
 [![YouTube](http://i.ytimg.com/vi/mFp3oi2-sb0/hqdefault.jpg)](https://www.youtube.com/watch?v=mFp3oi2-sb0)
 
 
@@ -91,7 +91,7 @@ $ vi install.yml
 
 $ make install
 ```
-* Youtube Link
+Youtube Link
 [![YouTube](http://i.ytimg.com/vi/ZAYEYPk-NEk/hqdefault.jpg)](https://www.youtube.com/watch?v=ZAYEYPk-NEk)
 
 
@@ -115,7 +115,7 @@ $ vi uninstall.yml
 $ make uninstall
 ~~~
 ```
-* Youtube Link
+Youtube Link
 [![YouTube](http://i.ytimg.com/vi/OW_NdpsjJSg/hqdefault.jpg)](https://www.youtube.com/watch?v=OW_NdpsjJSg)
 
 
@@ -139,7 +139,7 @@ $ vi install.yml
 $ make install
 ~~~
 ```
-* Youtube Link
+Youtube Link
 [![YouTube](http://i.ytimg.com/vi/8a8S0V1Gs4E/hqdefault.jpg)](https://www.youtube.com/watch?v=8a8S0V1Gs4E)
 
 
@@ -163,7 +163,7 @@ $ vi uninstall.yml
 $ make uninstall
 ~~~
 ```
-* Youtube Link
+Youtube Link
 [![YouTube](http://i.ytimg.com/vi/QTmhB9awxY8/hqdefault.jpg)](https://www.youtube.com/watch?v=QTmhB9awxY8)
 
 
@@ -187,7 +187,7 @@ $ vi install.yml
 $ make install
 ~~~
 ```
-* Youtube Link
+Youtube Link
 [![YouTube](http://i.ytimg.com/vi/fw0qFdploNQ/hqdefault.jpg)](https://www.youtube.com/watch?v=fw0qFdploNQ)
 
 
@@ -211,7 +211,7 @@ $ vi uninstall.yml
 $ make uninstall
 ~~~
 ```
-* Youtube Link
+Youtube Link
 [![YouTube](http://i.ytimg.com/vi/jSCiGs7OCFg/hqdefault.jpg)](https://www.youtube.com/watch?v=jSCiGs7OCFg)
 
 
