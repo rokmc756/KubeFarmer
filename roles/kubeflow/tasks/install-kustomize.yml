@@ -1,0 +1,9 @@
+$ wget https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh
+
+$ chmod 755 install_kustomize.sh
+
+$ ./install_kustomize.sh 5.0.3
+v5.0.3
+kustomize installed to //root/kustomize
+
+$ mv kustomize /usr/local/bin/

@@ -39,3 +39,4 @@
   shell: setsebool -P haproxy_connect_any=1
   ignore_errors: yes
   when: not inventory_hostname in groups['workers']
+

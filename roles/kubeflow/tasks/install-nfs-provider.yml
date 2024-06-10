@@ -1,0 +1,20 @@
+
+
+nfs provider 설치
+git clone https://github.com/kubernetes-sigs/nfs-subdir-external-provisioner.git
+cd nfs-subdir-external-provisioner/deploy
+kubectl create -f rbac.yaml
+vi deployment.yaml
+env:
+  - name: PROVISIONER_NAME
+    value: k8s-sigs.io/nfs-subdir-external-provisioner
+  - name: NFS_SERVER
+    value: NFS SERVER IP
+  - name: NFS_PATH
+    value: NFS 데이터 폴더 경로
+kubectl apply -f deployment.yaml
+kubectl apply -f class.yaml
+kubectl patch storageclass nfs-client -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-defa
+
+
+

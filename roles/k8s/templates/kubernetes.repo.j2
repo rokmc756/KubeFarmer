@@ -1,12 +1,11 @@
 [kubernetes]
 name=Kubernetes
-baseurl=https://pkgs.k8s.io/core:/stable:/v1.28/rpm/
+baseurl=https://pkgs.k8s.io/core:/stable:/v{{ k8s.major_version }}.{{ k8s.minor_version }}/rpm/
 enabled=1
 gpgcheck=1
-gpgkey=https://pkgs.k8s.io/core:/stable:/v1.28/rpm/repodata/repomd.xml.key
+gpgkey=https://pkgs.k8s.io/core:/stable:/v{{ k8s.major_version }}.{{ k8s.minor_version }}/rpm/repodata/repomd.xml.key
 # exclude=kubelet kubeadm kubectl cri-tools kubernetes-cni
 
 # baseurl=https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
 # repo_gpgcheck=0
 # gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg
-

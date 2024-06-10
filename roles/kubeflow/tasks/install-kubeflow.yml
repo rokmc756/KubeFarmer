@@ -1,0 +1,8 @@
+
+$ git clone https://github.com/kubeflow/manifests.git -b v1.8.0
+
+cd manifast
+
+while ! kustomize build example | kubectl apply -f -; do echo "Retrying to apply resources"; sleep 10; done
+
+
