@@ -5,10 +5,10 @@ remote_machine_password="changeme"
 ansible_python_interpreter=/usr/bin/python3
 
 [master]
-ubt22-node01 ansible_ssh_host=192.168.0.61
+ubt22-node01 ansible_ssh_host=192.168.1.61
 
 [workers]
-ubt22-node03 ansible_ssh_host=192.168.0.63
-ubt22-node04 ansible_ssh_host=192.168.0.64
-ubt22-node05 ansible_ssh_host=192.168.0.65
+ubt22-node03 ansible_ssh_host=192.168.1.63
+ubt22-node04 ansible_ssh_host=192.168.1.64
+ubt22-node05 ansible_ssh_host=192.168.1.65
 

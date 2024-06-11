@@ -69,7 +69,7 @@
     enabled: yes
     daemon_reload: yes
   register: start_containerd
-  until: containerd_started is succeeded
+  until: start_containerd is succeeded
   retries: 20
   delay: 10
 - debug: msg={{ start_containerd }}
@@ -99,7 +99,7 @@
     enabled: yes
     daemon_reload: yes
   register: start_docker
-  until: docker_started is succeeded
+  until: start_docker is succeeded
   retries: 10
   delay: 10
 - debug: msg={{ start_docker }}
@@ -120,7 +120,7 @@
     enabled: yes
     daemon_reload: yes
   register: enable_kublet
-  until: kubelet_started is succeeded
+  until: enable_kubelet is succeeded
   retries: 20
   delay: 10
 - debug: msg={{ enable_kubelet }}
@@ -231,13 +231,13 @@
 - name: Start Container Runtime to Apply Changes in config.toml
   systemd:
     name: "{{ container_runtime }}"
-    state: started
+    state: restarted
     enabled: yes
     daemon_reload: yes
-  register: start_container_runtime
-  until: start_container_runtime is succeeded
+  register: restart_container_runtime
+  until: restart_container_runtime is succeeded
   retries: 20
   delay: 10
-- debug: msg={{ start_container_runtime }}
+- debug: msg={{ restart_container_runtime }}
   when: print_debug == true
 

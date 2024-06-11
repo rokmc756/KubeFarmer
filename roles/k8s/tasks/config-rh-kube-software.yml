@@ -47,11 +47,11 @@
 - name: Start Containerd to Apply SystemdCgroup in config.toml
   systemd:
     name: containerd
-    state: started
+    state: restarted
     enabled: yes
     daemon_reload: yes
-  register: start_containerd
-  until: start_containerd is succeeded
+  register: restart_containerd
+  until: restart_containerd is succeeded
   retries: 20
   delay: 10
 
@@ -166,11 +166,11 @@
     state: started
     enabled: yes
     daemon_reload: yes
-  register: start_cr
-  until: start_cr is succeeded
+  register: start_containerd
+  until: start_containerd is succeeded
   retries: 20
   delay: 10
-- debug: msg={{ start_cr }}
+- debug: msg={{ start_containerd }}
   when: print_debug == true
 
 
@@ -180,11 +180,11 @@
     state: started
     enabled: yes
     daemon_reload: yes
-  register: start_kubelet
-  until: start_kubelet is succeeded
+  register: enable_kubelet
+  until: enable_kubelet is succeeded
   retries: 20
   delay: 10
-- debug: msg={{ start_kubelet }}
+- debug: msg={{ enable_kubelet }}
   when: print_debug == true
 
 

@@ -29,10 +29,11 @@
 - name: Download Kubernetes APT Repository
   shell: |
     curl -fsSL https://pkgs.k8s.io/core:/stable:/v{{ k8s.major_version }}.{{ k8s.minor_version }}/deb/Release.key \
-    | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+    | sudo gpg --yes --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
   register: download_k8s_repo
   ignore_errors: true
 - debug: msg={{ download_k8s_repo }}
+  #  | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
 
 
 - name: Add Kubernetes Repositories
