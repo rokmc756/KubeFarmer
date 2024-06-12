@@ -1,0 +1,15 @@
+---
+apiVersion: awx.ansible.com/v1
+kind: AWX
+metadata:
+  annotations:
+    kubernetes.io/ingress.class: nginx
+  name: {{ awx.namespace }}
+  namespace: default
+spec:
+  tower_create_preload_data: true
+  tower_hostname: awx.jtest.suse.com
+  tower_image_pull_policy: IfNotPresent
+  tower_ingress_tls_secret: awx-jtest-suse-com-tls
+  tower_ingress_type: Ingress
+# apiVersion: awx.ansible.com/v1beta1

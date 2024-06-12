@@ -20,12 +20,6 @@
   when: helm.enable_repo == true and inventory_hostname in groups['master']
 
 
-- name: Deploy AWX
-  import_tasks: install-awx.yml
-  tags: install
-  when: awx.install == true and inventory_hostname in groups['master']
-
-
 - name: Install Metallb
   import_tasks: install-metallb.yml
   tags: install
@@ -36,6 +30,12 @@
   import_tasks: install-cert-manager.yml
   tags: install
   when: cert_manager.install == true and inventory_hostname in groups['master']
+
+
+- name: Deploy AWX
+  import_tasks: install-awx.yml
+  tags: install
+  when: awx.install == true and inventory_hostname in groups['master']
 
 
 - name: Install Load Balancer
@@ -50,6 +50,12 @@
   when: metallb.install == true and inventory_hostname in groups['master']
 
 
+- name: Destroy AWX
+  import_tasks: uninstall-awx.yml
+  tags: uninstall
+  when: awx.install == true and inventory_hostname in groups['master']
+
+
 - name: Uninstall Cert Manager
   import_tasks: uninstall-cert-manager.yml
   tags: uninstall
@@ -60,12 +66,6 @@
   import_tasks: uninstall-metallb.yml
   tags: uninstall
   when: metallb.install == true and inventory_hostname in groups['master']
-
-
-- name: Destroy AWX
-  import_tasks: uninstall-awx.yml
-  tags: uninstall
-  when: awx.install == true and inventory_hostname in groups['master']
 
 
 - name: Disable Helm Repository

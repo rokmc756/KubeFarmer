@@ -1,5 +1,11 @@
 # https://www.server-world.info/en/note?os=CentOS_Stream_9&p=ansible&f=9
 # https://computingforgeeks.com/install-and-configure-ansible-awx-on-centos/
+# https://devops.cisel.ch/install-ansible-awx-on-microk8s
+
+
+# mkdir /mnt/storage
+# chmod 777 /mnt/storage
+
 
 - name: Check if the AWX Source Code is already downloaded
   stat: path={{ base_path }}/awx-operator
@@ -18,15 +24,40 @@
   when: print_debug == true and awx.clone_git == true and awx_op_dir_existed.stat.exists != True
 
 
-- name: Deply AWX Operator
+- name: Deploy AWX Operator
   shell: |
-    export NAMESPACE={{ awx.namespace }}
-    make deploy
+    su - root -c 'export NAMESPACE={{ awx.namespace }} ; cd /root/awx-operator ; make deploy'
   register: deploy_awx_operator
   args:
     chdir: "{{ base_path }}/awx-operator"
+    executable: /bin/bash
+  environment:
+    NAMESPACE: "{{ awx.namespace }}"
 - debug: msg={{ deploy_awx_operator }}
   when: print_debug == true
+
+
+
+#- name: Create AWX Operator
+#  shell: |
+#    kubectl apply -f https://raw.githubusercontent.com/ansible/awx-operator/{{ awx.major_version }}.{{ awx.minor_version }}.{{ awx.patch_version }}/deploy/awx-operator.yaml
+#  register: create_awx_operator
+#- debug: msg={{ create_awx_operator }}
+#  when: print_debug == true
+#  # Original 0.7.0
+
+
+
+#- name: Deploy AWX Operator
+#  shell: |
+#    export NAMESPACE={{ awx.namespace }}
+#    make deploy
+#  register: deploy_awx_operator
+#  args:
+#    chdir: "{{ base_path }}/awx-operator/"
+#- debug: msg={{ deploy_awx_operator }}
+#  when: print_debug == true
+
 
 
 - name: Validate if AWX Operator Container is still Creating
@@ -58,6 +89,7 @@
   register: change_awx_namespace
   with_items:
     - { regexp: '^  name: awx-demo*', line: '  name: {{ awx.namespace }}', state: present }
+    - { regexp: '^  service_type: nodeport*', line: '  service_type: LoadBalancer', state: present }
 - debug: msg={{ change_awx_namespace }}
   when: print_debug == true
 
@@ -116,21 +148,84 @@
   when: print_debug == true
 
 
+#- name: Copy Cluster Local PVC Config Yaml
+#  template:
+#    src: cluster-on-local-pvc.yaml.j2
+#    dest: "{{ base_path }}/cluster-on-local-pvc.yaml"
+#  register: copy_cluster_local_pvc_config_yaml
+#  ignore_errors: yes
+#- debug: msg={{ copy_cluster_local_pvc_config_yaml }}
+
+
 - name: Copy Cluster Local PVC Config Yaml
   template:
-    src: cluster-on-local-pvc.yaml.j2
-    dest: "{{ base_path }}/cluster-on-local-pvc.yaml"
+    src: "{{ item }}.j2"
+    dest: "{{ base_path }}/{{ item }}"
   register: copy_cluster_local_pvc_config_yaml
   ignore_errors: yes
+  with_items:
+    - "local-storage-class.yaml"
+    - "pv.yaml"
+    - "pvc.yaml"
+    - "awx-config.yaml"
 - debug: msg={{ copy_cluster_local_pvc_config_yaml }}
+
+
+#- name: Setup Tower Ingress
+#  shell: |
+#    kubectl apply -f awx-config.yaml
+#  register: setup_tower_ingress
+#  args:
+#    chdir: "{{ base_path }}/"
+#- debug: msg={{ setup_tower_ingress }}
+#  when: print_debug == true
 
 
 - name: Cluster Settings for a Production Cluster Running in a Dynamic Cloud Environment including VMware
   shell: |
-    kubectl create -f cluster-on-local-pvc.yaml
+    kubectl create -f {{ item }}
   register: create_pvc
+  with_items:
+    - "local-storage-class.yaml"
+    - "pv.yaml"
+    - "pvc.yaml"
   args:
     chdir: "{{ base_path }}/"
 - debug: msg={{ create_pvc }}
   when: print_debug == true
+
+
+- name: Validate if AWX Container is still Creating
+  shell: |
+    kubectl get pods -n {{ awx.namespace }} | grep {{ item }}
+  register: check_awx_container
+  until: check_awx_container.stdout.find("Running") != -1
+  retries: 100
+  delay: 10
+  with_items:
+    - "{{ awx.namespace }}-postgres"
+    - "{{ awx.namespace }}-"
+- debug: msg={{ check_awx_container }}
+  when: print_debug == true
+#    - "{{ awx.namespace }}-web"
+#    - "{{ awx.namespace }}-task"
+
+
+- pause:
+    seconds: 60
+
+
+#- name: Expose Deployment to LoadBalancer
+#  shell: |
+#    kubectl delete service ansible-awx-service -n ansible-awx
+#    kubectl expose deployment ansible-awx --port=80 --target-port=80 --name=ansible-awx-service --type=LoadBalancer
+#  register: expose_deploy_lb
+#  ignore_errors: yes
+#- debug: msg={{ expose_deploy_lb }}
+
+
+# Expose IP Address for AWX Service
+# kubectl patch svc ansible-awx-service -p '{"spec":{"externalIPs":["192.168.1.201"]}}'
+# kubectl port-forward service/ansible-awx-service 80:80
+# kubectl port-forward service/ansible-awx-service 7080:80
 

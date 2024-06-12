@@ -25,6 +25,7 @@ rancher:
   kernel_parameters:
     - "net.ipv4.neigh.default.gc_thresh1 = 0"   # For ARP Cache
 
+
 metallb:
   install: true
   major_version: 0
@@ -54,6 +55,7 @@ metallb:
               name: default
               protocol: layer2
               ips_range: 192.168.1.210-192.168.1.250
+
 
 helm:
   enable_repo: true

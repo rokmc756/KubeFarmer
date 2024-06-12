@@ -42,6 +42,21 @@
 - debug: msg={{ apply_metallb_native_config }}
 
 
+- name: Validate if Metallb Speaker Container is still Creating
+  shell: |
+    kubectl get pods -n metallb-system | grep metallb-speaker
+  register: check_metallb_speaker_container
+  until: check_metallb_speaker_container.stdout.find("Running") != -1
+  retries: 10
+  delay: 1
+- debug: msg={{ check_metallb_speaker_container }}
+  when: print_debug == true
+
+
+- pause:
+    seconds: 30
+
+
 #- name: Apply the Metallb Native
 #  shell: |
 #    kubectl apply -f \
@@ -56,6 +71,15 @@
   register: create_metallb_secret
   ignore_errors: yes
 - debug: msg={{ create_metallb_secret }}
+
+
+#- name: Expose Deployment to LoadBalancer
+#  shell: |
+#    kubectl delete service ansible-awx-service -n ansible-awx
+#    kubectl expose deployment ansible-awx --port=80 --target-port=80 --name=ansible-awx-service --type=LoadBalancer
+#  register: expose_deploy_lb
+#  ignore_errors: yes
+#- debug: msg={{ expose_deploy_lb }}
 
 
 - name: Copy Metallb Config Yaml for VMware

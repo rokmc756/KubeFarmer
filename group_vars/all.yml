@@ -4,7 +4,7 @@ ansible_become_pass: "changeme"
 k8s:
   cluster_name: jack-kr-k8s
   major_version: "1"
-  minor_version: "26"               # Rancher does not support higher than kubernetes 1.28.x versions currently
+  minor_version: "28"               # Rancher does not support higher than kubernetes 1.28.x versions currently
   patch_version: "0"
   build_version: ""
   repo_url: ""
