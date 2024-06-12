@@ -17,7 +17,8 @@
     init_k8s: true
     stop_services: true
   roles:
-    - k8s
+    - kubeflow
+#    - k8s
 #    - init-hosts
 #    - nginx
 #    -  rancher

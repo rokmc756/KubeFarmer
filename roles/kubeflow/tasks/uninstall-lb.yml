@@ -1,0 +1,27 @@
+- name: Delete Rancher Load Balancer
+  shell: |
+    kubectl delete -f "{{ base_path }}"/rancher-loadbalancer.yaml
+  register: delete_rancher_lb
+  ignore_errors: yes
+- debug: msg={{ delete_rancher_lb }}
+
+
+- name: Check Racher Pods
+  shell: kubectl get all -n cattle-system
+  register: check_rancher_pods
+  ignore_errors: yes
+  until: check_rancher_pods.stdout.find("Terminating") == -1
+  retries: 20
+- debug: msg={{ check_rancher_pods }}
+
+
+- name: Delete Rancher Loadbalancer Config Yaml
+  file:
+    path: "{{ item }}"
+    state: absent
+  register: delete_rancher_lb_config_yaml
+  ignore_errors: yes
+  with_items:
+    - "{{ base_path }}/rancher-loadbalancer.yaml"
+- debug: msg={{ delete_rancher_lb_config_yaml }}
+

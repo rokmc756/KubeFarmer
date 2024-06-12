@@ -1,8 +1,28 @@
 
-$ git clone https://github.com/kubeflow/manifests.git -b v1.8.0
+- name: Check if the Kubeflow is already downloaded
+  stat: path={{ base_path }}/manifests
+  register: kubeflow_dir_existed
+- debug: msg={{ kubeflow_dir_existed }}
 
-cd manifast
 
-while ! kustomize build example | kubectl apply -f -; do echo "Retrying to apply resources"; sleep 10; done
+- name: Clone Kubeflow
+  shell: |
+    git -C "{{ base_path }}" clone --single-branch --branch release-{{ kubeflow.major_version }}.{{ kubeflow.minor_version }} https://github.com/kubeflow/manifests.git
+  register: git_clone_kubeflow
+  ignore_errors: true
+  when: kubeflow.clone_git == true and kubeflow_dir_existed.stat.exists != True
+- debug: msg={{ git_clone_kubeflow }}
+  when: print_debug == true and kubeflow.clone_git == true and kubeflow_dir_existed.stat.exists != True
 
+
+- name: Deploy Kubeflow
+  shell: |
+    while ! kustomize build example | kubectl apply -f -; do echo "Retrying to apply resources"; sleep 10; done
+  register: deploy_kubeflow
+  args:
+    chdir: "{{ base_path }}/manifests"
+- debug: msg={{ deploy_kubeflow }}
+
+
+# kubectl get service -n istio-system istio-ingressgateway
 

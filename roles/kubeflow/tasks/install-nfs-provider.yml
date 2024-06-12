@@ -1,20 +1,93 @@
+#- name: Clone Rook Source Code
+#  shell: |
+#    git -C "{{ base_path }}" clone --single-branch --branch release-{{ rook.major_version }}.{{ rook.minor_version }} https://github.com/rook/rook.git
+#  register: git_clone_rook
+#  ignore_errors: true
+#  when: rook.clone_git == true and rook_dir_existed.stat.exists != True
+#- debug: msg={{ git_clone_rook }}
+#  when: print_debug == true and rook.clone_git == true and rook_dir_existed.stat.exists != True
 
 
-nfs provider 설치
-git clone https://github.com/kubernetes-sigs/nfs-subdir-external-provisioner.git
-cd nfs-subdir-external-provisioner/deploy
-kubectl create -f rbac.yaml
-vi deployment.yaml
-env:
-  - name: PROVISIONER_NAME
-    value: k8s-sigs.io/nfs-subdir-external-provisioner
-  - name: NFS_SERVER
-    value: NFS SERVER IP
-  - name: NFS_PATH
-    value: NFS 데이터 폴더 경로
-kubectl apply -f deployment.yaml
-kubectl apply -f class.yaml
-kubectl patch storageclass nfs-client -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-defa
+- name: Check if the Rook Ceph Source Code is already downloaded
+  stat: path={{ base_path }}/rook
+  register: rook_dir_existed
+- debug: msg={{ rook_dir_existed }}
 
+
+
+# git -C "{{ base_path }}" clone --single-branch --branch release-{{ rook.major_version }}.{{ rook.minor_version }} https://github.com/rook/rook.git
+- name: Install NFS Provider
+  shell: |
+    git -C "{{ base_path }}" clone https://github.com/kubernetes-sigs/nfs-subdir-external-provisioner.git
+  register: git_clone_nfs_profiler
+  ignore_errors: true
+  when: kubeflow.clone_git == true and rook_dir_existed.stat.exists != True
+- debug: msg={{ git_clone_rook }}
+  when: print_debug == true and rook.clone_git == true and rook_dir_existed.stat.exists != True
+
+
+- name: Creae CRDs
+  shell: |
+    kubectl create -f crds.yaml
+  register: create_crds
+  args:
+    chdir: "{{ base_path }}/rook/deploy/examples/"
+- debug: msg={{ create_crds }}
+  when: print_debug == true
+
+
+- name: Creae CRDs
+  shell: |
+    kubectl create -f crds.yaml
+  register: create_crds
+  args:
+    chdir: "{{ base_path }}/rook/deploy/examples/"
+- debug: msg={{ create_crds }}
+  when: print_debug == true
+
+
+- name: Creae RBAC
+  shell: |
+    kubectl create -f rbac.yaml
+  register: create_crds
+  args:
+    chdir: "{{ base_path }}/nfs-subdir-external-provisioner/deploy"
+- debug: msg={{ create_crds }}
+  when: print_debug == true
+
+
+- name: Creae Deployment
+  shell: |
+    kubectl apply -f deployment.yaml
+  register: create_crds
+  args:
+    chdir: "{{ base_path }}/nfs-subdir-external-provisioner/deploy"
+- debug: msg={{ create_crds }}
+  when: print_debug == true
+#env:
+#  - name: PROVISIONER_NAME
+#    value: k8s-sigs.io/nfs-subdir-external-provisioner
+#  - name: NFS_SERVER
+#    value: NFS SERVER IP
+#  - name: NFS_PATH
+#    value: NFS 데이터 폴더 경로
+
+
+- name: Creae Class
+  shell: |
+    kubectl apply -f class.yaml
+  register: create_crds
+  args:
+    chdir: "{{ base_path }}/nfs-subdir-external-provisioner/deploy"
+- debug: msg={{ create_crds }}
+  when: print_debug == true
+
+
+- name: Creae Class
+  shell: |
+    kubectl patch storageclass nfs-client -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
+  register: create_crds
+- debug: msg={{ create_crds }}
+  when: print_debug == true
 
 
