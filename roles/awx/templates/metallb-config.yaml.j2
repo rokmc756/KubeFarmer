@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ metal.baremetal.kind.configmap.metadata.name }}
+  namespace: {{ metal.baremetal.kind.configmap.metadata.namespace }}
+data:
+  config: |
+    address-pools:
+    - name: {{ metal.baremetal.kind.configmap.data.ipaddr_pools.name }}
+      protocol: {{ metal.baremetal.kind.configmap.data.ipaddr_pools.protocol }}
+      addresses:
+      - {{ metal.baremetal.kind.configmap.data.ipaddr_pools.ips_range }}

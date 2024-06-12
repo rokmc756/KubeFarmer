@@ -1,0 +1,135 @@
+# https://www.server-world.info/en/note?os=CentOS_Stream_9&p=ansible&f=9
+
+- name: Check if the AWX Source Code is already downloaded
+  stat: path={{ base_path }}/awx-operator
+  register: awx_op_dir_existed
+- debug: msg={{ awx_op_dir_existed }}
+
+
+- name: Clone AWX Source Code
+  shell: |
+    git -C "{{ base_path }}" clone --single-branch --branch {{ awx.major_version }}.{{ awx.minor_version }}.{{ awx.patch_version }} \
+    https://github.com/ansible/awx-operator.git
+  register: git_clone_awx
+  ignore_errors: true
+  when: awx.clone_git == true and awx_op_dir_existed.stat.exists != True
+- debug: msg={{ git_clone_awx }}
+  when: print_debug == true and awx.clone_git == true and awx_op_dir_existed.stat.exists != True
+
+
+- name: Deply AWX Operator
+  shell: |
+    export NAMESPACE={{ awx.namespace }}
+    make deploy
+  register: deploy_awx_operator
+  args:
+    chdir: "{{ base_path }}/awx-operator"
+- debug: msg={{ deploy_awx_operator }}
+  when: print_debug == true
+
+
+- name: Validate if AWX Operator Container is still Creating
+  shell: |
+    kubectl get pods -n {{ awx.namespace }}
+  register: check_awx_operator
+  until: check_awx_operator.stdout.find("ContainerCreating") == -1
+  retries: 60
+- debug: msg={{ check_awx_operator }}
+  when: print_debug == true
+
+
+- name: Copy AWX Yaml File
+  copy:
+    src: "{{ base_path }}/awx-operator/awx-demo.yml"
+    dest: "{{ base_path }}/awx-operator/ansible-awx.yml"
+    remote_src: true
+  register: copy_awx_yaml
+- debug: msg={{ copy_awx_yaml }}
+  when: print_debug == true
+
+
+- name: Change the Name of AWX Namespace
+  lineinfile:
+    dest: "{{ base_path }}/awx-operator/ansible-awx.yml"
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    state: "{{ item.state }}"
+  register: change_awx_namespace
+  with_items:
+    - { regexp: '^  name: awx-demo*', line: '  name: {{ awx.namespace }}', state: present }
+- debug: msg={{ change_awx_namespace }}
+  when: print_debug == true
+
+
+- name: Set namespace for AWX you set to kubectl context
+  shell: |
+    kubectl config set-context --current --namespace={{ awx.namespace }}
+  register: set_awx_namespace
+  args:
+    chdir: "{{ base_path }}/awx-operator"
+- debug: msg={{ set_awx_namespace }}
+  when: print_debug == true
+
+
+- name: Deploy AWX
+  shell: |
+    kubectl apply -f ansible-awx.yml
+  register: set_awx_namespace
+  args:
+    chdir: "{{ base_path }}/awx-operator"
+- debug: msg={{ set_awx_namespace }}
+  when: print_debug == true
+
+
+#- name: Possible to see installation progress on the logs
+#  shell: |
+#    kubectl logs -f deployments/awx-operator-controller-manager -c awx-manager
+#  register: check_awx_install_progress
+#- debug: msg={{ check_awx_install_progress }}
+#  when: print_debug == true
+
+
+- name: Validate if AWX Operator Container is still Creating
+  shell: |
+    kubectl get pods -l "app.kubernetes.io/managed-by=awx-operator"
+  register: check_awx_operator_containers
+  until: check_awx_operator_containers.stdout.find("ContainerCreating") == -1
+  retries: 60
+- debug: msg={{ check_awx_operator_containers }}
+  when: print_debug == true
+
+
+- name: Get AWX Service
+  shell: |
+    kubectl get service -l "app.kubernetes.io/managed-by=awx-operator"
+  register: get_awx_service
+- debug: msg={{ get_awx_service }}
+  when: print_debug == true
+
+
+- name: Confirm Password for Admin Account
+  shell: |
+    kubectl get secret ansible-awx-admin-password -o jsonpath="{.data.password}" | base64 --decode; echo
+  register: confirm_admin_password
+- debug: msg={{ confirm_admin_password }}
+  when: print_debug == true
+
+
+- name: Copy Cluster Local PVC Config Yaml
+  template:
+    src: cluster-on-local-pvc.yaml.j2
+    dest: "{{ base_path }}/cluster-on-local-pvc.yaml"
+  register: copy_cluster_local_pvc_config_yaml
+  ignore_errors: yes
+- debug: msg={{ copy_cluster_local_pvc_config_yaml }}
+
+
+- name: Cluster Settings for a Production Cluster Running in a Dynamic Cloud Environment including VMware
+  shell: |
+    kubectl create -f cluster-on-local-pvc.yaml
+  register: create_pvc
+  args:
+    chdir: "{{ base_path }}/"
+- debug: msg={{ create_pvc }}
+  when: print_debug == true
+

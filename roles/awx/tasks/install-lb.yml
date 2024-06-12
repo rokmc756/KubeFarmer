@@ -1,0 +1,35 @@
+- name: Copy AWX Loadbalancer Config Yaml
+  template:
+    src: awx-loadbalancer.yaml.j2
+    dest: "{{ base_path }}/awx-loadbalancer.yaml"
+  register: copy_awx_lb_config_yaml
+- debug: msg={{ copy_awx_lb_config_yaml }}
+
+
+- name: Create AWX Load Balancer
+  shell: |
+    kubectl create -f "{{ base_path }}"/awx-loadbalancer.yaml
+  register: create_awx_lb
+- debug: msg={{ create_awx_lb }}
+
+
+- name: Check AWX Pods
+  shell: kubectl get all -n cattle-system
+  register: check_awx_pods
+  until: check_awx_pods.stdout.find("pending") == -1
+  retries: 30
+- debug: msg={{ check_awx_pods }}
+
+
+- pause:
+    seconds: 15
+
+
+- name: Check if the status of ContainerCreating is still existing
+  shell: kubectl get all -A | grep cattle-
+  register: check_container_creating
+  until: check_container_creating.stdout.find("ContainerCreating") == -1
+  retries: 30
+  delay: 10
+- debug: msg={{ check_container_creating }}
+

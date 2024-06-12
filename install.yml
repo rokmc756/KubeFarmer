@@ -17,10 +17,12 @@
     init_k8s: true
     stop_services: true
   roles:
-    - kubeflow
+    - awx
+
 #    - k8s
-#    - init-hosts
 #    - nginx
+#    - kubeflow
+#    - init-hosts
 #    -  rancher
 #    -  rook-ceph
 #    - dashboard

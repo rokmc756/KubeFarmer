@@ -1,0 +1,27 @@
+- name: Delete AWX Load Balancer
+  shell: |
+    kubectl delete -f "{{ base_path }}"/awx-loadbalancer.yaml
+  register: delete_awx_lb
+  ignore_errors: yes
+- debug: msg={{ delete_awx_lb }}
+
+
+- name: Check AWX Pods
+  shell: kubectl get all -n cattle-system
+  register: check_awx_pods
+  ignore_errors: yes
+  until: check_awx_pods.stdout.find("Terminating") == -1
+  retries: 20
+- debug: msg={{ check_awx_pods }}
+
+
+- name: Delete AWX Loadbalancer Config Yaml
+  file:
+    path: "{{ item }}"
+    state: absent
+  register: delete_awx_lb_config_yaml
+  ignore_errors: yes
+  with_items:
+    - "{{ base_path }}/awx-loadbalancer.yaml"
+- debug: msg={{ delete_awx_lb_config_yaml }}
+

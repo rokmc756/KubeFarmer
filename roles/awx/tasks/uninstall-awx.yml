@@ -1,0 +1,100 @@
+# https://www.server-world.info/en/note?os=CentOS_Stream_9&p=ansible&f=9
+
+# 1
+- name: Delete Cluster Settings for a Production Cluster Running in a Dynamic Cloud Environment including VMware
+  shell: |
+    kubectl delete -f cluster-on-local-pvc.yaml
+  register: delete_pvc
+  ignore_errors: true
+  args:
+    chdir: "{{ base_path }}/"
+- debug: msg={{ delete_pvc }}
+  when: print_debug == true
+
+
+# 2
+- name: Delete Cluster Local PVC Config Yaml
+  file:
+    path: cluster-on-local-pvc.yaml.j2
+    state: absent
+  register: delete_cluster_local_pvc_config_yaml
+  ignore_errors: true
+- debug: msg={{ delete_cluster_local_pvc_config_yaml }}
+
+
+# 3
+- name: Delete AWX
+  shell: |
+    kubectl delete -f ansible-awx.yml
+  register: delete_awx
+  ignore_errors: true
+  args:
+    chdir: "{{ base_path }}/awx-operator"
+- debug: msg={{ delete_awx }}
+  when: print_debug == true
+
+
+# 4
+- name: Set namespace for AWX you set to kubectl context
+  shell: |
+    kubectl config set-context --current --namespace={{ awx.namespace }}
+  register: set_awx_namespace
+  ignore_errors: true
+  args:
+    chdir: "{{ base_path }}/awx-operator"
+- debug: msg={{ set_awx_namespace }}
+  when: print_debug == true
+
+
+# 5
+- name: Delete AWX Yaml
+  file:
+    path: "{{ base_path }}/awx-operator/ansible-awx.yml"
+    state: absent
+  register: delete_awx_yaml
+  ignore_errors: true
+- debug: msg={{ delete_awx_yaml }}
+  when: print_debug == true
+
+
+# 6
+- name: Undeply AWX Operator
+  shell: |
+    export NAMESPACE={{ awx.namespace }}
+    make undeploy
+  register: undeploy_awx_operator
+  ignore_errors: true
+  args:
+    chdir: "{{ base_path }}/awx-operator"
+- debug: msg={{ undeploy_awx_operator }}
+  when: print_debug == true
+
+
+# 7
+- name: Check if the AWX Source Code is already downloaded
+  stat: path={{ base_path }}/awx-operator
+  register: awx_op_dir_existed
+  ignore_errors: true
+- debug: msg={{ awx_op_dir_existed }}
+
+
+# 8
+- name: Clone AWX Source Code
+  file:
+    path: "{{ base_path }}/awx-operator"
+    state: absent
+  register: delete_awx_clone
+  ignore_errors: true
+  when: awx.clone_git == true and awx_op_dir_existed.stat.exists == True
+- debug: msg={{ delete_awx_clone }}
+  when: print_debug == true and awx.clone_git == true and awx_op_dir_existed.stat.exists == True
+
+# 9
+- name: Delete AWX Operator Namespace
+  shell: |
+    kubectl delete namespace awx-operator-system
+  register: delete_awx_operator_namespace
+  ignore_errors: true
+- debug: msg={{ delete_awx_operator_namespace }}
+  when: print_debug == true
+

@@ -1,0 +1,72 @@
+- debug: msg={{ "Need to check if set_facts is needed" }}
+  when: print_debug == true
+
+
+- name: Get NVME Devices
+  shell: |
+    nvme list | sed 1,2d | awk '{print $1}' | cut -d "/" -f 3
+  register: nvme_device_list
+  when: awx.nvme == true
+- debug: msg={{ nvme_device_list.stdout_lines }}
+  when: print_debug == true
+   # | grep -v nvme0n3 | grep -v nvme0n4
+
+
+- name: Set volume Fact with list
+  set_fact:
+    volume_mode: "{{ volume_modes | list }}"
+  vars:
+    volume_modes:
+      - "Filesystem"
+      - "Block"
+      - "Block"
+      - "Block"
+- debug: msg={{ volume_mode }}
+  when: print_debug == true
+
+
+- name: Set Fact after merging Volume Mode with NVME Device Name
+  set_fact:
+    nvme_merge_info0: "{{ volume_mode | zip(nvme_device_list.stdout_lines) }}"
+- debug: msg={{ nvme_merge_info0 }}
+  when: print_debug == true
+
+
+- name: Set each Fact with Dictionary to Combile Hostname and Devices Names
+  set_fact:
+    nvme_merge_info: "{{ dict([ inventory_hostname ] | zip( [ nvme_merge_info0 ] )) | dict2items( key_name='hostname', value_name='devinfo' ) }}"
+- debug: msg={{ nvme_merge_info }}
+  when: print_debug == true
+
+
+- name: Set a Fact Merging Dictionaries with NVME Info
+  set_fact:
+    all_nvme_info: "{{ groups['workers'] | map('extract', hostvars, ['nvme_merge_info']) | join(',') }}"
+- debug: msg={{ all_nvme_info }}
+  when: print_debug == true
+
+
+- debug:
+    msg: >
+      [
+      {%- for arr1 in all_nvme_info -%}
+        {%- for arr2 in arr1 -%}
+          {%- for d in arr2.devinfo -%}
+            {{ d[0] }},{{ d[1] }}
+          {%- endfor -%}
+        {%- endfor -%}
+      {%- endfor -%}
+      ]
+  when: print_debug == true and inventory_hostname in groups['master']
+
+
+#- name: Copy Cluster Local PVC Config Yaml
+#  template:
+#    src: cluster-on-local-pvc.yaml.j2
+#    dest: "{{ base_path }}/cluster-on-local-pvc.yaml"
+#  register: copy_cluster_local_pvc_config_yaml
+#  ignore_errors: yes
+#  when: awx.nvme == true and inventory_hostname in groups['master']
+#- debug: msg={{ copy_cluster_local_pvc_config_yaml }}
+#  when: print_debug == true and inventory_hostname in groups['master']
+

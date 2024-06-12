@@ -1,0 +1,48 @@
+#################################################################################################################
+# Define the settings for the rook-ceph cluster with common settings for a production cluster on top of bare metal.
+
+# This example expects three nodes, each with two available disks. Please modify it according to your environment.
+# See the documentation for more details on storage settings available.
+
+# For example, to create the cluster:
+#   kubectl create -f crds.yaml -f common.yaml -f operator.yaml
+#   kubectl create -f cluster-on-local-pvc.yaml
+#################################################################################################################
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: local-storage
+provisioner: kubernetes.io/no-provisioner
+volumeBindingMode: WaitForFirstConsumer
+{% for arr1 in all_nvme_info %}
+{% for arr2 in arr1 -%}
+{% for dinfo in arr2.devinfo %}
+{{ "---" }}
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: {{ dinfo[1] }}-{{ arr2.hostname }}
+spec:
+  storageClassName: local-storage
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  # PV for OSD must be a block volume - volumeMode: Block
+  # PV for mon must be a filesystem volume - volumeMode: Filesystem
+  volumeMode: {{ dinfo[0] }}
+  local:
+    path: /dev/{{ dinfo[1] }}
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - {{ arr2.hostname }}
+{{ ""|safe }}
+{%- endfor -%}
+{%- endfor -%}
+{%- endfor -%}
