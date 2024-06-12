@@ -4,7 +4,7 @@ UBT_NET=6
 RH_NET=7
 SUSE_NET=17
 
-_NET=$UBT_NET
+_NET=$RH_NET
 
 ssh root@192.168.0.90 "shutdown -h now"
 

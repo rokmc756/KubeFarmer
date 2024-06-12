@@ -1,4 +1,5 @@
 # https://www.server-world.info/en/note?os=CentOS_Stream_9&p=ansible&f=9
+# https://computingforgeeks.com/install-and-configure-ansible-awx-on-centos/
 
 - name: Check if the AWX Source Code is already downloaded
   stat: path={{ base_path }}/awx-operator
