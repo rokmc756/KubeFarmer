@@ -215,6 +215,7 @@
 
 
 
+
 # $ kubectl get secrets -n awx | grep -i admin-password
 
 #- name: Expose Deployment to LoadBalancer
@@ -231,3 +232,10 @@
 # kubectl port-forward service/ansible-awx-service 80:80
 # kubectl port-forward service/ansible-awx-service 7080:80
 
+
+# $ kubectl exec -n awx pods/awx-web-7f77d648fd-5k5bx -it -- /bin/bash
+# bash-5.1$ awx-manage createsuperuser
+# Username (leave blank to use 'awx'):
+# Email address: rokmc756@gmail.com
+# Password:
+# Password (again):
