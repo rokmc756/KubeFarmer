@@ -18,12 +18,12 @@
   roles:
     - awx
 
+#    - rancher
+#    - rook-ceph
 #    - k8s
 #    - kubeflow
 #    - nginx
 #    - init-hosts
-#    - rancher
-#    - rook-ceph
 #    - dashboard
 
 #- hosts: minio

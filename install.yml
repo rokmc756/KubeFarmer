@@ -19,11 +19,11 @@
   roles:
     - awx
 
-#    - k8s
-#    - nginx
-#    - kubeflow
-#    - init-hosts
 #    -  rancher
 #    -  rook-ceph
+#    - k8s
+#    - init-hosts
+#    - nginx
+#    - kubeflow
 #    - dashboard
 

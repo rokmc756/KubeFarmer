@@ -3,7 +3,7 @@ apiVersion: awx.ansible.com/v1beta1
 kind: AWX
 metadata:
   name: ansible-awx
-  namespace: {{ awx.namespace }}
+  namespace: awx
 spec:
   service_type: ClusterIP
   postgres_storage_class: local-storage

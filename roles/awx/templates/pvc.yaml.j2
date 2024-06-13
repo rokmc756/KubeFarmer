@@ -1,11 +1,11 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: postgres-{{ awx.namespace }}-postgres-0
+  name: postgres-15-{{ awx.namespace }}-postgres-15-0
   namespace: {{ awx.namespace }}
-  # name: postgres-15-{{ awx.namespace }}-postgres-15-0
-  # name: postgres-13-ansible-awx-postgres-13-0
-  # name: ansible-awx-postgres-0
+  # name: postgres-13-{{ awx.namespace }}-postgres-13-0
+  # name: postgres-{{ awx.namespace }}-postgres-0
+  # name: {{ awx.namespace }}-postgres-0
 spec:
   storageClassName: local-storage
   accessModes:

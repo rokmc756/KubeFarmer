@@ -14,7 +14,7 @@
 
 
 - name: Check AWX Pods
-  shell: kubectl get all -n cattle-system
+  shell: kubectl get all -n {{ awx.namespace }}
   register: check_awx_pods
   until: check_awx_pods.stdout.find("pending") == -1
   retries: 30
@@ -26,7 +26,7 @@
 
 
 - name: Check if the status of ContainerCreating is still existing
-  shell: kubectl get all -A | grep cattle-
+  shell: kubectl get pods -n {{ awx.namespace }}
   register: check_container_creating
   until: check_container_creating.stdout.find("ContainerCreating") == -1
   retries: 30

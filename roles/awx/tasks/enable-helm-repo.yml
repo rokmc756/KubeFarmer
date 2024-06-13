@@ -24,6 +24,13 @@
 - debug: msg={{ add_nginx_helm_repo }}
 
 
+- name: Add AWX Operator Helm Repo
+  shell: |
+    /usr/local/bin/helm repo add awx-operator https://ansible.github.io/awx-operator/
+  register: add_awx_operator_helm_repo
+- debug: msg={{ add_awx_operator_helm_repo }}
+
+
 - name: Add Jetstack Helm Repo
   shell: |
     /usr/local/bin/helm repo add jetstack https://charts.jetstack.io

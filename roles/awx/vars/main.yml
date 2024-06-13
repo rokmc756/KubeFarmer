@@ -4,15 +4,15 @@ base_path: /root
 # 2.18.0
 awx:
   install: true
-  major_version: 0
-  minor_version: 17
+  major_version: 2
+  minor_version: 18
   patch_version: 0
   build_version:
   admin_password: "Changeme123!@#"
   enable_discovery_daemon: false
   clone_git: true
   nvme: true
-  namespace: ansible-awx
+  namespace: awx
   k8s:
     major_version: 1
     minor_version: 28
@@ -22,11 +22,11 @@ awx:
   service:
     metadata:
       name: awx-loadbalancer
-      namespace: cattle-system
+      namespace: awx
   ingress:
     metadata:
       name: awx-ingress
-      namespace: cattle-system
+      namespace: awx
     hostname: "awx.jtest.suse.com"
   kernel_parameters:
     - "net.ipv4.neigh.default.gc_thresh1 = 0"   # For ARP Cache

@@ -89,7 +89,7 @@
   register: change_awx_namespace
   with_items:
     - { regexp: '^  name: awx-demo*', line: '  name: {{ awx.namespace }}', state: present }
-    - { regexp: '^  service_type: nodeport*', line: '  service_type: ClusterIP', state: present }
+    - { regexp: '^  service_type: nodeport*', line: '  service_type: LoadBalancer', state: present }
 - debug: msg={{ change_awx_namespace }}
   when: print_debug == true
 
@@ -203,13 +203,12 @@
   retries: 100
   delay: 10
   with_items:
-    - "{{ awx.namespace }}-operator-controller-manager"
     - "{{ awx.namespace }}-postgres"
-    - "{{ awx.namespace }}-web"
-    - "{{ awx.namespace }}-migration"
-    - "{{ awx.namespace }}-task"
+    - "{{ awx.namespace }}-"
 - debug: msg={{ check_awx_container }}
   when: print_debug == true
+#    - "{{ awx.namespace }}-web"
+#    - "{{ awx.namespace }}-task"
 
 
 - pause:

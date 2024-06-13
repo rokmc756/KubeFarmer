@@ -8,6 +8,13 @@
 - debug: msg={{ remove_nginx_helm_repo }}
 
 
+- name: Remove AWX Operator Helm Repo
+  shell: |
+    /usr/local/bin/helm repo remove awx-operator
+  register: remove_awx_operator_helm_repo
+- debug: msg={{ remove_awx_operator_helm_repo }}
+
+
 - name: Remove Jetstack Helm Repo
   shell: |
     /usr/local/bin/helm repo remove jetstack

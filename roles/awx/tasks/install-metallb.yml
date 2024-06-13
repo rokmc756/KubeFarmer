@@ -53,8 +53,8 @@
   when: print_debug == true
 
 
-- pause:
-    seconds: 30
+#- pause:
+#    seconds: 30
 
 
 #- name: Apply the Metallb Native
