@@ -9,6 +9,7 @@
   notify:
     - Reload Sysctl
 
+
 - name: Apply strictARP for VMWare or Cloud
   shell: |
     kubectl get configmap kube-proxy -n kube-system -o yaml | \
@@ -47,7 +48,7 @@
     kubectl get pods -n metallb-system | grep metallb-speaker
   register: check_metallb_speaker_container
   until: check_metallb_speaker_container.stdout.find("Running") != -1
-  retries: 10
+  retries: 60
   delay: 1
 - debug: msg={{ check_metallb_speaker_container }}
   when: print_debug == true
@@ -144,3 +145,4 @@
   args:
     chdir: "{{ base_path }}/kubernetes-ingress/deployments/helm-chart"
 - debug: msg={{ upgrade_nginx_ingress_crds }}
+

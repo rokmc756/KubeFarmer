@@ -34,6 +34,26 @@
   when: print_debug == true and inventory_hostname in groups['master']
 
 
+- name: Check if Calicoctl exists
+  stat: path=/root/calicoctl
+  register: calicoctl_bin_exists
+- debug: msg={{ calicoctl_bin_exists }}
+  when: print_debug == true
+
+
+- name: Unarchive Calicoctl Tarball
+  unarchive:
+    src: "calicoctl-v{{ k8s.cni.major_version }}.{{ k8s.cni.minor_version }}.{{ k8s.cni.patch_version }}.tar.gz"
+    dest: "/usr/local/bin/"
+    mode: 0755
+    owner: root
+    group: root
+  register: unarchive_calicoctl_tarball
+  when: calicoctl_bin_exists.stat.exists == false and upload_calico == true
+- debug: msg={{ unarchive_calicoctl_tarball }}
+  when: print_debug == true and calicoctl_bin_exists.stat.exists == false and upload_calico == true
+
+
 # curl -o /root/calicoctl -O -L https://github.com/projectcalico/calicoctl/releases/download/v{{ k8s.cni.calicoctl.major_version }}.{{ k8s.cni.calicoctl.minor_version }}.{{ k8s.cni.calicoctl.patch_version }}/calicoctl
 # curl -L https://github.com/projectcalico/calico/releases/download/v3.27.3/calicoctl-linux-amd64 -o /root/calicoctl
 - name: Install Calicoctl
@@ -42,6 +62,7 @@
     chmod +x /root/calicoctl
     mv /root/calicoctl /usr/local/bin
   register: install_calicoctl
-  when: inventory_hostname in groups['master']
+  when: upload_calico == false and calicoctl_bin_exists.stat.exists == true and inventory_hostname in groups['master']
 - debug: msg={{ install_calicoctl }}
-  when: print_debug == true and inventory_hostname in groups['master']
+  when: print_debug == true and upload_calico == false and calicoctl_bin_exists.stat.exists == false and inventory_hostname in groups['master']
+

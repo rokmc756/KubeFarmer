@@ -89,7 +89,7 @@
   register: change_awx_namespace
   with_items:
     - { regexp: '^  name: awx-demo*', line: '  name: {{ awx.namespace }}', state: present }
-    - { regexp: '^  service_type: nodeport*', line: '  service_type: LoadBalancer', state: present }
+    - { regexp: '^  service_type: nodeport*', line: '  service_type: ClusterIP', state: present }
 - debug: msg={{ change_awx_namespace }}
   when: print_debug == true
 
@@ -197,22 +197,22 @@
 
 - name: Validate if AWX Container is still Creating
   shell: |
-    kubectl get pods -n {{ awx.namespace }} | grep {{ item }}
+    kubectl get pods -n {{ awx.namespace }} | grep {{ item.pod_name }}
   register: check_awx_container
   until: check_awx_container.stdout.find("Running") != -1
   retries: 100
   delay: 10
   with_items:
-    - "{{ awx.namespace }}-postgres"
-    - "{{ awx.namespace }}-"
+    - { pod_name: "{{ awx.namespace }}-operator-controller-manager", status: "Running" }
+    - { pod_name: "{{ awx.namespace }}-postgres", status: "Running" }
+    - { pod_name: "{{ awx.namespace }}-web", status: "Running" }
+    - { pod_name: "{{ awx.namespace }}-task", status: "Running" }
 - debug: msg={{ check_awx_container }}
   when: print_debug == true
-#    - "{{ awx.namespace }}-web"
-#    - "{{ awx.namespace }}-task"
-
+# - { pod: "{{ awx.namespace }}-migration", status: "Completed" }
 
 - pause:
-    seconds: 60
+    seconds: 30
 
 
 #- name: Expose Deployment to LoadBalancer

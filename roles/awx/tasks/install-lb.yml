@@ -8,8 +8,10 @@
 
 - name: Create AWX Load Balancer
   shell: |
-    kubectl create -f "{{ base_path }}"/awx-loadbalancer.yaml
+    kubectl apply -f awx-loadbalancer.yaml
   register: create_awx_lb
+  args:
+    chdir: "{{ base_path }}/"
 - debug: msg={{ create_awx_lb }}
 
 

@@ -2,8 +2,19 @@
 apiVersion: awx.ansible.com/v1beta1
 kind: AWX
 metadata:
-  name: ansible-awx
+  name: awx
   namespace: {{ awx.namespace }}
 spec:
   service_type: ClusterIP
   postgres_storage_class: local-storage
+  create_preload_data: true
+  hostname: awx.jtest.suse.com
+  image_pull_policy: IfNotPresent
+  ingress_tls_secret: awx-jtest-suse-com-tls
+  ingress_type: Ingress
+
+  # tower_create_preload_data: true
+  # tower_hostname: awx.jtest.suse.com
+  # tower_image_pull_policy: IfNotPresent
+  # tower_ingress_tls_secret: awx-jtest-suse-com-tls
+  # tower_ingress_type: Ingress

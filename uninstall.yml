@@ -18,9 +18,9 @@
   roles:
     - awx
 
+#    - k8s
 #    - rancher
 #    - rook-ceph
-#    - k8s
 #    - kubeflow
 #    - nginx
 #    - init-hosts

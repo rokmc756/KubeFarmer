@@ -1,8 +1,9 @@
+{% for h in groups["workers"] %}
 ---
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: postgres-pv03
+  name: postgres-pv-{{ hostvars[h]['ansible_hostname'] }}
   namespace: {{ awx.namespace }}
 spec:
   capacity:
@@ -21,4 +22,5 @@ spec:
         - key: kubernetes.io/hostname
           operator: In
           values:
-          - osuse15-node03
+          - {{ hostvars[h]['ansible_hostname'] }}
+{% endfor %}
