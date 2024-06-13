@@ -20,8 +20,8 @@
   roles:
     - awx
 
-#    - k8s
 #    - rancher
+#    - k8s
 #    - rook-ceph
 #    - init-hosts
 #    - nginx

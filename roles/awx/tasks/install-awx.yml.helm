@@ -2,7 +2,6 @@
 # https://computingforgeeks.com/install-and-configure-ansible-awx-on-centos/
 # https://devops.cisel.ch/install-ansible-awx-on-microk8s
 
-
 - name: Create Directory for Persistent Volumes
   shell: |
     mkdir /mnt/storage
