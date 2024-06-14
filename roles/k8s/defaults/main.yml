@@ -4,7 +4,7 @@ rh_common_devel_pkgs: "git"
 
 rh7_common_devel_pkgs: "make,perl,gcc,tcl,tk,libnl"
 rh8_common_devel_pkgs: "make,perl,gcc,tcl,tk,libnl3,python2,python2-libselinux"
-rh9_common_devel_pkgs: "make,perl,gcc,tcl,tk,libnl3,yum-utils,firewalld,python3-libselinux,python3,python3-libselinux,libselinux-python3,python3-policycoreutils,policycoreutils-python-utils,iproute-tc,container-selinux,chrony,jq,java-1.8.0-openjdk,yum-plugin-versionlock"
+rh9_common_devel_pkgs: "make,perl,gcc,tcl,tk,libnl3,yum-utils,firewalld,python3-libselinux,python3,python3-libselinux,libselinux-python3,python3-policycoreutils,policycoreutils-python-utils,iproute-tc,container-selinux,chrony,jq,java-1.8.0-openjdk,yum-plugin-versionlock,python3-pexpect"
 
 rh_docker_pkgs: "docker-ce,docker-ce-cli,containerd.io,docker-compose-plugin,docker-scan-plugin,container-selinux"
 # libcgroup,libcgroup-tools
@@ -12,7 +12,7 @@ rh_docker_pkgs: "docker-ce,docker-ce-cli,containerd.io,docker-compose-plugin,doc
 suse_common_pkgs: "sshpass,cifs-utils,nfs-utils,lsof,glibc-devel,rpcbind,xfsprogs,kernel-devel,jq,expect,net-tools,restorecond,policycoreutils,setools-console"
 suse_common_devel_pkgs: "git"
 # libxml2-python,s3cmd
-suse15_common_devel_pkgs: "make,perl,gcc,tcl,tk,firewalld,python3,python3-policycoreutils,policycoreutils-python-utils,chrony,jq"
+suse15_common_devel_pkgs: "make,perl,gcc,tcl,tk,firewalld,python3,python3-policycoreutils,policycoreutils-python-utils,chrony,jq,python3-pexpect"
 suse_docker_pkgs: "docker,containerd,conntrack-tools"    # packages for container engine
 suse_extra_pkgs: "selinux-policy-targeted,selinux-policy-devel,libseccomp-devel,libcgroup-tools,libcgroup1,cpuset,libcpuset1,cni,cni-plugins"
 
@@ -27,9 +27,9 @@ suse_extra_pkgs: "selinux-policy-targeted,selinux-policy-devel,libseccomp-devel,
 ubt_common_pkgs: "sshpass,s3cmd,cifs-utils,nfs-client,libnl-*,elfutils*,lsof,rpcbind,glibc-*,xfsprogs,linux-headers-generic,jq,expect,nvme-cli,selinux-utils"
 ubt_common_devel_pkgs: "git,make,gcc,tcl,tk"
 
-ubt20_common_devel_pkgs: "perl"
-ubt22_common_devel_pkgs: "perl"
-ubt23_common_devel_pkgs: "perl"
+ubt20_common_devel_pkgs: "perl,python3-pexpect"
+ubt22_common_devel_pkgs: "perl,python3-pexpect"
+ubt23_common_devel_pkgs: "perl,python3-pexpect"
 
 ubt_docker_pkgs: "docker.io,containerd"
 

@@ -6,23 +6,23 @@ metadata:
   namespace: {{ awx.namespace }}
 spec:
   postgres_storage_class: local-storage
-  service_type: LoadBalancer
+  service_type: LoadBalancer               # NodePort or ClusterIP
 
-  # ingress_type: none             # Ingress or Route
-  # create_preload_data: true
-  # hostname: awx.jtest.suse.com
-  # image_pull_policy: IfNotPresent
-  # ingress_tls_secret: awx-jtest-suse-com-tls
-  # ingress_type: Ingress
+# ingress_type: none ( Default ) # Ingress or Route
+# create_preload_data: true
+# hostname: awx.jtest.suse.com
+# image_pull_policy: IfNotPresent
+# ingress_tls_secret: awx-jtest-suse-com-tls
+# ingress_type: Ingress
 
-  # tower_create_preload_data: true
-  # tower_hostname: awx.jtest.suse.com
-  # tower_image_pull_policy: IfNotPresent
-  # tower_ingress_tls_secret: awx-jtest-suse-com-tls
-  # tower_ingress_type: Ingress
+# tower_create_preload_data: true
+# tower_hostname: awx.jtest.suse.com
+# tower_image_pull_policy: IfNotPresent
+# tower_ingress_tls_secret: awx-jtest-suse-com-tls
+# tower_ingress_type: Ingress
 
-  # https://github.com/ansible/awx-operator/issues/1713
-  # https://groups.google.com/g/awx-project/c/Hs2kHwiRvg8
-  # https://forum.ansible.com/t/how-to-enable-https-in-awx/2213/2
-  # https://computingforgeeks.com/expose-ansible-awx-service-using-nginx-ingress/
-  
+# https://github.com/ansible/awx-operator/issues/1713
+# https://groups.google.com/g/awx-project/c/Hs2kHwiRvg8
+# https://forum.ansible.com/t/how-to-enable-https-in-awx/2213/2
+# https://computingforgeeks.com/expose-ansible-awx-service-using-nginx-ingress/
+

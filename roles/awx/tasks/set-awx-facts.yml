@@ -1,5 +1,27 @@
-- debug: msg={{ "Need to check if set_facts is needed" }}
-  when: print_debug == true
+#- name: Get AXE Web Pod Name
+#  shell: |
+#    kubectl -n awx get pods | grep awx-web | awk '{print $1}'
+#  register: get_awx_web_pod_name
+#  when: inventory_hostname in groups['master']
+#- debug: msg={{ get_awx_web_pod_name }}
+#  when: print_debug == true and inventory_hostname in groups['master']
+#
+#
+#- name: Create AXE Admin User and Password
+#  expect:
+#    command: kubectl exec -n awx pods/{{ get_awx_web_pod_name.stdout }} -it -- awx-manage createsuperuser
+#    responses:
+#      '(.*)Username:*': '{{ awx.admin_user }}'
+#      '(.*)Email address:*': '{{ awx.admin_email }}'
+#      '(.*)Password:*': '{{ awx.admin_password }}'
+#      '(.*)Password (again):*': '{{ awx.admin_password }}'
+#    echo: yes
+#    timeout: 5
+#  when: print_debug == true and inventory_hostname in groups['master']
+  # no_log: true
+
+
+#- meta: end_play
 
 
 - name: Get NVME Devices

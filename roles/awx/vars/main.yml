@@ -8,7 +8,9 @@ awx:
   minor_version: 18
   patch_version: 0
   build_version:
-  admin_password: "Changeme123!@#"
+  admin_user: "awxadm"
+  admin_password: "changeme"
+  admin_email: "rokmc756@gmail.com"
   enable_discovery_daemon: false
   clone_git: true
   nvme: true

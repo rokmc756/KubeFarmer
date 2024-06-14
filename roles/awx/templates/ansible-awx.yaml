@@ -1,9 +1,0 @@
----
-apiVersion: awx.ansible.com/v1beta1
-kind: AWX
-metadata:
-  name: awx
-  namespace: awx
-spec:
-  service_type: NodePort
-  postgres_storage_class: local-storage
