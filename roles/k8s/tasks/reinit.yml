@@ -32,6 +32,19 @@
   when: inventory_hostname in groups['workers']
 
 
+- name: Remove Directory for AWX Persistent Volumes
+  file:
+    path: /mnt/awx-storage
+    state: absent
+  register: remove_pv_dir
+  delegate_to: "{{ item }}"
+  delegate_facts: True
+  with_items:
+    - "{{ groups['all'] }}"
+- debug: msg={{ remove_pv_dir }}
+  when: print_debug == true
+
+
 - name: Config image pull
   command: kubeadm config images pull
   when: inventory_hostname in groups['master']

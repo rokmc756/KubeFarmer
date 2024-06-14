@@ -37,6 +37,7 @@
     - "/var/lib/docker/containers"
     - "/var/lib/docker/overlay2"
     - "/etc/modules-load.d/containerd.conf"
+    - "/mnt/awx-storage"
 - debug: msg={{ kube_dir_removed }}
   when: print_debug == true
 

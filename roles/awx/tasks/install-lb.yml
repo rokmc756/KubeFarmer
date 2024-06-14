@@ -23,8 +23,8 @@
 - debug: msg={{ check_awx_pods }}
 
 
-- pause:
-    seconds: 15
+#- pause:
+#    seconds: 15
 
 
 - name: Check if the status of ContainerCreating is still existing

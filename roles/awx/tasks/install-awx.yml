@@ -1,1 +1,196 @@
-install-awx.yml.helm
+# https://www.server-world.info/en/note?os=CentOS_Stream_9&p=ansible&f=9
+# https://computingforgeeks.com/install-and-configure-ansible-awx-on-centos/
+# https://devops.cisel.ch/install-ansible-awx-on-microk8s
+
+- name: Create Directory for Persistent Volumes
+  file:
+    path: /mnt/awx-storage
+    state: directory
+    owner: root
+    group: root
+    mode: 0777
+  register: create_pv_dir
+  delegate_to: "{{ item }}"
+  delegate_facts: True
+  with_items:
+    - "{{ groups['all'] }}"
+- debug: msg={{ create_pv_dir }}
+  when: print_debug == true
+
+
+- name: Check if the AWX Source Code is already downloaded
+  stat: path={{ base_path }}/awx-operator
+  register: awx_op_dir_existed
+- debug: msg={{ awx_op_dir_existed }}
+
+
+- name: Deploy AWX Operator
+  shell: |
+    /usr/local/bin/helm install awx-operator awx-operator/awx-operator -n {{ awx.namespace }} --create-namespace
+  register: deploy_awx_operator
+- debug: msg={{ deploy_awx_operator }}
+  when: print_debug == true
+
+
+- name: Validate if AWX Operator Container is still Creating
+  shell: |
+    kubectl get pods -n {{ awx.namespace }}
+  register: check_awx_operator
+  until: check_awx_operator.stdout.find("ContainerCreating") == -1
+  retries: 60
+- debug: msg={{ check_awx_operator }}
+  when: print_debug == true
+
+
+#- name: Confirm Password for Admin Account
+#  shell: |
+#    kubectl get secret awx-admin-password -o jsonpath="{.data.password}" | base64 --decode; echo
+#  register: confirm_admin_password
+#- debug: msg={{ confirm_admin_password }}
+#  when: print_debug == true
+
+
+
+- name: Validate if AWX Operator Container is still Creating
+  shell: |
+    kubectl get pods -n {{ awx.namespace }}
+  register: check_awx_operator
+  until: check_awx_operator.stdout.find("ContainerCreating") == -1
+  retries: 60
+- debug: msg={{ check_awx_operator }}
+  when: print_debug == true
+
+
+- name: Set namespace for AWX you set to kubectl context
+  shell: |
+    kubectl config set-context --current --namespace={{ awx.namespace }}
+  register: set_awx_namespace
+- debug: msg={{ set_awx_namespace }}
+  when: print_debug == true
+
+
+#- name: Possible to see installation progress on the logs
+#  shell: |
+#    kubectl logs -f deployments/awx-operator-controller-manager -c awx-manager
+#  register: check_awx_install_progress
+#- debug: msg={{ check_awx_install_progress }}
+#  when: print_debug == true
+
+
+- name: Validate if AWX Operator Container is still Creating
+  shell: |
+    kubectl get pods -l "app.kubernetes.io/managed-by=awx-operator"
+  register: check_awx_operator_containers
+  until: check_awx_operator_containers.stdout.find("ContainerCreating") == -1
+  retries: 60
+- debug: msg={{ check_awx_operator_containers }}
+  when: print_debug == true
+
+
+- name: Get AWX Service
+  shell: |
+    kubectl get service -l "app.kubernetes.io/managed-by=awx-operator"
+  register: get_awx_service
+- debug: msg={{ get_awx_service }}
+  when: print_debug == true
+
+
+- name: Confirm Password for Admin Account
+  shell: |
+    kubectl get secret awx-admin-password -o jsonpath="{.data.password}" | base64 --decode; echo
+  register: confirm_admin_password
+- debug: msg={{ confirm_admin_password }}
+  when: print_debug == true
+
+
+- name: Copy Cluster Local PVC Config Yaml
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ base_path }}/{{ item }}"
+  register: copy_cluster_local_pvc_config_yaml
+  ignore_errors: yes
+  with_items:
+    - "local-storage-class.yaml"
+    - "local-storage-pv.yaml"
+    - "local-storage-pvc.yaml"
+    - "ansible-awx.yaml"
+- debug: msg={{ copy_cluster_local_pvc_config_yaml }}
+
+
+- name: Cluster Settings for a Production Cluster Running in a Dynamic Cloud Environment including VMware
+  shell: |
+    kubectl create -f {{ item }}
+  register: create_pvc
+  with_items:
+    - "local-storage-class.yaml"
+    - "local-storage-pv.yaml"
+    - "local-storage-pvc.yaml"
+  args:
+    chdir: "{{ base_path }}/"
+- debug: msg={{ create_pvc }}
+  when: print_debug == true
+
+
+- name: Copy AWX Config Yaml
+  template:
+    src: ansible-awx.yaml.j2
+    dest: "{{ base_path }}/ansible-awx.yaml"
+  register: copy_awx_config_yaml
+- debug: msg={{ copy_awx_config_yaml }}
+
+
+- name: Deploy AWX
+  shell: |
+    kubectl apply -f ansible-awx.yaml
+  register: set_awx_namespace
+  args:
+    chdir: "{{ base_path }}/"
+- debug: msg={{ set_awx_namespace }}
+  when: print_debug == true
+
+
+- name: Validate if AWX Container is still Creating
+  shell: |
+    kubectl get pods -n {{ awx.namespace }} | grep {{ item.pod_name }}
+  register: check_awx_container
+  until: check_awx_container.stdout.find("Running") != -1
+  retries: 100
+  delay: 10
+  with_items:
+    - { pod_name: "{{ awx.namespace }}-operator-controller-manager", status: "Running" }
+    - { pod_name: "{{ awx.namespace }}-postgres", status: "Running" }
+    - { pod_name: "{{ awx.namespace }}-web", status: "Running" }
+    - { pod_name: "{{ awx.namespace }}-task", status: "Running" }
+- debug: msg={{ check_awx_container }}
+  when: print_debug == true
+  # - { pod: "{{ awx.namespace }}-migration", status: "Completed" }
+
+
+- name: Get AXE Web Pod Name
+  shell: |
+    kubectl -n awx get pods | grep awx-web | awk '{print $1}'
+  register: get_awx_web_pod_name
+- debug: msg={{ get_awx_web_pod_name }}
+  when: print_debug == true
+
+
+- name: Create AXE Admin User and Password
+  expect:
+    command: kubectl exec -n awx pods/{{ get_awx_web_pod_name.stdout }} -it -- awx-manage createsuperuser
+    responses:
+      (?i)Username: "{{ awx.admin_user }}"
+      (?i)Email address: "{{ awx.admin_email }}"
+      (?i)Password: "{{ awx.admin_password }}"
+      (?i)Password (again): "{{ awx.admin_password }}"
+    echo: yes
+    timeout: 5
+  register: create_axe_admin_user
+- debug: msg={{ create_axe_admin_user }}
+  when: print_debug == true
+  # no_log: true
+  # you don't want to show passwords in your logs
+
+
+# Expose IP Address for AWX Service
+# kubectl patch svc ansible-awx-service -p '{"spec":{"externalIPs":["192.168.1.201"]}}'
+

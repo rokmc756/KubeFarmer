@@ -7,7 +7,7 @@
 
 
 - name: Check AWX Pods
-  shell: kubectl get all -n cattle-system
+  shell: kubectl get all -n {{ awx.namespace }}
   register: check_awx_pods
   ignore_errors: yes
   until: check_awx_pods.stdout.find("Terminating") == -1

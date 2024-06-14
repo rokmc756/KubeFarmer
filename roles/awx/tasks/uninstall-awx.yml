@@ -1,113 +1,72 @@
-# https://www.server-world.info/en/note?os=CentOS_Stream_9&p=ansible&f=9
-
-# 1
-- name: Delete Cluster Settings for a Production Cluster Running in a Dynamic Cloud Environment including VMware
-  shell: |
-    kubectl delete -f cluster-on-local-pvc.yaml
-  register: delete_pvc
-  ignore_errors: true
-  args:
-    chdir: "{{ base_path }}/"
-- debug: msg={{ delete_pvc }}
-  when: print_debug == true
-
-
-# 2
-- name: Delete Cluster Local PVC Config Yaml
-  file:
-    path: cluster-on-local-pvc.yaml.j2
-    state: absent
-  register: delete_cluster_local_pvc_config_yaml
-  ignore_errors: true
-- debug: msg={{ delete_cluster_local_pvc_config_yaml }}
-
-
-# 3
 - name: Delete AWX
   shell: |
-    kubectl delete -f ansible-awx.yml
+    kubectl delete -f ansible-awx.yaml
   register: delete_awx
   ignore_errors: true
   args:
-    chdir: "{{ base_path }}/awx-operator"
+    chdir: "{{ base_path }}/"
 - debug: msg={{ delete_awx }}
   when: print_debug == true
 
 
-# 4
-- name: Set namespace for AWX you set to kubectl context
-  shell: |
-    kubectl config set-context --current --namespace={{ awx.namespace }}
-  register: set_awx_namespace
+- name: Delete AWX Config Yaml
+  file:
+    path: "{{ base_path }}/ansible-awx.yaml"
+    state: absent
+  register: delete_awx_config_yaml
   ignore_errors: true
+- debug: msg={{ delete_awx_config_yaml }}
+
+
+- name: Delete Local Storage and Persistent Volumes
+  shell: |
+    kubectl delete -f {{ item }}
+  register: delete_local_storage
+  ignore_errors: true
+  with_items:
+    - "local-storage-pvc.yaml"
+    - "local-storage-pv.yaml"
+    - "local-storage-class.yaml"
   args:
-    chdir: "{{ base_path }}/awx-operator"
-- debug: msg={{ set_awx_namespace }}
+    chdir: "{{ base_path }}/"
+- debug: msg={{ delete_local_storage }}
   when: print_debug == true
 
 
-# 5
-- name: Delete AWX Yaml
+- name: Copy Cluster Local PVC Config Yaml
   file:
-    path: "{{ base_path }}/awx-operator/ansible-awx.yml"
+    path: "{{ item }}"
     state: absent
-  register: delete_awx_yaml
-  ignore_errors: true
-- debug: msg={{ delete_awx_yaml }}
+  register: delete_cluster_local_pvc_config_yaml
+  ignore_errors: yes
+  with_items:
+    - "local-storage-class.yaml"
+    - "local-storage-pv.yaml"
+    - "local-storage-pvc.yaml"
+    - "ansible-awx.yaml"
+- debug: msg={{ delete_cluster_local_pvc_config_yaml }}
   when: print_debug == true
 
 
-# 6
-- name: Undeply AWX Operator
+- name: Uninsatll AWX Operator
   shell: |
-    export NAMESPACE={{ awx.namespace }}
-    make undeploy
-  register: undeploy_awx_operator
-  ignore_errors: true
-  args:
-    chdir: "{{ base_path }}/awx-operator"
-- debug: msg={{ undeploy_awx_operator }}
+    /usr/local/bin/helm uninstall awx-operator
+  register: uninstall_awx_operator
+  ignore_errors: yes
+- debug: msg={{ uninstall_awx_operator }}
   when: print_debug == true
 
 
-# 7
-- name: Check if the AWX Source Code is already downloaded
-  stat: path={{ base_path }}/awx-operator
-  register: awx_op_dir_existed
-  ignore_errors: true
-- debug: msg={{ awx_op_dir_existed }}
-
-
-# 8
-- name: Clone AWX Source Code
+- name: Delete Directory for Persistent Volumes
   file:
-    path: "{{ base_path }}/awx-operator"
+    path: /mnt/awx-storage
     state: absent
-  register: delete_awx_clone
-  ignore_errors: true
-  when: awx.clone_git == true and awx_op_dir_existed.stat.exists == True
-- debug: msg={{ delete_awx_clone }}
-  when: print_debug == true and awx.clone_git == true and awx_op_dir_existed.stat.exists == True
-
-# 9
-- name: Delete AWX Operator Namespace
-  shell: |
-    kubectl delete namespace awx-operator-system
-  register: delete_awx_operator_namespace
-  ignore_errors: true
-- debug: msg={{ delete_awx_operator_namespace }}
-  when: print_debug == true
-
-
-- name: Remove Directory for Persistent Volumes
-  file:
-    path: /mnt/storage
-    state: absent
-  register: remove_pv_dir
+  register: delete_pv_dir
+  ignore_errors: yes
   delegate_to: "{{ item }}"
   delegate_facts: True
   with_items:
     - "{{ groups['all'] }}"
-- debug: msg={{ remove_pv_dir }}
+- debug: msg={{ delete_pv_dir }}
   when: print_debug == true
 

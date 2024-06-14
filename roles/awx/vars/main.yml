@@ -1,7 +1,5 @@
 base_path: /root
 
-# 0.17.0
-# 2.18.0
 awx:
   install: true
   major_version: 2
@@ -74,7 +72,7 @@ helm:
 
 
 cert_manager:
-  install: true
+  install: false
   major_version: 1
   minor_version: 7
   patch_version: 1
