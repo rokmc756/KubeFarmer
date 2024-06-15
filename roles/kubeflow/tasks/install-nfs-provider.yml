@@ -1,52 +1,21 @@
-#- name: Clone Rook Source Code
-#  shell: |
-#    git -C "{{ base_path }}" clone --single-branch --branch release-{{ rook.major_version }}.{{ rook.minor_version }} https://github.com/rook/rook.git
-#  register: git_clone_rook
-#  ignore_errors: true
-#  when: rook.clone_git == true and rook_dir_existed.stat.exists != True
-#- debug: msg={{ git_clone_rook }}
-#  when: print_debug == true and rook.clone_git == true and rook_dir_existed.stat.exists != True
-
-
-- name: Check if the Rook Ceph Source Code is already downloaded
-  stat: path={{ base_path }}/rook
-  register: rook_dir_existed
-- debug: msg={{ rook_dir_existed }}
-
+- name: Check if the NFS Provider Source Code is Already Downloaded
+  stat: path={{ base_path }}/nfs-subdir-external-provisioner
+  register: nfs_provider_dir_existed
+- debug: msg={{ nfs_provider_dir_existed }}
 
 
 # git -C "{{ base_path }}" clone --single-branch --branch release-{{ rook.major_version }}.{{ rook.minor_version }} https://github.com/rook/rook.git
 - name: Install NFS Provider
   shell: |
     git -C "{{ base_path }}" clone https://github.com/kubernetes-sigs/nfs-subdir-external-provisioner.git
-  register: git_clone_nfs_profiler
+  register: git_clone_nfs_provider
   ignore_errors: true
-  when: kubeflow.clone_git == true and rook_dir_existed.stat.exists != True
-- debug: msg={{ git_clone_rook }}
-  when: print_debug == true and rook.clone_git == true and rook_dir_existed.stat.exists != True
+  when: kubeflow.clone_git == true and nfs_provider_dir_existed.stat.exists != True
+- debug: msg={{ git_clone_nfs_provider }}
+  when: print_debug == true and kubeflow.clone_git == true and nfs_provider_dir_existed.stat.exists != True
 
 
-- name: Creae CRDs
-  shell: |
-    kubectl create -f crds.yaml
-  register: create_crds
-  args:
-    chdir: "{{ base_path }}/rook/deploy/examples/"
-- debug: msg={{ create_crds }}
-  when: print_debug == true
-
-
-- name: Creae CRDs
-  shell: |
-    kubectl create -f crds.yaml
-  register: create_crds
-  args:
-    chdir: "{{ base_path }}/rook/deploy/examples/"
-- debug: msg={{ create_crds }}
-  when: print_debug == true
-
-
-- name: Creae RBAC
+- name: Create RBAC
   shell: |
     kubectl create -f rbac.yaml
   register: create_crds
@@ -56,38 +25,76 @@
   when: print_debug == true
 
 
-- name: Creae Deployment
+#          env:
+#            - name: PROVISIONER_NAME
+#              value: k8s-sigs.io/nfs-subdir-external-provisioner
+#            - name: NFS_SERVER
+#              value: 10.3.243.101
+#            - name: NFS_PATH
+#              value: /ifs/kubernetes
+#      volumes:
+#        - name: nfs-client-root
+#          nfs:
+#            server: 10.3.243.101
+#            path: /ifs/kubernetes
+
+
+- name: Replace lines for NFS Server IP Address and NFS Root
+  lineinfile:
+    dest: "{{ base_path }}/nfs-subdir-external-provisioner/deploy/deployment.yaml"
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    state: "{{ item.state }}"
+  register: replace_nfs_server_lines
+  with_items:
+    - { regexp: '^              value: 10.3.243.101', line: '              value: 192.168.1.90', state: present }
+    - { regexp: '^              value: /ifs/kubernetes', line: '              value: /nfs-root', state: present }
+    - { regexp: '^            server: 10.3.243.101', line: '            server: 192.168.1.90', state: present }
+    - { regexp: '^            path: /ifs/kubernetes', line: '            path: /nfs-root', state: present }
+- debug: msg={{ replace_nfs_server_lines  }}
+  when: print_debug == true
+
+
+
+#- name: Enable ROOK Discovery Daemon
+#  lineinfile:
+#    dest: "{{ base_path }}/rook/deploy/examples/operator.yaml"
+#    regexp: "{{ item.regexp }}"
+#    line: "{{ item.line }}"
+#    state: "{{ item.state }}"
+#  register: enable_rook_discovery_daemon
+#  with_items:
+#    - { regexp: '^  ROOK_ENABLE_DISCOVERY_DAEMON:*', line: '  ROOK_ENABLE_DISCOVERY_DAEMON: "true"', state: present }
+#  when: rook.enable_discovery_daemon == true
+#- debug: msg={{ enable_rook_discovery_daemon }}
+#  when: rook.enable_discovery_daemon == true and print_debug == true
+
+
+
+- name: Create Deployment
   shell: |
     kubectl apply -f deployment.yaml
-  register: create_crds
+  register: apply_deployment
   args:
     chdir: "{{ base_path }}/nfs-subdir-external-provisioner/deploy"
-- debug: msg={{ create_crds }}
+- debug: msg={{ apply_deployment }}
   when: print_debug == true
-#env:
-#  - name: PROVISIONER_NAME
-#    value: k8s-sigs.io/nfs-subdir-external-provisioner
-#  - name: NFS_SERVER
-#    value: NFS SERVER IP
-#  - name: NFS_PATH
-#    value: NFS 데이터 폴더 경로
 
 
-- name: Creae Class
+- name: Apply Class
   shell: |
     kubectl apply -f class.yaml
-  register: create_crds
+  register: apply_class
   args:
     chdir: "{{ base_path }}/nfs-subdir-external-provisioner/deploy"
-- debug: msg={{ create_crds }}
+- debug: msg={{ apply_class }}
   when: print_debug == true
 
 
-- name: Creae Class
+- name: Patch StorageClass for NFS Client
   shell: |
     kubectl patch storageclass nfs-client -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
-  register: create_crds
-- debug: msg={{ create_crds }}
+  register: patch_storageclass_nfs_client
+- debug: msg={{ patch_storageclass_nfs_client }}
   when: print_debug == true
-
 

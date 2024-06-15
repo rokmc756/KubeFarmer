@@ -16,12 +16,11 @@
     enable_firewall: false
     reboot_required: true
   roles:
-    - awx
-
+    - kubeflow
+#    - awx
 #    - k8s
 #    - rancher
 #    - rook-ceph
-#    - kubeflow
 #    - nginx
 #    - init-hosts
 #    - dashboard

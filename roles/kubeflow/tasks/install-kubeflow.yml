@@ -7,7 +7,8 @@
 
 - name: Clone Kubeflow
   shell: |
-    git -C "{{ base_path }}" clone --single-branch --branch release-{{ kubeflow.major_version }}.{{ kubeflow.minor_version }} https://github.com/kubeflow/manifests.git
+    git -C "{{ base_path }}" clone --single-branch --branch v{{ kubeflow.major_version }}.{{ kubeflow.minor_version }}.{{ kubeflow.patch_version }} \
+    https://github.com/kubeflow/manifests.git
   register: git_clone_kubeflow
   ignore_errors: true
   when: kubeflow.clone_git == true and kubeflow_dir_existed.stat.exists != True
@@ -15,14 +16,56 @@
   when: print_debug == true and kubeflow.clone_git == true and kubeflow_dir_existed.stat.exists != True
 
 
+# /usr/local/bin/kustomize build example | /usr/bin/kubectl apply -f -
+# while ! kustomize build example | kubectl apply -f -; do echo "Retrying to apply resources"; sleep 10; done
 - name: Deploy Kubeflow
   shell: |
-    while ! kustomize build example | kubectl apply -f -; do echo "Retrying to apply resources"; sleep 10; done
+    kustomize build example | kubectl apply -f -
   register: deploy_kubeflow
+  until: deploy_kubeflow is succeeded
+  retries: 10
+  delay: 60
   args:
     chdir: "{{ base_path }}/manifests"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ deploy_kubeflow }}
+  when: print_debug == true
 
 
-# kubectl get service -n istio-system istio-ingressgateway
+- name: Validate if KubeFlow Containers are still Initializing
+  shell: |
+    kubectl get pods -n {{ item.ns }} | grep {{ item.pod }}
+  register: check_kubeflow_containers
+  until: check_kubeflow_containers.stdout.find("PodIntializing") == -1
+  retries: 100
+  delay: 10
+  with_items:
+    - { ns: knative-serving , pod: "domain-mapping" }
+    - { ns: knative-serving, pod: "domainmapping-webhook" }
+    - { ns: kubeflow, pod: "cache-server" }
+    - { ns: kubeflow, pod: "katib-ui" }
+- debug: msg={{ check_kubeflow_containers }}
+  when: print_debug == true
+
+
+- name: Validate if KubeFlow Container is still CrashLoopBackOff
+  shell: |
+    kubectl get pods -n {{ item.ns }} | grep {{ item.pod }}
+  register: check_kubeflow_container
+  until: check_kubeflow_container.stdout.find("CrashLoopBackOff") == -1
+  retries: 100
+  delay: 10
+  with_items:
+    - { ns: kubeflow, pod: "metadata-grpc-deployment" }
+- debug: msg={{ check_kubeflow_container }}
+  when: print_debug == true
+
+
+- name: Check KubeFlow Ingress
+  shell: |
+    kubectl get service -n istio-system istio-ingressgateway
+  register: check_kubeflow_ingress
+- debug: msg={{ check_kubeflow_ingress }}
+  when: print_debug == true
 
