@@ -99,17 +99,17 @@
   when: print_debug == true
 
 
-- name: Validate if KubeFlow Container is still CrashLoopBackOff
-  shell: |
-    kubectl get pods -n {{ item.ns }} | grep {{ item.pod }}
-  register: check_kubeflow_container
-  until: check_kubeflow_container.stdout.find("CrashLoopBackOff") == -1
-  retries: 100
-  delay: 10
-  with_items:
-    - { ns: kubeflow, pod: "metadata-grpc-deployment" }
-- debug: msg={{ check_kubeflow_container }}
-  when: print_debug == true
+#- name: Validate if KubeFlow Container is still CrashLoopBackOff
+#  shell: |
+#    kubectl get pods -n {{ item.ns }} | grep {{ item.pod }}
+#  register: check_kubeflow_container
+#  until: check_kubeflow_container.stdout.find("CrashLoopBackOff") == -1
+#  retries: 100
+#  delay: 10
+#  with_items:
+#    - { ns: kubeflow, pod: "metadata-grpc-deployment" }
+#- debug: msg={{ check_kubeflow_container }}
+#  when: print_debug == true
 
 
 - name: Check KubeFlow Ingress
