@@ -1,15 +1,22 @@
+#
 - name: Copy KubeFlow Loadbalancer Config Yaml
   template:
-    src: kubeflow-loadbalancer.yaml.j2
-    dest: "{{ base_path }}/kubeflow-loadbalancer.yaml"
+    src: "{{ item }}.j2"
+    dest: "{{ base_path }}/{{ item }}"
   register: copy_kubeflow_lb_config_yaml
+  with_items:
+    - "kubeflow-loadbalancer.yaml"
+    - "minio-loadbalancer.yaml"
 - debug: msg={{ copy_kubeflow_lb_config_yaml }}
 
 
 - name: Create KubeFlow Load Balancer
   shell: |
-    kubectl create -f "{{ base_path }}"/kubeflow-loadbalancer.yaml
+    kubectl create -f "{{ base_path }}/{{ item }}"
   register: create_rancher_lb
+  with_items:
+    - "kubeflow-loadbalancer.yaml"
+    - "minio-loadbalancer.yaml"
 - debug: msg={{ create_rancher_lb }}
 
 
@@ -21,11 +28,11 @@
 - debug: msg={{ check_kubeflow_pods }}
 
 
-- pause:
-    seconds: 15
+#- pause:
+#    seconds: 15
 
 
-- name: Check if the status of ContainerCreating is still existing
+- name: Check if the status of ContainerCreating is Still Creating
   shell: kubectl get pods -n {{ kubeflow.namespace }}
   register: check_container_creating
   until: check_container_creating.stdout.find("ContainerCreating") == -1

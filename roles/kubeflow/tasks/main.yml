@@ -33,10 +33,10 @@
 #  when: cert_manager.install == true and inventory_hostname in groups['master']
 
 
-#- name: Deploy NFS Provider
-#  import_tasks: install-nfs-provider.yml
-#  tags: install
-#  when: kubeflow.install == true and inventory_hostname in groups['master']
+- name: Deploy NFS Provider
+  import_tasks: install-nfs-provider.yml
+  tags: install
+  when: kubeflow.install == true and inventory_hostname in groups['master']
 
 
 - name: Install Kustomize
@@ -75,10 +75,10 @@
 #  when: cert_manager.install == true and inventory_hostname in groups['master']
 
 
-#- name: Destroy NFS Provider
-#  import_tasks: uninstall-nfs-provider.yml
-#  tags: uninstall
-#  when: kubeflow.install == true and inventory_hostname in groups['master']
+- name: Destroy NFS Provider
+  import_tasks: uninstall-nfs-provider.yml
+  tags: uninstall
+  when: kubeflow.install == true and inventory_hostname in groups['master']
 
 
 - name: Uninstall Metallb
