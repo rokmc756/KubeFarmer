@@ -1,4 +1,5 @@
-
+# https://mlops-for-all.github.io/docs/appendix/metallb
+#
 - name: Check if the Kubeflow is already downloaded
   stat: path={{ base_path }}/manifests
   register: kubeflow_dir_existed
