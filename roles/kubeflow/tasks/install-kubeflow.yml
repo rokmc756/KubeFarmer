@@ -56,6 +56,12 @@
   when: print_debug == true and kubeflow.clone_git == true and kubeflow_dir_existed.stat.exists != True
 
 
+# Change CluserIP to LoadBalancer
+# kubectl -n istio-system patch svc istio-ingressgateway \
+# -p '{"spec": {"ports": [{"port": 443,"targetPort": 443,"name": "https"},{"port": 80,"targetPort": 80,"name": "http"}],"type": "LoadBalancer"}}'
+
+
+
 # kustomize build example | sed '/mysql_native_password/d' | kubectl apply -f -
 # while ! kustomize build example | kubectl apply -f -; do echo "Retrying to apply resources"; sleep 10; done
 # kustomize build example | kubectl apply -f -
