@@ -24,3 +24,29 @@ spec:
           values:
           - {{ hostvars[h]['ansible_hostname'] }}
 {% endfor %}
+{% for h in groups["workers"] %}
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: authservice-pv-{{ hostvars[h]['ansible_hostname'] }}
+  namespace: istio-system
+spec:
+  capacity:
+    storage: 10Gi
+  volumeMode: Filesystem
+  accessModes:
+  - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Delete
+  storageClassName: authservice-storage
+  local:
+    path: /mnt/authservice-storage
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - {{ hostvars[h]['ansible_hostname'] }}
+{% endfor %}

@@ -1,17 +1,19 @@
 
-- name: Create Directory for Persistent Volumes
-  file:
-    path: /mnt/katib-storage
-    state: directory
-    owner: root
-    group: root
-    mode: 0777
-  register: create_pv_dir
-  delegate_to: "{{ item }}"
-  delegate_facts: True
+- name: Check if the Kubeflow is already downloaded
+  stat: path={{ base_path }}/manifests
+  register: kubeflow_dir_existed
+- debug: msg={{ kubeflow_dir_existed }}
+
+
+- name: Create Namespace for Persistent Volumes
+  shell: |
+    kubectl create namespace {{ item }}
+  register: create_namespace
+  ignore_errors: true
   with_items:
-    - "{{ groups['all'] }}"
-- debug: msg={{ create_pv_dir }}
+    - kubeflow
+    - istio-system
+- debug: msg={{ create_namespace }}
   when: print_debug == true
 
 
@@ -28,18 +30,11 @@
 - debug: msg={{ copy_cluster_local_pvc_config_yaml }}
 
 
-- name: Create Namespace for Persistent Volumes
-  shell: |
-    kubectl create namespace {{ kubeflow.namespace }}
-  register: create_namespace
-- debug: msg={{ create_namespace }}
-  when: print_debug == true
-
-
 - name: Cluster Settings for a Production Cluster Running in a Dynamic Cloud Environment including VMware
   shell: |
     kubectl create -f {{ item }}
   register: create_pvc
+  ignore_errors: true
   with_items:
     - "local-storage-class.yaml"
     - "local-storage-pv.yaml"
@@ -48,12 +43,6 @@
     chdir: "{{ base_path }}/"
 - debug: msg={{ create_pvc }}
   when: print_debug == true
-
-
-- name: Check if the Kubeflow is already downloaded
-  stat: path={{ base_path }}/manifests
-  register: kubeflow_dir_existed
-- debug: msg={{ kubeflow_dir_existed }}
 
 
 - name: Clone Kubeflow
@@ -67,14 +56,55 @@
   when: print_debug == true and kubeflow.clone_git == true and kubeflow_dir_existed.stat.exists != True
 
 
+# kustomize build example | sed '/mysql_native_password/d' | kubectl apply -f -
+# while ! kustomize build example | kubectl apply -f -; do echo "Retrying to apply resources"; sleep 10; done
+# kustomize build example | kubectl apply -f -
+#- name: Deploy Kubeflow
+#  shell: |
+#    kustomize build {{ item }} | kubectl apply -f -
+#  register: deploy_kubeflow
+#  ignore_errors: true
+#  until: deploy_kubeflow is succeeded
+#  retries: 5
+#  delay: 20
+#  args:
+#    chdir: "{{ base_path }}/manifests"
+#  environment:
+#    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+#  with_items:
+#    - "common/cert-manager/cert-manager/base"
+#    - "kustomize build common/cert-manager/kubeflow-issuer/base"
+#    - "common/istio-1-17/istio-crds/base"
+#    - "common/istio-1-17/istio-namespace/base"
+#    - "common/istio-1-17/istio-install/base"
+#    - "common/dex/overlays/istio"
+#    - "common/oidc-authservice/base"
+#    - "common/kubeflow-namespace/base"
+#    - "common/kubeflow-roles/base"
+#    - "common/istio-1-17/kubeflow-istio-resources/base"
+#    - "apps/pipeline/upstream/env/platform-agnostic-multi-user"
+#    - "apps/katib/upstream/installs/katib-with-kubeflow"
+#    - "apps/centraldashboard/upstream/overlays/istio"
+#    - "apps/admission-webhook/upstream/overlays/cert-manager"
+#    - "apps/profiles/upstream/overlays/kubeflow"
+#    - "apps/volumes-web-app/upstream/overlays/istio"
+#    - "apps/training-operator/upstream/overlays/kubeflow"
+#    - "common/user-namespace/base"
+#- debug: msg={{ deploy_kubeflow }}
+#  when: print_debug == true
+
+
+# kustomize build example | sed '/mysql_native_password/d' | kubectl apply -f -
+# kustomize build example | kubectl apply -f -
 # while ! kustomize build example | kubectl apply -f -; do echo "Retrying to apply resources"; sleep 10; done
 - name: Deploy Kubeflow
   shell: |
-    kustomize build example | sed '/mysql_native_password/d' | kubectl apply -f -
+    kustomize build example | kubectl apply -f -
   register: deploy_kubeflow
+  ignore_errors: true
   until: deploy_kubeflow is succeeded
   retries: 10
-  delay: 60
+  delay: 5
   args:
     chdir: "{{ base_path }}/manifests"
   environment:
@@ -99,17 +129,17 @@
   when: print_debug == true
 
 
-#- name: Validate if KubeFlow Container is still CrashLoopBackOff
-#  shell: |
-#    kubectl get pods -n {{ item.ns }} | grep {{ item.pod }}
-#  register: check_kubeflow_container
-#  until: check_kubeflow_container.stdout.find("CrashLoopBackOff") == -1
-#  retries: 100
-#  delay: 10
-#  with_items:
-#    - { ns: kubeflow, pod: "metadata-grpc-deployment" }
-#- debug: msg={{ check_kubeflow_container }}
-#  when: print_debug == true
+- name: Validate if KubeFlow Container is still CrashLoopBackOff
+  shell: |
+    kubectl get pods -n {{ item.ns }} | grep {{ item.pod }}
+  register: check_kubeflow_container
+  until: check_kubeflow_container.stdout.find("CrashLoopBackOff") == -1
+  retries: 100
+  delay: 10
+  with_items:
+    - { ns: kubeflow, pod: "metadata-grpc-deployment" }
+- debug: msg={{ check_kubeflow_container }}
+  when: print_debug == true
 
 
 - name: Check KubeFlow Ingress

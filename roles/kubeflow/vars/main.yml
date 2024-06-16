@@ -38,6 +38,8 @@ kubeflow:
     hostname: "kubeflow.jtest.suse.com"
   kernel_parameters:
     - "net.ipv4.neigh.default.gc_thresh1 = 0"   # For ARP Cache
+    - "fs.inotify.max_user_instances=2280"
+    - "fs.inotify.max_user_watches=755360"
 
 metallb:
   install: true
@@ -75,6 +77,13 @@ helm:
   minor_version:
   patch_version:
   build_version:
+
+
+nfs_provider:
+  install: true
+  major_version:
+  minor_version:
+  patch_version:
 
 
 nginx:

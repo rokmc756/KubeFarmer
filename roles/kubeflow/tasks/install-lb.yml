@@ -7,6 +7,8 @@
   with_items:
     - "kubeflow-loadbalancer.yaml"
     - "minio-loadbalancer.yaml"
+    - "katib-ui-loadbalancer.yaml"
+    - "ml-pipeline-ui-loadbalancer.yaml"
 - debug: msg={{ copy_kubeflow_lb_config_yaml }}
 
 
@@ -17,6 +19,8 @@
   with_items:
     - "kubeflow-loadbalancer.yaml"
     - "minio-loadbalancer.yaml"
+    - "katib-ui-loadbalancer.yaml"
+    - "ml-pipeline-ui-loadbalancer.yaml"
 - debug: msg={{ create_rancher_lb }}
 
 
