@@ -32,15 +32,14 @@
   when: inventory_hostname in groups['workers']
 
 
-- name: Remove Directory for AWX Persistent Volumes
+- name: Remove Directory for Persistent Volumes
   file:
-    path: /mnt/awx-storage
+    path: "{{ item }}"
     state: absent
   register: remove_pv_dir
-  delegate_to: "{{ item }}"
-  delegate_facts: True
   with_items:
-    - "{{ groups['all'] }}"
+    - "/mnt/awx-storage"
+    - "/mnt/kubeflow-storage"
 - debug: msg={{ remove_pv_dir }}
   when: print_debug == true
 

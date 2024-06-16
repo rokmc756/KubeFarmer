@@ -1,4 +1,55 @@
 
+- name: Create Directory for Persistent Volumes
+  file:
+    path: /mnt/katib-storage
+    state: directory
+    owner: root
+    group: root
+    mode: 0777
+  register: create_pv_dir
+  delegate_to: "{{ item }}"
+  delegate_facts: True
+  with_items:
+    - "{{ groups['all'] }}"
+- debug: msg={{ create_pv_dir }}
+  when: print_debug == true
+
+
+- name: Copy Cluster Local PVC Config Yaml
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ base_path }}/{{ item }}"
+  register: copy_cluster_local_pvc_config_yaml
+  ignore_errors: yes
+  with_items:
+    - "local-storage-class.yaml"
+    - "local-storage-pv.yaml"
+    - "local-storage-pvc.yaml"
+- debug: msg={{ copy_cluster_local_pvc_config_yaml }}
+
+
+- name: Create Namespace for Persistent Volumes
+  shell: |
+    kubectl create namespace {{ kubeflow.namespace }}
+  register: create_namespace
+- debug: msg={{ create_namespace }}
+  when: print_debug == true
+
+
+- name: Cluster Settings for a Production Cluster Running in a Dynamic Cloud Environment including VMware
+  shell: |
+    kubectl create -f {{ item }}
+  register: create_pvc
+  with_items:
+    - "local-storage-class.yaml"
+    - "local-storage-pv.yaml"
+    - "local-storage-pvc.yaml"
+  args:
+    chdir: "{{ base_path }}/"
+- debug: msg={{ create_pvc }}
+  when: print_debug == true
+
+
 - name: Check if the Kubeflow is already downloaded
   stat: path={{ base_path }}/manifests
   register: kubeflow_dir_existed
@@ -16,11 +67,10 @@
   when: print_debug == true and kubeflow.clone_git == true and kubeflow_dir_existed.stat.exists != True
 
 
-# /usr/local/bin/kustomize build example | /usr/bin/kubectl apply -f -
 # while ! kustomize build example | kubectl apply -f -; do echo "Retrying to apply resources"; sleep 10; done
 - name: Deploy Kubeflow
   shell: |
-    kustomize build example | kubectl apply -f -
+    kustomize build example | sed '/mysql_native_password/d' | kubectl apply -f -
   register: deploy_kubeflow
   until: deploy_kubeflow is succeeded
   retries: 10

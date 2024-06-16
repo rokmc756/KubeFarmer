@@ -35,7 +35,7 @@ kubeflow:
     metadata:
       name: kubeflow-ingress
       namespace: cattle-system
-    hostname: "rancher.jtest.suse.com"
+    hostname: "kubeflow.jtest.suse.com"
   kernel_parameters:
     - "net.ipv4.neigh.default.gc_thresh1 = 0"   # For ARP Cache
 

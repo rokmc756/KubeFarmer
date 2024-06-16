@@ -50,7 +50,6 @@
 #  when: print_debug == true
 
 
-
 - name: Validate if AWX Operator Container is still Creating
   shell: |
     kubectl get pods -n {{ awx.namespace }}
