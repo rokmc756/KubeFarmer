@@ -1,5 +1,5 @@
 # https://mlops-for-all.github.io/docs/appendix/metallb
-#
+
 - name: Check if the Kubeflow is already downloaded
   stat: path={{ base_path }}/manifests
   register: kubeflow_dir_existed
@@ -57,12 +57,6 @@
   when: print_debug == true and kubeflow.clone_git == true and kubeflow_dir_existed.stat.exists != True
 
 
-# Change CluserIP to LoadBalancer
-# kubectl -n istio-system patch svc istio-ingressgateway \
-# -p '{"spec": {"ports": [{"port": 443,"targetPort": 443,"name": "https"},{"port": 80,"targetPort": 80,"name": "http"}],"type": "LoadBalancer"}}'
-
-
-
 # kustomize build example | sed '/mysql_native_password/d' | kubectl apply -f -
 # while ! kustomize build example | kubectl apply -f -; do echo "Retrying to apply resources"; sleep 10; done
 # kustomize build example | kubectl apply -f -
@@ -117,10 +111,8 @@
   failed_when: deploy_kubeflow.rc in [ 0, 68 ]
 - debug: msg={{ deploy_kubeflow }}
   when: print_debug == true
-  # changed_when: false
 
 
-# kubectl get pods -A | grep {{ item.pod }}
 - name: Validate if KubeFlow Containers are still Creating
   shell: |
     kubectl get all -A | grep {{ item }} | awk '{print $4}' | uniq | cut -d : -f 1
@@ -133,28 +125,8 @@
     - PodIntializing
     - ContainerCreating
     - CrashLoopBackOff
-  #retries: 100
-  #delay: 10
-  #with_items:
-  #  - { ns: knative-serving , pod: "domain-mapping" }
-  #  - { ns: knative-serving, pod: "domainmapping-webhook" }
-  #  - { ns: kubeflow, pod: "cache-server" }
-  #  - { ns: kubeflow, pod: "katib-ui" }
 - debug: msg={{ check_kubeflow_containers }}
   when: print_debug == true
-
-
-#- name: Validate if KubeFlow Container is still CrashLoopBackOff
-#  shell: |
-#    kubectl get pods -A | grep {{ item.pod }}
-#  register: check_kubeflow_container
-#  until: check_kubeflow_container.stdout.find("CrashLoopBackOff") == -1
-#  retries: 100
-#  delay: 10
-#  with_items:
-#    - { ns: kubeflow, pod: "metadata-grpc-deployment" }
-#- debug: msg={{ check_kubeflow_container }}
-#  when: print_debug == true
 
 
 - name: Check KubeFlow Ingress
@@ -163,4 +135,19 @@
   register: check_kubeflow_ingress
 - debug: msg={{ check_kubeflow_ingress }}
   when: print_debug == true
+
+
+#
+# python3 -c 'from passlib.hash import bcrypt; import getpass; print(bcrypt.using(rounds=12, ident="2y").hash(getpass.getpass()))'
+# Password:
+# $2y$12$Tup0fFXFr0ZNpI.CS8ot4.9bhbk1QJcFCh.Tf41XKnBfaapMHVLha
+
+# Change CluserIP to LoadBalancer
+# kubectl -n istio-system patch svc istio-ingressgateway \
+# -p '{"spec": {"ports": [{"port": 443,"targetPort": 443,"name": "https"},{"port": 80,"targetPort": 80,"name": "http"}],"type": "LoadBalancer"}}'
+
+# https://github.com/kubeflow/manifests#change-default-user-password
+# https://yjwang.tistory.com/entry/kubeflow-dex-%EC%95%94%ED%98%B8-%EB%B3%80%EA%B2%BD
+
+# https://v0-7.kubeflow.org/docs/started/k8s/kfctl-existing-arrikto/
 

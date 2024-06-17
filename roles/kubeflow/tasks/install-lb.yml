@@ -14,7 +14,7 @@
 
 - name: Create KubeFlow Load Balancer
   shell: |
-    kubectl create -f "{{ base_path }}/{{ item }}"
+    kubectl apply -f "{{ base_path }}/{{ item }}"
   register: create_rancher_lb
   with_items:
     - "kubeflow-loadbalancer.yaml"

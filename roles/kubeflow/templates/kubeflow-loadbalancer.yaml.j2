@@ -2,60 +2,69 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ kubeflow.service.metadata.name }}
+  name: istio-ingressgateway
   namespace: istio-system
   annotations:
     nginx.ingress.kubernetes.io/proxy-protocol: "true"
 spec:
   selector:
     app: istio-ingressgateway
+    istio: ingressgateway
+  sessionAffinity: None
   ports:
-    - name: http
-      protocol: TCP
-      port: 80
-      targetPort: 80
-    - name: https
-      protocol: TCP
-      port: 443
-      targetPort: 443
+  - name: status-port
+    nodePort: 30461
+    port: 15021
+    protocol: TCP
+    targetPort: 15021
+  - name: http2
+    nodePort: 31071
+    port: 80
+    protocol: TCP
+    targetPort: 8080
+  - name: https
+    nodePort: 32000
+    port: 443
+    protocol: TCP
+    targetPort: 8443
   type: LoadBalancer
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: {{ kubeflow.ingress.metadata.name }}
-  namespace: istio-system
-  annotations:
-    nginx.ingress.kubernetes.io/ssl-redirect: "false"
-spec:
-  rules:
-    - host: {{ kubeflow.ingress.hostname }}
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: istio-ingressgateway
-                port:
-                  name: http
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: minio-ingress
-  namespace: kubeflow
-  annotations:
-    nginx.ingress.kubernetes.io/ssl-redirect: "false"
-spec:
-  rules:
-    - host: minio.jtest.suse.com
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: minio-service
-                port:
-                  name: http
+#---
+#apiVersion: networking.k8s.io/v1
+#kind: Ingress
+#metadata:
+#  name: {{ kubeflow.ingress.metadata.name }}
+#  namespace: istio-system
+#  annotations:
+#    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+#spec:
+#  rules:
+#    - host: {{ kubeflow.ingress.hostname }}
+#      http:
+#        paths:
+#          - path: /
+#            pathType: Prefix
+#            backend:
+#              service:
+#                name: istio-ingressgateway
+#                port:
+#                  name: http
+#---
+#apiVersion: networking.k8s.io/v1
+#kind: Ingress
+#metadata:
+#  name: minio-ingress
+#  namespace: kubeflow
+#  annotations:
+#    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+#spec:
+#  rules:
+#    - host: minio.jtest.suse.com
+#      http:
+#        paths:
+#          - path: /
+#            pathType: Prefix
+#            backend:
+#              service:
+#                name: minio-service
+#                port:
+#                  name: http
