@@ -102,51 +102,59 @@
 
 
 # kustomize build example | sed '/mysql_native_password/d' | kubectl apply -f -
-# kustomize build example | kubectl apply -f -
 # while ! kustomize build example | kubectl apply -f -; do echo "Retrying to apply resources"; sleep 10; done
 - name: Deploy Kubeflow
   shell: |
     kustomize build example | kubectl apply -f -
   register: deploy_kubeflow
-  ignore_errors: true
-  until: deploy_kubeflow is succeeded
-  retries: 10
-  delay: 5
+  until: deploy_kubeflow is not succeeded
+  retries: 3
+  delay: 10
   args:
     chdir: "{{ base_path }}/manifests"
   environment:
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+  failed_when: deploy_kubeflow.rc in [ 0, 68 ]
 - debug: msg={{ deploy_kubeflow }}
   when: print_debug == true
+  # changed_when: false
 
 
-- name: Validate if KubeFlow Containers are still Initializing
+# kubectl get pods -A | grep {{ item.pod }}
+- name: Validate if KubeFlow Containers are still Creating
   shell: |
-    kubectl get pods -n {{ item.ns }} | grep {{ item.pod }}
+    kubectl get all -A | grep {{ item }} | awk '{print $4}' | uniq | cut -d : -f 1
   register: check_kubeflow_containers
-  until: check_kubeflow_containers.stdout.find("PodIntializing") == -1
+  until: check_kubeflow_containers.stdout.find("") != -1
   retries: 100
   delay: 10
   with_items:
-    - { ns: knative-serving , pod: "domain-mapping" }
-    - { ns: knative-serving, pod: "domainmapping-webhook" }
-    - { ns: kubeflow, pod: "cache-server" }
-    - { ns: kubeflow, pod: "katib-ui" }
+    - Init
+    - PodIntializing
+    - ContainerCreating
+    - CrashLoopBackOff
+  #retries: 100
+  #delay: 10
+  #with_items:
+  #  - { ns: knative-serving , pod: "domain-mapping" }
+  #  - { ns: knative-serving, pod: "domainmapping-webhook" }
+  #  - { ns: kubeflow, pod: "cache-server" }
+  #  - { ns: kubeflow, pod: "katib-ui" }
 - debug: msg={{ check_kubeflow_containers }}
   when: print_debug == true
 
 
-- name: Validate if KubeFlow Container is still CrashLoopBackOff
-  shell: |
-    kubectl get pods -n {{ item.ns }} | grep {{ item.pod }}
-  register: check_kubeflow_container
-  until: check_kubeflow_container.stdout.find("CrashLoopBackOff") == -1
-  retries: 100
-  delay: 10
-  with_items:
-    - { ns: kubeflow, pod: "metadata-grpc-deployment" }
-- debug: msg={{ check_kubeflow_container }}
-  when: print_debug == true
+#- name: Validate if KubeFlow Container is still CrashLoopBackOff
+#  shell: |
+#    kubectl get pods -A | grep {{ item.pod }}
+#  register: check_kubeflow_container
+#  until: check_kubeflow_container.stdout.find("CrashLoopBackOff") == -1
+#  retries: 100
+#  delay: 10
+#  with_items:
+#    - { ns: kubeflow, pod: "metadata-grpc-deployment" }
+#- debug: msg={{ check_kubeflow_container }}
+#  when: print_debug == true
 
 
 - name: Check KubeFlow Ingress
