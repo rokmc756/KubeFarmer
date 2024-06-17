@@ -24,8 +24,8 @@
 
 - name: Delete Namespace for NGINX Ingress
   shell: |
-    kubectl delete ns nginx-ingress --grace-period=0 --force &
-    sleep 10
+    kubectl delete namespace nginx-ingress --grace-period=0 --force &
+    sleep 20
   register: delete_nginx_ingress_namespace
   ignore_errors: yes
 - debug: msg={{ delete_nginx_ingress_namespace }}
@@ -77,7 +77,7 @@
 - name: Delete Namespace for Metallb
   shell: |
     kubectl delete ns metallb-system --grace-period=0 --force &
-    sleep 10
+    sleep 20
   register: delete_metallb_namespace
   ignore_errors: yes
 - debug: msg={{ delete_metallb_namespace }}
@@ -110,6 +110,15 @@
     - "{{ base_path }}/metallb-config-vmware.yaml"
     - "{{ base_path }}/kubernetes-ingress"
 - debug: msg={{ remove_config_yaml_and_kube_ingress_dir }}
+
+
+- name: Check Nginx Ingress Pods
+  shell: kubectl get pods -n nginx-ingress
+  register: check_nginx_ingress_pods
+  until: check_nginx_ingress_pods.stdout.find("Terminating") == -1
+  retries: 30
+  delay: 10
+- debug: msg={{ check_nginx_ingress_pods }}
 
 
 #- name: Get the list of Metallb Kubernetesa ClusterRoleBindings

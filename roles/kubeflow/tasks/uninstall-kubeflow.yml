@@ -1,8 +1,54 @@
+- name: Destroy Kubeflow
+  shell: |
+    kustomize build example | kubectl delete -f -
+  register: deploy_kubeflow
+  ignore_errors: true
+  until: deploy_kubeflow is not succeeded
+  retries: 3
+  delay: 10
+  args:
+    chdir: "{{ base_path }}/manifests"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+  failed_when: deploy_kubeflow.rc in [ 0, 68 ]
+- debug: msg={{ deploy_kubeflow }}
+  when: print_debug == true
 
-- name: Delete Local Storage and Persistent Volumes
+
+#- name: Validate if KubeFlow Containers are still Creating
+#  shell: |
+#    kubectl get all -A | grep {{ item }} | awk '{print $4}' | uniq | cut -d : -f 1
+#  register: check_kubeflow_containers
+#  ignore_errors: true
+#  until: check_kubeflow_containers.stdout.find("") != -1
+#  retries: 100
+#  delay: 10
+#  with_items:
+#    - Init
+#    - PodIntializing
+#    - ContainerCreating
+#    - CrashLoopBackOff
+#- debug: msg={{ check_kubeflow_containers }}
+#  when: print_debug == true
+
+
+- name: Copy Cluster Local PVC Config Yaml
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ base_path }}/{{ item }}"
+  register: copy_cluster_local_pvc_config_yaml
+  ignore_errors: true
+  with_items:
+    - "local-storage-class.yaml"
+    - "local-storage-pv.yaml"
+    - "local-storage-pvc.yaml"
+- debug: msg={{ copy_cluster_local_pvc_config_yaml }}
+
+
+- name: Cluster Settings for a Production Cluster Running in a Dynamic Cloud Environment including VMware
   shell: |
     kubectl delete -f {{ item }}
-  register: delete_local_storage
+  register: delete_pvc
   ignore_errors: true
   with_items:
     - "local-storage-pvc.yaml"
@@ -10,21 +56,7 @@
     - "local-storage-class.yaml"
   args:
     chdir: "{{ base_path }}/"
-- debug: msg={{ delete_local_storage }}
-  when: print_debug == true
-
-
-- name: Copy Cluster Local PVC Config Yaml
-  file:
-    path: "{{ item }}"
-    state: absent
-  register: delete_cluster_local_pvc_config_yaml
-  ignore_errors: yes
-  with_items:
-    - "local-storage-class.yaml"
-    - "local-storage-pv.yaml"
-    - "local-storage-pvc.yaml"
-- debug: msg={{ delete_cluster_local_pvc_config_yaml }}
+- debug: msg={{ delete_pvc }}
   when: print_debug == true
 
 
@@ -33,11 +65,78 @@
     path: /mnt/katib-storage
     state: absent
   register: delete_pv_dir
-  ignore_errors: yes
+  ignore_errors: true
   delegate_to: "{{ item }}"
   delegate_facts: True
   with_items:
     - "{{ groups['all'] }}"
 - debug: msg={{ delete_pv_dir }}
+  when: print_debug == true
+
+
+#- name: Delete Namespace for Persistent Volumes
+#  shell: |
+#    kubectl delete namespace {{ item }}
+#  register: delete_namespace
+#  ignore_errors: true
+#  with_items:
+#    - istio-system
+#    - kubeflow
+#- debug: msg={{ delete_namespace }}
+#  when: print_debug == true
+
+
+- name: Delete Kubeflow Manifests Codes
+  file:
+    path: "{{ base_path }}/manifests"
+    state: absent
+  register: delete_kubeflow_git
+  ignore_errors: true
+- debug: msg={{ delete_kubeflow_git }}
+  when: print_debug == true
+
+
+- name: Delete Deployment for KubeFlow User
+  shell: |
+     kubectl -n kubeflow-user-example-com delete deployment.apps/{{ item }}
+  register: delete_kube_user_deployment
+  ignore_errors: true
+  with_items:
+    - "ml-pipeline-ui-artifact"
+    - "ml-pipeline-visualizationserver"
+- debug: msg={{ delete_kube_user_deployment }}
+  when: print_debug == true
+
+
+- name: Validate if KubeFlow Containers are still Terminating
+  shell: |
+    kubectl get pods -A | grep {{ item }}
+  register: check_kubeflow_containers
+  ignore_errors: true
+  until: check_kubeflow_containers.stdout.find("Terminating") == -1
+  with_items:
+    - "ml-pipeline-ui-artifact"
+    - "ml-pipeline-visualizationserver"
+- debug: msg={{ check_kubeflow_containers }}
+
+
+- name: Delete Service for KubeFlow User
+  shell: |
+     kubectl -n kubeflow-user-example-com delete service/{{ item }}
+  register: delete_kube_user_service
+  ignore_errors: true
+  with_items:
+    - "ml-pipeline-ui-artifact"
+    - "ml-pipeline-visualizationserver"
+- debug: msg={{ delete_kube_user_service }}
+  when: print_debug == true
+
+
+- name: Delete Namespace for KubeFlow User
+  shell: |
+     kubectl delete namespace kubeflow-user-example-com
+  register: delete_kube_user_namespace
+  ignore_errors: true
+- debug: msg={{ delete_kube_user_namespace }}
   when: print_debug == true
 

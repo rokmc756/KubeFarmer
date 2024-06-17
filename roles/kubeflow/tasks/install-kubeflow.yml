@@ -151,3 +151,50 @@
 
 # https://v0-7.kubeflow.org/docs/started/k8s/kfctl-existing-arrikto/
 
+
+
+# kubectl -n kubeflow get gateways.networking.istio.io kubeflow-gateway -o yaml
+#apiVersion: networking.istio.io/v1beta1
+#kind: Gateway
+#metadata:
+#  annotations:
+#    kubectl.kubernetes.io/last-applied-configuration: |
+#      {"apiVersion":"networking.istio.io/v1alpha3","kind":"Gateway","metadata":{"annotations":{},"name":"kubeflow-gateway","namespace":"kubeflow"},"spec":{"selector":{"istio":"ingressgateway"},"servers":[{"hosts":["*"],"port":{"name":"http","number":80,"protocol":"HTTP"}}]}}
+#  creationTimestamp: "2024-06-17T07:36:29Z"
+#  generation: 2
+#  name: kubeflow-gateway
+#  namespace: kubeflow
+#  resourceVersion: "73363"
+#  uid: fb1aba7b-5763-4c09-af26-77fdc164bc8f
+#spec:
+#  selector:
+#    istio: ingressgateway
+#  servers:
+#  - hosts:
+#    - '*'
+#    port:
+#      name: http
+#      number: 80
+#      protocol: HTTP
+#    tls:
+#      httpsRedirect: true
+#  - hosts:
+#    - '*'
+#    port:
+#      name: https
+#      number: 443
+#      protocol: HTTPS
+#    tls:
+#      mode: SIMPLE
+#      privateKey: /etc/istio/ingressgateway-certs/tls.key
+#      serverCertificate: /etc/istio/ingressgateway-certs/tls.crt
+
+
+# Note. Your Kubernetes cluster must have StorageClass for dynamic volume provisioning for Katib DB.
+# For more information, check the Kubernetes documentation on dynamic provisioning. 
+# If your cluster doesn’t have dynamic volume provisioning, you must manually deploy PersistentVolume (PV) to bind PVC for the Katib DB component.
+#
+# https://kubernetes.io/docs/concepts/storage/dynamic-provisioning/
+# https://prathapreddy-mudium.medium.com/dynamic-volume-provisioning-in-kubernetes-19fc6a02e19d
+# https://waspro.tistory.com/771
+
