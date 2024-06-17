@@ -25,11 +25,11 @@
 - debug: msg={{ add_nginx_helm_repo }}
 
 
-- name: Add Rancher Helm Repo
-  shell: |
-    /usr/local/bin/helm repo add rancher-stable https://releases.rancher.com/server-charts/stable
-  register: add_rancher_helm_repo
-- debug: msg={{ add_rancher_helm_repo }}
+#- name: Add KubeFlow Helm Repo
+#  shell: |
+#    /usr/local/bin/helm repo add xxxx xxxxx
+#  register: add_kubeflow_helm_repo
+#- debug: msg={{ add_kubeflow_helm_repo }}
 
 
 - name: Add Jetstack Helm Repo

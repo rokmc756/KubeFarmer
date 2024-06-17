@@ -110,10 +110,10 @@
 
 - name: Validate if KubeFlow Containers are still Terminating
   shell: |
-    kubectl get pods -A | grep {{ item }}
+    kubectl get pods -A | grep "{{ item }}" | grep Terminating | awk '{print $4}'
   register: check_kubeflow_containers
   ignore_errors: true
-  until: check_kubeflow_containers.stdout.find("Terminating") == -1
+  until: check_kubeflow_containers.stdout.find("") != -1
   with_items:
     - "ml-pipeline-ui-artifact"
     - "ml-pipeline-visualizationserver"

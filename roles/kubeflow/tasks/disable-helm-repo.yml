@@ -8,12 +8,12 @@
 - debug: msg={{ remove_nginx_helm_repo }}
 
 
-- name: Remove Rancher Helm Repo
-  shell: |
-    /usr/local/bin/helm repo remove rancher-stable
-  register: remove_rancher_helm_repo
-  ignore_errors: yes
-- debug: msg={{ remove_rancher_helm_repo }}
+#- name: Remove KubeFlow Helm Repo
+#  shell: |
+#    /usr/local/bin/helm repo remove xxxx
+#  register: remove_kubeflow_helm_repo
+#  ignore_errors: yes
+#- debug: msg={{ remove_kubeflow_helm_repo }}
 
 
 - name: Remove Jetstack Helm Repo
