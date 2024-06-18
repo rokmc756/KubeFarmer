@@ -163,3 +163,8 @@
     chdir: "{{ base_path }}/kubernetes-ingress/deployments/helm-chart"
 - debug: msg={{ upgrade_nginx_ingress_crds }}
 
+
+# The following command will change default password, 
+# kubectl -n kubeflow get secrets mlpipeline-minio-artifact -o yaml | sed -e "s/  secretkey: $(echo minio123 | base64)=/  secretkey: $(echo changeme123| base64)=/" | kubectl apply -f - -n kubeflow
+# kubectl rollout restart deployment minio -n kubeflow
+

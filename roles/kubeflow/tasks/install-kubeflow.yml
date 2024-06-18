@@ -1,4 +1,6 @@
 # https://mlops-for-all.github.io/docs/appendix/metallb
+# https://kmaster.tistory.com/156
+# https://github.com/kubeflow/kubeflow/issues/5271
 
 - name: Check if the Kubeflow is already downloaded
   stat: path={{ base_path }}/manifests
@@ -137,7 +139,24 @@
   when: print_debug == true
 
 
-#
+- name: Change MinIO User Password
+  shell: |
+    kubectl -n kubeflow get secrets mlpipeline-minio-artifact -o yaml | \
+    sed -e "s/$(echo minio123|base64|sed -e s/K$/=$/g)/$(echo changeme123|base64|sed -e s/K$/=/g)/g" | \
+    kubectl -n kubeflow apply -f -
+  register: change_minio_user_password
+- debug: msg={{ change_minio_user_password }}
+  when: print_debug == true
+
+
+- name: Restart Deployment for Applying MinIO Password Changed
+  shell: |
+    kubectl rollout restart deployment -n kubeflow
+  register: restart_deployment
+- debug: msg={{ restart_deployment }}
+  when: print_debug == true
+
+
 # python3 -c 'from passlib.hash import bcrypt; import getpass; print(bcrypt.using(rounds=12, ident="2y").hash(getpass.getpass()))'
 # Password:
 # $2y$12$Tup0fFXFr0ZNpI.CS8ot4.9bhbk1QJcFCh.Tf41XKnBfaapMHVLha
@@ -198,3 +217,12 @@
 # https://prathapreddy-mudium.medium.com/dynamic-volume-provisioning-in-kubernetes-19fc6a02e19d
 # https://waspro.tistory.com/771
 
+#
+# kubectl get secret mlpipeline-minio-artifact -n kubeflow -o jsonpath="{.data.accesskey}" | base64 --decode
+# minio
+# kubectl get secret mlpipeline-minio-artifact -n kubeflow -o jsonpath="{.data.secretkey}" | base64 --decode
+# minio123
+#
+# kubectl -n kubeflow get secrets mlpipeline-minio-artifact -o yaml | \
+# sed -e "s/$(echo minio123|base64|sed -e s/K$/=$/g)/$(echo changeme123|base64|sed -e s/K$/=/g)/g" | \
+# kubectl -n kubeflow apply -f -
