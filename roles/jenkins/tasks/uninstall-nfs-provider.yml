@@ -1,0 +1,39 @@
+- name: Delete Class
+  shell: |
+    kubectl delete -f class.yaml
+  register: delete_class
+  ignore_errors: true
+  args:
+    chdir: "{{ base_path }}/nfs-subdir-external-provisioner/deploy"
+- debug: msg={{ delete_class }}
+  when: print_debug == true
+
+
+- name: Delete Deployment
+  shell: |
+    kubectl delete -f deployment.yaml
+  register: delete_deployment
+  ignore_errors: true
+  args:
+    chdir: "{{ base_path }}/nfs-subdir-external-provisioner/deploy"
+- debug: msg={{ delete_deployment }}
+  when: print_debug == true
+
+
+- name: Delete RBAC
+  shell: |
+    kubectl delete -f rbac.yaml
+  register: delete_rbac
+  ignore_errors: true
+  args:
+    chdir: "{{ base_path }}/nfs-subdir-external-provisioner/deploy"
+- debug: msg={{ delete_rbac }}
+  when: print_debug == true
+
+
+- name: Delete NFS Provider Source Code Directory
+  file: path={{ base_path }}/nfs-subdir-external-provisioner state=absent
+  register: delete_nfs_provider_dir
+  ignore_errors: true
+- debug: msg={{ delete_nfs_provider_dir }}
+

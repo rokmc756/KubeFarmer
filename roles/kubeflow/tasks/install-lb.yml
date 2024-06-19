@@ -12,8 +12,8 @@
     - "minio-loadbalancer.yaml"
     - "katib-ui-loadbalancer.yaml"
     - "ml-pipeline-ui-loadbalancer.yaml"
-    - "centraldashboard-loadbalancer.yaml"
 - debug: msg={{ copy_kubeflow_lb_config_yaml }}
+  #  - "centraldashboard-loadbalancer.yaml"
 
 # --type=strategic
 - name: Apply Ingress Patch for SSL Connection
@@ -34,8 +34,8 @@
     - "minio-loadbalancer.yaml"
     - "katib-ui-loadbalancer.yaml"
     - "ml-pipeline-ui-loadbalancer.yaml"
-    - "centraldashboard-loadbalancer.yaml"
 - debug: msg={{ create_rancher_lb }}
+#  #  - "centraldashboard-loadbalancer.yaml"
 
 
 - name: Check KubeFlow Pods

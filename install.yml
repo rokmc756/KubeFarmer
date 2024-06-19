@@ -18,7 +18,9 @@
     stop_services: true
     upload_calico: true
   roles:
-    - kubeflow
+    - jenkins
+
+#    - kubeflow
 #    - awx
 #    - rancher
 #    - k8s

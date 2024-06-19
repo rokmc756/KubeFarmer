@@ -1,0 +1,60 @@
+#
+- name: Copy jenkins Loadbalancer Config Yaml
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ base_path }}/{{ item }}"
+  register: copy_jenkins_lb_config_yaml
+  with_items:
+    - "patch-ingress.yaml"
+    - "auth-policy.yaml"
+    - "jenkins-certs.yaml"
+    - "jenkins-loadbalancer.yaml"
+    - "minio-loadbalancer.yaml"
+    - "katib-ui-loadbalancer.yaml"
+    - "ml-pipeline-ui-loadbalancer.yaml"
+- debug: msg={{ copy_jenkins_lb_config_yaml }}
+  #  - "centraldashboard-loadbalancer.yaml"
+
+# --type=strategic
+#- name: Apply Ingress Patch for SSL Connection
+#  shell: |
+#    kubectl -n jenkins patch --type=merge gateways.networking.istio.io jenkins-gateway --patch-file {{ base_path }}/patch-ingress.yaml
+#  register: apply_ingress_patch
+#- debug: msg={{ apply_ingress_patch }}
+
+
+#- name: Create jenkins Load Balancer
+#  shell: |
+#    kubectl apply -f "{{ base_path }}/{{ item }}"
+#  register: create_rancher_lb
+#  with_items:
+#    - "jenkins-certs.yaml"
+#    - "auth-policy.yaml"
+#    - "jenkins-loadbalancer.yaml"
+#    - "minio-loadbalancer.yaml"
+#    - "katib-ui-loadbalancer.yaml"
+#    - "ml-pipeline-ui-loadbalancer.yaml"
+#- debug: msg={{ create_rancher_lb }}
+  #  - "centraldashboard-loadbalancer.yaml"
+
+
+#- name: Check jenkins Pods
+#  shell: kubectl get all -n {{ jenkins.namespace }}
+#  register: check_jenkins_pods
+#  until: check_jenkins_pods.stdout.find("pending") == -1
+#  retries: 30
+#- debug: msg={{ check_jenkins_pods }}
+
+
+#- pause:
+#    seconds: 15
+
+
+#- name: Check if the status of ContainerCreating is Still Creating
+#  shell: kubectl get pods -n {{ jenkins.namespace }}
+#  register: check_container_creating
+#  until: check_container_creating.stdout.find("ContainerCreating") == -1
+#  retries: 30
+#  delay: 10
+#- debug: msg={{ check_container_creating }}
+

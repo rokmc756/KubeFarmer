@@ -16,9 +16,10 @@
     enable_firewall: false
     reboot_required: true
   roles:
-    - kubeflow
+    - jenkins
 
 #    - awx
+#    - kubeflow
 #    - k8s
 #    - rancher
 #    - rook-ceph
