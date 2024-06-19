@@ -1,0 +1,87 @@
+- name: Create Directory for Persistent Volumes
+  file:
+    path: "{{ harbor.storage_path }}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0777
+  register: create_pv_dir
+  delegate_to: "{{ item }}"
+  delegate_facts: True
+  with_items:
+    - "{{ groups['all'] }}"
+- debug: msg={{ create_pv_dir }}
+  when: print_debug == true
+
+
+- name: Create Namespace for Persistent Volumes
+  shell: |
+    kubectl create namespace {{ item }}
+  register: create_namespace
+  with_items:
+    - harbor
+    - istio-system
+- debug: msg={{ create_namespace }}
+  when: print_debug == true
+
+
+- name: Copy Cluster Local PVC Config Yaml
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ base_path }}/{{ item }}"
+  register: copy_cluster_local_pvc_config_yaml
+  with_items:
+    - "local-storage-class.yaml"
+    - "local-storage-pv.yaml"
+    - "local-storage-pvc.yaml"
+- debug: msg={{ copy_cluster_local_pvc_config_yaml }}
+
+
+- name: Cluster Settings for a Production Cluster Running in a Dynamic Cloud Environment including VMware
+  shell: |
+    kubectl create -f {{ item }}
+  register: create_pvc
+  with_items:
+    - "local-storage-class.yaml"
+    - "local-storage-pv.yaml"
+    - "local-storage-pvc.yaml"
+  args:
+    chdir: "{{ base_path }}/"
+- debug: msg={{ create_pvc }}
+  when: print_debug == true
+
+
+- name: Copy Harbor Loadbalancer Config Yaml
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ base_path }}/{{ item }}"
+  register: copy_harbor_lb_config_yaml
+  with_items:
+    - "harbor-values.yaml"
+- debug: msg={{ copy_harbor_lb_config_yaml }}
+
+
+
+# /usr/local/bin/helm install harbor harbor/harbor -n harbor
+# --set persistence.existingClaim={data-harbor-redis-0,data-harbor-trivy-0,database-data-harbor-database-0,harbor-jobservice,harbor-registry} \
+# --create-namespace
+
+- name: Deploy Harbor
+  shell: |
+    /usr/local/bin/helm install harbor harbor/harbor -f {{ base_path }}/harbor-values.yaml --create-namespace -n harbor
+  register: deploy_harbor
+- debug: msg={{ deploy_harbor }}
+  when: print_debug == true
+
+
+- name: Validate if Harbor Containers area Running
+  shell: |
+    kubectl -n harbor get pods
+  register: check_harbor_container
+  until: check_harbor_container.stdout.find("ContainerCreating") == -1
+  retries: 100
+  delay: 10
+- debug: msg={{ check_harbor_container }}
+  when: print_debug == true
+
+

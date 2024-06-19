@@ -1,0 +1,9 @@
+- name: Delete Harbor Loadbalancer Config Yaml
+  file:
+    path: "{{ base_path }}/{{ item }}"
+    state: absent
+  register: delete_harbor_lb_config_yaml
+  with_items:
+    - "harbor-values.yaml"
+- debug: msg={{ delete_harbor_lb_config_yaml }}
+

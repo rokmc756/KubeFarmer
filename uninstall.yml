@@ -16,9 +16,10 @@
     enable_firewall: false
     reboot_required: true
   roles:
-    - jenkins
+    - harbor-k8s
 
 #    - awx
+#    - jenkins
 #    - kubeflow
 #    - k8s
 #    - rancher

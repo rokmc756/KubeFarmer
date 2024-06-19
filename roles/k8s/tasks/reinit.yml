@@ -42,6 +42,7 @@
     - "/mnt/katib-storage"
     - "/mnt/authservice-storage"
     - "/mnt/jenkins-storage"
+    - "/mnt/harbor-storage"
 - debug: msg={{ remove_pv_dir }}
   when: print_debug == true
 
