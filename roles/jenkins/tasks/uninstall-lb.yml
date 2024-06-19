@@ -1,58 +1,8 @@
-- name: Delete jenkins Load Balancer
-  shell: |
-    kubectl delete -f "{{ base_path }}/{{ item }}"
-  register: create_jenkins_lb
-  ignore_errors: true
-  with_items:
-    - "ml-pipeline-ui-loadbalancer.yaml"
-    - "katib-ui-loadbalancer.yaml"
-    - "minio-loadbalancer.yaml"
-    - "jenkins-loadbalancer.yaml"
-    - "auth-policy.yaml"
-    - "jenkins-certs.yaml"
-- debug: msg={{ create_jenkins_lb }}
-
-
-- name: Check jenkins Pods
-  shell: kubectl get all -n jenkins
-  register: check_jenkins_pods
-  ignore_errors: true
-  until: check_jenkins_pods.stdout.find("Terminating") == -1
-  retries: 20
-- debug: msg={{ check_jenkins_pods }}
-
-
-- name: Delete jenkins Loadbalancer Config Yaml
+- name: Delete Jenkins Loadbalancer Config Yaml
   file:
-    path: "{{ item }}"
+    path: "{{ base_path }}/{{ item }}"
     state: absent
   register: delete_jenkins_lb_config_yaml
-  ignore_errors: true
   with_items:
-    - "patch-ingress.yaml"
-    - "auth-policy.yaml"
-    - "jenkins-certs.yaml"
-    - "jenkins-loadbalancer.yaml"
-    - "minio-loadbalancer.yaml"
-    - "katib-ui-loadbalancer.yaml"
-    - "ml-pipeline-ui-loadbalancer.yaml"
+    - "jenkins-values.yaml"
 - debug: msg={{ delete_jenkins_lb_config_yaml }}
-
-
-#- name: Check jenkins Pods
-#  shell: kubectl get all -n {{ jenkins.namespace }}
-#  register: check_jenkins_pods
-#  until: check_jenkins_pods.stdout.find("pending") == -1
-#  retries: 30
-#- debug: msg={{ check_jenkins_pods }}
-
-
-#- name: Check if the status of ContainerCreating is Still Creating
-#  shell: kubectl get pods -n {{ jenkins.namespace }}
-#  register: check_container_creating
-#  until: check_container_creating.stdout.find("ContainerCreating") == -1
-#  retries: 30
-#  delay: 10
-#- debug: msg={{ check_container_creating }}
-
-

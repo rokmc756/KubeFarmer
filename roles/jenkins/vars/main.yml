@@ -13,17 +13,17 @@ jenkins:
   patch_version: 0
   build_version:
   admin_user: "admin"
-  admin_password: "changeme"
+  admin_password: "Changeme123"
   admin_email: "rokmc756@gmail.com"
   enable_discovery_daemon: false
   clone_git: true
   nvme: true
   namespace: jenkins
-  nfs_server: 192.168.1.90
-  nfs_root_dir: /nfs-root
+  lb_ip_addr: 192.168.1.219
+  storage_path: "/mnt/jenkins-storage"
   k8s:
     major_version: 1
-    minor_version: 26
+    minor_version: 28
     patch_version: 0
     build_version:
   hostname: "jenkins.jtest.suse.com"

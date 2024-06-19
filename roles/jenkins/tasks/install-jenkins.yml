@@ -1,10 +1,6 @@
-# https://mlops-for-all.github.io/docs/appendix/metallb
-# https://kmaster.tistory.com/156
-# https://github.com/jenkins/jenkins/issues/5271
-
 - name: Create Directory for Persistent Volumes
   file:
-    path: /mnt/jenkins-storage
+    path: "{{ jenkins.storage_path }}"
     state: directory
     owner: root
     group: root
@@ -22,7 +18,6 @@
   shell: |
     kubectl create namespace {{ item }}
   register: create_namespace
-  ignore_errors: true
   with_items:
     - jenkins
     - istio-system
@@ -35,7 +30,6 @@
     src: "{{ item }}.j2"
     dest: "{{ base_path }}/{{ item }}"
   register: copy_cluster_local_pvc_config_yaml
-  ignore_errors: yes
   with_items:
     - "local-storage-class.yaml"
     - "local-storage-pv.yaml"
@@ -47,7 +41,6 @@
   shell: |
     kubectl create -f {{ item }}
   register: create_pvc
-  ignore_errors: true
   with_items:
     - "local-storage-class.yaml"
     - "local-storage-pv.yaml"
@@ -60,7 +53,7 @@
 
 - name: Deploy Jenkins
   shell: |
-    /usr/local/bin/helm install jenkins jenkins/jenkins -n jenkins --set persistence.existingClaim=jenkins --create-namespace --set adminPassword="Changeme12!@"
+    /usr/local/bin/helm install jenkins jenkins/jenkins -n jenkins --set persistence.existingClaim=jenkins --create-namespace --set adminPassword={{ jenkins.admin_password }}
   register: deploy_jenkins
 - debug: msg={{ deploy_jenkins }}
   when: print_debug == true
@@ -76,192 +69,3 @@
 - debug: msg={{ check_jenkins_container }}
   when: print_debug == true
 
-
-#| kubectl -n jenkins apply -f
-- name: Apply LoadBalancer IP Address for Jenkins
-  shell: |
-    kubectl -n jenkins get svc/jenkins -o yaml | sed 's/  type: ClusterIP/  type: LoadBalancer\n  loadBalancerIP: 192.168.1.211/g' > {{ base_path }}/jenkins-service.yaml
-    kubectl -n jenkins apply -f {{ base_path }}/jenkins-service.yamlh
-  register: apply_lb_ip
-  ignore_errors: true
-- debug: msg={{ apply_lb_ip }}
-  when: print_debug == true
-
-
-- name: Print Jenkins Admin Password
-  shell: |
-    printf $(kubectl get secret --namespace jenkins jenkins -o jsonpath="{.data.jenkins-admin-password}" | base64 --decode);echo
-  register: print_jenkins_admin_password
-- debug: msg={{ print_jenkins_admin_password }}
-  when: print_debug == true
-
-
-
-
-# kustomize build example | sed '/mysql_native_password/d' | kubectl apply -f -
-# while ! kustomize build example | kubectl apply -f -; do echo "Retrying to apply resources"; sleep 10; done
-# kustomize build example | kubectl apply -f -
-#- name: Deploy jenkins
-#  shell: |
-#    kustomize build {{ item }} | kubectl apply -f -
-#  register: deploy_jenkins
-#  ignore_errors: true
-#  until: deploy_jenkins is succeeded
-#  retries: 5
-#  delay: 20
-#  args:
-#    chdir: "{{ base_path }}/manifests"
-#  environment:
-#    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-#  with_items:
-#    - "common/cert-manager/cert-manager/base"
-#    - "kustomize build common/cert-manager/jenkins-issuer/base"
-#    - "common/istio-1-17/istio-crds/base"
-#    - "common/istio-1-17/istio-namespace/base"
-#    - "common/istio-1-17/istio-install/base"
-#    - "common/dex/overlays/istio"
-#    - "common/oidc-authservice/base"
-#    - "common/jenkins-namespace/base"
-#    - "common/jenkins-roles/base"
-#    - "common/istio-1-17/jenkins-istio-resources/base"
-#    - "apps/pipeline/upstream/env/platform-agnostic-multi-user"
-#    - "apps/katib/upstream/installs/katib-with-jenkins"
-#    - "apps/centraldashboard/upstream/overlays/istio"
-#    - "apps/admission-webhook/upstream/overlays/cert-manager"
-#    - "apps/profiles/upstream/overlays/jenkins"
-#    - "apps/volumes-web-app/upstream/overlays/istio"
-#    - "apps/training-operator/upstream/overlays/jenkins"
-#    - "common/user-namespace/base"
-#- debug: msg={{ deploy_jenkins }}
-#  when: print_debug == true
-
-
-# kustomize build example | sed '/mysql_native_password/d' | kubectl apply -f -
-# while ! kustomize build example | kubectl apply -f -; do echo "Retrying to apply resources"; sleep 10; done
-#- name: Deploy jenkins
-#  shell: |
-#    kustomize build example | kubectl apply -f -
-#  register: deploy_jenkins
-#  until: deploy_jenkins is not succeeded
-#  retries: 3
-#  delay: 10
-#  args:
-#    chdir: "{{ base_path }}/manifests"
-#  environment:
-#    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-#  failed_when: deploy_jenkins.rc in [ 0, 68 ]
-#- debug: msg={{ deploy_jenkins }}
-#  when: print_debug == true
-#
-#
-#- name: Validate if jenkins Containers are still Creating
-#  shell: |
-#    kubectl get all -A | grep {{ item }} | awk '{print $4}' | uniq | cut -d : -f 1
-#  register: check_jenkins_containers
-#  until: check_jenkins_containers.stdout.find("") != -1
-#  retries: 100
-#  delay: 10
-#  with_items:
-#    - Init
-#    - PodIntializing
-#    - ContainerCreating
-#    - CrashLoopBackOff
-#- debug: msg={{ check_jenkins_containers }}
-#  when: print_debug == true
-#
-#
-#- name: Check jenkins Ingress
-#  shell: |
-#    kubectl get service -n istio-system istio-ingressgateway
-#  register: check_jenkins_ingress
-#- debug: msg={{ check_jenkins_ingress }}
-#  when: print_debug == true
-#
-#
-#- name: Change MinIO User Password
-#  shell: |
-#    kubectl -n jenkins get secrets mlpipeline-minio-artifact -o yaml | \
-#    sed -e "s/$(echo minio123|base64|sed -e s/K$/=$/g)/$(echo changeme123|base64|sed -e s/K$/=/g)/g" | \
-#    kubectl -n jenkins apply -f -
-#  register: change_minio_user_password
-#- debug: msg={{ change_minio_user_password }}
-#  when: print_debug == true
-#
-#
-#- name: Restart Deployment for Applying MinIO Password Changed
-#  shell: |
-#    kubectl rollout restart deployment -n jenkins
-#  register: restart_deployment
-#- debug: msg={{ restart_deployment }}
-#  when: print_debug == true
-
-
-# python3 -c 'from passlib.hash import bcrypt; import getpass; print(bcrypt.using(rounds=12, ident="2y").hash(getpass.getpass()))'
-# Password:
-# $2y$12$Tup0fFXFr0ZNpI.CS8ot4.9bhbk1QJcFCh.Tf41XKnBfaapMHVLha
-
-# Change CluserIP to LoadBalancer
-# kubectl -n istio-system patch svc istio-ingressgateway \
-# -p '{"spec": {"ports": [{"port": 443,"targetPort": 443,"name": "https"},{"port": 80,"targetPort": 80,"name": "http"}],"type": "LoadBalancer"}}'
-
-# https://github.com/jenkins/manifests#change-default-user-password
-# https://yjwang.tistory.com/entry/jenkins-dex-%EC%95%94%ED%98%B8-%EB%B3%80%EA%B2%BD
-
-# https://v0-7.jenkins.org/docs/started/k8s/kfctl-existing-arrikto/
-
-
-
-# kubectl -n jenkins get gateways.networking.istio.io jenkins-gateway -o yaml
-#apiVersion: networking.istio.io/v1beta1
-#kind: Gateway
-#metadata:
-#  annotations:
-#    kubectl.kubernetes.io/last-applied-configuration: |
-#      {"apiVersion":"networking.istio.io/v1alpha3","kind":"Gateway","metadata":{"annotations":{},"name":"jenkins-gateway","namespace":"jenkins"},"spec":{"selector":{"istio":"ingressgateway"},"servers":[{"hosts":["*"],"port":{"name":"http","number":80,"protocol":"HTTP"}}]}}
-#  creationTimestamp: "2024-06-17T07:36:29Z"
-#  generation: 2
-#  name: jenkins-gateway
-#  namespace: jenkins
-#  resourceVersion: "73363"
-#  uid: fb1aba7b-5763-4c09-af26-77fdc164bc8f
-#spec:
-#  selector:
-#    istio: ingressgateway
-#  servers:
-#  - hosts:
-#    - '*'
-#    port:
-#      name: http
-#      number: 80
-#      protocol: HTTP
-#    tls:
-#      httpsRedirect: true
-#  - hosts:
-#    - '*'
-#    port:
-#      name: https
-#      number: 443
-#      protocol: HTTPS
-#    tls:
-#      mode: SIMPLE
-#      privateKey: /etc/istio/ingressgateway-certs/tls.key
-#      serverCertificate: /etc/istio/ingressgateway-certs/tls.crt
-
-
-# Note. Your Kubernetes cluster must have StorageClass for dynamic volume provisioning for Katib DB.
-# For more information, check the Kubernetes documentation on dynamic provisioning. 
-# If your cluster doesn’t have dynamic volume provisioning, you must manually deploy PersistentVolume (PV) to bind PVC for the Katib DB component.
-#
-# https://kubernetes.io/docs/concepts/storage/dynamic-provisioning/
-# https://prathapreddy-mudium.medium.com/dynamic-volume-provisioning-in-kubernetes-19fc6a02e19d
-# https://waspro.tistory.com/771
-
-#
-# kubectl get secret mlpipeline-minio-artifact -n jenkins -o jsonpath="{.data.accesskey}" | base64 --decode
-# minio
-# kubectl get secret mlpipeline-minio-artifact -n jenkins -o jsonpath="{.data.secretkey}" | base64 --decode
-# minio123
-#
-# kubectl -n jenkins get secrets mlpipeline-minio-artifact -o yaml | \
-# sed -e "s/$(echo minio123|base64|sed -e s/K$/=$/g)/$(echo changeme123|base64|sed -e s/K$/=/g)/g" | \
-# kubectl -n jenkins apply -f -
