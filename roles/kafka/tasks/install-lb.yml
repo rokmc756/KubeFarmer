@@ -1,0 +1,28 @@
+- name: Copy Kafka Loadbalancer Config Yaml
+  template:
+    src: kafdrop.yaml.j2
+    dest: "{{ base_path }}/kafdrop.yaml"
+  register: copy_kafka_lb_config_yaml
+- debug: msg={{ copy_kafka_lb_config_yaml }}
+
+
+- name: Create Kafka Load Balancer
+  shell: |
+    kubectl apply -f kafdrop.yaml
+  register: create_kafka_lb
+  args:
+    chdir: "{{ base_path }}/"
+- debug: msg={{ create_kafka_lb }}
+
+
+# kubectl patch svc kafka-portal -n kafka -p '{"spec": {"type": "LoadBalancer"}}'
+- name: Validate if Kafdrop Container is Running
+  shell: |
+    kubectl -n kafka get pod | grep kafdrop | awk '{print $3}' | cut -d : -f 1
+  register: check_kafdrop_container
+  until: check_kafdrop_container.stdout.find("Running") != -1
+  retries: 100
+  delay: 10
+- debug: msg={{ check_kafdrop_container }}
+  when: print_debug == true
+

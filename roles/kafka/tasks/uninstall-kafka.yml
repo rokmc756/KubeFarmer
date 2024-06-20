@@ -1,21 +1,21 @@
-- name: Uninstall Jenkins
+- name: Uninstall Kafka
   shell: |
-    /usr/local/bin/helm uninstall jenkins -n jenkins
-  register: uninstall_jenkins
+    /usr/local/bin/helm uninstall kafka -n kafka
+  register: uninstall_kafka
   ignore_errors: true
-- debug: msg={{ uninstall_jenkins }}
+- debug: msg={{ uninstall_kafka }}
   when: print_debug == true
 
 
-- name: Validate if Jenkins Containers are deleted
+- name: Validate if Kafka Containers are deleted
   shell: |
-    kubectl get pods -n jenkins
-  register: delete_jenkins_container
+    kubectl get pods -n kafka
+  register: delete_kafka_container
   ignore_errors: true
-  until: delete_jenkins_container.stdout.find("") != -1
+  until: delete_kafka_container.stdout.find("") != -1
   retries: 100
   delay: 10
-- debug: msg={{ delete_jenkins_container }}
+- debug: msg={{ delete_kafka_container }}
   when: print_debug == true
 
 
@@ -54,15 +54,15 @@
   register: delete_namespace
   ignore_errors: true
   with_items:
-    - jenkins
+    - kafka
     - istio-system
 - debug: msg={{ delete_namespace }}
   when: print_debug == true
 
 
-- name:  Directory for Persistent Volumes
+- name: Directory for Persistent Volumes
   file:
-    path: "{{ jenkins.storage_path }}"
+    path: "{{ kafka.storage_path }}"
     state: absent
   register: delete_pv_dir
   ignore_errors: true
@@ -74,13 +74,13 @@
   when: print_debug == true
 
 
-#- name: Validate if Jenkins Containers are Running
+#- name: Validate if kafka Containers are Running
 #  shell: |
-#    kubectl -n jenkins get pod | grep jenkins | awk '{print $3}' | cut -d : -f 1
-#  register: check_jenkins_container
-#  until: check_jenkins_container.stdout.find("Running") != -1
+#    kubectl -n kafka get pod | grep kafka | awk '{print $3}' | cut -d : -f 1
+#  register: check_kafka_container
+#  until: check_kafka_container.stdout.find("Running") != -1
 #  retries: 100
 #  delay: 10
-#- debug: msg={{ check_jenkins_container }}
+#- debug: msg={{ check_kafka_container }}
 #  when: print_debug == true
 

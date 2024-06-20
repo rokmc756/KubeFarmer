@@ -74,7 +74,7 @@
   when: print_debug == true
 
 
-- name: Validate if Harbor Containers area Running
+- name: Validate if Harbor Containers are Running
   shell: |
     kubectl -n harbor get pods
   register: check_harbor_container

@@ -1,0 +1,104 @@
+- name: Create Directory for Persistent Volumes
+  file:
+    path: "{{ kafka.storage_path }}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0777
+  register: create_pv_dir
+  delegate_to: "{{ item }}"
+  delegate_facts: True
+  with_items:
+    - "{{ groups['all'] }}"
+- debug: msg={{ create_pv_dir }}
+  when: print_debug == true
+
+
+- name: Create Namespace for Persistent Volumes
+  shell: |
+    kubectl create namespace {{ item }}
+  register: create_namespace
+  with_items:
+    - kafka
+    - istio-system
+- debug: msg={{ create_namespace }}
+  when: print_debug == true
+
+
+- name: Copy Cluster Local PVC Config Yaml
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ base_path }}/{{ item }}"
+  register: copy_cluster_local_pvc_config_yaml
+  with_items:
+    - "local-storage-class.yaml"
+    - "local-storage-pv.yaml"
+    - "local-storage-pvc.yaml"
+- debug: msg={{ copy_cluster_local_pvc_config_yaml }}
+
+
+- name: Cluster Settings for a Production Cluster Running in a Dynamic Cloud Environment including VMware
+  shell: |
+    kubectl create -f {{ item }}
+  register: create_pvc
+  with_items:
+    - "local-storage-class.yaml"
+    - "local-storage-pv.yaml"
+    - "local-storage-pvc.yaml"
+  args:
+    chdir: "{{ base_path }}/"
+- debug: msg={{ create_pvc }}
+  when: print_debug == true
+
+
+#- name: Copy kafka Loadbalancer Config Yaml
+#  template:
+#    src: "{{ item }}.j2"
+#    dest: "{{ base_path }}/{{ item }}"
+#  register: copy_kafka_lb_config_yaml
+#  with_items:
+#    - "kafka-values.yaml"
+#- debug: msg={{ copy_kafka_lb_config_yaml }}
+
+
+
+# /usr/local/bin/helm install kafka kafka/kafka -n kafka
+# --set persistence.existingClaim={data-kafka-redis-0,data-kafka-trivy-0,database-data-kafka-database-0,kafka-jobservice,kafka-registry} \
+# --create-namespace
+
+
+# /usr/local/bin/helm install kafka kafka/kafka -f {{ base_path }}/kafka-values.yaml --create-namespace -n kafka
+
+# --set externalAccess.controller.service.type=NodePort \
+#    --set externalAccess.autoDiscovery.enabled=true \
+- name: Deploy kafka
+  shell: |
+    /usr/local/bin/helm install kafka bitnami/kafka -n kafka \
+    --set controller.replicaCount=3 \
+    --set externalAccess.enabled=true \
+    --set externalAccess.controller.service.type=ClusterIP \
+    --set externalAccess.controller.service.domain=ingress-ip \
+    --set externalAccess.controller.service.ports.external=9094 \
+    --set serviceAccount.create=true \
+    --set rbac.create=true \
+    --set listeners.client.protocol=PLAINTEXT \
+    --set listeners.controller.protocol=PLAINTEXT \
+    --set controller.automountServiceAccountToken=true \
+    --set broker.automountServiceAccountToken=true \
+    --set topic.autoCreate=true \
+    --version {{ kafka.major_version }}.{{ kafka.minor_version }}.{{ kafka.patch_version }}
+  register: deploy_kafka
+- debug: msg={{ deploy_kafka }}
+  when: print_debug == true
+
+
+- name: Validate if Kafka Controller Containers are Running
+  shell: |
+    kubectl get pods -n kafka |  grep kafka-controller | awk '{print $3}' | uniq
+  register: check_kafka_controller_container
+  until: check_kafka_controller_container.stdout.find("Running") != -1
+  retries: 100
+  delay: 10
+- debug: msg={{ check_kafka_controller_container }}
+  when: print_debug == true
+

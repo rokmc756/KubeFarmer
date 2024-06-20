@@ -17,7 +17,7 @@
 # kubectl patch svc harbor-portal -n harbor -p '{"spec": {"type": "LoadBalancer"}}'
 
 
-- name: Validate if Harbor Containers area Running
+- name: Validate if Harbor Containers are Running
   shell: |
     kubectl -n harbor get pod | grep harbor | awk '{print $3}' | cut -d : -f 1
   register: check_harbor_container

@@ -59,7 +59,7 @@
   when: print_debug == true
 
 
-- name: Validate if Jenkins Containers area Running
+- name: Validate if Jenkins Containers are Running
   shell: |
     kubectl -n jenkins get pod | grep jenkins | awk '{print $3}' | cut -d : -f 1
   register: check_jenkins_container

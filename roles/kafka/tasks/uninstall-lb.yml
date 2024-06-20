@@ -1,0 +1,9 @@
+- name: Delete kafka Loadbalancer Config Yaml
+  file:
+    path: "{{ base_path }}/{{ item }}"
+    state: absent
+  register: delete_kafka_lb_config_yaml
+  with_items:
+    - "kafka-values.yaml"
+- debug: msg={{ delete_kafka_lb_config_yaml }}
+
