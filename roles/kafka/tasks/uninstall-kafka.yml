@@ -9,7 +9,7 @@
 
 - name: Validate if Kafka Containers are deleted
   shell: |
-    kubectl get pods -n kafka
+    kubectl get pods -n kafka | grep kafka-controller | awk '{print $3}' | uniq
   register: delete_kafka_container
   ignore_errors: true
   until: delete_kafka_container.stdout.find("") != -1

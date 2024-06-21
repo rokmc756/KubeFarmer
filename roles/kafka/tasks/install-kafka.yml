@@ -51,7 +51,7 @@
   when: print_debug == true
 
 
-#- name: Copy kafka Loadbalancer Config Yaml
+#- name: Copy Kafka Loadbalancer Config Yaml
 #  template:
 #    src: "{{ item }}.j2"
 #    dest: "{{ base_path }}/{{ item }}"
@@ -61,23 +61,22 @@
 #- debug: msg={{ copy_kafka_lb_config_yaml }}
 
 
-
 # /usr/local/bin/helm install kafka kafka/kafka -n kafka
 # --set persistence.existingClaim={data-kafka-redis-0,data-kafka-trivy-0,database-data-kafka-database-0,kafka-jobservice,kafka-registry} \
 # --create-namespace
 
-
 # /usr/local/bin/helm install kafka kafka/kafka -f {{ base_path }}/kafka-values.yaml --create-namespace -n kafka
 
 # --set externalAccess.controller.service.type=NodePort \
-#    --set externalAccess.autoDiscovery.enabled=true \
-- name: Deploy kafka
+# --set externalAccess.autoDiscovery.enabled=true \
+# --set externalAccess.controller.service.domain=ingress-ip \
+- name: Deploy Kafka
   shell: |
     /usr/local/bin/helm install kafka bitnami/kafka -n kafka \
     --set controller.replicaCount=3 \
     --set externalAccess.enabled=true \
     --set externalAccess.controller.service.type=ClusterIP \
-    --set externalAccess.controller.service.domain=ingress-ip \
+    --set externalAccess.controller.service.domain=kafka.jtest.suse.com \
     --set externalAccess.controller.service.ports.external=9094 \
     --set serviceAccount.create=true \
     --set rbac.create=true \

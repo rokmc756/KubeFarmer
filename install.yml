@@ -18,9 +18,8 @@
     stop_services: true
     upload_calico: true
   roles:
-    - hadoop
-
-#    - kafka
+    - kafka
+#    - hadoop
 #    - jenkins
 #    - harbor-k8s
 #    - kubeflow

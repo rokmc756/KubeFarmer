@@ -8,6 +8,14 @@
 - debug: msg={{ remove_nginx_helm_repo }}
 
 
+- name: Remove Kafka UI Helm Repo
+  shell: |
+    /usr/local/bin/helm repo remove kafka-ui
+  register: remove_kafka_ui_helm_repo
+  ignore_errors: yes
+- debug: msg={{ remove_kafka_ui_helm_repo }}
+
+
 - name: Remove Kafka Helm Repo
   shell: |
     /usr/local/bin/helm repo remove bitnami

@@ -1,0 +1,492 @@
+2. Start deployment
+1) Add source
+Address: https://artifacthub.io/packages/helm/apache-hadoop-helm/hadoop
+
+helm pull apache-hadoop-helm/hadoop --version 1.2.0
+tar -xf hadoop-1.2.0.tgz
+
+
+2) Build the image Dockerfile
+FROM myharbor.com/bigdata/centos:7.9.2009
+
+RUN rm -f /etc/localtime && ln -sv /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && echo "Asia/Shanghai" > /etc/timezone
+
+RUN export LANG=zh_CN.UTF-8
+
+# 创建用户和用户组，跟yaml编排里的spec.template.spec.containers. securityContext.runAsUser: 9999
+RUN groupadd --system --gid=9999 admin && useradd --system --home-dir /home/admin --uid=9999 --gid=admin admin
+
+# 安装sudo
+RUN yum -y install sudo ; chmod 640 /etc/sudoers
+
+# 给admin添加sudo权限
+RUN echo "admin ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+
+RUN yum -y install install net-tools telnet wget
+
+RUN mkdir /opt/apache/
+
+ADD jdk-8u212-linux-x64.tar.gz /opt/apache/
+
+ENV JAVA_HOME=/opt/apache/jdk1.8.0_212
+ENV PATH=$JAVA_HOME/bin:$PATH
+
+ENV HADOOP_VERSION 3.3.2
+ENV HADOOP_HOME=/opt/apache/hadoop
+
+ENV HADOOP_COMMON_HOME=${HADOOP_HOME} \
+    HADOOP_HDFS_HOME=${HADOOP_HOME} \
+    HADOOP_MAPRED_HOME=${HADOOP_HOME} \
+    HADOOP_YARN_HOME=${HADOOP_HOME} \
+    HADOOP_CONF_DIR=${HADOOP_HOME}/etc/hadoop \
+    PATH=${PATH}:${HADOOP_HOME}/bin
+
+#RUN curl --silent --output /tmp/hadoop.tgz https://ftp-stud.hs-esslingen.de/pub/Mirrors/ftp.apache.org/dist/hadoop/common/hadoop-${HADOOP_VERSION}/hadoop-${HADOOP_VERSION}.tar.gz && tar --directory /opt/apache -xzf /tmp/hadoop.tgz && rm /tmp/hadoop.tgz
+ADD hadoop-${HADOOP_VERSION}.tar.gz /opt/apache
+RUN ln -s /opt/apache/hadoop-${HADOOP_VERSION} ${HADOOP_HOME}
+
+RUN chown -R admin:admin /opt/apache
+
+WORKDIR $HADOOP_HOME
+
+# Hdfs ports
+EXPOSE 50010 50020 50070 50075 50090 8020 9000
+
+# Mapred ports
+EXPOSE 19888
+
+#Yarn ports
+EXPOSE 8030 8031 8032 8033 8040 8042 8088
+
+#Other ports
+EXPOSE 49707 2122
+
+
+Start building the image
+
+docker build -t myharbor.com/bigdata/hadoop:3.3.2 . --no-cache
+
+### 参数解释
+# -t：指定镜像名称
+# . ：当前目录Dockerfile
+# -f：指定Dockerfile路径
+#  --no-cache：不缓存
+Push to the image repository
+
+docker push myharbor.com/bigdata/hadoop:3.3.2
+Adjust the directory structure
+
+mkdir hadoop/templates/hdfs hadoop/templates/yarn
+mv hadoop/templates/hdfs-* hadoop/templates/hdfs/
+mv hadoop/templates/yarn-* hadoop/templates/yarn/
+
+
+
+3) Modify the configuration
+hadoop/values.yaml
+image:
+  repository: myharbor.com/bigdata/hadoop
+  tag: 3.3.2
+  pullPolicy: IfNotPresent
+
+...
+
+persistence:
+  nameNode:
+    enabled: true
+    storageClass: "hadoop-nn-local-storage"
+    accessMode: ReadWriteOnce
+    size: 10Gi
+    local:
+    - name: hadoop-nn-0
+      host: "local-168-182-110"
+      path: "/opt/bigdata/servers/hadoop/nn/data/data1"
+       
+  dataNode:
+    enabled: true
+    storageClass: "hadoop-dn-local-storage"
+    accessMode: ReadWriteOnce
+    size: 20Gi
+    local:
+    - name: hadoop-dn-0
+      host: "local-168-182-110"
+      path: "/opt/bigdata/servers/hadoop/dn/data/data1"
+    - name: hadoop-dn-1
+      host: "local-168-182-110"
+      path: "/opt/bigdata/servers/hadoop/dn/data/data2"
+    - name: hadoop-dn-2
+      host: "local-168-182-110"
+      path: "/opt/bigdata/servers/hadoop/dn/data/data3"
+    - name: hadoop-dn-3
+      host: "local-168-182-111"
+      path: "/opt/bigdata/servers/hadoop/dn/data/data1"
+    - name: hadoop-dn-4
+      host: "local-168-182-111"
+      path: "/opt/bigdata/servers/hadoop/dn/data/data2"
+    - name: hadoop-dn-5
+      host: "local-168-182-111"
+      path: "/opt/bigdata/servers/hadoop/dn/data/data3"
+    - name: hadoop-dn-6
+      host: "local-168-182-112"
+      path: "/opt/bigdata/servers/hadoop/dn/data/data1"
+    - name: hadoop-dn-7
+      host: "local-168-182-112"
+      path: "/opt/bigdata/servers/hadoop/dn/data/data2"
+   - name: hadoop-dn-8
+      host: "local-168-182-112"
+      path: "/opt/bigdata/servers/hadoop/dn/data/data3"
+
+...
+
+service:
+  nameNode:
+    type: NodePort
+    ports:
+      dfs: 9000
+      webhdfs: 9870
+    nodePorts:
+      dfs: 30900
+      webhdfs: 30870
+  dataNode:
+    type: NodePort
+    ports:
+      dfs: 9000
+      webhdfs: 9864
+    nodePorts:
+      dfs: 30901
+      webhdfs: 30864
+  resourceManager:
+    type: NodePort
+    ports:
+      web: 8088
+    nodePorts:
+      web: 30088
+...
+
+securityContext:
+  runAsUser: 9999
+  privileged: true
+
+
+
+
+hadoop/templates/hdfs/hdfs-nn-pv.yaml
+{{- range .Values.persistence.nameNode.local }}
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ .name }}
+  labels:
+    name: {{ .name }}
+spec:
+  storageClassName: {{ $.Values.persistence.nameNode.storageClass }}
+  capacity:
+    storage: {{ $.Values.persistence.nameNode.size }}
+  accessModes:
+    - ReadWriteOnce
+  local:
+    path: {{ .path }}
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - {{ .host }}
+---
+{{- end }}
+
+
+
+
+
+
+hadoop/templates/hdfs/hdfs-dn-pv.yaml
+{{- range .Values.persistence.dataNode.local }}
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ .name }}
+  labels:
+    name: {{ .name }}
+spec:
+  storageClassName: {{ $.Values.persistence.dataNode.storageClass }}
+  capacity:
+    storage: {{ $.Values.persistence.dataNode.size }}
+  accessModes:
+    - ReadWriteOnce
+  local:
+    path: {{ .path }}
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - {{ .host }}
+---
+{{- end }}
+
+
+
+
+
+Modify hdfs service
+mv hadoop/templates/hdfs/hdfs-nn-svc.yaml hadoop/templates/hdfs/hdfs-nn-svc-headless.yaml
+mv hadoop/templates/hdfs/hdfs-dn-svc.yaml hadoop/templates/hdfs/hdfs-dn-svc-headless.yaml
+# 注意修改名称，不要重复
+
+
+
+
+
+
+hadoop/templates/hdfs/hdfs-nn-svc.yaml
+
+# A headless service to create DNS records
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "hadoop.fullname" . }}-hdfs-nn
+  labels:
+    app.kubernetes.io/name: {{ include "hadoop.name" . }}
+    helm.sh/chart: {{ include "hadoop.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: hdfs-nn
+spec:
+  ports:
+  - name: dfs
+    port: {{ .Values.service.nameNode.ports.dfs }}
+    protocol: TCP
+    nodePort: {{ .Values.service.nameNode.nodePorts.dfs }}
+  - name: webhdfs
+    port: {{ .Values.service.nameNode.ports.webhdfs }}
+    nodePort: {{ .Values.service.nameNode.nodePorts.webhdfs }}
+  type: {{ .Values.service.nameNode.type }}
+  selector:
+    app.kubernetes.io/name: {{ include "hadoop.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: hdfs-nn
+
+
+
+
+
+
+
+hadoop/templates/hdfs/hdfs-dn-svc.yaml
+
+# A headless service to create DNS records
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "hadoop.fullname" . }}-hdfs-dn
+  labels:
+    app.kubernetes.io/name: {{ include "hadoop.name" . }}
+    helm.sh/chart: {{ include "hadoop.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: hdfs-nn
+spec:
+  ports:
+  - name: dfs
+    port: {{ .Values.service.dataNode.ports.dfs }}
+    protocol: TCP
+    nodePort: {{ .Values.service.dataNode.nodePorts.dfs }}
+  - name: webhdfs
+    port: {{ .Values.service.dataNode.ports.webhdfs }}
+    nodePort: {{ .Values.service.dataNode.nodePorts.webhdfs }}
+  type: {{ .Values.service.dataNode.type }}
+  selector:
+    app.kubernetes.io/name: {{ include "hadoop.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: hdfs-dn
+
+
+
+
+
+
+
+
+
+Modify the yarn service
+mv hadoop/templates/yarn/yarn-nm-svc.yaml hadoop/templates/yarn/yarn-nm-svc-headless.yaml
+mv hadoop/templates/yarn/yarn-rm-svc.yaml hadoop/templates/yarn/yarn-rm-svc-headless.yaml
+mv hadoop/templates/yarn/yarn-ui-svc.yaml hadoop/templates/yarn/yarn-rm-svc.yaml
+# 注意修改名称，不要重复
+
+
+
+
+
+
+
+
+
+
+hadoop/templates/yarn/yarn-rm-svc.yaml
+
+# Service to access the yarn web ui
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "hadoop.fullname" . }}-yarn-rm
+  labels:
+    app.kubernetes.io/name: {{ include "hadoop.name" . }}
+    helm.sh/chart: {{ include "hadoop.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: yarn-rm
+spec:
+  ports:
+  - port: {{ .Values.service.resourceManager.ports.web }}
+    name: web
+    nodePort: {{ .Values.service.resourceManager.nodePorts.web }}
+  type: {{ .Values.service.resourceManager.type }}
+  selector:
+    app.kubernetes.io/name: {{ include "hadoop.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: yarn-rm
+
+
+
+
+
+
+
+
+Modifying the Controller
+Add the following to all controls:
+
+containers:
+...
+  securityContext:
+    runAsUser: {{ .Values.securityContext.runAsUser }}
+    privileged: {{ .Values.securityContext.privileged }}
+
+
+
+
+
+
+
+
+
+
+
+
+hadoop/templates/hadoop-configmap.yaml
+### 1、将/root换成/opt/apache
+### 2、TMP_URL="http://{{ include "hadoop.fullname" . }}-yarn-rm-headless:8088/ws/v1/cluster/info"
+
+
+
+
+
+
+
+
+
+
+4) Start the installation
+# 创建存储目录
+mkdir -p /opt/bigdata/servers/hadoop/{nn,dn}/data/data{1..3}
+
+helm install hadoop ./hadoop -n hadoop --create-namespace
+NOTES
+
+NAME: hadoop
+LAST DEPLOYED: Sat Sep 24 17:00:55 2022
+NAMESPACE: hadoop
+STATUS: deployed
+REVISION: 1
+TEST SUITE: None
+NOTES:
+1. You can check the status of HDFS by running this command:
+   kubectl exec -n hadoop -it hadoop-hadoop-hdfs-nn-0 -- /opt/hadoop/bin/hdfs dfsadmin -report
+
+2. You can list the yarn nodes by running this command:
+   kubectl exec -n hadoop -it hadoop-hadoop-yarn-rm-0 -- /opt/hadoop/bin/yarn node -list
+
+3. Create a port-forward to the yarn resource manager UI:
+   kubectl port-forward -n hadoop hadoop-hadoop-yarn-rm-0 8088:8088
+
+   Then open the ui in your browser:
+
+   open http://localhost:8088
+
+4. You can run included hadoop tests like this:
+   kubectl exec -n hadoop -it hadoop-hadoop-yarn-nm-0 -- /opt/hadoop/bin/hadoop jar /opt/hadoop/share/hadoop/mapreduce/hadoop-mapreduce-client-jobclient-3.3.2-tests.jar TestDFSIO -write -nrFiles 5 -fileSize 128MB -resFile /tmp/TestDFSIOwrite.txt
+
+5. You can list the mapreduce jobs like this:
+   kubectl exec -n hadoop -it hadoop-hadoop-yarn-rm-0 -- /opt/hadoop/bin/mapred job -list
+
+6. This chart can also be used with the zeppelin chart
+    helm install --namespace hadoop --set hadoop.useConfigMap=true,hadoop.configMapName=hadoop-hadoop stable/zeppelin
+
+7. You can scale the number of yarn nodes like this:
+   helm upgrade hadoop --set yarn.nodeManager.replicas=4 stable/hadoop
+
+   Make sure to update the values.yaml if you want to make this permanent.
+
+
+
+
+Check
+
+kubectl get pods,svc -n hadoop -owide
+
+
+
+
+hdfs web: http://192.168.182.110:30870/
+
+
+
+
+yarn web: http://192.168.182.110:30088/
+
+
+
+
+5) Test verification
+HDFS test verification
+
+kubectl exec -it hadoop-hadoop-hdfs-nn-0 -n hadoop -- bash
+[root@local-168-182-110 hadoop]# kubectl exec -it hadoop-hadoop-hdfs-nn-0 -n hadoop -- bash
+bash-4.2$
+bash-4.2$
+bash-4.2$ hdfs dfs -mkdir /tmp
+bash-4.2$ hdfs dfs -ls /
+Found 1 items
+drwxr-xr-x   - admin supergroup          0 2022-09-24 17:56 /tmp
+bash-4.2$ echo "test hadoop" >test.txt
+bash-4.2$ hdfs dfs -put test.txt /tmp/
+bash-4.2$ hdfs dfs -ls /tmp/
+Found 1 items
+-rw-r--r--   3 admin supergroup         12 2022-09-24 17:57 /tmp/test.txt
+bash-4.2$ hdfs dfs -cat /tmp/
+cat: `/tmp': Is a directory
+bash-4.2$ hdfs dfs -cat /tmp/test.txt
+test hadoop
+bash-4.2$
+
+
+
+
+The testing and verification of Yarn will be discussed later when we talk about hive on k8s.
+
+6) Uninstall
+helm uninstall hadoop -n hadoop
+
+kubectl delete pod -n hadoop `kubectl get pod -n hadoop|awk 'NR>1{print $1}'` --force
+kubectl patch ns hadoop -p '{"metadata":{"finalizers":null}}'
+kubectl delete ns hadoop --force
+The git download address is also provided here. Friends in need can download and deploy it for fun. https://gitee.com/hadoop-bigdata/hadoop-on-k8s
+
+In the k8s cluster, yarn will gradually be weakened, and k8s resource scheduling will be used directly instead of yarn to schedule resources. Here, only a single point is deployed, which is limited to the test environment. The next article will talk about Hadoop high availability on k8s. Please wait patiently. If you have any questions, please leave me a message~
+
+

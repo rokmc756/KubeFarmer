@@ -56,6 +56,18 @@
   when: metallb.install == true and inventory_hostname in groups['master']
 
 
+- name: Deploy Kafka UI
+  import_tasks: install-kafka-ui.yml
+  tags: install
+  when: kafka_ui.install == true and inventory_hostname in groups['master']
+
+
+- name: Destroy Kafka UI
+  import_tasks: uninstall-kafka-ui.yml
+  tags: uninstall
+  when: kafka_ui.install == true and inventory_hostname in groups['master']
+
+
 - name: Uninstall Load Balancer
   import_tasks: uninstall-lb.yml
   tags: uninstall

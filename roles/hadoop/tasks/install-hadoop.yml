@@ -1,3 +1,4 @@
+# https://www.cnblogs.com/liugp/p/16726178.html
 - name: Create Directory for Persistent Volumes
   file:
     path: "{{ hadoop.storage_path }}"
@@ -70,13 +71,18 @@
   when: print_debug == true
 
 
-- name: Validate if hadoop Controller Containers are Running
+- name: Validate if Hadoop Controller Containers are Running
   shell: |
-    kubectl get pods -n hadoop |  grep hadoop-controller | awk '{print $3}' | uniq
-  register: check_hadoop_controller_container
-  until: check_hadoop_controller_container.stdout.find("Running") != -1
+    kubectl get pods -n hadoop | grep {{ item }} | awk '{print $3}' | uniq
+  register: check_hadoop_containers
+  until: check_hadoop_containers.stdout.find("Running") != -1
   retries: 100
   delay: 10
-- debug: msg={{ check_hadoop_controller_container }}
+  with_items:
+    - hadoop-hdfs-dn
+    - hadoop-hdfs-nn
+    - hadoop-yarn-nm
+    - hadoop-yarn-rm
+- debug: msg={{ check_hadoop_containers }}
   when: print_debug == true
 
