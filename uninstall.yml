@@ -16,7 +16,9 @@
     enable_firewall: false
     reboot_required: true
   roles:
-    - kafka
+    - hadoop
+
+#    - kafka
 #    - harbor-k8s
 #    - jenkins
 #    - awx

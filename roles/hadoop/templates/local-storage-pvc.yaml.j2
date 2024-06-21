@@ -1,0 +1,26 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: dfs-hadoop-hadoop-hdfs-cn-0
+  namespace: {{ hadoop.namespace }}
+spec:
+  storageClassName: {{ hadoop.namespace}}-storage
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: dfs-hadoop-hadoop-hdfs-nn-0
+  namespace: {{ hadoop.namespace }}
+spec:
+  storageClassName: {{ hadoop.namespace}}-storage
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi

@@ -1,0 +1,28 @@
+- name: Copy Hadoop Loadbalancer Config Yaml
+  template:
+    src: hadoop-loadbalancer.yaml.j2
+    dest: "{{ base_path }}/hadoop-loadbalancer.yaml"
+  register: copy_hadoop_lb_config_yaml
+- debug: msg={{ copy_hadoop_lb_config_yaml }}
+
+
+- name: Create hadoop Load Balancer
+  shell: |
+    kubectl apply -f hadoop-loadbalancer.yaml
+  register: create_hadoop_lb
+  args:
+    chdir: "{{ base_path }}/"
+- debug: msg={{ create_hadoop_lb }}
+
+
+# kubectl patch svc hadoop-portal -n hadoop -p '{"spec": {"type": "LoadBalancer"}}'
+- name: Validate if Hadoop Container is Running
+  shell: |
+    kubectl -n hadoop get pod | grep hadoop | awk '{print $3}' | cut -d : -f 1
+  register: check_hadoop_container
+  until: check_hadoop_container.stdout.find("Running") != -1
+  retries: 100
+  delay: 10
+- debug: msg={{ check_hadoop_container }}
+  when: print_debug == true
+

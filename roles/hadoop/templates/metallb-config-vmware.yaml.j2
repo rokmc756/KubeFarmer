@@ -1,0 +1,14 @@
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: {{ metallb.vmware.kind.ipaddrpool.metadata.name }}
+  namespace: {{ metallb.vmware.kind.ipaddrpool.metadata.namespace }}
+spec:
+  addresses:
+  - {{ metallb.vmware.kind.ipaddrpool.spec.ips_range }}
+---
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: {{ metallb.vmware.kind.l2advertise.metadata.name }}
+  namespace: {{ metallb.vmware.kind.l2advertise.metadata.namespace }}

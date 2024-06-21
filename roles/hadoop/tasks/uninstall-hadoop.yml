@@ -1,21 +1,21 @@
-- name: Uninstall Kafka
+- name: Uninstall hadoop
   shell: |
-    /usr/local/bin/helm uninstall kafka -n kafka
-  register: uninstall_kafka
+    /usr/local/bin/helm uninstall hadoop -n hadoop
+  register: uninstall_hadoop
   ignore_errors: true
-- debug: msg={{ uninstall_kafka }}
+- debug: msg={{ uninstall_hadoop }}
   when: print_debug == true
 
 
-- name: Validate if Kafka Containers are deleted
+- name: Validate if hadoop Containers are deleted
   shell: |
-    kubectl get pods -n kafka
-  register: delete_kafka_container
+    kubectl get pods -n hadoop
+  register: delete_hadoop_container
   ignore_errors: true
-  until: delete_kafka_container.stdout.find("") != -1
+  until: delete_hadoop_container.stdout.find("") != -1
   retries: 100
   delay: 10
-- debug: msg={{ delete_kafka_container }}
+- debug: msg={{ delete_hadoop_container }}
   when: print_debug == true
 
 
@@ -66,7 +66,7 @@
   register: delete_namespace
   ignore_errors: true
   with_items:
-    - kafka
+    - hadoop
     - istio-system
 - debug: msg={{ delete_namespace }}
   when: print_debug == true
@@ -74,7 +74,7 @@
 
 - name: Directory for Persistent Volumes
   file:
-    path: "{{ kafka.storage_path }}"
+    path: "{{ hadoop.storage_path }}"
     state: absent
   register: delete_pv_dir
   ignore_errors: true
@@ -86,13 +86,13 @@
   when: print_debug == true
 
 
-#- name: Validate if kafka Containers are Running
+#- name: Validate if hadoop Containers are Running
 #  shell: |
-#    kubectl -n kafka get pod | grep kafka | awk '{print $3}' | cut -d : -f 1
-#  register: check_kafka_container
-#  until: check_kafka_container.stdout.find("Running") != -1
+#    kubectl -n hadoop get pod | grep hadoop | awk '{print $3}' | cut -d : -f 1
+#  register: check_hadoop_container
+#  until: check_hadoop_container.stdout.find("Running") != -1
 #  retries: 100
 #  delay: 10
-#- debug: msg={{ check_kafka_container }}
+#- debug: msg={{ check_hadoop_container }}
 #  when: print_debug == true
 
