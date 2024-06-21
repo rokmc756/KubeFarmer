@@ -18,11 +18,13 @@
     stop_services: true
     upload_calico: true
   roles:
-    - kafka
+    - harbor
+
 #    - hadoop
+#    - kafka
 #    - jenkins
-#    - harbor-k8s
 #    - kubeflow
+#    - harbor-non-k8s
 #    - awx
 #    - rancher
 #    - k8s

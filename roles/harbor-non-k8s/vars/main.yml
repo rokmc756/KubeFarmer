@@ -1,0 +1,18 @@
+---
+# major_version: "1"
+# minor_version: "10"
+harbor:
+  major_version: "2"
+  minor_version: "8"
+  patch_version: "0"
+  os_version: "9"
+  cert:
+    country: "KR"
+    state: "Seoul"
+    location: "Gangnam"
+    org: "VMware"
+    org_unit: "Tanzu GSS"
+    email_address: "rokmc756@gmail.com"
+  admin_password: "changeme"
+  database_password: "changeme"
+

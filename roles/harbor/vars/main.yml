@@ -1,18 +1,96 @@
----
-# major_version: "1"
-# minor_version: "10"
+base_path: /root
+
+kustomize:
+  download_url: "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"
+  major_version: 5
+  minor_version: 4
+  patch_version: 2
+
 harbor:
-  major_version: "2"
-  minor_version: "8"
-  patch_version: "0"
-  os_version: "9"
-  cert:
-    country: "KR"
-    state: "Seoul"
-    location: "Gangnam"
-    org: "VMware"
-    org_unit: "Tanzu GSS"
-    email_address: "rokmc756@gmail.com"
-  admin_password: "changeme"
-  database_password: "changeme"
+  install: true
+  major_version: 1
+  minor_version: 8
+  patch_version: 0
+  build_version:
+  admin_user: "admin"
+  admin_password: "Changeme123"
+  admin_email: "rokmc756@gmail.com"
+  enable_discovery_daemon: false
+  clone_git: true
+  nvme: true
+  namespace: harbor
+  lb_ip_addr: 192.168.1.219
+  storage_path: "/mnt/harbor-storage"
+  k8s:
+    major_version: 1
+    minor_version: 28
+    patch_version: 0
+    build_version:
+  hostname: "harbor.jtest.suse.com"
+  service:
+    metadata:
+      name: harbor-loadbalancer
+      namespace: harbor
+  ingress:
+    metadata:
+      name: harbor-ingress
+      namespace: harbor
+    hostname: "harbor.jtest.suse.com"
+  kernel_parameters:
+    - "net.ipv4.neigh.default.gc_thresh1 = 0"   # For ARP Cache
+    - "fs.inotify.max_user_instances=2280"
+    - "fs.inotify.max_user_watches=755360"
+
+metallb:
+  install: true
+  major_version: 0
+  minor_version: 13
+  patch_version: 11
+  vmware:
+    kind:
+      ipaddrpool:
+        metadata:
+          name: first-pool
+          namespace: metallb-system
+        spec:
+          ips_range: 192.168.1.210-200.168.1.250
+      l2advertise:
+        metadata:
+          name: example
+          namespace: metallb-system
+  baremetal:
+    kind:
+      configmap:
+        metadata:
+          name: config
+          namespace: metallb-system
+        data:
+          config:
+            ipaddr_pools:
+              name: default
+              protocol: layer2
+              ips_range: 192.168.1.210-192.168.1.250
+
+helm:
+  enable_repo: true
+  major_version: 3
+  minor_version:
+  patch_version:
+  build_version:
+
+
+nginx:
+  major_version:
+  minor_version:
+  patch_version:
+  k8s_ingress:
+    major_version: 3
+    minor_version: 0
+    patch_version: 2
+  ingress:
+    name: nginx-ingress
+    major_version:
+    minor_version:
+    patch_version:
+    build_version:
 

@@ -19,13 +19,22 @@
 
 - name: Validate if Harbor Containers are Running
   shell: |
-    kubectl -n harbor get pod | grep harbor | awk '{print $3}' | cut -d : -f 1
+    kubectl -n harbor get pod | grep harbor | awk '{print $3}' | cut -d : -f 1 | uniq
   register: check_harbor_container
   until: check_harbor_container.stdout.find("Running") != -1
   retries: 100
   delay: 10
 - debug: msg={{ check_harbor_container }}
   when: print_debug == true
+
+
+- name: Print IP Addresses for LoadBalancer
+  shell: |
+    kubectl get all -A | grep LoadBalancer
+  register: print_lb_ipaddr
+  args:
+    chdir: "{{ base_path }}/"
+- debug: msg={{ print_lb_ipaddr }}
 
 
 # echo "Harbor Username Secret: $(kubectl -n ${HARBOR_NAMESPACE} get secret "harbor-${HARBOR_POD_ID}-controller-registry" --template={{.data.harborAdminUsername}})"

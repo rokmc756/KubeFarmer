@@ -26,3 +26,13 @@
 - debug: msg={{ check_hadoop_container }}
   when: print_debug == true
 
+
+- name: Print IP Addresses for LoadBalancer
+  shell: |
+    kubectl get all -A | grep LoadBalancer
+  register: print_lb_ipaddr
+  args:
+    chdir: "{{ base_path }}/"
+- debug: msg={{ print_lb_ipaddr }}
+
+

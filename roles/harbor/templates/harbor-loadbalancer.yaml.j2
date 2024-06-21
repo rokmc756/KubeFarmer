@@ -1,3 +1,4 @@
+---
 apiVersion: v1
 kind: Service
 metadata:
@@ -7,17 +8,19 @@ metadata:
     nginx.ingress.kubernetes.io/proxy-protocol: "true"
 spec:
   selector:
-    app: harbor-portal
+    app: harbor
+    component: portal
   ports:
     - name: http
       protocol: TCP
       port: 80
-      targetPort: 80
+      targetPort: 8080
     - name: https
       protocol: TCP
-      port: 443
+      port: 8443
       targetPort: 443
   type: LoadBalancer
+  loadBalancerIP: 192.168.1.219
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress

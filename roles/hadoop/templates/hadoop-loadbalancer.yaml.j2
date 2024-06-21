@@ -1,23 +1,25 @@
+---
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ hadoop.service.metadata.name }}
+  name: hadoop-hadoop-yarn-ui
   namespace: {{ hadoop.service.metadata.namespace }}
   annotations:
     nginx.ingress.kubernetes.io/proxy-protocol: "true"
 spec:
-  selector:
-    app: hadoop-portal
   ports:
     - name: http
       protocol: TCP
-      port: 80
-      targetPort: 80
+      port: 8088
+      targetPort: 8088
     - name: https
       protocol: TCP
-      port: 443
-      targetPort: 443
+      port: 8488
+      targetPort: 8488
   type: LoadBalancer
+  loadBalancerIP: 192.168.1.219
+#  selector:
+#    app: hadoop-hadoop-yarn-ui
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -35,6 +37,6 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: hadoop-portal
+                name: hadoop-hadoop-yarn-ui
                 port:
                   name: http
