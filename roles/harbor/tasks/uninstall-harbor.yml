@@ -9,7 +9,7 @@
 
 - name: Validate if Harbor Containers are deleted
   shell: |
-    kubectl get pods -n harbor
+    kubectl get pods -n harbor | grep harbor- | awk '{print $3}' | uniq
   register: delete_harbor_container
   ignore_errors: true
   until: delete_harbor_container.stdout.find("") != -1

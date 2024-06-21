@@ -4,10 +4,12 @@
   shell: |
     curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
     chmod 755 get_helm.sh
-    export PATH=$PATH:/usr/local/bin ; ./get_helm.sh
+    ./get_helm.sh
   register: install_helm
   args:
-    chdir: /root
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ install_helm }}
 
 
