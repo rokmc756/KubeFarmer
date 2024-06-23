@@ -12,8 +12,9 @@
     - "minio-loadbalancer.yaml"
     - "katib-ui-loadbalancer.yaml"
     - "ml-pipeline-ui-loadbalancer.yaml"
+    - "centraldashboard-loadbalancer.yaml"
+    - "tensorboards-web-app-loadbalancer.yaml"
 - debug: msg={{ copy_kubeflow_lb_config_yaml }}
-  #  - "centraldashboard-loadbalancer.yaml"
 
 # --type=strategic
 - name: Apply Ingress Patch for SSL Connection
@@ -34,27 +35,16 @@
     - "minio-loadbalancer.yaml"
     - "katib-ui-loadbalancer.yaml"
     - "ml-pipeline-ui-loadbalancer.yaml"
+    - "centraldashboard-loadbalancer.yaml"
+    - "tensorboards-web-app-loadbalancer.yaml"
 - debug: msg={{ create_rancher_lb }}
-#  #  - "centraldashboard-loadbalancer.yaml"
-
-
-- name: Check KubeFlow Pods
-  shell: kubectl get all -n {{ kubeflow.namespace }}
-  register: check_kubeflow_pods
-  until: check_kubeflow_pods.stdout.find("pending") == -1
-  retries: 30
-- debug: msg={{ check_kubeflow_pods }}
-
-
-#- pause:
-#    seconds: 15
 
 
 - name: Check if the status of ContainerCreating is Still Creating
-  shell: kubectl get pods -n {{ kubeflow.namespace }}
+  shell: kubectl get pods -n {{ kubeflow.namespace }} | sed 1d | awk '{print $3}' | sort | uniq
   register: check_container_creating
-  until: check_container_creating.stdout.find("ContainerCreating") == -1
-  retries: 30
+  until: check_container_creating.stdout.find("Terminating") == -1
+  retries: 100
   delay: 10
 - debug: msg={{ check_container_creating }}
 

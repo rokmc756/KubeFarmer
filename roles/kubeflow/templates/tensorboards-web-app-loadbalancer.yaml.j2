@@ -6,20 +6,22 @@ metadata:
   namespace: kubeflow
   annotations:
     nginx.ingress.kubernetes.io/proxy-protocol: "true"
-  labels:
-    app: tensorboards-web-app
-    kustomize.component: tensorboards-web-app
-    run: tensorboards-web-app
+  #labels:
+  #  app: tensorboards-web-app
+  #  kustomize.component: tensorboards-web-app
+  #  run: tensorboards-web-app
 spec:
-  selector:
-    app: tensorboards-web-app
-    kustomize.component: tensorboards-web-app
+  #selector:
+  #  app: tensorboards-web-app
+  #  kustomize.component: tensorboards-web-app
   ports:
   - name: http
     port: 80
     protocol: TCP
     targetPort: 5000
   type: LoadBalancer
+  loadBalancerIP: 192.168.1.218
+
 #---
 #apiVersion: networking.k8s.io/v1
 #kind: Ingress
@@ -40,3 +42,4 @@ spec:
 #                name: ml-pipeline-ui
 #                port:
 #                  name: http
+

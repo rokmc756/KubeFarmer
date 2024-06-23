@@ -2,6 +2,7 @@
 # https://kmaster.tistory.com/156
 # https://github.com/kubeflow/kubeflow/issues/5271
 
+
 - name: Check if the Kubeflow is already downloaded
   stat: path={{ base_path }}/manifests
   register: kubeflow_dir_existed

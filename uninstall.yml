@@ -16,14 +16,14 @@
     enable_firewall: false
     reboot_required: true
   roles:
-    - harbor
+    - kubeflow
 
+#    - harbor
 #    - harbor-non-k8s
 #    - hadoop
 #    - kafka
 #    - jenkins
 #    - awx
-#    - kubeflow
 #    - k8s
 #    - rancher
 #    - rook-ceph
