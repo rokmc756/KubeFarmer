@@ -16,8 +16,8 @@
     enable_firewall: false
     reboot_required: true
   roles:
-    - geode
-
+    - k8s
+#    - geode
 #    - rabbitmq
 #    - kubeflow
 #    - harbor-non-k8s
@@ -25,7 +25,6 @@
 #    - kafka
 #    - jenkins
 #    - awx
-#    - k8s
 #    - rancher
 #    - rook-ceph
 #    - nginx

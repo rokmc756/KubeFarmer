@@ -18,8 +18,8 @@
     stop_services: true
     upload_calico: true
   roles:
-    - geode
-
+    - k8s
+#    - geode
 #    - rabbitmq
 #    - kubeflow
 #    - harbor
@@ -29,7 +29,6 @@
 #    - harbor-non-k8s
 #    - awx
 #    - rancher
-#    - k8s
 #    - rook-ceph
 #    - init-hosts
 #    - nginx

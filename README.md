@@ -293,6 +293,10 @@ $ make reinit
 ## TODO
 * Fixing interaction with harbor
 * Deploy VMware-Postgres and MySQL
+* Multi Master
+- https://github.com/hub-kubernetes/kubeadm-multi-master-setup
+- https://www.useoflinux.com/install-and-configure-a-multi-master-kubernetes-cluster-with-kubeadm/
+- https://navyadevops.hashnode.dev/kubernetes-multi-master-setup-with-loadbalancer-on-ubuntu
 
 
 ## Debugging
