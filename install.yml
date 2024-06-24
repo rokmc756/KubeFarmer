@@ -18,7 +18,8 @@
     stop_services: true
     upload_calico: true
   roles:
-    - geode
+    - rabbitmq
+#    - geode
 #    - kubeflow
 #    - harbor
 #    - hadoop

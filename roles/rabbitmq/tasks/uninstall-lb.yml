@@ -1,0 +1,27 @@
+- name: Copy rabbitmq Loadbalancer Config Yaml
+  template:
+    src: kafdrop.yaml.j2
+    dest: "{{ base_path }}/kafdrop.yaml"
+  register: copy_rabbitmq_lb_config_yaml
+- debug: msg={{ copy_rabbitmq_lb_config_yaml }}
+
+
+- name: Delete rabbitmq Load Balancer
+  shell: |
+    kubectl delete -f kafdrop.yaml
+  register: delete_rabbitmq_lb
+  args:
+    chdir: "{{ base_path }}/"
+- debug: msg={{ delete_rabbitmq_lb }}
+
+
+- name: Validate if Kafdrop Container is Running
+  shell: |
+    kubectl -n rabbitmq get pod | grep kafdrop | awk '{print $3}' | cut -d : -f 1
+  register: check_kafdrop_container
+  until: check_kafdrop_container.stdout.find("") != -1
+  retries: 100
+  delay: 10
+- debug: msg={{ check_kafdrop_container }}
+  when: print_debug == true
+

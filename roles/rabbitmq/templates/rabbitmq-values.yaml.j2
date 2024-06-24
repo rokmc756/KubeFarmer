@@ -1,0 +1,28 @@
+image:
+  tag: 3.11
+
+replicaCount: 6
+
+auth:
+  username: rabbitmq
+  password: changeme
+
+persistence:
+  enabled: true
+  existingClaim: "rabbitmq-pvc"
+  size: 10Gi
+
+volumePermissions:
+  enabled: true
+
+service:
+  type: LoadBalancer
+
+ingress:
+  enabled: true
+  hostname: rabbitmq-dashboard.jtest.suse.com
+  tls: true
+  annotations: {
+    "kubernetes.io/ingress.class": "nginx",
+    "cert-manager.io/cluster-issuer": "letsencrypt-issuer"
+  }

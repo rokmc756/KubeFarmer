@@ -1,0 +1,108 @@
+# https://8grams.medium.com/how-to-install-rabbitmq-on-kubernetes-cluster-cd399a9df83f
+
+- name: Create Directory for Persistent Volumes
+  file:
+    path: "{{ rabbitmq.storage_path }}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0777
+  register: create_pv_dir
+  delegate_to: "{{ item }}"
+  delegate_facts: True
+  with_items:
+    - "{{ groups['all'] }}"
+- debug: msg={{ create_pv_dir }}
+  when: print_debug == true
+
+
+- name: Create Namespace for Persistent Volumes
+  shell: |
+    kubectl create namespace {{ item }}
+  register: create_namespace
+  with_items:
+    - rabbitmq
+- debug: msg={{ create_namespace }}
+  when: print_debug == true
+
+
+- name: Copy Cluster Local PVC Config Yaml
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ base_path }}/{{ item }}"
+  register: copy_cluster_local_pvc_config_yaml
+  with_items:
+    - "local-storage-class.yaml"
+    - "local-storage-pv.yaml"
+    - "local-storage-pvc.yaml"
+- debug: msg={{ copy_cluster_local_pvc_config_yaml }}
+
+
+- name: Cluster Settings for a Production Cluster Running in a Dynamic Cloud Environment including VMware
+  shell: |
+    kubectl create -f {{ item }}
+  register: create_pvc
+  with_items:
+    - "local-storage-class.yaml"
+    - "local-storage-pv.yaml"
+    - "local-storage-pvc.yaml"
+  args:
+    chdir: "{{ base_path }}/"
+- debug: msg={{ create_pvc }}
+  when: print_debug == true
+
+
+#- name: Copy Rabbitmq Loadbalancer Config Yaml
+#  template:
+#    src: "{{ item }}.j2"
+#    dest: "{{ base_path }}/{{ item }}"
+#  register: copy_rabbitmq_lb_config_yaml
+#  with_items:
+#    - "rabbitmq-values.yaml"
+#- debug: msg={{ copy_rabbitmq_lb_config_yaml }}
+
+
+
+- name: Copy Rabbitmq Helm Values
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ base_path }}/{{ item }}"
+  register: copy_rabbitmq_helm_values
+  with_items:
+    - "rabbitmq-values.yaml"
+- debug: msg={{ copy_rabbitmq_helm_values }}
+
+
+- name: Deploy Rabbitmq
+  shell: |
+    /usr/local/bin/helm install rabbitmq bitnami/rabbitmq --namespace rabbitmq -f rabbitmq-values.yaml
+  register: deploy_rabbitmq
+  args:
+    chdir: "{{ base_path }}/"
+- debug: msg={{ deploy_rabbitmq }}
+  when: print_debug == true
+
+# watch kubectl get deployments,pods,services --namespace rabbitmq
+- name: Validate if Rabbitmq Controller Containers are Running
+  shell: |
+    kubectl get pods -n rabbitmq |  grep rabbitmq- | awk '{print $3}' | sort | uniq
+  register: check_rabbitmq_controller_container
+  until: check_rabbitmq_controller_container.stdout.find("Running") != -1
+  retries: 100
+  delay: 10
+- debug: msg={{ check_rabbitmq_controller_container }}
+  when: print_debug == true
+
+
+# Troubleshooting
+# Occasionally, you may encounter issues logging into the RabbitMQ Dashboard due to various reasons. To address this problem, you can simply create a new user in RabbitMQ.
+#
+# Go to RabbitMQ Pod
+#
+# $ exec kubectl exec -i -t -n rabbitmq rabbitmq-0 -c rabbitmq -- sh -c "clear; (bash || ash || sh)"
+# To create a new user, in this example named foo with the password bar, follow these steps. Optionally, you can also grant the user administrator rights and assign proper permissions:
+
+# $ rabbitmqctl add_user foo bar
+# $ rabbitmqctl set_user_tags foo administrator
+# $ rabbitmqctl set_permissions -p / foo ".*" ".*" ".*"
+

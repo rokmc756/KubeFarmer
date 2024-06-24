@@ -16,8 +16,9 @@
     enable_firewall: false
     reboot_required: true
   roles:
-    - geode
+    - rabbitmq
 
+#    - geode
 #    - kubeflow
 #    - harbor-non-k8s
 #    - hadoop
