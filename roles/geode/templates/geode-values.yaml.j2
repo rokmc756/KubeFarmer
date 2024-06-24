@@ -1,0 +1,81 @@
+#expose:
+#  ingress:
+#    hosts:
+#      # Adjust the domain to suit you
+#      core: geode.jtest.suse.com
+#
+## Adjust the externalURL https://{domain}
+#externalURL: https://geode.jtest.suse.com
+#geodeAdminPassword: "{{ geode.admin_password }}"
+#
+#controller:
+#  serviceType: LoadBalancer
+#
+#
+#  https://github.com/gogeode/geode-helm/blob/main/values.yaml
+#
+---
+geodeAdminPassword: "Changeme123"
+
+expose:
+  type: ingress
+  tls:
+    enabled: true
+    certSource: secret
+    secret:
+      secretName: "geode-cat-tls"
+  ingress:
+    hosts:
+      core: geode.jtest.suse.com
+    className: "nginx"
+
+externalURL: https://geode.jtest.suse.com
+
+persistence:
+  enabled: false
+  resourcePolicy: "keep"
+  persistentVolumeClaim:
+    registry:
+      storageClass: "geode-storage"
+      accessMode: ReadWriteMany
+      size: 10Gi
+    jobservice:
+      jobLog:
+        storageClass: "geode-storage"
+        accessMode: ReadWriteMany
+        size: 10Gi
+    redis:
+      storageClass: "geode-storage"
+      accessMode: ReadWriteMany
+      size: 10Gi
+    trivy:
+      storageClass: "geode-storage"
+      accessMode: ReadWriteMany
+      size: 10Gi
+  imageChartStorage:
+    disableredirect: false
+    type: filesystem
+    filesystem:
+      rootdirectory: {{ geode.storage_path }}
+
+registry:
+  replicas: 2
+portal:
+  replicas: 2
+core:
+  replicas: 2
+jobservice:
+  replicas: 2
+trivy:
+  enabled: true
+  replicas: 2
+notary:
+  enabled: false
+cache:
+  enabled: true
+  expireHours: 24
+database:
+  type: internal
+redis:
+  type: internal
+

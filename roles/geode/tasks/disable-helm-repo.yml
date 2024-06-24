@@ -8,20 +8,12 @@
 - debug: msg={{ remove_nginx_helm_repo }}
 
 
-- name: Remove kafka UI Helm Repo
-  shell: |
-    /usr/local/bin/helm repo remove kafka-ui
-  register: remove_kafka_ui_helm_repo
-  ignore_errors: yes
-- debug: msg={{ remove_kafka_ui_helm_repo }}
-
-
-- name: Remove kafka Helm Repo
+- name: Remove geode Helm Repo
   shell: |
     /usr/local/bin/helm repo remove bitnami
-  register: remove_kafka_helm_repo
+  register: remove_geode_helm_repo
   ignore_errors: yes
-- debug: msg={{ remove_kafka_helm_repo }}
+- debug: msg={{ remove_geode_helm_repo }}
 
 
 - name: Remove Jetstack Helm Repo

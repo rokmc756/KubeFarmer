@@ -44,6 +44,8 @@
     - "/mnt/jenkins-storage"
     - "/mnt/harbor-storage"
     - "/mnt/kafka-storage"
+    - "/mnt/hadoop-storage"
+    - "/mnt/geode-storage"
 - debug: msg={{ remove_pv_dir }}
   when: print_debug == true
 

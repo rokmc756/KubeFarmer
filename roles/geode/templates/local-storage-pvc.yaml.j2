@@ -1,0 +1,26 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: data-geode-server-0
+  namespace: {{ geode.namespace }}
+spec:
+  storageClassName: {{ geode.namespace}}-storage
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: data-geode-locator-0
+  namespace: {{ geode.namespace }}
+spec:
+  storageClassName: {{ geode.namespace}}-storage
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi

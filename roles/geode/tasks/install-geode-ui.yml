@@ -1,0 +1,129 @@
+# https://medium.com/@tharukam/simplifying-geode-ui-your-guide-to-google-oauth-integration-on-kubernetes-0a62edf8fc2d
+# https://pastime2532.tistory.com/257
+
+- name: Check if geode UI Directory exists
+  stat: path={{ base_path }}/geode-ui
+  register: geode_ui_dir
+- debug: msg={{ geode_ui_dir }}
+  when: print_debug == true
+
+
+- name: Pull geode UI Tarball
+  shell: |
+    /usr/local/bin/helm pull geode-ui/geode-ui
+  register: pull_geode_ui_tarball
+  args:
+    chdir: "{{ base_path }}/"
+  when: geode_ui_dir.stat.exists == false
+- debug: msg={{ pull_geode_ui_tarball }}
+  when: print_debug == true and geode_ui_dir.stat.exists == false
+
+
+- name: Unarchive geode UI Tarball
+  unarchive:
+    src: "{{ base_path }}/geode-ui-{{ geode_ui.major_version }}.{{ geode_ui.minor_version }}.{{ geode_ui.patch_version }}.tgz"
+    dest: "{{ base_path }}/"
+    mode: 0755
+    owner: root
+    group: root
+    remote_src: true
+  register: unarchive_geode_ui_tarball
+  when: geode_ui_dir.stat.exists == false
+- debug: msg={{ unarchive_geode_ui_tarball }}
+  when: print_debug == true and geode_ui_dir.stat.exists == false
+
+
+- name: Create Namespace for geode UI
+  shell: |
+    kubectl create namespace {{ item }}
+  register: create_geode_ui_namespace
+  with_items:
+    - "{{ geode_ui.namespace }}"
+- debug: msg={{ create_geode_ui_namespace }}
+  when: print_debug == true
+
+
+#- name: Replace lines for NFS Server IP Address and NFS Root
+#  lineinfile:
+#    dest: "{{ base_path }}/nfs-subdir-external-provisioner/deploy/deployment.yaml"
+#    regexp: "{{ item.regexp }}"
+#    line: "{{ item.line }}"
+#    state: "{{ item.state }}"
+#  register: replace_nfs_server_lines
+#  with_items:
+#    - { regexp: '^              value: 10.3.243.101', line: '              value: 192.168.1.90', state: present }
+#    - { regexp: '^              value: /ifs/kubernetes', line: '              value: /nfs-root', state: present }
+#    - { regexp: '^            server: 10.3.243.101', line: '            server: 192.168.1.90', state: present }
+#    - { regexp: '^            path: /ifs/kubernetes', line: '            path: /nfs-root', state: present }
+#- debug: msg={{ replace_nfs_server_lines  }}
+#  when: print_debug == true
+
+
+- name: Copy geode UI Config Yaml
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ base_path }}/geode-ui/{{ item }}"
+  register: copy_geode_ui_config_yaml
+  with_items:
+    - "geode-ui-values.yaml"
+- debug: msg={{ copy_geode_ui_config_yaml }}
+
+
+# vi geode-ui/values.yaml
+#yamlApplicationConfig:
+#  geode:
+#    clusters:
+#      - name: local
+#        bootstrapServers: geode-0.geode-headless.geode.svc.cluster.local:9092
+#
+#service:
+#  type: LoadBalancer
+#  port: 80
+#
+#resources:
+#   limits:
+#     cpu: 1000m
+#     memory: 1024Mi
+#   requests:
+#     cpu: 200m
+#     memory: 256Mi
+
+
+- name: Install geode UI by Helm Upgrade
+  shell: |
+    /usr/local/bin/helm upgrade --install -f geode-ui/geode-ui-values.yaml -n geode-ui geode-ui geode-ui/
+  register: install_geode_ui
+  args:
+    chdir: "{{ base_path }}/"
+- debug: msg={{ install_geode_ui }}
+  when: print_debug == true
+
+
+- name: Validate if geode UI Contaienr is still Creating
+  shell: |
+    kubectl get pods -n geode-ui
+  register: validate_geode_ui_container
+  args:
+    chdir: "{{ base_path }}/"
+- debug: msg={{ validate_geode_ui_container }}
+  when: print_debug == true
+
+
+- name: Validate if geode UI Container is Running
+  shell: |
+    kubectl get pods -n geode-ui |  grep geode-ui | awk '{print $3}' | uniq
+  register: check_geode_ui_container
+  until: check_geode_ui_container.stdout.find("Running") != -1
+  retries: 100
+  delay: 10
+- debug: msg={{ check_geode_ui_container }}
+  when: print_debug == true
+
+
+- name: Check LoadBalancer IP addresses for geode and geode UI
+  shell: |
+    kubectl get all -A | grep LoadBalancer
+  register: check_lb_ipaddr
+- debug: msg={{ check_lb_ipaddr }}
+  when: print_debug == true
+

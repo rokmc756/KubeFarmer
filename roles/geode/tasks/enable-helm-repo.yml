@@ -27,18 +27,11 @@
 - debug: msg={{ add_nginx_helm_repo }}
 
 
-- name: Add kafka Helm Repo
+- name: Add Geode Helm Repo
   shell: |
     /usr/local/bin/helm repo add bitnami https://charts.bitnami.com/bitnami
-  register: add_kafka_helm_repo
-- debug: msg={{ add_kafka_helm_repo }}
-
-
-- name: Add kafka UI Helm Repo
-  shell: |
-    /usr/local/bin/helm repo add {{ kafka_ui.repo_name }} {{ kafka_ui.download_link }}
-  register: add_kafka_ui_helm_repo
-- debug: msg={{ add_kafka_ui_helm_repo }}
+  register: add_geode_helm_repo
+- debug: msg={{ add_geode_helm_repo }}
 
 
 - name: Add Jetstack Helm Repo

@@ -16,9 +16,9 @@
     enable_firewall: false
     reboot_required: true
   roles:
-    - kubeflow
+    - geode
 
-#    - harbor
+#    - kubeflow
 #    - harbor-non-k8s
 #    - hadoop
 #    - kafka

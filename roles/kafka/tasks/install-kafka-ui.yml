@@ -1,14 +1,14 @@
 # https://medium.com/@tharukam/simplifying-kafka-ui-your-guide-to-google-oauth-integration-on-kubernetes-0a62edf8fc2d
 # https://pastime2532.tistory.com/257
 
-- name: Check if Kafka UI Directory exists
+- name: Check if kafka UI Directory exists
   stat: path={{ base_path }}/kafka-ui
   register: kafka_ui_dir
 - debug: msg={{ kafka_ui_dir }}
   when: print_debug == true
 
 
-- name: Pull Kafka UI Tarball
+- name: Pull kafka UI Tarball
   shell: |
     /usr/local/bin/helm pull kafka-ui/kafka-ui
   register: pull_kafka_ui_tarball
@@ -19,7 +19,7 @@
   when: print_debug == true and kafka_ui_dir.stat.exists == false
 
 
-- name: Unarchive Kafka UI Tarball
+- name: Unarchive kafka UI Tarball
   unarchive:
     src: "{{ base_path }}/kafka-ui-{{ kafka_ui.major_version }}.{{ kafka_ui.minor_version }}.{{ kafka_ui.patch_version }}.tgz"
     dest: "{{ base_path }}/"
@@ -33,7 +33,7 @@
   when: print_debug == true and kafka_ui_dir.stat.exists == false
 
 
-- name: Create Namespace for Kafka UI
+- name: Create Namespace for kafka UI
   shell: |
     kubectl create namespace {{ item }}
   register: create_kafka_ui_namespace
@@ -59,7 +59,7 @@
 #  when: print_debug == true
 
 
-- name: Copy Kafka UI Config Yaml
+- name: Copy kafka UI Config Yaml
   template:
     src: "{{ item }}.j2"
     dest: "{{ base_path }}/kafka-ui/{{ item }}"
@@ -89,7 +89,7 @@
 #     memory: 256Mi
 
 
-- name: Install Kafka UI by Helm Upgrade
+- name: Install kafka UI by Helm Upgrade
   shell: |
     /usr/local/bin/helm upgrade --install -f kafka-ui/kafka-ui-values.yaml -n kafka-ui kafka-ui kafka-ui/
   register: install_kafka_ui
@@ -99,7 +99,7 @@
   when: print_debug == true
 
 
-- name: Validate if Kafka UI Contaienr is still Creating
+- name: Validate if kafka UI Contaienr is still Creating
   shell: |
     kubectl get pods -n kafka-ui
   register: validate_kafka_ui_container
@@ -109,7 +109,7 @@
   when: print_debug == true
 
 
-- name: Validate if Kafka UI Container is Running
+- name: Validate if kafka UI Container is Running
   shell: |
     kubectl get pods -n kafka-ui |  grep kafka-ui | awk '{print $3}' | uniq
   register: check_kafka_ui_container
@@ -120,7 +120,7 @@
   when: print_debug == true
 
 
-- name: Check LoadBalancer IP addresses for Kafka and Kafka UI
+- name: Check LoadBalancer IP addresses for kafka and kafka UI
   shell: |
     kubectl get all -A | grep LoadBalancer
   register: check_lb_ipaddr

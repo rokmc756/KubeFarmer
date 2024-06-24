@@ -1,0 +1,90 @@
+- name: Create Directory for Persistent Volumes
+  file:
+    path: "{{ geode.storage_path }}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0777
+  register: create_pv_dir
+  delegate_to: "{{ item }}"
+  delegate_facts: True
+  with_items:
+    - "{{ groups['all'] }}"
+- debug: msg={{ create_pv_dir }}
+  when: print_debug == true
+
+
+- name: Create Namespace for Persistent Volumes
+  shell: |
+    kubectl create namespace {{ item }}
+  register: create_namespace
+  with_items:
+    - geode
+    - istio-system
+- debug: msg={{ create_namespace }}
+  when: print_debug == true
+
+
+- name: Copy Cluster Local PVC Config Yaml
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ base_path }}/{{ item }}"
+  register: copy_cluster_local_pvc_config_yaml
+  with_items:
+    - "local-storage-class.yaml"
+    - "local-storage-pv.yaml"
+    - "local-storage-pvc.yaml"
+- debug: msg={{ copy_cluster_local_pvc_config_yaml }}
+
+
+- name: Cluster Settings for a Production Cluster Running in a Dynamic Cloud Environment including VMware
+  shell: |
+    kubectl create -f {{ item }}
+  register: create_pvc
+  with_items:
+    - "local-storage-class.yaml"
+    - "local-storage-pv.yaml"
+    - "local-storage-pvc.yaml"
+  args:
+    chdir: "{{ base_path }}/"
+- debug: msg={{ create_pvc }}
+  when: print_debug == true
+
+
+#- name: Copy geode Loadbalancer Config Yaml
+#  template:
+#    src: "{{ item }}.j2"
+#    dest: "{{ base_path }}/{{ item }}"
+#  register: copy_geode_lb_config_yaml
+#  with_items:
+#    - "geode-values.yaml"
+#- debug: msg={{ copy_geode_lb_config_yaml }}
+
+
+# /usr/local/bin/helm install geode geode/geode -n geode
+# --set persistence.existingClaim={data-geode-redis-0,data-geode-trivy-0,database-data-geode-database-0,geode-jobservice,geode-registry} \
+# --create-namespace
+
+# /usr/local/bin/helm install geode geode/geode -f {{ base_path }}/geode-values.yaml --create-namespace -n geode
+
+# --set externalAccess.controller.service.type=NodePort \
+# --set externalAccess.autoDiscovery.enabled=true \
+# --set externalAccess.controller.service.domain=ingress-ip \
+- name: Deploy Geode
+  shell: |
+    /usr/local/bin/helm install geode bitnami/geode -n geode --create-namespace
+  register: deploy_geode
+- debug: msg={{ deploy_geode }}
+  when: print_debug == true
+
+
+- name: Validate if geode Controller Containers are Running
+  shell: |
+    kubectl get pods -n geode |  grep geode- | awk '{print $3}' | sort | uniq
+  register: check_geode_controller_container
+  until: check_geode_controller_container.stdout.find("Running") != -1
+  retries: 100
+  delay: 10
+- debug: msg={{ check_geode_controller_container }}
+  when: print_debug == true
+
