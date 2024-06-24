@@ -27,9 +27,10 @@
 - debug: msg={{ add_nginx_helm_repo }}
 
 
+# /usr/local/bin/helm repo add bitnami https://charts.bitnami.com/bitnami
 - name: Add Geode Helm Repo
   shell: |
-    /usr/local/bin/helm repo add bitnami https://charts.bitnami.com/bitnami
+    /usr/local/bin/helm repo add google-geode https://sbawaska.github.io/geode-helm-chart
   register: add_geode_helm_repo
 - debug: msg={{ add_geode_helm_repo }}
 

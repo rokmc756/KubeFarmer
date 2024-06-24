@@ -1,40 +1,36 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ geode.service.metadata.name }}
+  name: geode
   namespace: {{ geode.service.metadata.namespace }}
   annotations:
     nginx.ingress.kubernetes.io/proxy-protocol: "true"
 spec:
-  selector:
-    app: geode-portal
   ports:
     - name: http
       protocol: TCP
-      port: 80
-      targetPort: 80
-    - name: https
-      protocol: TCP
-      port: 443
-      targetPort: 443
+      port: 7070
+      targetPort: 7070
   type: LoadBalancer
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: {{ geode.ingress.metadata.name }}
-  namespace: {{ geode.ingress.metadata.namespace }}
-  annotations:
-    nginx.ingress.kubernetes.io/ssl-redirect: "true"
-spec:
-  rules:
-    - host: {{ geode.ingress.hostname }}
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: geode-portal
-                port:
-                  name: http
+
+#---
+#apiVersion: networking.k8s.io/v1
+#kind: Ingress
+#metadata:
+#  name: {{ geode.ingress.metadata.name }}
+#  namespace: {{ geode.ingress.metadata.namespace }}
+#  annotations:
+#    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+#spec:
+#  rules:
+#    - host: {{ geode.ingress.hostname }}
+#      http:
+#        paths:
+#          - path: /
+#            pathType: Prefix
+#            backend:
+#              service:
+#                name: geode-portal
+#                port:
+#                  name: http
+

@@ -44,7 +44,7 @@
   when: geode.install == true and inventory_hostname in groups['master']
 
 
-- name: Deploy geode
+- name: Deploy Geode
   import_tasks: install-geode.yml
   tags: install
   when: geode.install == true and inventory_hostname in groups['master']
@@ -62,7 +62,7 @@
   when: metallb.install == true and inventory_hostname in groups['master']
 
 
-- name: Destroy geode
+- name: Destroy Geode
   import_tasks: uninstall-geode.yml
   tags: uninstall
   when: geode.install == true and inventory_hostname in groups['master']

@@ -1,27 +1,27 @@
-- name: Copy geode Loadbalancer Config Yaml
+- name: Copy Geode Loadbalancer Config Yaml
   template:
-    src: kafdrop.yaml.j2
-    dest: "{{ base_path }}/kafdrop.yaml"
+    src: geode-loadbalancer.yaml.j2
+    dest: "{{ base_path }}/geode-loadbalancer.yaml"
   register: copy_geode_lb_config_yaml
 - debug: msg={{ copy_geode_lb_config_yaml }}
 
 
-- name: Delete geode Load Balancer
+- name: Delete Geode Load Balancer
   shell: |
-    kubectl delete -f kafdrop.yaml
+    kubectl delete -f geode-loadbalancer.yaml
   register: delete_geode_lb
   args:
     chdir: "{{ base_path }}/"
 - debug: msg={{ delete_geode_lb }}
 
 
-- name: Validate if Kafdrop Container is Running
+- name: Validate if Geode Container is Running
   shell: |
-    kubectl -n geode get pod | grep kafdrop | awk '{print $3}' | cut -d : -f 1
-  register: check_kafdrop_container
-  until: check_kafdrop_container.stdout.find("") != -1
+    kubectl -n geode get pod | grep geode | awk '{print $3}' | cut -d : -f 1
+  register: check_geode_container
+  until: check_geode_container.stdout.find("") != -1
   retries: 100
   delay: 10
-- debug: msg={{ check_kafdrop_container }}
+- debug: msg={{ check_geode_container }}
   when: print_debug == true
 

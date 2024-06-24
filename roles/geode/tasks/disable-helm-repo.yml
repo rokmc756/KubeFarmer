@@ -8,9 +8,11 @@
 - debug: msg={{ remove_nginx_helm_repo }}
 
 
-- name: Remove geode Helm Repo
+# /usr/local/bin/helm repo remove bitnami
+# /usr/local/bin/helm repo add geode-repo https://sbawaska.github.io/geode-helm-chart
+- name: Remove Geode Helm Repo
   shell: |
-    /usr/local/bin/helm repo remove bitnami
+    /usr/local/bin/helm repo remove google-geode
   register: remove_geode_helm_repo
   ignore_errors: yes
 - debug: msg={{ remove_geode_helm_repo }}
