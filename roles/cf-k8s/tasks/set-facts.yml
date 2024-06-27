@@ -62,5 +62,23 @@
   when: ansible_distribution == "openSUSE Leap"
 
 
+- name: Check Kube Minor Version if less than v1.24.x
+  shell: |
+    kubectl version | grep "Server Version" | awk '{print $3}' | cut -d . -f 2
+  register: kube_minor_version
+  when: inventory_hostname in groups['master']
+
+
+- name: Make Sure that CF for K8S should be installed on versions less than Kube 1.24.x
+  debug:
+    msg: "CF for K8S should be required on versions less than k8s v1.24.x"
+  when: inventory_hostname in groups['master'] and ( kube_minor_version.stdout|int > 24 )
+
+
+- name: End CF for K8S Ansible Playbook
+  meta: end_play
+  when: ( kube_minor_version.stdout|int > 24 ) and inventory_hostname in groups['master']
+
+
 # - debug: msg={{ ansible_distribution }}
 

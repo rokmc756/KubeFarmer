@@ -18,8 +18,8 @@
     stop_services: true
     upload_calico: true
   roles:
-    - k8s
-#    - cf-k8s
+    - cf-k8s
+#    - k8s
 #    - stratos
 #    - mongodb
 #    - geode

@@ -12,12 +12,12 @@
     - uninstall
 
 
-- name: Install Bosh CLI
+- name: Install CF for K8S CLI
   import_tasks: install.yml
   tags: install
 
 
-- name: Uninstall Bosh CLI
+- name: Uninstall CF for K8S Bosh CLI
   import_tasks: uninstall.yml
   tags: uninstall
 
