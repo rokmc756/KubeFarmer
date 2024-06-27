@@ -37,13 +37,13 @@
   register: delete_pvc
   ignore_errors: true
   with_items:
-    - "local-storage-pvc.yaml"
     - "local-storage-pv.yaml"
     - "local-storage-class.yaml"
   args:
     chdir: "{{ base_path }}/"
 - debug: msg={{ delete_pvc }}
   when: print_debug == true
+  #  - "local-storage-pvc.yaml"
 
 
 - name: Delete Cluster Local PVC Config Yaml

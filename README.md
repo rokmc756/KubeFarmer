@@ -297,6 +297,7 @@ $ make reinit
 - https://github.com/hub-kubernetes/kubeadm-multi-master-setup
 - https://www.useoflinux.com/install-and-configure-a-multi-master-kubernetes-cluster-with-kubeadm/
 - https://navyadevops.hashnode.dev/kubernetes-multi-master-setup-with-loadbalancer-on-ubuntu
+- https://www.lisenet.com/2021/install-and-configure-a-multi-master-ha-kubernetes-cluster-with-kubeadm-haproxy-and-keepalived-on-centos-7/
 
 
 ## Debugging

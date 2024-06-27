@@ -1,0 +1,23 @@
+---
+# for now fail if it's not a Red Hat based system
+- name: Check OS ( Kubernetes )
+  fail: msg="Not a Red Hat or SuSE based system!"
+  when: ansible_os_family != 'RedHat' or  ansible_os_family != 'CentOS' or  ansible_os_family != 'Rocky' or ansible_os_family != 'Suse' or ansible_os_family != 'Ubuntu' or ansible_os_family != 'Debian'
+
+
+- name: Set facts for network and packages informations
+  import_tasks: set-facts.yml
+  tags:
+    - install
+    - uninstall
+
+
+- name: Install Bosh CLI
+  import_tasks: install.yml
+  tags: install
+
+
+- name: Uninstall Bosh CLI
+  import_tasks: uninstall.yml
+  tags: uninstall
+

@@ -1,0 +1,122 @@
+ansible_become_pass: "changeme"
+
+# cf_release_version: 279
+# bosh_deploy_dir: /home/jomoon/bosh-deploy
+# cf_deploy_dir: /home/jomoon/cf-release-{{ cf_release_version }}
+# dns_recursor_ip: 8.8.8.8
+# stemcell_version: 1017
+
+
+download_dir: /home/jomoon/downloads
+releases_dir: /home/jomoon/releases
+delete: false
+
+
+# base_path: "/home/jomoon/KubeFarmer"
+base_path: "/root"
+
+
+director:
+  name: bosh-1
+
+kind:
+  cli:
+    download_url: "https://kind.sigs.k8s.io/dl/"
+    major_version: 0
+    minor_version: 23
+    patch_version: 0
+
+ytt:
+  cli:
+    download_url: "https://github.com/vmware-tanzu/carvel-ytt/releases/download/"
+    major_version: 0
+    minor_version: 49
+    patch_version: 1
+
+
+bosh:
+  environment: "192.168.0.181"
+  director_name: bosh-1
+  deploy_dir: "{{ base_path }}/bosh-deploy"
+  cli:
+    download_url: "https://github.com/cloudfoundry/bosh-cli/releases/download"
+    major_version: 7
+    minor_version: 6
+    patch_version: 1
+  version: ""
+  internal_cidr: "192.168.0.0/24"
+  internal_gw: "192.168.0.1"
+  internal_ip: "192.168.0.181"
+  vm_network: "VM Network"
+
+
+cf:
+  deploy_dir: "{{ base_path }}/cf-release"
+  dns_recursor_ip: "8.8.8.8"
+  cli:
+    download_url: "https://github.com/cloudfoundry/cli/releases/download"
+    major_version: 8
+    minor_version: 7
+    patch_version: 10
+  zone:
+    az1:
+      name: "jaz001"
+      vswitch_id: "001"
+      vswitch_range: "192.168.0.0/24"
+      vswitch_gw: "192.168.0.1"
+    az2:
+      name: "jaz002"
+      vswitch_id: "002"
+      vswitch_range: "192.168.1.0/24"
+      vswitch_gw: "192.168.1.1"
+    az3:
+      name: "jaz003"
+      vswitch_id: "003"
+      vswitch_range: "192.168.2.0/24"
+      vswitch_gw: "192.168.2.1"
+  security_group:
+    id1: "secgrp001"
+    id2: "secgrp002"
+    id3: "secgrp003"
+  tcp_slb_id_arrary: ""
+  http_slb_id_arrary: ""
+  iaas_info: vsphere-esxi
+  os_info: ubuntu-jammy
+  domain: jtest.weka.io
+
+
+# -v az1_zone={{ cf.az1_zone }} -v az2_zone={{ cf.az2_zone }} -v az3_zone={{ cf.az3_zone }} \
+# -v az1_vswitch_id={{ cf.az1_vswitch_id }} -v az2_vswitch_id={{ cf.az2_vswitch_id }} -v az3_vswitch_id={{ cf.az3_vswitch_id }} \
+# -v az1_vswitch_range={{ cf.az1_vswitch_range }}  -v az2_vswitch_range={{ cf.az2_vswitch_range }} -v az3_vswitch_range={{ cf.az3_vswitch_range }} \
+# -v az1_vswitch_gateway={{ cf.az1_vswitch_gateway }} -v az2_vswitch_gateway={{ cf.az2_vswitch_gateway }} -v az3_vswitch_gateway={{ cf.az3_vswitch_gateway }} \
+# -v security_group_id_1={{ cf.security_group_id_1 }} -v security_group_id_2={{ cf.security_group_id_2 }} -v security_group_id_3={{ cf.security_group_id_3 }} \
+# -v tcp_slb_id_array=[{{ cf.tcp_slb_id_array }}] -v http_slb_id_array=[{{ cf.http_slb_id_array }}]
+
+
+app:
+  version: ""
+
+
+stemcell:
+  release_version: 1017
+
+
+esxi:
+  hostname: "esxi8.jtest.weka.io"
+  ipaddr: "192.168.0.201"
+  username: "root"
+  password: "Changeme34#$"
+vcenter:
+  hostname: "vcenter8"
+  ip_addr: "192.168.0.202"
+  username: "administrator@vsphere.local"
+  password: "Changeme34#$"
+  vm_user: "root"
+  vm_password: 'Changeme34#$'
+  dns: '192.168.0.90'
+  domain: 'vcenter8.jtest.weka.io'
+  searchpath: 'jtest.weka.io'
+  datacenter: 'wDC01'
+  cluster: 'wClu01'
+  datastore: 'datastore3'
+

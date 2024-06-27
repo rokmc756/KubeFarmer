@@ -1,0 +1,36 @@
+- name: Delete CF and Bosh CLI Binary
+  file:
+    path: "{{ item }}"
+    state: absent
+  register: delete_cf_cli
+  with_items:
+    - "/usr/local/bin/bosh"
+    - "/usr/local/bin/cf"
+    - "/usr/local/bin/cf8"
+    - "/usr/local/bin/kind"
+    - "/usr/local/bin/LICENSE"
+    - "/usr/local/bin/NOTICE"
+    - "/usr/local/bin/kapp"
+    - "/usr/local/bin/kbld"
+    - "/usr/local/bin/kctrl"
+    - "/usr/local/bin/kwt"
+    - "/usr/local/bin/ytt"
+- debug: msg={{ delete_cf_cli }}
+
+
+- name: Check if CF-For-K8S is Already Downloaded
+  stat: path={{ base_path }}/cf-for-k8s
+  register: cf_k8s_dir
+- debug: msg={{ cf_k8s_dir }}
+
+
+- name: Delete CF-For-K8S Directory
+  file:
+    path: "{{ base_path }}/cf-for-k8s"
+    state: absent
+  register: delete_cf_k8s_dir
+  ignore_errors: yes
+  when: cf_k8s_dir.stat.exists == true
+- debug: msg={{ delete_cf_k8s_dir }}
+  when: cf_k8s_dir.stat.exists == true
+
