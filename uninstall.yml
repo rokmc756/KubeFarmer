@@ -16,8 +16,11 @@
     enable_firewall: false
     reboot_required: true
   roles:
-    - k8s
+    - stratos
+#    - mongodb
+#    - k8s
 #    - geode
+#    - init-hosts
 #    - rabbitmq
 #    - kubeflow
 #    - harbor-non-k8s
@@ -28,8 +31,8 @@
 #    - rancher
 #    - rook-ceph
 #    - nginx
-#    - init-hosts
 #    - dashboard
+
 
 #- hosts: minio
 #  become: yes

@@ -1,0 +1,26 @@
+{% for h in groups["workers"] %}
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: stratos-pv-{{ hostvars[h]['ansible_hostname'] }}
+  namespace: {{ stratos.namespace }}
+spec:
+  capacity:
+    storage: 70Gi
+  volumeMode: Filesystem
+  accessModes:
+  - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Delete
+  storageClassName: stratos-storage
+  local:
+    path: {{ stratos.storage_path }}
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - {{ hostvars[h]['ansible_hostname'] }}
+{% endfor %}

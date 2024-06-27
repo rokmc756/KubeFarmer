@@ -1,0 +1,26 @@
+{% for h in groups["workers"] %}
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mongodb-pv-{{ hostvars[h]['ansible_hostname'] }}
+  namespace: {{ mongodb.namespace }}
+spec:
+  capacity:
+    storage: 70Gi
+  volumeMode: Filesystem
+  accessModes:
+  - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Delete
+  storageClassName: {{ mongodb.namespace }}-storage
+  local:
+    path: {{ mongodb.storage_path }}
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - {{ hostvars[h]['ansible_hostname'] }}
+{% endfor %}

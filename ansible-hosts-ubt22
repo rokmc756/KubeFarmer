@@ -7,6 +7,9 @@ ansible_python_interpreter=/usr/bin/python3
 [master]
 ubt22-node01 ansible_ssh_host=192.168.1.61
 
+[slave]
+ubt22-node02 ansible_ssh_host=192.168.1.62
+
 [workers]
 ubt22-node03 ansible_ssh_host=192.168.1.63
 ubt22-node04 ansible_ssh_host=192.168.1.64

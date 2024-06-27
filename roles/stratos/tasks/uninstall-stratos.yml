@@ -1,0 +1,97 @@
+- name: Uninstall Stratos
+  shell: |
+    /usr/local/bin/helm uninstall stratos-console -n {{ stratos.namespace }}
+  register: uninstall_stratos
+  ignore_errors: true
+- debug: msg={{ uninstall_stratos }}
+  when: print_debug == true
+
+
+- name: Validate if Stratos Containers are deleted
+  shell: |
+    kubectl get pods -n stratos | grep stratos- | awk '{print $3}' | sort | uniq
+  register: delete_stratos_container
+  ignore_errors: true
+  until: delete_stratos_container.stdout.find("") != -1
+  retries: 100
+  delay: 10
+- debug: msg={{ delete_stratos_container }}
+  when: print_debug == true
+
+
+- name: Copy Cluster Local PVC Config Yaml
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ base_path }}/{{ item }}"
+  register: copy_cluster_local_pvc_config_yaml
+  with_items:
+    - "local-storage-class.yaml"
+    - "local-storage-pv.yaml"
+    - "local-storage-pvc.yaml"
+- debug: msg={{ copy_cluster_local_pvc_config_yaml }}
+
+
+- name: Delete Persistent Volumes, Claim and Storage Class
+  shell: |
+    kubectl delete -f {{ item }}
+  register: delete_pvc
+  ignore_errors: true
+  with_items:
+    - "local-storage-pvc.yaml"
+    - "local-storage-pv.yaml"
+    - "local-storage-class.yaml"
+  args:
+    chdir: "{{ base_path }}/"
+- debug: msg={{ delete_pvc }}
+  when: print_debug == true
+
+
+- name: Delete Cluster Local PVC Config Yaml
+  file:
+    path: "{{ base_path }}/{{ item }}"
+    state: absent
+  register: delete_cluster_local_pvc_config_yaml
+  ignore_errors: true
+  with_items:
+    - "local-storage-class.yaml"
+    - "local-storage-pv.yaml"
+    - "local-storage-pvc.yaml"
+- debug: msg={{ delete_cluster_local_pvc_config_yaml }}
+  when: print_debug == true
+
+
+- name: Delete Namespace for Persistent Volumes
+  shell: |
+    kubectl delete namespace {{ item }}
+  register: delete_namespace
+  ignore_errors: true
+  with_items:
+    - "{{ stratos.namespace }}"
+- debug: msg={{ delete_namespace }}
+  when: print_debug == true
+
+
+- name: Directory for Persistent Volumes
+  file:
+    path: "{{ stratos.storage_path }}"
+    state: absent
+  register: delete_pv_dir
+  ignore_errors: true
+  delegate_to: "{{ item }}"
+  delegate_facts: True
+  with_items:
+    - "{{ groups['all'] }}"
+- debug: msg={{ delete_pv_dir }}
+  when: print_debug == true
+
+
+#- name: Validate if stratos Containers are Running
+#  shell: |
+#    kubectl -n stratos get pod | grep stratos | awk '{print $3}' | cut -d : -f 1
+#  register: check_stratos_container
+#  until: check_stratos_container.stdout.find("Running") != -1
+#  retries: 100
+#  delay: 10
+#- debug: msg={{ check_stratos_container }}
+#  when: print_debug == true
+

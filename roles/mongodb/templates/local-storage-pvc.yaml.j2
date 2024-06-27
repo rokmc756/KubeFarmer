@@ -1,0 +1,39 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: datadir-mongodb-mongodb-sharded-configsvr-0
+  namespace: {{ mongodb.namespace }}
+spec:
+  storageClassName: {{ mongodb.namespace}}-storage
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: datadir-mongodb-mongodb-sharded-shard0-data-0
+  namespace: {{ mongodb.namespace }}
+spec:
+  storageClassName: {{ mongodb.namespace}}-storage
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: datadir-mongodb-mongodb-sharded-shard1-data-0
+  namespace: {{ mongodb.namespace }}
+spec:
+  storageClassName: {{ mongodb.namespace}}-storage
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi

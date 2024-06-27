@@ -1,0 +1,44 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafdrop
+  namespace: mongodb
+  labels:
+    app: kafdrop
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongodb
+  template:
+    metadata:
+      labels:
+        app: mongodb
+    spec:
+      containers:
+      - name: kafdrop
+        image: obsidiandynamics/kafdrop:latest
+        ports:
+        - containerPort: 9000
+        env:
+        - name: mongodb_BROKERCONNECT
+          value: "mongodb:9092"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafdrop
+  namespace: mongodb
+  labels:
+    name: kafdrop
+spec:
+  ports:
+  - port: 9000
+    targetPort: 9000
+    name: kafdrop
+    protocol: TCP
+  selector:
+    app: mongodb
+  type: LoadBalancer
+

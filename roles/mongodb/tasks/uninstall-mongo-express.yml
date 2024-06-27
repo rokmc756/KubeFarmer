@@ -1,0 +1,46 @@
+- name: Uninstall Mongo Express
+  shell: |
+    /usr/local/bin/helm uninstall mongo-express -n mongo-express
+  register: uninstall_mongo_express
+  ignore_errors: true
+  args:
+    chdir: "{{ base_path }}/"
+- debug: msg={{ uninstall_mongo_express }}
+  when: print_debug == true
+
+
+#- name: Delete MongoDB UI Config Yaml and Directory
+#  file:
+#    path: "{{ base_path }}/{{ item }}"
+#    state: absent
+#  register: delete_mongo_express_config
+#  ignore_errors: true
+#  with_items:
+#    - "mongo-express/mongo-express-values.yaml"
+#    - "mongo-express"
+#  when: mongo_express_dir.stat.exists == true
+#- debug: msg={{ delete_mongo_express_config }}
+#  when: print_debug == true and mongo_express_dir.stat.exists == true
+
+
+- name: Delete Namespace for Mongo Express
+  shell: |
+    kubectl delete namespace {{ item }}
+  register: delete_mongo_express_namespace
+  ignore_errors: true
+  with_items:
+    - mongo-express
+- debug: msg={{ delete_mongo_express_namespace }}
+  when: print_debug == true
+
+
+#- name: Delete Mongo Express Tarball
+#  file:
+#    path: "{{ base_path }}/mongo-express-0.7.6.tgz"
+#    state: absent
+#  register: delete_mongo_express_tarball
+#  ignore_errors: true
+#  when: mongo_express_dir.stat.exists == true
+#- debug: msg={{ delete_mongo_express_tarball }}
+#  when: print_debug == true and mongo_express_dir.stat.exists == true
+

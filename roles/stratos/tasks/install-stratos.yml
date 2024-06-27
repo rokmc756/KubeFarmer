@@ -1,0 +1,75 @@
+# https://stratos.app/docs/4.0.0/deploy/kubernetes/helm-installation/
+#
+- name: Create Directory for Persistent Volumes
+  file:
+    path: "{{ stratos.storage_path }}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0777
+  register: create_pv_dir
+  delegate_to: "{{ item }}"
+  delegate_facts: True
+  with_items:
+    - "{{ groups['all'] }}"
+- debug: msg={{ create_pv_dir }}
+  when: print_debug == true
+
+
+- name: Create Namespace for Persistent Volumes
+  shell: |
+    kubectl create namespace {{ item }}
+  register: create_namespace
+  with_items:
+    - "{{ stratos.namespace }}"
+- debug: msg={{ create_namespace }}
+  when: print_debug == true
+
+
+- name: Copy Cluster Local PVC Config Yaml
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ base_path }}/{{ item }}"
+  register: copy_cluster_local_pvc_config_yaml
+  with_items:
+    - "local-storage-class.yaml"
+    - "local-storage-pv.yaml"
+    - "stratos-values.yaml"
+- debug: msg={{ copy_cluster_local_pvc_config_yaml }}
+  #  - "local-storage-pvc.yaml"
+
+
+- name: Cluster Settings for a Production Cluster Running in a Dynamic Cloud Environment including VMware
+  shell: |
+    kubectl create -f {{ item }}
+  register: create_pvc
+  with_items:
+    - "local-storage-class.yaml"
+    - "local-storage-pv.yaml"
+  args:
+    chdir: "{{ base_path }}/"
+- debug: msg={{ create_pvc }}
+  when: print_debug == true
+  # - "local-storage-pvc.yaml"
+
+
+- name: Deploy Stratos
+  shell: |
+    /usr/local/bin/helm install stratos-console stratos/console -n {{ stratos.namespace }} -f stratos-values.yaml
+  register: deploy_stratos
+  args:
+    chdir: "{{ base_path }}/"
+- debug: msg={{ deploy_stratos }}
+  when: print_debug == true
+
+
+- name: Validate if Stratos Controller Containers are Running
+  shell: |
+    kubectl get pods -n {{ stratos.namespace }} |  grep stratos-db | awk '{print $3}' | sort | uniq
+  register: check_stratos_controller_container
+  until: check_stratos_controller_container.stdout.find("Running") != -1
+  retries: 100
+  delay: 10
+- debug: msg={{ check_stratos_controller_container }}
+  when: print_debug == true
+

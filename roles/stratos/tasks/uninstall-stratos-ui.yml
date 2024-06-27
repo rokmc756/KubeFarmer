@@ -1,0 +1,54 @@
+- name: Uninstall stratos UI
+  shell: |
+    /usr/local/bin/helm uninstall stratos-ui -n stratos-ui
+  register: uninstall_stratos_ui
+  ignore_errors: true
+  args:
+    chdir: "{{ base_path }}/"
+- debug: msg={{ uninstall_stratos_ui }}
+  when: print_debug == true
+
+
+- name: Check if stratos UI Directory exists
+  stat: path={{ base_path }}/stratos-ui
+  register: stratos_ui_dir
+  ignore_errors: true
+- debug: msg={{ stratos_ui_dir }}
+  when: print_debug == true
+
+
+- name: Delete stratos UI Config Yaml and Directory
+  file:
+    path: "{{ base_path }}/{{ item }}"
+    state: absent
+  register: delete_stratos_ui_config
+  ignore_errors: true
+  with_items:
+    - "stratos-ui/stratos-ui-values.yaml"
+    - "stratos-ui"
+  when: stratos_ui_dir.stat.exists == true
+- debug: msg={{ delete_stratos_ui_config }}
+  when: print_debug == true and stratos_ui_dir.stat.exists == true
+
+
+- name: Delete Namespace for stratos UI
+  shell: |
+    kubectl delete namespace {{ item }}
+  register: delete_stratos_ui_namespace
+  ignore_errors: true
+  with_items:
+    - stratos-ui
+- debug: msg={{ delete_stratos_ui_namespace }}
+  when: print_debug == true
+
+
+- name: Delete stratos UI Tarball
+  file:
+    path: "{{ base_path }}/stratos-ui-0.7.6.tgz"
+    state: absent
+  register: delete_stratos_ui_tarball
+  ignore_errors: true
+  when: stratos_ui_dir.stat.exists == true
+- debug: msg={{ delete_stratos_ui_tarball }}
+  when: print_debug == true and stratos_ui_dir.stat.exists == true
+

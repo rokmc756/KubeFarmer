@@ -1,0 +1,13 @@
+
+- name: Download and Install Kustomize
+  shell: |
+    curl -fsSL -o {{ base_path }}/install_kustomize.sh {{ kustomize.download_url }}
+    chmod 700 {{ base_path }}/install_kustomize.sh
+    {{ base_path }}/install_kustomize.sh {{ kustomize.major_version }}.{{ kustomize.minor_version }}.{{ kustomize.patch_version }}
+    chmod 755 {{ base_path }}/kustomize
+    mv kustomize /usr/local/bin/
+  register: install_kustomize
+  args:
+    chdir: "{{ base_path }}"
+- debug: msg={{ install_kustomize }}
+

@@ -1,0 +1,27 @@
+- name: Copy MongoDB Loadbalancer Config Yaml
+  template:
+    src: mongodb-loadbalancer.yaml.j2
+    dest: "{{ base_path }}/mongodb-loadbalancer.yaml"
+  register: copy_mongodb_lb_config_yaml
+- debug: msg={{ copy_mongodb_lb_config_yaml }}
+
+
+- name: Delete MongoDB Load Balancer
+  shell: |
+    kubectl delete -f mongodb-loadbalancer.yaml
+  register: delete_mongodb_lb
+  args:
+    chdir: "{{ base_path }}/"
+- debug: msg={{ delete_mongodb_lb }}
+
+
+- name: Validate if MongoDB Container is Running
+  shell: |
+    kubectl -n mongodb get pod | grep mongodb | awk '{print $3}' | cut -d : -f 1
+  register: check_mongodb_container
+  until: check_mongodb_container.stdout.find("") != -1
+  retries: 100
+  delay: 10
+- debug: msg={{ check_mongodb_container }}
+  when: print_debug == true
+

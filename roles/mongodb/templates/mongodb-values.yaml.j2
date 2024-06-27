@@ -1,0 +1,31 @@
+mage:
+  registry: docker.io
+  repository: bitnami/mongodb
+  tag: 4.4.4-debian-10-r41
+  pullPolicy: IfNotPresent
+
+architecture: standalone
+
+useStatefulSet: true
+
+## MongoDB(R) Authentication parameters
+auth:
+  enabled: true
+  rootPassword: "changeme"
+  username: admin
+  password: changeme
+  database: sample
+
+##
+persistence:
+  enabled: true
+  storageClass: "mongodb-storage"
+  accessModes:
+    - ReadWriteOnce
+  size: 2Gi
+
+#  type: NodePort
+service:
+  type: ClusterIP
+  port: 27017
+  portName: mongodb
