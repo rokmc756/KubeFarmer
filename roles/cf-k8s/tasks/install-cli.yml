@@ -1,0 +1,73 @@
+---
+#- name: Register Region
+#  command: echo {{ alicloud_region }}
+#  register: region
+
+# https://www.devopsschool.com/blog/getting-started-with-cloud-foundry-for-kubernetes-using-cf-for-k8s-in-linuxubuntu/
+
+- name: Download Kind CLI from GitHub
+  get_url:
+    url: "{{ item.url }}"
+    dest: "{{ item.dest }}"
+    mode: "{{ item.mode }}"
+  register: download_kind_cli
+  with_items:
+    - { url: "{{ kind.cli.download_url }}/v{{ kind.cli.major_version }}.{{ kind.cli.minor_version }}.{{ kind.cli.patch_version }}/kind-linux-amd64", dest: "/usr/local/bin/kind", mode: "0755" }
+- debug: msg={{ download_kind_cli }}
+
+
+- name: Install Kapp
+  shell: |
+    wget -O- https://carvel.dev/install.sh | bash
+  register: install_kapp
+- debug: msg={{ install_kapp }}
+
+
+- name: Download YTT CLI from GitHub
+  get_url:
+    url: "{{ item.url }}"
+    dest: "{{ item.dest }}"
+    mode: "{{ item.mode }}"
+  register: download_ytt_cli
+  with_items:
+    - { url: "{{ ytt.cli.download_url }}/v{{ ytt.cli.major_version }}.{{ ytt.cli.minor_version }}.{{ ytt.cli.patch_version }}/ytt-linux-amd64", dest: "/usr/local/bin/ytt", mode: "0755" }
+- debug: msg={{ download_ytt_cli }}
+
+
+- name: Download Bosh CLI from GitHub
+  get_url:
+    url: "{{ item.url }}"
+    dest: "{{ item.dest }}"
+    mode: "{{ item.mode }}"
+  register: download_bosh_cli
+  with_items:
+    - { url: "{{ bosh.cli.download_url }}/v{{ bosh.cli.major_version }}.{{ bosh.cli.minor_version }}.{{ bosh.cli.patch_version }}/bosh-cli-{{ bosh.cli.major_version }}.{{ bosh.cli.minor_version }}.{{ bosh.cli.patch_version }}-linux-amd64", dest: "/usr/local/bin/bosh", mode: "0755" }
+- debug: msg={{ download_bosh_cli }}
+
+
+- name: Download CF CLI from GitHub
+  unarchive:
+    src: "{{ item.url }}"
+    dest: "{{ item.dest }}"
+    mode: "{{ item.mode }}"
+    remote_src: yes
+  register: download_cf_cli
+  with_items:
+    - { url: "{{ cf.cli.download_url }}/v{{ cf.cli.major_version }}.{{ cf.cli.minor_version }}.{{ cf.cli.patch_version }}/cf8-cli_{{ cf.cli.major_version }}.{{ cf.cli.minor_version }}.{{ cf.cli.patch_version }}_linux_x86-64.tgz", dest: "/usr/local/bin/", mode: "0755" }
+- debug: msg={{ download_cf_cli }}
+
+
+- name: Execute Bosh and CF CLI
+  shell: |
+    {{ item }}
+  register: execute_cli
+  with_items:
+    - "bosh -v"
+    - "cf -v"
+    - "kapp --version"
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ execute_cli }}
+

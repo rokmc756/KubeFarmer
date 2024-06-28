@@ -19,6 +19,13 @@ base_path: "/root"
 director:
   name: bosh-1
 
+
+cf_k8s:
+  install_cli: true
+  deploy: true
+  storage_path: "/mnt/cf-k8s-storage"
+
+
 kind:
   cli:
     download_url: "https://kind.sigs.k8s.io/dl/"
@@ -119,4 +126,9 @@ vcenter:
   datacenter: 'wDC01'
   cluster: 'wClu01'
   datastore: 'datastore3'
+
+
+helm:
+  enable_repo: true
+
 

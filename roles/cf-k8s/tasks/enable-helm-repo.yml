@@ -1,0 +1,28 @@
+# https://oopflow.medium.com/setup-install-rancher-onto-existing-kubernetes-cluster-for-high-availability-7351f0284592
+
+- name: Download and Install Helm
+  shell: |
+    curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+    chmod 755 get_helm.sh
+    ./get_helm.sh
+  register: install_helm
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ install_helm }}
+
+
+- name: Add Metrics Server Helm Repo
+  shell: |
+    /usr/local/bin/helm repo add metrics-server https://kubernetes-sigs.github.io/metrics-server
+  register: add_metrics_server_helm_repo
+- debug: msg={{ add_metrics_server_helm_repo }}
+
+
+- name: Update Helm Repo
+  shell: |
+    /usr/local/bin/helm repo update
+  register: update_helm_repo
+- debug: msg={{ update_helm_repo }}
+

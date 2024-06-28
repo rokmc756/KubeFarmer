@@ -29,7 +29,7 @@
 
 - name: Add Harbor Helm Repo
   shell: |
-    helm repo add harbor https://helm.goharbor.io
+    /usr/local/bin/helm repo add harbor https://helm.goharbor.io
   register: add_harbor_helm_repo
 - debug: msg={{ add_harbor_helm_repo }}
 

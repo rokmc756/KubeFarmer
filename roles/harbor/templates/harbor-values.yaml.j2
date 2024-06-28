@@ -15,7 +15,6 @@
 #  https://github.com/goharbor/harbor-helm/blob/main/values.yaml
 #
 ---
-harborAdminPassword: "Changeme123"
 
 expose:
   type: ingress
@@ -30,6 +29,7 @@ expose:
     className: "nginx"
 
 externalURL: https://harbor.jtest.suse.com
+harborAdminPassword: "Changeme123"
 
 persistence:
   enabled: false

@@ -36,7 +36,8 @@
 
 - name: Config image pull
   command: kubeadm config images pull
-  when: ( k8s.major_version|int == 1 and k8s.minor_version|int > 24 ) and inventory_hostname in groups['master']
+  # Latest version is k8s v1.24.17 for cf-for-k8s
+  # when: ( k8s.major_version|int == 1 and k8s.minor_version|int > 24 ) and inventory_hostname in groups['master']
 
 
 - name: Initialize Kubernetest Master and Create Cluster

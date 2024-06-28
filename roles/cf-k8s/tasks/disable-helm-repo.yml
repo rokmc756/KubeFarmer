@@ -1,0 +1,19 @@
+- name: Remove Metrics Server Helm Repo
+  shell: |
+    /usr/local/bin/helm repo remove metrics-server
+  register: remove_stratos_helm_repo
+  ignore_errors: yes
+- debug: msg={{ remove_stratos_helm_repo }}
+
+
+- name: Delete Helm Install Script
+  file:
+    path: "{{ item }}"
+    state: absent
+  register: delete_helm_install_script
+  ignore_errors: yes
+  with_items:
+    - "{{ base_path }}/get_helm.sh"
+    - "/usr/local/bin/helm"
+- debug: msg={{ delete_helm_install_script }}
+

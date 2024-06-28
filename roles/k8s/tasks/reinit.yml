@@ -48,6 +48,10 @@
     - "/mnt/geode-storage"
     - "/mnt/mongodb-storage"
     - "/mnt/stratos-storage"
+    - "/mnt/cf-k8s-storage"
+    - "/mnt/cf-db-storage"
+    - "/mnt/cf-blobstore-storage"
+    - "/root/cf-for-k8s"
 - debug: msg={{ remove_pv_dir }}
   when: print_debug == true
 

@@ -19,6 +19,8 @@
     upload_calico: true
   roles:
     - cf-k8s
+
+#    - harbor
 #    - k8s
 #    - stratos
 #    - mongodb
@@ -26,7 +28,6 @@
 #    - init-hosts
 #    - rabbitmq
 #    - kubeflow
-#    - harbor
 #    - hadoop
 #    - kafka
 #    - jenkins

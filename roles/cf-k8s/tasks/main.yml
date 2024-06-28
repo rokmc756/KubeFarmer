@@ -11,13 +11,38 @@
     - install
     - uninstall
 
+- name: Enable Helm Repository
+  import_tasks: enable-helm-repo.yml
+  tags: install
+  when: helm.enable_repo == true and inventory_hostname in groups['master']
+
 
 - name: Install CF for K8S CLI
-  import_tasks: install.yml
+  import_tasks: install-cli.yml
   tags: install
+  when: cf_k8s.install_cli == true and inventory_hostname in groups['master']
 
 
-- name: Uninstall CF for K8S Bosh CLI
-  import_tasks: uninstall.yml
+- name: Deploy CF for K8S
+  import_tasks: deploy-cf.yml
+  tags: install
+  when: cf_k8s.deploy == true and inventory_hostname in groups['master']
+
+
+- name: Destroy CF for K8S
+  import_tasks: destroy-cf.yml
   tags: uninstall
+  when: cf_k8s.deploy == true and inventory_hostname in groups['master']
+
+
+- name: Uninstall CF for K8S CLI
+  import_tasks: uninstall-cli.yml
+  tags: uninstall
+  when: cf_k8s.install_cli == true and inventory_hostname in groups['master']
+
+
+- name: Disable Helm Repository
+  import_tasks: disable-helm-repo.yml
+  tags: uninstall
+  when: helm.enable_repo == true and inventory_hostname in groups['master']
 
