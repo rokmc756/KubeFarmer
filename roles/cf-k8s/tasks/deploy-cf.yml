@@ -115,7 +115,7 @@
 
 
 # To the bottom of the ./cf-install-values.yml replacing with your information. You can copy/paste or use the following command.
-# docker login -u rokmc756@gmail.com -p Mc002661\!\@ https://index.docker.io/v1
+# docker login -u rokmc756@gmail.com -p XXXXX\!\@ https://index.docker.io/v1
 - name: Append the app_registry credentials to your DockerHub registry
   lineinfile:
     path: "{{ base_path }}/cf-for-k8s/cf-install-values.yml"
@@ -126,7 +126,7 @@
     - "  hostname: https://index.docker.io/v1/"
     - "  repository_prefix: \"cf-for-k8s-test\""
     - "  username: \"rokmc756@gmail.com\""
-    - "  password: \"Mc002661!@\""
+    - "  password: \"XXXXXX!@\""
   register: append_cred_app_registry
 - debug: msg={{ append_cred_app_registry }}
 
@@ -181,8 +181,4 @@
   environment:
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ deploy_cf_for_k8s }}
-
-
-#TASK [cf-k8s : Deploy CF for K8S] *************************************************************************************************************************************************
-#fatal: [rk9-node05]: FAILED! => {"changed": true, "cmd": "kapp deploy -a cf -f ./cf-for-k8s-rendered.yml -y\nkapp list\n", "delta": "0:00:00.044973", "end": "2024-06-28 15:05:42.793373", "msg": "non-zero return code", "rc": 1, "start": "2024-06-28 15:05:42.748400", "stderr": "kapp: Error: Building Kubernetes config: invalid configuration: no configuration has been provided, try setting KUBERNETES_MASTER environment variable (hint: Ensure cluster name is specified correctly in context configuration)\nkapp: Error: Building Kubernetes config: invalid configuration: no configuration has been provided, try setting KUBERNETES_MASTER environment variable (hint: Ensure cluster name is specified correctly in context configuration)", "stderr_lines": ["kapp: Error: Building Kubernetes config: invalid configuration: no configuration has been provided, try setting KUBERNETES_MASTER environment variable (hint: Ensure cluster name is specified correctly in context configuration)", "kapp: Error: Building Kubernetes config: invalid configuration: no configuration has been provided, try setting KUBERNETES_MASTER environment variable (hint: Ensure cluster name is specified correctly in context configuration)"], "stdout": "", "stdout_lines": []}
 
