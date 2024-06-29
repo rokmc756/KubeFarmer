@@ -1,0 +1,84 @@
+---
+- set_fact:
+    rh_install_pks: "{{ rh_common_pkgs ~ ',' ~ rh_common_devel_pkgs  ~ ',' ~ rh7_common_devel_pkgs }}"
+  when: ( ansible_distribution == "RedHat" or ansible_distribution == "CentOS" or ansible_distribution == "Rocky" ) and ansible_distribution_major_version|int <= 7
+- set_fact:
+    rh_install_pkgs: "{{ rh_common_pkgs ~ ',' ~ rh_common_devel_pkgs  ~ ',' ~ rh8_common_devel_pkgs }}"
+  when: ( ansible_distribution == "RedHat" or ansible_distribution == "CentOS" or ansible_distribution == "Rocky" ) and ansible_distribution_major_version|int == 8
+- set_fact:
+    rh_install_pkgs: "{{ rh_common_pkgs ~ ',' ~ rh_common_devel_pkgs  ~ ',' ~ rh9_common_devel_pkgs }}"
+  when: ( ansible_distribution == "RedHat" or ansible_distribution == "CentOS" or ansible_distribution == "Rocky" ) and ansible_distribution_major_version|int >= 9
+- set_fact:
+    install_pkgs: "{{ rh_install_pkgs }}"
+  when: ( ansible_distribution == "RedHat" or ansible_distribution == "CentOS" or ansible_distribution == "Rocky" )
+
+
+- set_fact:
+    ubt_install_pkgs: "{{ ubt_common_pkgs ~ ',' ~ ubt_common_devel_pkgs  ~ ',' ~ ubt20_common_devel_pkgs }}"
+  when: ( ansible_distribution == "Ubuntu" or ansible_distribution == "Debian" ) and ansible_distribution_major_version|int <= 20
+- set_fact:
+    ubt_install_pkgs: "{{ ubt_common_pkgs ~ ',' ~ ubt_common_devel_pkgs  ~ ',' ~ ubt22_common_devel_pkgs }}"
+  when: ( ansible_distribution == "Ubuntu" or ansible_distribution == "Debian" ) and ansible_distribution_major_version|int == 22
+- set_fact:
+    ubt_install_pkgs: "{{ ubt_common_pkgs ~ ',' ~ ubt_common_devel_pkgs  ~ ',' ~ ubt23_common_devel_pkgs }}"
+  when: ( ansible_distribution == "Ubuntu" or ansible_distribution == "Debian" ) and ansible_distribution_major_version|int >= 23
+- set_fact:
+    install_pkgs: "{{ ubt_install_pkgs }}"
+  when: ( ansible_distribution == "Ubuntu" or ansible_distribution == "Debian" )
+
+
+- set_fact:
+    suse_install_pkgs: "{{ suse_common_pkgs ~ ',' ~ suse_common_devel_pkgs  ~ ',' ~ suse15_common_devel_pkgs }}"
+  when: ansible_distribution == "openSUSE Leap" and ansible_distribution_major_version|int <= 15
+- set_fact:
+    install_pkgs: "{{ suse_install_pkgs }}"
+  when: ansible_distribution == "openSUSE Leap"
+
+
+- set_fact:
+    fedora_install_pkgs: "{{ fedora_common_pkgs ~ ',' ~ fedora_common_devel_pkgs  ~ ',' ~ fedora_common_devel_pkgs }}"
+  when: ansible_distribution == "Fedora" and ansible_distribution_major_version|int >= 39
+- set_fact:
+    install_pkgs: "{{ fedora_install_pkgs }}"
+  when: ansible_distribution == "Fedora"
+
+
+- set_fact:
+    update_repo_cache: "dnf makecache"
+    lock_kube_cmds: "yum versionlock kubelet kubeadm kubectl"
+    unlock_kube_cmds: "yum versionlock clear kubelet kubeadm kubectl"
+  when: ( ansible_distribution == "RedHat" or ansible_distribution == "CentOS" or ansible_distribution == "Rocky" )
+
+- set_fact:
+    update_repo_cache: "apt update"
+    lock_kube_cmds: "apt-mark hold kubelet kubeadm kubectl"
+    unlock_kube_cmds: "apt-mark unhold kubelet kubeadm kubectl"
+  when: ( ansible_distribution == "Ubuntu" or ansible_distribution == "Debian" )
+
+- set_fact:
+    update_repo_cache: "zypper refresh -B"
+    lock_kube_cmds: "zypper addlock kubelet kubeadm kubectl"
+    unlock_kube_cmds: "zypper removelock kubelet kubeadm kubectl"
+  when: ansible_distribution == "openSUSE Leap"
+
+
+- name: Check Kube Minor Version if less than v1.24.x
+  shell: |
+    kubectl version | grep "Server Version" | awk '{print $3}' | cut -d . -f 2
+  register: kube_minor_version
+  when: inventory_hostname in groups['master']
+
+
+- name: Make Sure that CF for K8S should be installed on versions less than Kube 1.24.x
+  debug:
+    msg: "CF for K8S should be required on versions less than k8s v1.24.x"
+  when: inventory_hostname in groups['master'] and ( kube_minor_version.stdout|int > 24 )
+
+
+- name: End CF for K8S Ansible Playbook
+  meta: end_play
+  when: ( kube_minor_version.stdout|int > 24 ) and inventory_hostname in groups['master']
+
+
+# - debug: msg={{ ansible_distribution }}
+

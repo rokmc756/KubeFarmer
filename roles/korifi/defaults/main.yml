@@ -1,0 +1,29 @@
+rh_common_pkgs: "git"
+rh_common_devel_pkgs: "git"
+
+rh7_common_devel_pkgs: "git"
+rh8_common_devel_pkgs: "git"
+rh9_common_devel_pkgs: "git"
+
+suse_common_pkgs: "git"
+suse_common_devel_pkgs: "git"
+suse15_common_devel_pkgs: "git"
+suse_extra_pkgs: "git"
+
+ubt_common_pkgs: "git,build-essential,zlibc,zlib1g-dev,ruby,ruby-dev,openssl,libxslt-dev,libxml2-dev,libssl-dev,libreadline6,libreadline6-dev,libyaml-dev,libsqlite3-dev,libpq-dev,libmysqlclient-dev,sqlite3,expect,tcl"
+ubt_common_devel_pkgs: "git"
+
+ubt20_common_devel_pkgs: "git"
+ubt22_common_devel_pkgs: "git"
+ubt23_common_devel_pkgs: "git"
+
+fedora_common_pkgs: "git,zlib,zlib-devel,ruby,ruby-devel,openssl,libxslt-devel,libxml2-devel,openssl-devel,readline-devel,libyaml-devel,libpq-devel,mysql-devel,sqlite3,expect,tcl"
+fedora_common_devel_pkgs: "git"
+
+fedora38_common_devel_pkgs: "git"
+fedora39_common_devel_pkgs: "git"
+fedora40_common_devel_pkgs: "git"
+
+
+update_cache: false
+upgrade_packages: false

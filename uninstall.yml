@@ -16,9 +16,10 @@
     enable_firewall: false
     reboot_required: true
   roles:
-    - cf-k8s
-#    - harbor
+    - korifi
+#    - cf-k8s
 #    - k8s
+#    - harbor
 #    - stratos
 #    - mongodb
 #    - geode
@@ -34,11 +35,4 @@
 #    - rook-ceph
 #    - nginx
 #    - dashboard
-
-
-#- hosts: minio
-#  become: yes
-#  roles:
-#    - minio
-#    - iscsi-target
 

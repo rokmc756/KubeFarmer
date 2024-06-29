@@ -12,9 +12,9 @@ spec:
   accessModes:
   - ReadWriteOnce
   persistentVolumeReclaimPolicy: Delete
-  storageClassName: cf-k8s-storage
+  storageClassName: cf-db-storage
   local:
-    path: /mnt/cf-k8s-storage
+    path: /mnt/cf-db-storage
   nodeAffinity:
     required:
       nodeSelectorTerms:
@@ -36,9 +36,9 @@ spec:
   accessModes:
   - ReadWriteOnce
   persistentVolumeReclaimPolicy: Delete
-  storageClassName: cf-k8s-storage
+  storageClassName: cf-blobstore-storage
   local:
-    path: /mnt/cf-k8s-storage
+    path: /mnt/cf-blobstore-storage
   nodeAffinity:
     required:
       nodeSelectorTerms:

@@ -1,51 +1,52 @@
 # https://www.devopsschool.com/blog/getting-started-with-cloud-foundry-for-kubernetes-using-cf-for-k8s-in-linuxubuntu/
 # https://hub.docker.com/r/cloudfoundry/oratos-metrics-server-cf-for-k8s/tags
 
-- name: Copy Metrics Server Config Yaml
-  template:
-    src: "{{ item }}.j2"
-    dest: "{{ base_path }}/{{ item }}"
-  register: copy_metrics_server_config_yaml
-  with_items:
-    - "metrics-server-values.yaml"
-- debug: msg={{ copy_metrics_server_config_yaml }}
-
-
-# --version 3.8.2
-#- name: Deploy Metrics Server
-#  shell: |
-#    /usr/local/bin/helm install metrics-server metrics-server/metrics-server -n kube-system -f metrics-server-values.yaml
-#  register: deploy_metrics_server
-#  args:
-#    chdir: "{{ base_path }}/"
-#- debug: msg={{ deploy_metrics_server }}
-#  when: print_debug == true
-#
-#- name: Validate if Metrics Server Container is Running
-#  shell: |
-#    kubectl -n kube-system get pod | grep metrics-server- | awk '{print $3}'
-#  register: check_metrics_server_container
-#  until: check_metrics_server_container.stdout.find("Running") != -1
-#  retries: 100
-#  delay: 10
-#- debug: msg={{ check_metrics_server_container }}
-#  when: print_debug == true
-
-
-- name: Create Directory for Persistent Volumes
+- name: Create Directory for CF for K8S Persistent Volumes
   file:
-    path: "{{ cf_k8s.storage_path }}"
+    path: "/mnt/cf-k8s-storage"
     state: directory
     owner: root
     group: root
     mode: 0777
-  register: create_pv_dir
+  register: create_k8s_pv_dir
   delegate_to: "{{ item }}"
   delegate_facts: True
   with_items:
     - "{{ groups['all'] }}"
-- debug: msg={{ create_pv_dir }}
+- debug: msg={{ create_k8s_pv_dir }}
   when: print_debug == true
+
+
+#- name: Create Directory for Database Persistent Volumes
+#  file:
+#    path: "/mnt/cf-db-storage"
+#    state: directory
+#    owner: root
+#    group: root
+#    mode: 0777
+#  register: create_db_pv_dir
+#  delegate_to: "{{ item }}"
+#  delegate_facts: True
+#  with_items:
+#    - "{{ groups['all'] }}"
+#- debug: msg={{ create_db_pv_dir }}
+#  when: print_debug == true
+
+
+#- name: Create Directory for Blobstore Persistent Volumes
+#  file:
+#    path: "/mnt/cf-blobstore-storage"
+#    state: directory
+#    owner: root
+#    group: root
+#    mode: 0777
+#  register: create_blob_pv_dir
+#  delegate_to: "{{ item }}"
+#  delegate_facts: True
+#  with_items:
+#    - "{{ groups['all'] }}"
+#- debug: msg={{ create_blob_pv_dir }}
+#  when: print_debug == true
 
 
 - name: Create Namespace for Persistent Volumes
@@ -53,8 +54,13 @@
     kubectl create namespace {{ item }}
   register: create_namespace
   with_items:
-    - cf-db
     - cf-blobstore
+    - cf-db
+#    - cf-system
+#    - cf-workloads
+#    - cf-workloads-staging
+#    - istio-system
+#    - kpack
 - debug: msg={{ create_namespace }}
   when: print_debug == true
 
@@ -124,11 +130,12 @@
   loop:
     - "app_registry:"
     - "  hostname: https://index.docker.io/v1/"
-    - "  repository_prefix: \"cf-for-k8s-test\""
+    - "  repository_prefix: \"cloudfoundry\""
     - "  username: \"rokmc756@gmail.com\""
-    - "  password: \"XXXXXX!@\""
+    - "  password: \"Mc002661!@\""
   register: append_cred_app_registry
 - debug: msg={{ append_cred_app_registry }}
+#    - "  repository_prefix: \"cf-for-k8s-test\""
 
 
 - name: Add a metrics server because kind does not come with one
@@ -140,19 +147,29 @@
     - "add_metrics_server_components: true"
     - "enable_automount_service_account_token: true"
     - "metrics_server_prefer_internal_kubelet_address: true"
-    - "remove_resource_requirements: true"
     - "use_first_party_jwt_tokens: true"
-    - " "
-    - " "
+    - "\n"
     - "load_balancer:"
-    - "  enable: false"
+    - "  enable: true"
   register: add_metrics_server
 - debug: msg={{ add_metrics_server }}
+#    - "remove_resource_requirements: true"
 
 
+- name: Replace NodePort to ClusterIP Istiosystem
+  lineinfile:
+    path: "{{ base_path }}/cf-for-k8s/config/istio/ingressgateway-service-nodeport.yml"
+    regexp: '^(.*)type: NodePort(.*)$'
+    line: "  type: ClusterIP"
+    backrefs: yes
+  register: replace_istiosystem_type_line
+- debug: msg={{ replace_istiosystem_type_line }}
+
+
+# ytt -f config -f ./cf-install-values.yml > ./cf-for-k8s-rendered.yml
 - name: Render the final Kubernetes template to raw Kubernetes configuration
   shell: |
-    ytt -f config -f ./cf-install-values.yml > ./cf-for-k8s-rendered.yml
+    ytt -f config -f ./cf-install-values.yml -f ./config/remove-resource-requirements.yml > ./cf-for-k8s-rendered.yml
   register: render_final_k8s_template
   args:
     chdir: "{{ base_path }}/cf-for-k8s"
@@ -172,13 +189,26 @@
 
 
 #  kapp list
-- name: Deploy CF for K8S
+#- name: Deploy CF for K8S
+#  shell: |
+#    kapp deploy -a cf -f ./cf-for-k8s-rendered.yml -y &
+#  register: deploy_cf_for_k8s
+#  args:
+#    chdir: "{{ base_path }}/cf-for-k8s"
+#  environment:
+#    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+#- debug: msg={{ deploy_cf_for_k8s }}
+
+
+
+- name: Validate if CF for K8S Containers are Running
   shell: |
-    kapp deploy -a cf -f ./cf-for-k8s-rendered.yml -y
-  register: deploy_cf_for_k8s
-  args:
-    chdir: "{{ base_path }}/cf-for-k8s"
-  environment:
-    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-- debug: msg={{ deploy_cf_for_k8s }}
+    kubectl get pods -A | sed 1d | awk '{print $4}' | sort | uniq
+  register: check_cf_k8s_containers
+  until: check_cf_k8s_containers.stdout.find("CrashLoopBackOff") == -1
+  retries: 100
+  delay: 10
+- debug: msg={{ check_cf_k8s_containers }}
+  when: print_debug == true
+
 

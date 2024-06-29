@@ -15,6 +15,7 @@
     src: "{{ item }}.j2"
     dest: "{{ base_path }}/{{ item }}"
   register: copy_cluster_local_pvc_config_yaml
+  ignore_errors: true
   with_items:
     - "local-storage-class.yaml"
     - "local-storage-pv.yaml"
@@ -44,13 +45,8 @@
   register: delete_namespace
   ignore_errors: true
   with_items:
-    - cf-blobstore
     - cf-db
-#    - cf-system
-#    - cf-workloads
-#    - cf-workloads-staging
-#    - istio-system
-#    - kpack
+    - cf-blobstore
 - debug: msg={{ delete_namespace }}
   when: print_debug == true
 
@@ -67,6 +63,7 @@
     path: "{{ base_path }}/cf-for-k8s"
     state: absent
   register: delete_cf_k8s_dir
+  ignore_errors: true
   when: cf_k8s_dir.stat.exists == true
 - debug: msg={{ delete_cf_k8s_dir }}
   when: print_debug == true and cf_k8s_dir.stat.exists == true
@@ -77,6 +74,7 @@
     path: "/mnt/cf-k8s-storage"
     state: absent
   register: delete_k8s_pv_dir
+  ignore_errors: true
   delegate_to: "{{ item }}"
   delegate_facts: True
   with_items:

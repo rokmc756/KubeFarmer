@@ -1,0 +1,38 @@
+---
+# Uninstall GO language
+#
+- name: Check if the GO file is is already existed
+  stat: path=/root/go{{ go.major_version }}.{{ go.minor_version }}.{{ go.patch_version }}.linux-amd64.tar.gz
+  register: go_file_existed
+
+#
+- name: Check if the GO binary is already existed
+  stat: path=/usr/local/go/bin/go
+  register: go_bin_existed
+
+#
+- name: Copy the GO file
+  copy: src=go{{ go.major_version }}.{{ go.minor_version }}.{{ go.patch_version }}.linux-amd64.tar.gz dest=/root/go{{ go.major_version }}.{{ go.minor_version }}.{{ go.patch_version }}.linux-amd64.tar.gz mode=0644 owner=root group=root
+  register: go_file_copied
+  when: go_file_existed.stat.exists != True
+
+#
+- name: Download GO file if copy fails
+  become: true
+  shell: wget https://dl.google.com/go/go{{ go.major_version }}.{{ go.minor_version }}.{{ go.patch_version }}.linux-amd64.tar.gz -P /root/
+  args:
+    executable: /bin/bash
+  when: go_file_copied is not succeeded
+
+
+#
+- name: Untar GO file
+  become: true
+  shell: tar -C /usr/local -xf /root/go{{ go.major_version }}.{{ go.minor_version }}.{{ go.patch_version }}.linux-amd64.tar.gz
+  args:
+    executable: /bin/bash
+  when: go_bin_existed.stat.exists != True
+
+# echo $PATH
+# /home/hadoop/hadoop-3.3.5/sbin:/home/hadoop/hadoop-3.3.5/bin:/usr/lib64/ccache:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/root/bin:/usr/local/go/bin:/opt/vmware/postgres/15/bin
+

@@ -1,29 +1,67 @@
-ansible_become_pass: "changeme"
 
-# cf_release_version: 279
-# bosh_deploy_dir: /home/jomoon/bosh-deploy
-# cf_deploy_dir: /home/jomoon/cf-release-{{ cf_release_version }}
-# dns_recursor_ip: 8.8.8.8
-# stemcell_version: 1017
-
-
-download_dir: /home/jomoon/downloads
-releases_dir: /home/jomoon/releases
-delete: false
+# 2024-06-30 - First Deployment with the following versions and without any errrors although it's not working correctly yet
+#
+# OS : Rocky Linux 9.x
+# k8s_version: v1.25.0
+# kpack: v0.14.1
+# contour: v1.29.1
+# metrics_server: v0.7.1
+# korifi: v0.10.0
 
 
-# base_path: "/home/jomoon/KubeFarmer"
 base_path: "/root"
 
+# go1.13.4.linux-amd64.tar.gz
+go:
+  download: true
+  major_version: 1
+  minor_version: 13
+  patch_version: 4
 
-director:
-  name: bosh-1
+
+kpack:
+  major_version: 0
+  minor_version: 14
+  patch_version: 1
 
 
-cf_k8s:
+contour:
+  major_version: 1
+  minor_version: 29
+  patch_version: 1
+
+
+cert_manager:
+  install: true
+  major_version: 1
+  minor_version: 15
+  patch_version: 1
+
+
+metrics_server:
+  major_version: 0
+  minor_version: 7
+  patch_version: 1
+
+
+korifi:
   install_cli: true
   deploy: true
-  storage_path: "/mnt/cf-k8s-storage"
+  storage_path: "/mnt/korifi-storage"
+  major_version: 0
+  minor_version: 10
+  patch_version: 0
+  root_namespace: "cf"
+  korifi_namespace: "korifi"
+  admin_username: "cf-admin"
+  base_domain: "jtest.suse.com"
+  gateway_class_name: "contour"
+
+
+servicebinding:
+  major_version: 0
+  minor_version: 9
+  patch_version: 0
 
 
 kind:
@@ -91,15 +129,6 @@ cf:
   os_info: ubuntu-jammy
   domain: jtest.weka.io
 
-
-# -v az1_zone={{ cf.az1_zone }} -v az2_zone={{ cf.az2_zone }} -v az3_zone={{ cf.az3_zone }} \
-# -v az1_vswitch_id={{ cf.az1_vswitch_id }} -v az2_vswitch_id={{ cf.az2_vswitch_id }} -v az3_vswitch_id={{ cf.az3_vswitch_id }} \
-# -v az1_vswitch_range={{ cf.az1_vswitch_range }}  -v az2_vswitch_range={{ cf.az2_vswitch_range }} -v az3_vswitch_range={{ cf.az3_vswitch_range }} \
-# -v az1_vswitch_gateway={{ cf.az1_vswitch_gateway }} -v az2_vswitch_gateway={{ cf.az2_vswitch_gateway }} -v az3_vswitch_gateway={{ cf.az3_vswitch_gateway }} \
-# -v security_group_id_1={{ cf.security_group_id_1 }} -v security_group_id_2={{ cf.security_group_id_2 }} -v security_group_id_3={{ cf.security_group_id_3 }} \
-# -v tcp_slb_id_array=[{{ cf.tcp_slb_id_array }}] -v http_slb_id_array=[{{ cf.http_slb_id_array }}]
-
-
 app:
   version: ""
 
@@ -129,6 +158,52 @@ vcenter:
 
 
 helm:
-  enable_repo: false
+  enable_repo: true
+
+
+metallb:
+  install: true
+  major_version: 0
+  minor_version: 13
+  patch_version: 11
+  vmware:
+    kind:
+      ipaddrpool:
+        metadata:
+          name: first-pool
+          namespace: metallb-system
+        spec:
+          ips_range: 192.168.1.210-200.168.1.250
+      l2advertise:
+        metadata:
+          name: example
+          namespace: metallb-system
+  baremetal:
+    kind:
+      configmap:
+        metadata:
+          name: config
+          namespace: metallb-system
+        data:
+          config:
+            ipaddr_pools:
+              name: default
+              protocol: layer2
+              ips_range: 192.168.1.210-192.168.1.250
+
+nginx:
+  major_version:
+  minor_version:
+  patch_version:
+  k8s_ingress:
+    major_version: 3
+    minor_version: 0
+    patch_version: 2
+  ingress:
+    name: nginx-ingress
+    major_version:
+    minor_version:
+    patch_version:
+    build_version:
 
 

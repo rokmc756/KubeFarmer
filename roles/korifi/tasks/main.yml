@@ -1,0 +1,85 @@
+---
+# for now fail if it's not a Red Hat based system
+- name: Check OS ( Kubernetes )
+  fail: msg="Not a Red Hat or SuSE based system!"
+  when: ansible_os_family != 'RedHat' or  ansible_os_family != 'CentOS' or  ansible_os_family != 'Rocky' or ansible_os_family != 'Suse' or ansible_os_family != 'Ubuntu' or ansible_os_family != 'Debian'
+
+
+- name: Set facts for network and packages informations
+  import_tasks: set-facts.yml
+  tags:
+    - install
+    - uninstall
+
+
+- name: Enable Helm Repository
+  import_tasks: enable-helm-repo.yml
+  tags: install
+  when: helm.enable_repo == true and inventory_hostname in groups['master']
+
+
+- name: Install Metallb
+  import_tasks: install-metallb.yml
+  tags: install
+  when: metallb.install == true and inventory_hostname in groups['master']
+
+
+- name: Install GO
+  import_tasks: install-go.yml
+  tags: install
+  when: korifi.install_cli == true and inventory_hostname in groups['master']
+
+
+- name: Install Cert Manager
+  import_tasks: install-cert-manager.yml
+  tags: install
+  when: cert_manager.install == true and inventory_hostname in groups['master']
+
+
+- name: Install K8S CLIs
+  import_tasks: install-cli.yml
+  tags: install
+  when: korifi.install_cli == true and inventory_hostname in groups['master']
+
+
+- name: Deploy Korifi
+  import_tasks: deploy-korifi.yml
+  tags: install
+  when: korifi.deploy == true and inventory_hostname in groups['master']
+
+
+- name: Destroy Korifi
+  import_tasks: destroy-korifi.yml
+  tags: uninstall
+  when: korifi.deploy == true and inventory_hostname in groups['master']
+
+
+- name: Uninstall K8S CLIs
+  import_tasks: uninstall-cli.yml
+  tags: uninstall
+  when: korifi.install_cli == true and inventory_hostname in groups['master']
+
+
+- name: Uninstall Cert Manager
+  import_tasks: uninstall-cert-manager.yml
+  tags: uninstall
+  when: cert_manager.install == true and inventory_hostname in groups['master']
+
+
+- name: Uninstall GO
+  import_tasks: uninstall-go.yml
+  tags: uninstall
+  when: korifi.install_cli == true and inventory_hostname in groups['master']
+
+
+- name: Uninstall Metallb
+  import_tasks: uninstall-metallb.yml
+  tags: uninstall
+  when: metallb.install == true and inventory_hostname in groups['master']
+
+
+- name: Disable Helm Repository
+  import_tasks: disable-helm-repo.yml
+  tags: uninstall
+  when: helm.enable_repo == true and inventory_hostname in groups['master']
+

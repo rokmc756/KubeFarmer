@@ -5,7 +5,7 @@ metadata:
   name: data-cf-db-postgresql-0
   namespace: cf-db
 spec:
-  storageClassName: cf-k8s-storage
+  storageClassName: cf-db-storage
   accessModes:
     - ReadWriteOnce
   resources:
@@ -18,9 +18,13 @@ metadata:
   name: cf-blobstore-minio
   namespace: cf-blobstore
 spec:
-  storageClassName: cf-k8s-storage
+  storageClassName: cf-blobstore-storage
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
       storage: 10Gi
+
+#    ClaimName:  cf-blobstore-minio
+#    ClaimName:  data-cf-db-postgresql-0
+

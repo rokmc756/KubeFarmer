@@ -18,10 +18,10 @@
     stop_services: true
     upload_calico: true
   roles:
-    - cf-k8s
-
-#    - harbor
+    - korifi
+#    - cf-k8s
 #    - k8s
+#    - harbor
 #    - stratos
 #    - mongodb
 #    - geode
