@@ -1,111 +1,222 @@
-- name: Destroy CF for K8S
+- name: Uninstall Korifi
   shell: |
-    kapp delete -a cf -y
-  register: destroy_cf_for_k8s
+    /usr/local/bin/helm uninstall korifi -n korifi
+  register: uninstall_korifi
   ignore_errors: true
-  args:
-    chdir: "{{ base_path }}/cf-for-k8s"
-  environment:
-    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-- debug: msg={{ destroy_cf_for_k8s }}
-
-
-- name: Copy Cluster Local PVC Config Yaml
-  template:
-    src: "{{ item }}.j2"
-    dest: "{{ base_path }}/{{ item }}"
-  register: copy_cluster_local_pvc_config_yaml
-  ignore_errors: true
-  with_items:
-    - "local-storage-class.yaml"
-    - "local-storage-pv.yaml"
-    - "local-storage-pvc.yaml"
-- debug: msg={{ copy_cluster_local_pvc_config_yaml }}
-  when: print_debug == true
-
-
-- name: Delete Cluster Settings for a Production Cluster Running in a Dynamic Cloud Environment including VMware
-  shell: |
-    kubectl delete -f {{ item }}
-  register: delete_pvc
-  ignore_errors: true
-  with_items:
-    - "local-storage-pvc.yaml"
-    - "local-storage-pv.yaml"
-    - "local-storage-class.yaml"
   args:
     chdir: "{{ base_path }}/"
-- debug: msg={{ delete_pvc }}
-  when: print_debug == true
+- debug: msg={{ uninstall_korifi }}
 
 
-- name: Delete Namespace for Persistent Volumes
+- name: Delete the role to the cf-admin.
   shell: |
-    kubectl delete namespace {{ item }}
-  register: delete_namespace
+    kubectl delete rolebinding developer-binding-cf-admin
+  register: delete_bind_role
+  ignore_errors: true
+  args:
+    chdir: "{{ base_path }}/"
+- debug: msg={{ delete_bind_role }}
+
+
+- name: Delete developer role for the cf-admin.
+  shell: |
+    kubectl delete role developer
+  register: delete_developer_role
+  ignore_errors: true
+  args:
+    chdir: "{{ base_path }}/"
+- debug: msg={{ delete_developer_role }}
+
+
+- name: Delete context for the cf-admin.
+  shell: |
+    kubectl config delete-context cf-admin --cluster=kubernetes --user=cf-admin
+  register: delete_context
+  ignore_errors: true
+  args:
+    chdir: "{{ base_path }}/"
+- debug: msg={{ delete_context }}
+
+
+#- name: Unset embed the certificate and key in the kubeconfig.
+#  shell: |
+#    kubectl config delete-credentials cf-admin --client-key=cf-admin.key --client-certificate=cf-admin.crt --embed-certs=true
+#  register: unset_embed_cert_key
+#  ignore_errors: true
+#  args:
+#    chdir: "{{ base_path }}/"
+#- debug: msg={{ unset_embed_cert_key }}
+
+
+#- name: Deny the certificate request
+#  shell: |
+#    kubectl certificate deny cf-admin
+#  register: deny_cert_request
+#  ignore_errors: true
+#  args:
+#    chdir: "{{ base_path }}/"
+#- debug: msg={{ deny_cert_request }}
+
+
+- name: Delete the manifest using the file you created in previous step
+  shell: |
+    kubectl delete -f cert-request.yaml
+  register: delete_manifest_created
+  ignore_errors: true
+  args:
+    chdir: "{{ base_path }}/"
+- debug: msg={{ delete_manifest_created }}
+
+
+- name: Delete a Yaml file for the Certificate Request whose Content are like below
+  file:
+    path: "{{ base_path }}/{{ item }}"
+    state: absent
+  register: delete_cert_request_yaml
   ignore_errors: true
   with_items:
-    - cf-db
-    - cf-blobstore
-- debug: msg={{ delete_namespace }}
-  when: print_debug == true
+    - "cert-request.yaml"
+    - "cf-admin.key"
+    - "cf-admin.csr"
+- debug: msg={{ delete_cert_request_yaml }}
 
 
-- name: Check if CF-For-K8S is Already Downloaded
-  stat: path={{ base_path }}/cf-for-k8s
-  register: cf_k8s_dir
-- debug: msg={{ cf_k8s_dir }}
-  when: print_debug == true
+# kubectl get secret --all-namespaces --field-selector type=Opaque
+# kubectl get secrets -o json | jq -r "[.items[] | {name: .metadata.name, startTime: .metadata.creationTimestamp | fromdate } | select(.startTime < (now | . - XXX-date ))]" | jq -r ".[].name"
+# kubectl delete secret <secret name>
+# kubectl delete secret -n vnamespace $(kubectl -n vnamespace get secrets --field-selector type=my_secret -o json | jq -r "[.items[] | {name: .metadata.name, startTime: .metadata.creationTimestamp | fromdate } | select(.startTime < (now | . - 86400))]" | jq -r ".[].name")
 
 
-- name: Delete CF for K8s Directory
-  file:
-    path: "{{ base_path }}/cf-for-k8s"
-    state: absent
-  register: delete_cf_k8s_dir
+- name: Delete Docker Register Secret
+  shell: |
+    kubectl -n cf delete secret image-registry-credentials
+  register: delete_docker_secret
+  ignore_errors: yes
+  args:
+    chdir: "{{ base_path }}/"
+- debug: msg={{ delete_docker_secret }}
+
+
+- name: Delete Service Binding Runtime
+  shell: |
+    kubectl delete -f https://github.com/servicebinding/runtime/releases/download/v0.9.0/servicebinding-runtime-v{{ servicebinding.major_version }}.{{ servicebinding.minor_version }}.{{ servicebinding.patch_version }}.yaml
+  register: delete_service_binding_runtime
   ignore_errors: true
-  when: cf_k8s_dir.stat.exists == true
-- debug: msg={{ delete_cf_k8s_dir }}
-  when: print_debug == true and cf_k8s_dir.stat.exists == true
+  args:
+    chdir: "{{ base_path }}/"
+- debug: msg={{ delete_service_binding_runtime }}
 
 
-- name: Delete Directory for CF for K8S Persistent Volumes
+- name: Unintall Metrics Server
+  shell: |
+    /usr/local/bin/helm uninstall metrics-server -n metrics-server
+  register: uninstall_metrics_server
+  ignore_errors: true
+  args:
+    chdir: "{{ base_path }}/"
+- debug: msg={{ uninstall_metrics_server }}
+
+
+- name: Delete Metrics Server Config Yaml
   file:
-    path: "/mnt/cf-k8s-storage"
+    path: "{{ base_path }}/{{ item }}"
     state: absent
-  register: delete_k8s_pv_dir
+  register: delete_metrics_server_config_yaml
+  ignore_errors: true
+  with_items:
+    - "metrics-server-values.yaml"
+- debug: msg={{ delete_metrics_server_config_yaml }}
+
+
+- name: Unintall Contour
+  shell: |
+    /usr/local/bin/helm uninstall contour -n contour
+  register: uninstall_contour
+  ignore_errors: true
+  args:
+    chdir: "{{ base_path }}/"
+- debug: msg={{ uninstall_contour }}
+  # v1.29.1
+
+
+- name: Delete Kpack
+  shell: |
+    kubectl delete -f https://github.com/buildpacks-community/kpack/releases/download/v{{ kpack.major_version }}.{{ kpack.minor_version }}.{{ kpack.patch_version }}/release-{{ kpack.major_version }}.{{ kpack.minor_version }}.{{ kpack.patch_version }}.yaml
+  register: delete_kpack
+  ignore_errors: true
+  args:
+    chdir: "{{ base_path }}/"
+- debug: msg={{ delete_kpack }}
+
+
+# --version should be helm chart version, not app version
+- name: Uninstall Reflector
+  shell: |
+    /usr/local/bin/helm uninstall reflector -n reflector
+  register: uninstall_reflector
+  ignore_errors: true
+  args:
+    chdir: "{{ base_path }}/"
+- debug: msg={{ uninstall_reflector }}
+  # 7.1.262
+
+
+- name: Delete Directory for Korifi Persistent Volumes
+  file:
+    path: "/mnt/korifi-storage"
+    state: absent
+    mode: 0777
+  register: delete_korifi_pv_dir
   ignore_errors: true
   delegate_to: "{{ item }}"
   delegate_facts: True
   with_items:
     - "{{ groups['all'] }}"
-- debug: msg={{ delete_k8s_pv_dir }}
+- debug: msg={{ delete_korifi_pv_dir }}
   when: print_debug == true
 
 
-#- name: Delete Directory for Database Persistent Volumes
-#  file:
-#    path: "/mnt/cf-db-storage"
-#    state: absent
-#  register: delete_db_pv_dir
-#  delegate_to: "{{ item }}"
-#  delegate_facts: True
-#  with_items:
-#    - "{{ groups['all'] }}"
-#- debug: msg={{ delete_db_pv_dir }}
-#  when: print_debug == true
+- name: Delete Namespaces
+  shell: |
+    kubectl delete namespace {{ item }}
+  register: delete_namespaces
+  ignore_errors: true
+  with_items:
+    - metrics-server
+    - reflector
+    - korifi
+  args:
+    chdir: "{{ base_path }}/"
+- debug: msg={{ delete_namespaces }}
+  when: print_debug == true
 
 
-#- name: Delete Directory for Blobstore Persistent Volumes
-#  file:
-#    path: "/mnt/cf-blobstore-storage"
-#    state: absent
-#  register: delete_blobstore_pv_dir
-#  delegate_to: "{{ item }}"
-#  delegate_facts: True
-#  with_items:
-#    - "{{ groups['all'] }}"
-#  when: cf_k8s_dir.stat.exists == true
-#- debug: msg={{ delete_blobstore_pv_dir }}
-#when: print_debug == true
+- name: Delete CF Namespace
+  shell: |
+    kubectl delete ns cf --grace-period=0 --force &
+    sleep 10
+  register: delete_cf_namespace
+  ignore_errors: yes
+- debug: msg={{ delete_cf_namespace }}
+
+
+- name: Force Delete CF Namespace
+  shell: |
+    kubectl get namespace "cf" -o json   | tr -d "\n" | sed "s/\"finalizers\": \[[^]]\+\]/\"finalizers\": []/" | \
+    kubectl replace --raw /api/v1/namespaces/cf/finalize -f -
+  register: force_delete_cf_namespace
+  ignore_errors: yes
+- debug: msg={{ force_delete_cf_namespace }}
+
+
+- name: Delete Namespaces Config Yaml
+  file:
+    path: "{{ base_path }}/{{ item }}"
+    state: absent
+  register: delete_namespaces_config_yaml
+  ignore_errors: true
+  with_items:
+    - "korifi-ns.yaml"
+    - "cf-ns.yaml"
+- debug: msg={{ delete_namespaces_config_yaml }}
 

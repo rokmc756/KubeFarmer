@@ -130,7 +130,7 @@
   shell: |
     kubectl --namespace cf create secret docker-registry image-registry-credentials \
     --docker-username="rokmc756@gmail.com" \
-    --docker-password="xxxxxxxx!@"
+    --docker-password="xxxxxx1!@"
   register: create_docker_secret
   ignore_errors: yes
   args:
