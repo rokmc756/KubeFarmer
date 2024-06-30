@@ -130,46 +130,65 @@
   loop:
     - "app_registry:"
     - "  hostname: https://index.docker.io/v1/"
-    - "  repository_prefix: \"cloudfoundry\""
+    - "  repository_prefix: \"cf-for-k8s-test\""
     - "  username: \"rokmc756@gmail.com\""
-    - "  password: \"Mc002661!@\""
+    - "  password: \"xxxxxxxx1!@\""
   register: append_cred_app_registry
 - debug: msg={{ append_cred_app_registry }}
 #    - "  repository_prefix: \"cf-for-k8s-test\""
 
 
-- name: Add a metrics server because kind does not come with one
-  lineinfile:
-    path: "{{ base_path }}/cf-for-k8s/cf-install-values.yml"
-    line: "{{ item }}"
-    state: present
-  loop:
-    - "add_metrics_server_components: true"
-    - "enable_automount_service_account_token: true"
-    - "metrics_server_prefer_internal_kubelet_address: true"
-    - "use_first_party_jwt_tokens: true"
-    - "\n"
-    - "load_balancer:"
-    - "  enable: true"
-  register: add_metrics_server
-- debug: msg={{ add_metrics_server }}
+#- name: Add a metrics server because kind does not come with one
+#  lineinfile:
+#    path: "{{ base_path }}/cf-for-k8s/cf-install-values.yml"
+#    line: "{{ item }}"
+#    state: present
+#  loop:
+#    - "add_metrics_server_components: true"
+#    - "enable_automount_service_account_token: true"
+#    - "metrics_server_prefer_internal_kubelet_address: true"
+#    - "use_first_party_jwt_tokens: true"
+#    - "\n"
+#    - "load_balancer:"
+#    - "  enable: true"
+#  register: add_metrics_server
+#- debug: msg={{ add_metrics_server }}
 #    - "remove_resource_requirements: true"
 
 
-- name: Replace NodePort to ClusterIP Istiosystem
-  lineinfile:
-    path: "{{ base_path }}/cf-for-k8s/config/istio/ingressgateway-service-nodeport.yml"
-    regexp: '^(.*)type: NodePort(.*)$'
-    line: "  type: ClusterIP"
-    backrefs: yes
-  register: replace_istiosystem_type_line
-- debug: msg={{ replace_istiosystem_type_line }}
+- name: Copy Metrics Server Config Yaml
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ base_path }}/{{ item }}"
+  register: copy_metrics_server_config_yaml
+  with_items:
+    - "metrics-server-values.yaml"
+- debug: msg={{ copy_metrics_server_config_yaml }}
 
 
-# ytt -f config -f ./cf-install-values.yml > ./cf-for-k8s-rendered.yml
+- name: Intall Metrics Server
+  shell: |
+    /usr/local/bin/helm install metrics-server metrics-server/metrics-server -n metrics-server --create-namespace -f metrics-server-values.yaml --wait
+  register: install_metrics_server
+  ignore_errors: yes
+  args:
+    chdir: "{{ base_path }}/"
+- debug: msg={{ install_metrics_server }}
+
+
+#- name: Replace NodePort to ClusterIP Istiosystem
+#  lineinfile:
+#    path: "{{ base_path }}/cf-for-k8s/config/istio/ingressgateway-service-nodeport.yml"
+#    regexp: '^(.*)type: NodePort(.*)$'
+#    line: "  type: ClusterIP"
+#    backrefs: yes
+#  register: replace_istiosystem_type_line
+#- debug: msg={{ replace_istiosystem_type_line }}
+
+
 - name: Render the final Kubernetes template to raw Kubernetes configuration
   shell: |
-    ytt -f config -f ./cf-install-values.yml -f ./config/remove-resource-requirements.yml > ./cf-for-k8s-rendered.yml
+    ytt -f config -f ./cf-install-values.yml > ./cf-for-k8s-rendered.yml
   register: render_final_k8s_template
   args:
     chdir: "{{ base_path }}/cf-for-k8s"
@@ -178,27 +197,26 @@
 - debug: msg={{ render_final_k8s_template }}
 
 
-- name: Replace Metrics Server Image Line
-  lineinfile:
-    path: "{{ base_path }}/cf-for-k8s/cf-for-k8s-rendered.yml"
-    regexp: '^(.*)image: oratos/metrics-server:v(.*)$'
-    line: "        image: cloudfoundry/oratos-metrics-server-cf-for-k8s:v0.3.6@sha256:a37da13de7b74c373e8698dee7836ce5fdbd102c3c1c8b9953a95e7f20138ab6"
-    backrefs: yes
-  register: replace_metrics_server_image_line
-- debug: msg={{ replace_metrics_server_image_line }}
+#- name: Replace Metrics Server Image Line
+#  lineinfile:
+#    path: "{{ base_path }}/cf-for-k8s/cf-for-k8s-rendered.yml"
+#    regexp: '^(.*)image: oratos/metrics-server:v(.*)$'
+#    line: "        image: cloudfoundry/oratos-metrics-server-cf-for-k8s:v0.3.6@sha256:a37da13de7b74c373e8698dee7836ce5fdbd102c3c1c8b9953a95e7f20138ab6"
+#    backrefs: yes
+#  register: replace_metrics_server_image_line
+#- debug: msg={{ replace_metrics_server_image_line }}
 
 
-#  kapp list
-#- name: Deploy CF for K8S
-#  shell: |
-#    kapp deploy -a cf -f ./cf-for-k8s-rendered.yml -y &
-#  register: deploy_cf_for_k8s
-#  args:
-#    chdir: "{{ base_path }}/cf-for-k8s"
-#  environment:
-#    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-#- debug: msg={{ deploy_cf_for_k8s }}
-
+# Kapp list
+- name: Deploy CF for K8S
+  shell: |
+    kapp deploy -a cf -f ./cf-for-k8s-rendered.yml -y &
+  register: deploy_cf_for_k8s
+  args:
+    chdir: "{{ base_path }}/cf-for-k8s"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ deploy_cf_for_k8s }}
 
 
 - name: Validate if CF for K8S Containers are Running

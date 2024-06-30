@@ -33,11 +33,11 @@
 #- debug: msg={{ add_korifi_helm_repo }}
 
 
-#- name: Add Metrics Server Helm Repo
-#  shell: |
-#    /usr/local/bin/helm repo add metrics-server https://kubernetes-sigs.github.io/metrics-server
-#  register: add_metrics_server_helm_repo
-#- debug: msg={{ add_metrics_server_helm_repo }}
+- name: Add Metrics Server Helm Repo
+  shell: |
+    /usr/local/bin/helm repo add metrics-server https://kubernetes-sigs.github.io/metrics-server
+  register: add_metrics_server_helm_repo
+- debug: msg={{ add_metrics_server_helm_repo }}
 
 
 - name: Add Reflector Helm Repo

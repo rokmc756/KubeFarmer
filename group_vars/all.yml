@@ -7,8 +7,8 @@ k8s:
   # k8s version should be v1.24.17 for cf-for-k8s
   cluster_name: jack-kr-k8s
   major_version: "1"
-  minor_version: "25"
-  patch_version: "0"
+  minor_version: "24"
+  patch_version: "17"
   build_version: ""
   repo_url: ""
   download_url: ""

@@ -55,6 +55,27 @@
   when: print_debug == true
 
 
+- name: Unintall Metrics Server
+  shell: |
+    /usr/local/bin/helm uninstall metrics-server -n metrics-server
+  register: uninstall_metrics_server
+  ignore_errors: true
+  args:
+    chdir: "{{ base_path }}/"
+- debug: msg={{ uninstall_metrics_server }}
+
+
+- name: Delete Metrics Server Config Yaml
+  file:
+    path: "{{ base_path }}/{{ item }}"
+    state: absent
+  register: delete_metrics_server_config_yaml
+  ignore_errors: true
+  with_items:
+    - "metrics-server-values.yaml"
+- debug: msg={{ delete_metrics_server_config_yaml }}
+
+
 - name: Check if CF-For-K8S is Already Downloaded
   stat: path={{ base_path }}/cf-for-k8s
   register: cf_k8s_dir

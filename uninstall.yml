@@ -16,10 +16,9 @@
     enable_firewall: false
     reboot_required: true
   roles:
-    - korifi
-
-#    - cf-k8s
+    - cf-k8s
 #    - k8s
+#    - korifi
 #    - harbor
 #    - stratos
 #    - mongodb
