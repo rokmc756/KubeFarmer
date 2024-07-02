@@ -55,14 +55,35 @@
   when: print_debug == true
 
 
-- name: Unintall Metrics Server
-  shell: |
-    /usr/local/bin/helm uninstall metrics-server -n metrics-server
-  register: uninstall_metrics_server
-  ignore_errors: true
-  args:
-    chdir: "{{ base_path }}/"
-- debug: msg={{ uninstall_metrics_server }}
+#- name: Unintall Metrics Server
+#  shell: |
+#    /usr/local/bin/helm uninstall metrics-server -n metrics-server
+#  register: uninstall_metrics_server
+#  ignore_errors: true
+#  args:
+#    chdir: "{{ base_path }}/"
+#- debug: msg={{ uninstall_metrics_server }}
+
+
+#- name: Delete Kpack
+#  shell: |
+#    kubectl delete -f https://github.com/buildpacks-community/kpack/releases/download/v{{ kpack.major_version }}.{{ kpack.minor_version }}.{{ kpack.patch_version }}/release-{{ kpack.major_version }}.{{ kpack.minor_version }}.{{ kpack.patch_version }}.yaml
+#  register: delete_kpack
+#  ignore_errors: true
+#  args:
+#    chdir: "{{ base_path }}/"
+#- debug: msg={{ delete_kpack }}
+
+
+#- name: Validate if Kpack Containers are Running
+#  shell: |
+#    kubectl get pod -n kpack | sed 1d | awk '{print $3}' | sort | uniq
+#  register: check_kpack_containers
+#  until: check_kpack_containers.stdout.find("") != -1
+#  retries: 100
+#  delay: 10
+#- debug: msg={{ check_kpack_containers }}
+#  when: print_debug == true
 
 
 - name: Delete Metrics Server Config Yaml
@@ -74,6 +95,7 @@
   with_items:
     - "metrics-server-values.yaml"
 - debug: msg={{ delete_metrics_server_config_yaml }}
+
 
 
 - name: Check if CF-For-K8S is Already Downloaded

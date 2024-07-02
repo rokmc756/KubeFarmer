@@ -1,38 +1,38 @@
-- name: Delete NGINX Ingress CRDs
-  shell: |
-    kubectl delete -f crds/ --namespace=nginx-ingress
-  register: delete_nginx_ingress_crds
-  ignore_errors: yes
-  args:
-    chdir: "{{ base_path }}/kubernetes-ingress/deployments/helm-chart"
-- debug: msg={{ delete_nginx_ingress_crds }}
-
-
-- name: Uninstall NGINX Ingress
-  shell: |
-    /usr/local/bin/helm uninstall nginx-ingress --namespace=nginx-ingress
-  register: uninstall_nginx_ingress
-  ignore_errors: yes
-  args:
-    chdir: "{{ base_path }}/kubernetes-ingress/deployments/helm-chart"
-- debug: msg={{ uninstall_nginx_ingress }}
-
-
-- name: Check Nginx Ingress Pods
-  shell: kubectl get pods -n nginx-ingress
-  register: check_nginx_ingress_pods
-  until: check_nginx_ingress_pods.stdout.find("Terminating") == -1
-  retries: 30
-  delay: 10
-- debug: msg={{ check_nginx_ingress_pods }}
-
-
-- name: Delete Namespace for NGINX Ingress
-  shell: |
-    kubectl delete namespace nginx-ingress
-  register: delete_nginx_ingress_namespace
-  ignore_errors: yes
-- debug: msg={{ delete_nginx_ingress_namespace }}
+#- name: Delete NGINX Ingress CRDs
+#  shell: |
+#    kubectl delete -f crds/ --namespace=nginx-ingress
+#  register: delete_nginx_ingress_crds
+#  ignore_errors: yes
+#  args:
+#    chdir: "{{ base_path }}/kubernetes-ingress/deployments/helm-chart"
+#- debug: msg={{ delete_nginx_ingress_crds }}
+#
+#
+#- name: Uninstall NGINX Ingress
+#  shell: |
+#    /usr/local/bin/helm uninstall nginx-ingress --namespace=nginx-ingress
+#  register: uninstall_nginx_ingress
+#  ignore_errors: yes
+#  args:
+#    chdir: "{{ base_path }}/kubernetes-ingress/deployments/helm-chart"
+#- debug: msg={{ uninstall_nginx_ingress }}
+#
+#
+#- name: Check Nginx Ingress Pods
+#  shell: kubectl get pods -n nginx-ingress
+#  register: check_nginx_ingress_pods
+#  until: check_nginx_ingress_pods.stdout.find("Terminating") == -1
+#  retries: 30
+#  delay: 10
+#- debug: msg={{ check_nginx_ingress_pods }}
+#
+#
+#- name: Delete Namespace for NGINX Ingress
+#  shell: |
+#    kubectl delete namespace nginx-ingress
+#  register: delete_nginx_ingress_namespace
+#  ignore_errors: yes
+#- debug: msg={{ delete_nginx_ingress_namespace }}
 
 
 - name: Delete the Metallb Config for VMware

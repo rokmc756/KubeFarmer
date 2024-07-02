@@ -17,35 +17,23 @@
   when: print_debug == true
 
 
-#- name: Create Directory for Database Persistent Volumes
-#  file:
-#    path: "/mnt/cf-db-storage"
-#    state: directory
-#    owner: root
-#    group: root
-#    mode: 0777
-#  register: create_db_pv_dir
-#  delegate_to: "{{ item }}"
-#  delegate_facts: True
-#  with_items:
-#    - "{{ groups['all'] }}"
-#- debug: msg={{ create_db_pv_dir }}
-#  when: print_debug == true
+#- name: Intall Kpack
+#  shell: |
+#    kubectl apply -f https://github.com/buildpacks-community/kpack/releases/download/v{{ kpack.major_version }}.{{ kpack.minor_version }}.{{ kpack.patch_version }}/release-{{ kpack.major_version }}.{{ kpack.minor_version }}.{{ kpack.patch_version }}.yaml
+#  register: install_kpack
+#  args:
+#    chdir: "{{ base_path }}/"
+#- debug: msg={{ install_kpack }}
 
 
-#- name: Create Directory for Blobstore Persistent Volumes
-#  file:
-#    path: "/mnt/cf-blobstore-storage"
-#    state: directory
-#    owner: root
-#    group: root
-#    mode: 0777
-#  register: create_blob_pv_dir
-#  delegate_to: "{{ item }}"
-#  delegate_facts: True
-#  with_items:
-#    - "{{ groups['all'] }}"
-#- debug: msg={{ create_blob_pv_dir }}
+#- name: Validate if Kpack Containers are Running
+#  shell: |
+#    kubectl get pod -n kpack | sed 1d | awk '{print $3}' | sort | uniq
+#  register: check_kpack_containers
+#  until: check_kpack_containers.stdout.find("Running") != -1
+#  retries: 100
+#  delay: 10
+#- debug: msg={{ check_kpack_containers }}
 #  when: print_debug == true
 
 
@@ -56,11 +44,6 @@
   with_items:
     - cf-blobstore
     - cf-db
-#    - cf-system
-#    - cf-workloads
-#    - cf-workloads-staging
-#    - istio-system
-#    - kpack
 - debug: msg={{ create_namespace }}
   when: print_debug == true
 
@@ -132,10 +115,28 @@
     - "  hostname: https://index.docker.io/v1/"
     - "  repository_prefix: \"cf-for-k8s-test\""
     - "  username: \"rokmc756@gmail.com\""
-    - "  password: \"xxxxxxxx1!@\""
+    - "  password: \"xxxxxxxx!@\""
   register: append_cred_app_registry
 - debug: msg={{ append_cred_app_registry }}
 #    - "  repository_prefix: \"cf-for-k8s-test\""
+
+
+- name: Add a metrics server because kind does not come with one
+  lineinfile:
+    path: "{{ base_path }}/cf-for-k8s/cf-install-values.yml"
+    line: "{{ item }}"
+    state: present
+  loop:
+    - "add_metrics_server_components: true"
+    - "enable_automount_service_account_token: true"
+    - "metrics_server_prefer_internal_kubelet_address: true"
+    - "use_first_party_jwt_tokens: true"
+    - "remove_resource_requirements: true"
+    - "\n"
+    - "load_balancer:"
+    - "  enable: true"
+  register: add_metrics_server
+- debug: msg={{ add_metrics_server }}
 
 
 #- name: Add a metrics server because kind does not come with one
@@ -144,9 +145,7 @@
 #    line: "{{ item }}"
 #    state: present
 #  loop:
-#    - "add_metrics_server_components: true"
 #    - "enable_automount_service_account_token: true"
-#    - "metrics_server_prefer_internal_kubelet_address: true"
 #    - "use_first_party_jwt_tokens: true"
 #    - "\n"
 #    - "load_balancer:"
@@ -154,26 +153,27 @@
 #  register: add_metrics_server
 #- debug: msg={{ add_metrics_server }}
 #    - "remove_resource_requirements: true"
+#    - "metrics_server_prefer_internal_kubelet_address: true"
 
 
-- name: Copy Metrics Server Config Yaml
-  template:
-    src: "{{ item }}.j2"
-    dest: "{{ base_path }}/{{ item }}"
-  register: copy_metrics_server_config_yaml
-  with_items:
-    - "metrics-server-values.yaml"
-- debug: msg={{ copy_metrics_server_config_yaml }}
+#- name: Copy Metrics Server Config Yaml
+#  template:
+#    src: "{{ item }}.j2"
+#    dest: "{{ base_path }}/{{ item }}"
+#  register: copy_metrics_server_config_yaml
+#  with_items:
+#    - "metrics-server-values.yaml"
+#- debug: msg={{ copy_metrics_server_config_yaml }}
 
 
-- name: Intall Metrics Server
-  shell: |
-    /usr/local/bin/helm install metrics-server metrics-server/metrics-server -n metrics-server --create-namespace -f metrics-server-values.yaml --wait
-  register: install_metrics_server
-  ignore_errors: yes
-  args:
-    chdir: "{{ base_path }}/"
-- debug: msg={{ install_metrics_server }}
+#- name: Intall Metrics Server
+#  shell: |
+#    /usr/local/bin/helm install metrics-server metrics-server/metrics-server -n metrics-server --create-namespace -f metrics-server-values.yaml --wait
+#  register: install_metrics_server
+#  ignore_errors: yes
+#  args:
+#    chdir: "{{ base_path }}/"
+#- debug: msg={{ install_metrics_server }}
 
 
 #- name: Replace NodePort to ClusterIP Istiosystem
@@ -197,26 +197,26 @@
 - debug: msg={{ render_final_k8s_template }}
 
 
-#- name: Replace Metrics Server Image Line
-#  lineinfile:
-#    path: "{{ base_path }}/cf-for-k8s/cf-for-k8s-rendered.yml"
-#    regexp: '^(.*)image: oratos/metrics-server:v(.*)$'
-#    line: "        image: cloudfoundry/oratos-metrics-server-cf-for-k8s:v0.3.6@sha256:a37da13de7b74c373e8698dee7836ce5fdbd102c3c1c8b9953a95e7f20138ab6"
-#    backrefs: yes
-#  register: replace_metrics_server_image_line
-#- debug: msg={{ replace_metrics_server_image_line }}
+- name: Replace Metrics Server Image Line
+  lineinfile:
+    path: "{{ base_path }}/cf-for-k8s/cf-for-k8s-rendered.yml"
+    regexp: '^(.*)image: oratos/metrics-server:v(.*)$'
+    line: "        image: cloudfoundry/oratos-metrics-server-cf-for-k8s:v0.3.6@sha256:a37da13de7b74c373e8698dee7836ce5fdbd102c3c1c8b9953a95e7f20138ab6"
+    backrefs: yes
+  register: replace_metrics_server_image_line
+- debug: msg={{ replace_metrics_server_image_line }}
 
 
 # Kapp list
-- name: Deploy CF for K8S
-  shell: |
-    kapp deploy -a cf -f ./cf-for-k8s-rendered.yml -y &
-  register: deploy_cf_for_k8s
-  args:
-    chdir: "{{ base_path }}/cf-for-k8s"
-  environment:
-    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-- debug: msg={{ deploy_cf_for_k8s }}
+#- name: Deploy CF for K8S
+#  shell: |
+#    kapp deploy -a cf -f ./cf-for-k8s-rendered.yml -y
+#  register: deploy_cf_for_k8s
+#  args:
+#    chdir: "{{ base_path }}/cf-for-k8s"
+#  environment:
+#    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+#- debug: msg={{ deploy_cf_for_k8s }}
 
 
 - name: Validate if CF for K8S Containers are Running
@@ -229,4 +229,6 @@
 - debug: msg={{ check_cf_k8s_containers }}
   when: print_debug == true
 
+#
+# kubectl patch svc istio-ingressgateway --namespace istio-system --patch '{"spec": { "loadBalancerIP": "192.168.1.219" }}'
 

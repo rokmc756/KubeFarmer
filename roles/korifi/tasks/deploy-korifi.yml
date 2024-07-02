@@ -7,6 +7,7 @@
 # https://younsl.github.io/blog/k8s/install-metrics-server-using-helm/
 # https://blog.khmersite.net/p/deploy-metrics-server-in-kubernetes-using-helm/
 # https://sysdocu.tistory.com/1863
+# https://sysdocu.tistory.com/1904
 
 
 - name: Create Directory for Korifi Persistent Volumes
