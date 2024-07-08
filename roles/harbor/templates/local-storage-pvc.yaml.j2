@@ -76,3 +76,29 @@ spec:
   resources:
     requests:
       storage: 10Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: data-harbor-postgresql-0
+  namespace: {{ harbor.namespace }}
+spec:
+  storageClassName: {{ harbor.namespace}}-storage
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redis-data-harbor-redis-master-0
+  namespace: {{ harbor.namespace }}
+spec:
+  storageClassName: {{ harbor.namespace}}-storage
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi

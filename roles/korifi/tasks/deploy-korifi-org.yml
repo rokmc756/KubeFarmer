@@ -37,7 +37,6 @@
 - debug: msg={{ install_reflector }}
   # 7.1.262
 
-
 # Replace the version of the release accordingly
 # kubectl apply -f https://github.com/buildpacks-community/kpack/releases/download/v0.12.3/release-0.12.3.yaml
 - name: Intall Kpack
@@ -58,6 +57,50 @@
   delay: 10
 - debug: msg={{ check_kpack_containers }}
   when: print_debug == true
+
+
+- name: Intall Contour
+  shell: |
+    /usr/local/bin/helm install contour bitnami/contour --namespace contour --create-namespace
+  register: install_contour
+  ignore_errors: yes
+  args:
+    chdir: "{{ base_path }}/"
+- debug: msg={{ install_contour }}
+  # v1.29.1
+
+
+# kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+# kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.6.1/components.yaml
+# kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.7.1/components.yaml
+
+- name: Copy Metrics Server Config Yaml
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ base_path }}/{{ item }}"
+  register: copy_metrics_server_config_yaml
+  with_items:
+    - "metrics-server-values.yaml"
+- debug: msg={{ copy_metrics_server_config_yaml }}
+
+
+- name: Intall Metrics Server
+  shell: |
+    /usr/local/bin/helm install metrics-server metrics-server/metrics-server -n metrics-server --create-namespace -f metrics-server-values.yaml --wait
+  register: install_metrics_server
+  ignore_errors: yes
+  args:
+    chdir: "{{ base_path }}/"
+- debug: msg={{ install_metrics_server }}
+
+
+- name: Intall Service Binding Runtime
+  shell: |
+    kubectl apply -f https://github.com/servicebinding/runtime/releases/download/v0.9.0/servicebinding-runtime-v{{ servicebinding.major_version }}.{{ servicebinding.minor_version }}.{{ servicebinding.patch_version }}.yaml
+  register: install_service_binding_runtime
+  args:
+    chdir: "{{ base_path }}/"
+- debug: msg={{ install_service_binding_runtime }}
 
 
 - name: Copy Namespaces Config Yaml
@@ -83,21 +126,9 @@
 - debug: msg={{ create_namespaces }}
   when: print_debug == true
 
-
-# /usr/local/bin/helm install contour bitnami/contour --namespace contour --create-namespace
-- name: Intall Contour
-  shell: |
-    kubectl apply -f https://projectcontour.io/quickstart/contour.yaml
-  register: install_contour
-  ignore_errors: yes
-  args:
-    chdir: "{{ base_path }}/"
-- debug: msg={{ install_contour }}
-  # v1.29.1
-
-
-
-
+# kubectl --namespace cf create secret docker-registry image-registry-credentials \
+# --docker-username="rokmc756@gmail.com" \
+# --docker-password="xxxxxxxx!@"
 - name: Create Docker Register Secret
   shell: |
     kubectl --namespace cf create secret docker-registry image-registry-credentials \
@@ -109,90 +140,6 @@
   args:
     chdir: "{{ base_path }}/"
 - debug: msg={{ create_docker_secret }}
-
-
-  # ations of the schema(s) in the following chart(s):", "korifi:", "- global: containerRepositoryPrefix is required"], "stdout": "",
-
-
-- name: Copy Korifi Config Values
-  template:
-    src: "{{ item }}.j2"
-    dest: "{{ base_path }}/korifi-values.yaml"
-  register: copy_korifi_config_values
-  with_items:
-    - "korifi-v{{ korifi.major_version }}-{{ korifi.minor_version }}-{{ korifi.patch_version }}-values.yaml"
-- debug: msg={{ copy_korifi_config_values }}
-
-
-# --set=containerRepositoryPrefix="harbor.jtest.suse.com/"  \
-# --set=networking.gatewayClass=contour \
-- name: Install Korifi
-  shell: |
-    helm install korifi \
-    https://github.com/cloudfoundry/korifi/releases/download/v{{ korifi.major_version }}.{{ korifi.minor_version }}.{{ korifi.patch_version }}/korifi-{{ korifi.major_version }}.{{ korifi.minor_version }}.{{ korifi.patch_version }}.tgz \
-    -n korifi \
-    -f korifi-values.yaml
-  register: install_korifi
-  args:
-    chdir: "{{ base_path }}/"
-  environment:
-    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-- debug: msg={{ install_korifi }}
-
-
-# --set=generateIngressCertificates=true \
-# --set=rootNamespace="cf" \
-# --set=containerRegistrySecret="image-registry-credentials" \
-# --set=containerRepositoryPrefix="harbor.jtest.suse.com/"  \
-# --set=adminUserName="cf-admin" \
-# --set=api.apiServer.url="api.jtest.suse.com" \
-# --set=defaultAppDomainName="apps.jtest.suse.com" \
-# --set=kpackImageBuilder.builderRepository="harbor.jtest.suse.com/jproject01" \
-# --wait
-#
-# --set=networking.gatewayClass=contour \
-# 설치할 Korifi 버전에 따라 사용되는 옵션이 다릅니다.
-# 가령 Korifi 0.10.0 버전에서는 옵션에 global. 이라는 명칭이 제거되고, Korifi 0.11.0 에서는 networking.gatewayClass 옵션이 추가됩니다.
-# Korifi 0.7.1 이후의 버전 설치방법은 확인되면 업데이트 하겠습니다.
-# 아래 Repository 에는 실제 사용 가능한 정보를 입력해야 합니다.
-
-
-# kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
-# kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.6.1/components.yaml
-# kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.7.1/components.yaml
-
-#- name: Copy Metrics Server Config Yaml
-#  template:
-#    src: "{{ item }}.j2"
-#    dest: "{{ base_path }}/{{ item }}"
-#  register: copy_metrics_server_config_yaml
-#  with_items:
-#    - "metrics-server-values.yaml"
-#- debug: msg={{ copy_metrics_server_config_yaml }}
-
-
-#- name: Intall Metrics Server
-#  shell: |
-#    /usr/local/bin/helm install metrics-server metrics-server/metrics-server -n metrics-server --create-namespace -f metrics-server-values.yaml --wait
-#  register: install_metrics_server
-#  ignore_errors: yes
-#  args:
-#    chdir: "{{ base_path }}/"
-#- debug: msg={{ install_metrics_server }}
-
-
-#- name: Intall Service Binding Runtime
-#  shell: |
-#    kubectl apply -f https://github.com/servicebinding/runtime/releases/download/v0.9.0/servicebinding-runtime-v{{ servicebinding.major_version }}.{{ servicebinding.minor_version }}.{{ servicebinding.patch_version }}.yaml
-#  register: install_service_binding_runtime
-#  args:
-#    chdir: "{{ base_path }}/"
-#- debug: msg={{ install_service_binding_runtime }}
-
-
-# kubectl --namespace cf create secret docker-registry image-registry-credentials \
-# --docker-username="rokmc756@gmail.com" \
-# --docker-password="xxxxxxxx!@"
 
 
 - name: Create User's Private Key, Replace 2048 to 3072, or 4096 for Better Security
@@ -274,24 +221,6 @@
 - debug: msg={{ save_cert_file }}
 
 
-- name: Create developer role for the cf-admin.
-  shell: |
-    kubectl create role developer --verb=create --verb=get --verb=list --verb=update --verb=delete --resource=pods
-  register: create_developer_role
-  args:
-    chdir: "{{ base_path }}/"
-- debug: msg={{ create_developer_role }}
-
-
-- name: Bind the role to the cf-admin.
-  shell: |
-    kubectl create rolebinding developer-binding-cf-admin --role=developer --user=cf-admin
-  register: bind_role
-  args:
-    chdir: "{{ base_path }}/"
-- debug: msg={{ bind_role }}
-
-
 - name: Embed the certificate and key in the kubeconfig.
   shell: |
     kubectl config set-credentials cf-admin --client-key=cf-admin.key --client-certificate=cf-admin.crt --embed-certs=true
@@ -308,6 +237,24 @@
   args:
     chdir: "{{ base_path }}/"
 - debug: msg={{ create_context }}
+
+
+- name: Create developer role for the cf-admin.
+  shell: |
+    kubectl create role developer --verb=create --verb=get --verb=list --verb=update --verb=delete --resource=pods
+  register: create_developer_role
+  args:
+    chdir: "{{ base_path }}/"
+- debug: msg={{ create_developer_role }}
+
+
+- name: Bind the role to the cf-admin.
+  shell: |
+    kubectl create rolebinding developer-binding-cf-admin --role=developer --user=cf-admin
+  register: bind_role
+  args:
+    chdir: "{{ base_path }}/"
+- debug: msg={{ bind_role }}
 
 
 # export ROOT_NAMESPACE="cf"
@@ -328,5 +275,72 @@
 #    --set=networking.gatewayClass=contour \
 #    --wait
 
+
+- name: Install Korifi
+  shell: |
+    /usr/local/bin/helm install korifi https://github.com/cloudfoundry/korifi/releases/download/v{{ korifi.major_version }}.{{ korifi.minor_version }}.{{ korifi.patch_version }}/korifi-{{ korifi.major_version }}.{{ korifi.minor_version }}.{{ korifi.patch_version }}.tgz \
+    --namespace="korifi" \
+    --set=generateIngressCertificates=true \
+    --set=rootNamespace="cf" \
+    --set=adminUserName="cf-admin" \
+    --set=global.containerRegistrySecret="image-registry-credentials" \
+    --set=api.apiServer.url="api.jtest.suse.com" \
+    --set=defaultAppDomainName="apps.jtest.suse.com" \
+    --set=containerRepositoryPrefix="harbor.jtest.suse.com/"  \
+    --set=kpackImageBuilder.builderRepository="harbor.jtest.suse.com/jproject01" \
+    --set=networking.gatewayClass=contour \
+    --wait
+  register: install_korifi
+  args:
+    chdir: "{{ base_path }}/"
+- debug: msg={{ install_korifi }}
+
+
+#- name: Create Namespace for Persistent Volumes
+#  shell: |
+#    kubectl create namespace {{ item }}
+#  register: create_namespace
+#  with_items:
+#    - cf-blobstore
+#    - cf-db
+#- debug: msg={{ create_namespace }}
+#  when: print_debug == true
+
+
+#- name: Copy Cluster Local PVC Config Yaml
+#  template:
+#    src: "{{ item }}.j2"
+#    dest: "{{ base_path }}/{{ item }}"
+#  register: copy_cluster_local_pvc_config_yaml
+#  with_items:
+#    - "local-storage-class.yaml"
+#    - "local-storage-pv.yaml"
+#    - "local-storage-pvc.yaml"
+#- debug: msg={{ copy_cluster_local_pvc_config_yaml }}
+
+
+#- name: Cluster Settings for a Production Cluster Running in a Dynamic Cloud Environment including VMware
+#  shell: |
+#    kubectl create -f {{ item }}
+#  register: create_pvc
+#  with_items:
+#    - "local-storage-class.yaml"
+#    - "local-storage-pv.yaml"
+#    - "local-storage-pvc.yaml"
+#  args:
+#    chdir: "{{ base_path }}/"
+#- debug: msg={{ create_pvc }}
+#  when: print_debug == true
+
+
+#- name: Validate if CF for K8S Containers are Running
+#  shell: |
+#    kubectl get pods -A | sed 1d | awk '{print $4}' | sort | uniq
+#  register: check_cf_k8s_containers
+#  until: check_cf_k8s_containers.stdout.find("CrashLoopBackOff") == -1
+#  retries: 100
+#  delay: 10
+#- debug: msg={{ check_cf_k8s_containers }}
+#  when: print_debug == true
 
 

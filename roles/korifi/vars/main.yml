@@ -21,8 +21,8 @@ go:
 
 kpack:
   major_version: 0
-  minor_version: 14
-  patch_version: 1
+  minor_version: 13
+  patch_version: 2
 
 
 contour:
@@ -32,10 +32,10 @@ contour:
 
 
 cert_manager:
-  install: true
+  install: false
   major_version: 1
-  minor_version: 15
-  patch_version: 1
+  minor_version: 14
+  patch_version: 2
 
 
 metrics_server:
@@ -162,7 +162,7 @@ helm:
 
 
 metallb:
-  install: true
+  install: false
   major_version: 0
   minor_version: 13
   patch_version: 11

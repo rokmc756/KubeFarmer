@@ -17,17 +17,16 @@
     reboot_required: true
   roles:
     - korifi
-
+    - harbor
 #    - k8s
+#    - harbor-non-k8s
 #    - cf-k8s
-#    - harbor
 #    - stratos
 #    - mongodb
 #    - geode
 #    - init-hosts
 #    - rabbitmq
 #    - kubeflow
-#    - harbor-non-k8s
 #    - hadoop
 #    - kafka
 #    - jenkins

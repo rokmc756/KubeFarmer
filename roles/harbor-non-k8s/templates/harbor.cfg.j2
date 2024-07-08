@@ -2,7 +2,7 @@
 
 #The IP address or hostname to access admin UI and registry service.
 #DO NOT use localhost or 127.0.0.1, because Harbor needs to be accessed by external clients.
-hostname = {{ inventory_hostname }}.jtest.pivotal.io
+hostname = {{ inventory_hostname }}.{{ harbor.domain }}
 
 #The protocol for accessing the UI and token/notification service, by default it is http.
 #It can be set to https if ssl is enabled on nginx.
@@ -21,8 +21,8 @@ max_job_workers = 3
 customize_crt = on
 
 #The path of cert and key files for nginx, they are applied only the protocol is set to https
-ssl_cert = /data/certs/{{ inventory_hostname }}.jtest.pivotal.io.crt
-ssl_cert_key = /data/certs/{{ inventory_hostname }}.jtest.pivotal.io.key
+ssl_cert = /data/certs/{{ inventory_hostname }}.{{ harbor.domain }}.crt
+ssl_cert_key = /data/certs/{{ inventory_hostname }}.{{ harbor.domain }}.key
 
 #The path of secretkey storage
 secretkey_path = /data

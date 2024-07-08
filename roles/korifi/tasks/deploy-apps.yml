@@ -1,0 +1,143 @@
+# Test Private Docker Repository
+#
+# docker pull nginx:latest
+# docker tag nginx:latest harbor.jtest.suse.com/jproject01/nginx:latest
+# docker push harbor.jtest.suse.com/jproject01/nginx:latest
+#
+
+- name: Login into Cloud Foundry API
+  shell: |
+    cf api https://api.jtest.suse.com --skip-ssl-validation
+  register: login_cf_api
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ login_cf_api }}
+
+
+- name: Login with cf-admin User
+  shell: |
+    cf auth cf-admin
+  register: login_cf_admin_user
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ login_cf_admin_user }}
+
+
+- name: Create Organization
+  shell: |
+    cf create-org org1
+  register: create_org
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ create_org }}
+
+
+- name: Create Space
+  shell: |
+    cf create-space -o org1 space1
+  register: create_space
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ create_space }}
+
+
+- name: Target Space
+  shell: |
+    cf target -o org1 -s space1
+  register: target_space
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ target_space }}
+
+
+- name: Check if the Sample Web Apps Directory is Already Downloaded
+  stat: path={{ base_path }}/sample-web-apps
+  register: check_sample_web_apps_dir
+- debug: msg={{ check_sample_web_apps_dir }}
+
+
+# git -C "{{ base_path }}" clone https://github.com/nginxinc/kubernetes-ingress.git \
+# --branch v{{ nginx.k8s_ingress.major_version }}.{{ nginx.k8s_ingress.minor_version }}.{{ nginx.k8s_ingress.patch_version }}
+- name: Clone Sample Web Apps
+  shell: |
+    git clone https://github.com/sylvainkalache/sample-web-apps
+  register: clone_sample_web_apps
+  args:
+    chdir: "{{ base_path }}/sample-web-apps/java"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+  when: check_sample_web_apps_dir.stat.exists != True
+- debug: msg={{ clone_sample_web_apps }}
+  when: check_sample_web_apps_dir.stat.exists != True
+
+
+- name: Distribute Java Application
+  shell: |
+    cf push java1
+  register: distribute_java_apps
+  args:
+    chdir: "{{ base_path }}/sample-web-apps/java"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ distribute_java_apps }}
+
+
+# 3. Check Application
+# Access Application Deployed
+
+# curl --insecure https://java1.apps.jtest.suse.com
+# Hello, World!
+# Java Version: 17.0.10
+
+
+# Check additional information of application as below
+
+# Check the list of appilcationed distributed by cf
+# cf a
+# Getting apps in org org1 / space space1 as cf-admin...
+# name    requested state   processes                               routes
+# java1   started           web:1/1, executable-jar:0/0, task:0/0   java1.apps.az1.sysdocu.kr
+
+# check the detailed information of the specific application
+
+# cf app java1
+# Showing health and status for app java1 in org org1 / space space1 as cf-admin...
+
+# name:              java1
+# requested state:   started
+# routes:            java1.apps.jtest.suse.com
+# last uploaded:     Fri 16 Feb 07:13:55 UTC 2024
+# stack:             io.buildpacks.stacks.bionic
+# buildpacks:        
+
+
+# type:           web
+# sidecars:       
+# instances:      1/1
+# memory usage:   1024M
+#     state     since                  cpu    memory   disk     logging      details
+# 0   running   2024-02-16T07:45:20Z   0.0%   0 of 0   0 of 0   0/s of 0/s   
+
+
+# type:           executable-jar
+# sidecars:       
+# instances:      0/0
+# memory usage:   1024M
+# There are no running instances of this process.
+
+
+# type:           task
+# sidecars:       
+# instances:      0/0
+# memory usage:   1024M
+# There are no running instances of this process.

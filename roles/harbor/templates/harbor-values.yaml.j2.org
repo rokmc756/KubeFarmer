@@ -1,0 +1,81 @@
+#expose:
+#  ingress:
+#    hosts:
+#      # Adjust the domain to suit you
+#      core: harbor.jtest.suse.com
+#
+## Adjust the externalURL https://{domain}
+#externalURL: https://harbor.jtest.suse.com
+#harborAdminPassword: "{{ harbor.admin_password }}"
+#
+#controller:
+#  serviceType: LoadBalancer
+#
+#
+#  https://github.com/goharbor/harbor-helm/blob/main/values.yaml
+#
+---
+
+expose:
+  type: ingress
+  tls:
+    enabled: true
+    certSource: secret
+    secret:
+      secretName: "harbor-cat-tls"
+  ingress:
+    hosts:
+      core: harbor.jtest.suse.com
+    className: "nginx"
+
+externalURL: https://harbor.jtest.suse.com
+harborAdminPassword: "Changeme123"
+
+persistence:
+  enabled: false
+  resourcePolicy: "keep"
+  persistentVolumeClaim:
+    registry:
+      storageClass: "harbor-storage"
+      accessMode: ReadWriteMany
+      size: 10Gi
+    jobservice:
+      jobLog:
+        storageClass: "harbor-storage"
+        accessMode: ReadWriteMany
+        size: 10Gi
+    redis:
+      storageClass: "harbor-storage"
+      accessMode: ReadWriteMany
+      size: 10Gi
+    trivy:
+      storageClass: "harbor-storage"
+      accessMode: ReadWriteMany
+      size: 10Gi
+  imageChartStorage:
+    disableredirect: false
+    type: filesystem
+    filesystem:
+      rootdirectory: {{ harbor.storage_path }}
+
+registry:
+  replicas: 2
+portal:
+  replicas: 2
+core:
+  replicas: 2
+jobservice:
+  replicas: 2
+trivy:
+  enabled: true
+  replicas: 2
+notary:
+  enabled: false
+cache:
+  enabled: true
+  expireHours: 24
+database:
+  type: internal
+redis:
+  type: internal
+

@@ -1,0 +1,128 @@
+adminUserName: "cf-admin"
+rootNamespace: cf
+debug: false
+logLevel: info
+defaultAppDomainName: "apps.jtest.suse.com"
+generateIngressCertificates: true
+containerRepositoryPrefix: "harbor.jtest.suse.com/"
+containerRegistrySecrets:
+- image-registry-credentials
+eksContainerRegistryRoleARN: ""
+containerRegistryCACertSecret:
+systemImagePullSecrets: []
+
+reconcilers:
+  build: kpack-image-builder
+  run: statefulset-runner
+
+stagingRequirements:
+  memoryMB: 0
+  diskMB: 0
+  buildCacheMB: 2048
+
+api:
+  include: true
+
+  image: cloudfoundry/korifi-api:latest
+
+  replicas: 1
+  resources:
+    requests:
+      cpu: 50m
+      memory: 100Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+
+  apiServer:
+    url: "api.jtest.suse.com"
+    # To override default port, set port to a non-zero value
+    port: 0
+    internalPort: 9000
+    timeouts:
+      read: 900
+      write: 900
+      idle: 900
+      readHeader: 10
+
+  lifecycle:
+    type: buildpack
+    stack: cflinuxfs3
+
+  userCertificateExpirationWarningDuration: 168h
+
+  authProxy:
+    host: ""
+    caCert: ""
+
+controllers:
+  image: cloudfoundry/korifi-controllers:latest
+
+  replicas: 1
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+    requests:
+      cpu: 50m
+      memory: 100Mi
+
+  processDefaults:
+    memoryMB: 1024
+    diskQuotaMB: 1024
+  taskTTL: 30d
+  workloadsTLSSecret: korifi-workloads-ingress-cert
+
+  namespaceLabels: {}
+  extraVCAPApplicationValues: {}
+  maxRetainedPackagesPerApp: 5
+  maxRetainedBuildsPerApp: 5
+
+kpackImageBuilder:
+  include: true
+  replicas: 1
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+    requests:
+      cpu: 50m
+      memory: 100Mi
+
+  clusterBuilderName: ""
+  builderReadinessTimeout: 30s
+  clusterStackID: io.buildpacks.stacks.jammy
+  clusterStackBuildImage: paketobuildpacks/build-jammy-full
+  clusterStackRunImage: paketobuildpacks/run-jammy-full
+  builderRepository: "harbor.jtest.suse.com/jproject01"
+
+statefulsetRunner:
+  include: true
+  replicas: 1
+  resources:
+    limits:
+      cpu: 500m
+      memory: 128Mi
+    requests:
+      cpu: 10m
+      memory: 64Mi
+
+jobTaskRunner:
+  include: true
+  replicas: 1
+  resources:
+    limits:
+      cpu: 500m
+      memory: 128Mi
+    requests:
+      cpu: 10m
+      memory: 64Mi
+
+  jobTTL: 24h
+
+helm:
+  hooksImage: alpine/k8s:1.25.2
+
+networking:
+  gatewayClass: projectcontour
+

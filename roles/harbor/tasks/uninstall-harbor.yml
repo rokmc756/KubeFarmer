@@ -19,6 +19,15 @@
   when: print_debug == true
 
 
+- name: Uninstall Contour
+  shell: |
+    /usr/local/bin/helm uninstall ingress -n contour
+  register: uninstall_controu
+  ignore_errors: true
+- debug: msg={{ uninstall_contour }}
+  when: print_debug == true
+
+
 - name: Delete Persistent Volumes, Claim and Storage Class
   shell: |
     kubectl delete -f {{ item }}
@@ -55,7 +64,7 @@
   ignore_errors: true
   with_items:
     - harbor
-    - istio-system
+    - contour
 - debug: msg={{ delete_namespace }}
   when: print_debug == true
 

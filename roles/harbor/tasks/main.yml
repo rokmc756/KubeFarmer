@@ -32,10 +32,10 @@
   when: metallb.install == true and inventory_hostname in groups['master']
 
 
-#- name: Install Cert Manager
-#  import_tasks: install-cert-manager.yml
-#  tags: install
-#  when: cert_manager.install == true and inventory_hostname in groups['master']
+- name: Install Cert Manager
+  import_tasks: install-cert-manager.yml
+  tags: install
+  when: cert_manager.install == true and inventory_hostname in groups['master']
 
 
 - name: Install Kustomize
@@ -68,10 +68,10 @@
   when: harbor.install == true and inventory_hostname in groups['master']
 
 
-#- name: Uninstall Cert Manager
-#  import_tasks: uninstall-cert-manager.yml
-#  tags: uninstall
-#  when: cert_manager.install == true and inventory_hostname in groups['master']
+- name: Uninstall Cert Manager
+  import_tasks: uninstall-cert-manager.yml
+  tags: uninstall
+  when: cert_manager.install == true and inventory_hostname in groups['master']
 
 
 - name: Uninstall Metallb

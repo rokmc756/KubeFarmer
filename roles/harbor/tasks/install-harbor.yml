@@ -1,3 +1,6 @@
+# https://medium.com/@ithesadson/how-to-deploy-a-harbor-with-helm-k8s-minikube-25f89af83610
+# https://www.viktorious.nl/2023/01/12/deploy-harbor-registry-with-signed-certificates-using-cert-manager-lets-encrypt-and-aws-route-53/
+
 - name: Create Directory for Persistent Volumes
   file:
     path: "{{ harbor.storage_path }}"
@@ -19,8 +22,8 @@
     kubectl create namespace {{ item }}
   register: create_namespace
   with_items:
+    - contour
     - harbor
-    - istio-system
 - debug: msg={{ create_namespace }}
   when: print_debug == true
 
@@ -61,14 +64,26 @@
 - debug: msg={{ copy_harbor_lb_config_yaml }}
 
 
+- name: Deploy Contour
+  shell: |
+    /usr/local/bin/helm install ingress bitnami/contour --create-namespace -n contour --wait
+  register: deploy_contour
+- debug: msg={{ deploy_contour }}
+  when: print_debug == true
 
-# /usr/local/bin/helm install harbor harbor/harbor -n harbor
-# --set persistence.existingClaim={data-harbor-redis-0,data-harbor-trivy-0,database-data-harbor-database-0,harbor-jobservice,harbor-registry} \
-# --create-namespace
+# You can use the following command to check if the pods are running:
+# kubectl get pods -n contour -w
+# With the following command you can check if and where your ingress is available:
+# kubectl get svc ingress-contour-envoy --namespace contour -wC
+# And:
+# kubectl describe svc ingress-contour-envoy --namespace contour | grep Ingress | awk '{print $3}'
 
+
+# /usr/local/bin/helm install harbor harbor/harbor --set harborAdminPassword=changeme -f {{ base_path }}/harbor-values.yaml --create-namespace -n harbor --wait
+# /usr/local/bin/helm install harbor harbor/harbor --set harborAdminPassword=changeme -f {{ base_path }}/harbor-values.yaml --create-namespace -n harbor --wait
 - name: Deploy Harbor
   shell: |
-    /usr/local/bin/helm install harbor harbor/harbor -f {{ base_path }}/harbor-values.yaml --create-namespace -n harbor
+    /usr/local/bin/helm install harbor -f {{ base_path }}/harbor-values.yaml bitnami/harbor -n harbor --create-namespace
   register: deploy_harbor
 - debug: msg={{ deploy_harbor }}
   when: print_debug == true
@@ -83,5 +98,28 @@
   delay: 10
 - debug: msg={{ check_harbor_container }}
   when: print_debug == true
+
+
+# ** Please be patient while the chart is being deployed **
+#1. Get the Harbor URL:
+#  NOTE: It may take a few minutes for the LoadBalancer IP to be available.
+#        Watch the status with: 'kubectl get svc --namespace harbor -w harbor'
+#    export SERVICE_IP=$(kubectl get svc --namespace harbor harbor --template "{{ range (index .status.loadBalancer.ingress 0) }}{{ . }}{{ end }}")
+#    echo "Harbor URL: http://$SERVICE_IP/"
+#
+#2. Login with the following credentials to see your Harbor application
+#  echo Username: "admin"
+#  echo Password: $(kubectl get secret --namespace harbor harbor-core-envvars -o jsonpath="{.data.HARBOR_ADMIN_PASSWORD}" | base64 -d)
+#
+#WARNING: There are "resources" sections in the chart not set. Using "resourcesPreset" is not recommended for production. For production installations, please set the following values according to your workload needs:
+#  - core.resources
+#  - exporter.resources
+#  - jobservice.resources
+#  - nginx.resources
+#  - portal.resources
+#  - registry.controller.resources
+#  - registry.server.resources
+#  - trivy.resources
+#+info https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
 
 

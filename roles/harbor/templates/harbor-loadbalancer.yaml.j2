@@ -4,40 +4,5 @@ kind: Service
 metadata:
   name: {{ harbor.service.metadata.name }}
   namespace: {{ harbor.service.metadata.namespace }}
-  annotations:
-    nginx.ingress.kubernetes.io/proxy-protocol: "true"
 spec:
-  selector:
-    app: harbor
-    component: portal
-  ports:
-    - name: http
-      protocol: TCP
-      port: 80
-      targetPort: 8080
-    - name: https
-      protocol: TCP
-      port: 8443
-      targetPort: 443
-  type: LoadBalancer
-  loadBalancerIP: 192.168.1.219
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: {{ harbor.ingress.metadata.name }}
-  namespace: {{ harbor.ingress.metadata.namespace }}
-  annotations:
-    nginx.ingress.kubernetes.io/ssl-redirect: "true"
-spec:
-  rules:
-    - host: {{ harbor.ingress.hostname }}
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: harbor-portal
-                port:
-                  name: http
+  loadBalancerIP: {{ harbor.lb_ip_addr }}

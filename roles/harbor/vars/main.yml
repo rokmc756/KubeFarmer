@@ -19,7 +19,7 @@ harbor:
   clone_git: true
   nvme: true
   namespace: harbor
-  lb_ip_addr: 192.168.1.219
+  lb_ip_addr: 192.168.1.249
   storage_path: "/mnt/harbor-storage"
   k8s:
     major_version: 1
@@ -29,7 +29,8 @@ harbor:
   hostname: "harbor.jtest.suse.com"
   service:
     metadata:
-      name: harbor-loadbalancer
+      name: harbor
+      # -loadbalancer
       namespace: harbor
   ingress:
     metadata:
@@ -40,6 +41,7 @@ harbor:
     - "net.ipv4.neigh.default.gc_thresh1 = 0"   # For ARP Cache
     - "fs.inotify.max_user_instances=2280"
     - "fs.inotify.max_user_watches=755360"
+
 
 metallb:
   install: true
@@ -70,6 +72,14 @@ metallb:
               name: default
               protocol: layer2
               ips_range: 192.168.1.210-192.168.1.250
+
+
+cert_manager:
+  install: true
+  major_version: 1
+  minor_version: 14
+  patch_version: 2
+
 
 helm:
   enable_repo: true

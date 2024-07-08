@@ -173,9 +173,9 @@
   shell: |
     mkdir /root/certs && mkdir /data/certs
     openssl genrsa -out /root/certs/ca.key 4096
-    openssl req -x509 -new -nodes -sha512 -days 3650 -subj "/C={{ harbor.cert.country }}/ST={{ harbor.cert.state }}/L={{ harbor.cert.location }}/O={{ harbor.cert.org }}/OU={{ harbor.cert.org_unit }}/CN={{ ansible_fqdn }}" -key /root/certs/ca.key -out /root/certs/ca.crt
-    openssl genrsa -out /root/certs/{{ ansible_fqdn }}.key 4096
-    openssl req -sha512 -new -subj "/C={{ harbor.cert.country }}/ST={{ harbor.cert.state }}/L={{ harbor.cert.location }}/O={{ harbor.cert.org }}/OU={{ harbor.cert.org_unit }}/CN={{ ansible_fqdn }}" -key /root/certs/{{ ansible_fqdn }}.key -out /root/certs/{{ ansible_fqdn }}.csr
+    openssl req -x509 -new -nodes -sha512 -days 3650 -subj "/C={{ harbor.cert.country }}/ST={{ harbor.cert.state }}/L={{ harbor.cert.location }}/O={{ harbor.cert.org }}/OU={{ harbor.cert.org_unit }}/CN=harbor.{{ harbor.domain }}" -key /root/certs/ca.key -out /root/certs/ca.crt
+    openssl genrsa -out /root/certs/harbor.{{ harbor.domain }}.key 4096
+    openssl req -sha512 -new -subj "/C={{ harbor.cert.country }}/ST={{ harbor.cert.state }}/L={{ harbor.cert.location }}/O={{ harbor.cert.org }}/OU={{ harbor.cert.org_unit }}/CN=harbor.{{ harbor.domain }}" -key /root/certs/harbor.{{ harbor.domain }}.key -out /root/certs/harbor.{{ harbor.domain }}.csr
   register: certs_generated
 - debug: msg={{ certs_generated }}
   when: print_debug == true
@@ -190,7 +190,7 @@
 #
 - name: Generate an x509 v3 Extension File
   shell: |
-    openssl x509 -req -sha512 -days 3650 -extfile /root/certs/v3.ext -CA /root/certs/ca.crt -CAkey /root/certs/ca.key -CAcreateserial -in /root/certs/{{ ansible_fqdn }}.csr -out /root/certs/{{ ansible_fqdn }}.crt
+    openssl x509 -req -sha512 -days 3650 -extfile /root/certs/v3.ext -CA /root/certs/ca.crt -CAkey /root/certs/ca.key -CAcreateserial -in /root/certs/harbor.{{ harbor.domain }}.csr -out /root/certs/harbor.{{ harbor.domain }}.crt
   register: v3_ext_generated
 - debug: msg={{ v3_ext_generated }}
   when: print_debug == true
@@ -202,19 +202,19 @@
     remote_src: yes
   register: certs_copied
   with_items:
-    - { src: "/root/certs/{{ ansible_fqdn }}.crt", dest: "/data/certs/{{ ansible_fqdn }}.crt" }
-    - { src: "/root/certs/{{ ansible_fqdn }}.key", dest: "/data/certs/{{ ansible_fqdn }}.key" }
+    - { src: "/root/certs/harbor.{{ harbor.domain }}.crt", dest: "/data/certs/harbor.{{ harbor.domain }}.crt" }
+    - { src: "/root/certs/harbor.{{ harbor.domain }}.key", dest: "/data/certs/harbor.{{ harbor.domain }}.key" }
 
 #
 - name: Copy harbor.tmpl to harboy.yml
   shell: |
-    openssl x509 -inform PEM -in /root/certs/{{ ansible_fqdn }}.crt -out /root/certs/{{ ansible_fqdn }}.cert
+    openssl x509 -inform PEM -in /root/certs/harbor.{{ harbor.domain }}.crt -out /root/certs/harbor.{{ harbor.domain }}.cert
   register: harbor_yml_copied
 
 #
 - name: Creates directory
   file:
-    path: "/etc/docker/certs.d/{{ ansible_fqdn }}:443"
+    path: "/etc/docker/certs.d/harbor.{{ harbor.domain }}:443"
     state: directory
     owner: root
     group: root
@@ -228,9 +228,9 @@
     remote_src: yes
   register: certs_copied
   with_items:
-    - { src: "/root/certs/{{ ansible_fqdn }}.cert", dest: "/etc/docker/certs.d/{{ ansible_fqdn }}:443/{{ ansible_fqdn }}.cert" }
-    - { src: "/root/certs/{{ ansible_fqdn }}.key",  dest: "/etc/docker/certs.d/{{ ansible_fqdn }}:443/{{ ansible_fqdn }}.key" }
-    - { src: "/root/certs/ca.crt",                  dest: "/etc/docker/certs.d/{{ ansible_fqdn }}:443/ca.crt" }
+    - { src: "/root/certs/harbor.{{ harbor.domain }}.cert", dest: "/etc/docker/certs.d/harbor.{{ harbor.domain }}:443/harbor.{{ harbor.domain }}.cert" }
+    - { src: "/root/certs/harbor.{{ harbor.domain }}.key",  dest: "/etc/docker/certs.d/harbor.{{ harbor.domain }}:443/harbor.{{ harbor.domain }}.key" }
+    - { src: "/root/certs/ca.crt",                  dest: "/etc/docker/certs.d/harbor.{{ harbor.domain }}:443/ca.crt" }
 
 #
 - name: Configure the Docker Daemon to Use Systemd for the Management of the Cotainer's Cgroups and Repository
@@ -262,7 +262,7 @@
   when: print_debug == true and hostvars[inventory_hostname].ansible_distribution_major_version|int <= 8
 
 # dest: /root/harbor/harbor.yml
-- name: Modify harbor.yml "{{ ansible_fqdn }}" with Control Plane's IP address
+- name: Modify harbor.yml "{{ harbor.domain }}" with Control Plane's IP address
   lineinfile:
     dest: /root/harbor/harbor.yml.tmpl
     regexp: "{{ item.regexp }}"
@@ -271,9 +271,9 @@
     backrefs: "{{ item.backrefs }}"
   register: harbor_config_modified
   with_items:
-    - { regexp: "^hostname: *", line: "hostname: {{ ansible_fqdn }}", state: present, backrefs: yes }
-    - { regexp: "^  certificate: *", line: "  certificate: /root/certs/{{ ansible_fqdn }}.crt", state: present, backrefs: yes }
-    - { regexp: "^  private_key: *", line: "  private_key: /root/certs/{{ ansible_fqdn }}.key", state: present, backrefs: yes }
+    - { regexp: "^hostname: *", line: "hostname: harbor.{{ harbor.domain }}", state: present, backrefs: yes }
+    - { regexp: "^  certificate: *", line: "  certificate: /root/certs/harbor.{{ harbor.domain }}.crt", state: present, backrefs: yes }
+    - { regexp: "^  private_key: *", line: "  private_key: /root/certs/harbor.{{ harbor.domain }}.key", state: present, backrefs: yes }
     - { regexp: "^harbor_admin_password: *", line: "harbor_admin_password: {{ harbor.admin_password }}", state: present, backrefs: yes }
     - { regexp: "^  password: *", line: "  password: /root/certs/{{ harbor.database_password }}", state: present, backrefs: yes }
 - debug: msg={{ harbor_config_modified }}

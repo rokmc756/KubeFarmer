@@ -6,8 +6,9 @@ k8s:
   # k8s version should be at least v1.25.0 for kpack and korifi
   # k8s version should be v1.24.17 for cf-for-k8s
   cluster_name: jack-kr-k8s
+  domain: "jtest.suse.com"
   major_version: "1"
-  minor_version: "25"
+  minor_version: "28"
   patch_version: "0"
   build_version: ""
   repo_url: ""

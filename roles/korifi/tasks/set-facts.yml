@@ -71,13 +71,13 @@
 
 - name: Make Sure that CF for K8S should be installed on versions less than Kube 1.24.x
   debug:
-    msg: "CF for K8S should be required on versions less than k8s v1.24.x"
-  when: inventory_hostname in groups['master'] and ( kube_minor_version.stdout|int > 24 )
+    msg: "CF for K8S should be required on versions higher than k8s v1.25.x"
+  when: inventory_hostname in groups['master'] and ( kube_minor_version.stdout|int < 25 )
 
 
 - name: End CF for K8S Ansible Playbook
   meta: end_play
-  when: ( kube_minor_version.stdout|int > 24 ) and inventory_hostname in groups['master']
+  when: ( kube_minor_version.stdout|int < 25 ) and inventory_hostname in groups['master']
 
 
 # - debug: msg={{ ansible_distribution }}
