@@ -24,6 +24,10 @@
   with_items:
     - contour
     - harbor
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ create_namespace }}
   when: print_debug == true
 
@@ -50,6 +54,8 @@
     - "local-storage-pvc.yaml"
   args:
     chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ create_pvc }}
   when: print_debug == true
 
@@ -66,8 +72,12 @@
 
 - name: Deploy Contour
   shell: |
-    /usr/local/bin/helm install ingress bitnami/contour --create-namespace -n contour --wait
+    helm install ingress bitnami/contour --create-namespace -n contour --wait
   register: deploy_contour
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ deploy_contour }}
   when: print_debug == true
 
@@ -80,11 +90,14 @@
 
 
 # /usr/local/bin/helm install harbor harbor/harbor --set harborAdminPassword=changeme -f {{ base_path }}/harbor-values.yaml --create-namespace -n harbor --wait
-# /usr/local/bin/helm install harbor harbor/harbor --set harborAdminPassword=changeme -f {{ base_path }}/harbor-values.yaml --create-namespace -n harbor --wait
 - name: Deploy Harbor
   shell: |
-    /usr/local/bin/helm install harbor -f {{ base_path }}/harbor-values.yaml bitnami/harbor -n harbor --create-namespace
+    helm install harbor -f {{ base_path }}/harbor-values.yaml bitnami/harbor -n harbor --create-namespace
   register: deploy_harbor
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ deploy_harbor }}
   when: print_debug == true
 
@@ -96,6 +109,10 @@
   until: check_harbor_container.stdout.find("ContainerCreating") == -1
   retries: 100
   delay: 10
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ check_harbor_container }}
   when: print_debug == true
 
@@ -121,5 +138,4 @@
 #  - registry.server.resources
 #  - trivy.resources
 #+info https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
-
 

@@ -2,33 +2,49 @@
 
 - name: Remove NGINX Helm Repo
   shell: |
-    /usr/local/bin/helm repo remove nginx-stable
+    helm repo remove nginx-stable
   register: remove_nginx_helm_repo
   ignore_errors: yes
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ remove_nginx_helm_repo }}
 
 
 - name: Remove Harbor Helm Repo
   shell: |
-    /usr/local/bin/helm repo remove harbor
+    helm repo remove harbor
   register: remove_harbor_helm_repo
   ignore_errors: yes
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ remove_harbor_helm_repo }}
 
 
 - name: Remove Jetstack Helm Repo
   shell: |
-    /usr/local/bin/helm repo remove jetstack
+    helm repo remove jetstack
   register: remove_jetstack_helm_repo
   ignore_errors: yes
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ remove_jetstack_helm_repo }}
 
 
 - name: Remove Metallb Helm Repo
   shell: |
-    /usr/local/bin/helm repo remove metallb
+    helm repo remove metallb
   register: remove_metallb_helm_repo
   ignore_errors: yes
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ remove_metallb_helm_repo }}
 
 

@@ -1,9 +1,13 @@
 - name: Intall Cert Manager by Helm
   shell: |
-    /usr/local/bin/helm install cert-manager jetstack/cert-manager -n cert-manager --create-namespace --set installCRDs=true \
-    --version v{{ cert_manager.major_version }}.{{ cert_manager.minor_version }}.{{ cert_manager.patch_version }}
+    helm install cert-manager jetstack/cert-manager -n cert-manager --create-namespace --set installCRDs=true \
+    --version v{{ cert_manager.major_version }}.{{ cert_manager.minor_version }}.{{ cert_manager.patch_version }} --wait
   register: install_cert_manager
   ignore_errors: yes
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ install_cert_manager }}
 
 

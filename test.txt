@@ -1,0 +1,41 @@
+
+ Cloud Foundry Concept/Resource
+Kubernetes Representation
+CF User
+Kubernetes RBAC User / Service Account
+UAA Oauth2 Token
+Kubernetes auth token or client cert/key
+Roles/Permissions
+Kubernetes RBAC resources
+Organization
+CFOrg + Namespace
+Space
+CFSpace + Namespace
+App
+CFApp
+App Env Vars
+Kubernetes Secret
+Package (app source code)
+CFPackage + OCI Container Image
+Build
+CFBuild, BuildWorkload, Kpack Image
+Droplet
+CFBuild, BuildWorkload, OCI Container Image
+Process
+CFProcess, AppWorkload (eventually StatefulSet and Pod)
+Task
+CFTask, TaskWorkload (eventually Kubernetes Job and Pod)
+Route
+CFRoute, Gateway API HTTPRoute, K8s Service
+Domain
+CFDomain
+Service Instance
+CFServiceInstance (ProvisionedService)
+Service Binding
+CFServiceBinding + ServiceBinding for Kubernetes
+Service credentials
+Kubernetes Secret
+
+
+
+

@@ -18,8 +18,8 @@
     stop_services: true
     upload_calico: true
   roles:
-    - korifi
-#    - harbor
+    - harbor
+#    - korifi
 #    - k8s
 #    - harbor-non-k8s
 #    - cf-k8s

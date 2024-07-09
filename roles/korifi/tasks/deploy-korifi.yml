@@ -29,12 +29,15 @@
 # --version should be helm chart version, not app version
 - name: Intall Reflector
   shell: |
-   /usr/local/bin/helm install reflector emberstack/reflector -n reflector --create-namespace
+   helm install reflector emberstack/reflector -n reflector --create-namespace
   register: install_reflector
   ignore_errors: yes
   args:
     chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ install_reflector }}
+  when: print_debug == true
   # 7.1.262
 
 
@@ -46,7 +49,10 @@
   register: install_repflector
   args:
     chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ install_reflector }}
+  when: print_debug == true
 
 
 - name: Validate if Kpack Containers are Running
@@ -56,6 +62,10 @@
   until: check_kpack_containers.stdout.find("Running") != -1
   retries: 100
   delay: 10
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ check_kpack_containers }}
   when: print_debug == true
 
@@ -69,6 +79,7 @@
     - "cf-ns.yaml"
     - "korifi-ns.yaml"
 - debug: msg={{ copy_namespaces_config_yaml }}
+  when: print_debug == true
 
 
 - name: Create Namespaces
@@ -80,6 +91,8 @@
     - "korifi-ns.yaml"
   args:
     chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ create_namespaces }}
   when: print_debug == true
 
@@ -92,10 +105,11 @@
   ignore_errors: yes
   args:
     chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ install_contour }}
+  when: print_debug == true
   # v1.29.1
-
-
 
 
 - name: Create Docker Register Secret
@@ -103,15 +117,16 @@
     kubectl --namespace cf create secret docker-registry image-registry-credentials \
     --docker-username="admin" \
     --docker-password="changeme" \
-    --docker-server="https://harbor.jtest.suse.com"
+    --docker-server="https://harbor.{{ korifi.domain_prefix }}"
   register: create_docker_secret
   ignore_errors: yes
   args:
     chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ create_docker_secret }}
-
-
-  # ations of the schema(s) in the following chart(s):", "korifi:", "- global: containerRepositoryPrefix is required"], "stdout": "",
+  when: print_debug == true
+# ations of the schema(s) in the following chart(s):", "korifi:", "- global: containerRepositoryPrefix is required"], "stdout": "",
 
 
 - name: Copy Korifi Config Values
@@ -122,6 +137,7 @@
   with_items:
     - "korifi-v{{ korifi.major_version }}-{{ korifi.minor_version }}-{{ korifi.patch_version }}-values.yaml"
 - debug: msg={{ copy_korifi_config_values }}
+  when: print_debug == true
 
 
 # --set=containerRepositoryPrefix="harbor.jtest.suse.com/"  \
@@ -138,6 +154,7 @@
   environment:
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ install_korifi }}
+  when: print_debug == true
 
 
 # --set=generateIngressCertificates=true \
@@ -160,6 +177,7 @@
 # kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
 # kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.6.1/components.yaml
 # kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.7.1/components.yaml
+
 
 #- name: Copy Metrics Server Config Yaml
 #  template:
@@ -201,7 +219,10 @@
   register: create_user_private_key
   args:
     chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ create_user_private_key }}
+  when: print_debug == true
 
 
 - name: Create a CSR for the User cf-admin
@@ -210,7 +231,10 @@
   register: create_csr
   args:
     chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ create_csr }}
+  when: print_debug == true
 
 
 - name: Convert CSR to Base64
@@ -219,7 +243,10 @@
   register: convert_base64
   args:
     chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ convert_base64 }}
+  when: print_debug == true
 
 
 - name: Create a Yaml file for the Certificate Request whose Content are like below
@@ -236,78 +263,105 @@
         expirationSeconds: 604800
         usages:
           - client auth
+  register: create_cert_request_yaml
+- debug: msg={{ create_cert_request_yaml }}
+  when: print_debug == true
 
 
-- name: Apply the manifest using the file you created in previous step
+- name: Apply the Manifest Using the File You Created in Previous Step
   shell: |
     kubectl apply -f cert-request.yaml
   register: apply_manifest_created
   args:
     chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ apply_manifest_created }}
+  when: print_debug == true
 
 
-- name: Validate the CSR if it got created successfully.
+- name: Validate the CSR if It got Created Successfully.
   shell: |
     kubectl get csr
   register: validate_csr
   args:
     chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ validate_csr }}
+  when: print_debug == true
 
 
-- name: Approve the certificate request
+- name: Approve the Certificate Request
   shell: |
     kubectl certificate approve cf-admin
   register: approve_cert_request
   args:
     chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ approve_cert_request }}
+  when: print_debug == true
 
 
-- name: Save the certificate to a file cf-admin.crt
+- name: Save the Certificate to a File cf-admin.crt
   shell: |
     kubectl get csr cf-admin -o jsonpath='{.status.certificate}'| base64 -d > cf-admin.crt
   register: save_cert_file
   args:
     chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ save_cert_file }}
+  when: print_debug == true
 
 
-- name: Create developer role for the cf-admin.
+- name: Create Developer Role for the cf-admin.
   shell: |
     kubectl create role developer --verb=create --verb=get --verb=list --verb=update --verb=delete --resource=pods
   register: create_developer_role
   args:
     chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ create_developer_role }}
+  when: print_debug == true
 
 
-- name: Bind the role to the cf-admin.
+- name: Bind the Role to the cf-admin.
   shell: |
     kubectl create rolebinding developer-binding-cf-admin --role=developer --user=cf-admin
   register: bind_role
   args:
     chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ bind_role }}
+  when: print_debug == true
 
 
-- name: Embed the certificate and key in the kubeconfig.
+- name: Embed the Certificate and Key In the kubeconfig.
   shell: |
     kubectl config set-credentials cf-admin --client-key=cf-admin.key --client-certificate=cf-admin.crt --embed-certs=true
   register: embed_cert_key
   args:
     chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ embed_cert_key }}
+  when: print_debug == true
 
 
-- name: Create context for the cf-admin.
+- name: Create Context For the cf-admin.
   shell: |
     kubectl config set-context cf-admin --cluster=kubernetes --user=cf-admin
   register: create_context
   args:
     chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ create_context }}
+  when: print_debug == true
 
 
 # export ROOT_NAMESPACE="cf"
@@ -316,17 +370,15 @@
 # export BASE_DOMAIN="jtest.suse.com"
 # export GATEWAY_CLASS_NAME="contour"
 
-#    /usr/local/bin/helm install korifi https://github.com/cloudfoundry/korifi/releases/download/v{{ korifi.major_version }}.{{ korifi.minor_version }}.{{ korifi.patch_version }}/korifi-{{ korifi.major_version }}.{{ korifi.minor_version }}.{{ korifi.patch_version }}.tgz \
-#    --namespace="korifi" \
-#    --set=generateIngressCertificates=true \
-#    --set=rootNamespace="cf" \
-#    --set=adminUserName="cf-admin" \
-#    --set=api.apiServer.url="api.jtest.suse.com" \
-#    --set=defaultAppDomainName="apps.jtest.suse.com" \
-#    --set=containerRepositoryPrefix="harbor.jtest.suse.com/"  \
-#    --set=kpackImageBuilder.builderRepository="harbor.jtest.suse.com/jproject01" \
-#    --set=networking.gatewayClass=contour \
-#    --wait
-
-
+# /usr/local/bin/helm install korifi https://github.com/cloudfoundry/korifi/releases/download/v{{ korifi.major_version }}.{{ korifi.minor_version }}.{{ korifi.patch_version }}/korifi-{{ korifi.major_version }}.{{ korifi.minor_version }}.{{ korifi.patch_version }}.tgz \
+# --namespace="korifi" \
+# --set=generateIngressCertificates=true \
+# --set=rootNamespace="cf" \
+# --set=adminUserName="cf-admin" \
+# --set=api.apiServer.url="api.jtest.suse.com" \
+# --set=defaultAppDomainName="apps.jtest.suse.com" \
+# --set=containerRepositoryPrefix="harbor.jtest.suse.com/"  \
+# --set=kpackImageBuilder.builderRepository="harbor.jtest.suse.com/jproject01" \
+# --set=networking.gatewayClass=contour \
+# --wait
 

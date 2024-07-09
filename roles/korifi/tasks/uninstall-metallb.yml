@@ -41,6 +41,10 @@
   register: delete_metallb_config
   ignore_errors: yes
   until: delete_metallb_config is succeeded
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ delete_metallb_config }}
 
 
@@ -49,6 +53,10 @@
     kubectl delete secret -n metallb-system memberlist
   register: delete_metallb_secret
   ignore_errors: yes
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ delete_metallb_secret }}
 
 
@@ -57,6 +65,10 @@
     /usr/local/bin/helm uninstall metallb -n metallb-system
   register: uninstall_metallb_native_config
   ignore_errors: yes
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ uninstall_metallb_native_config }}
 
 
@@ -65,6 +77,10 @@
     kubectl delete ns metallb-system
   register: delete_metallb_namespace
   ignore_errors: yes
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ delete_metallb_namespace }}
 
 
@@ -74,6 +90,10 @@
     sed -e "s/strictARP: true/strictARP: false/" | kubectl apply -f - -n kube-system
   register: rollback_strict_arp
   ignore_errors: yes
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ rollback_strict_arp }}
 
 

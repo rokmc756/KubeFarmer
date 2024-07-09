@@ -1,4 +1,3 @@
-
 - name: Download and Install Kustomize
   shell: |
     curl -fsSL -o {{ base_path }}/install_kustomize.sh {{ kustomize.download_url }}
@@ -8,6 +7,8 @@
     mv kustomize /usr/local/bin/
   register: install_kustomize
   args:
-    chdir: "{{ base_path }}"
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ install_kustomize }}
 

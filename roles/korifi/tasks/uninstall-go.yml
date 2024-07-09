@@ -22,17 +22,22 @@
   shell: wget https://dl.google.com/go/go{{ go.major_version }}.{{ go.minor_version }}.{{ go.patch_version }}.linux-amd64.tar.gz -P /root/
   args:
     executable: /bin/bash
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
   when: go_file_copied is not succeeded
 
 
-#
 - name: Untar GO file
   become: true
   shell: tar -C /usr/local -xf /root/go{{ go.major_version }}.{{ go.minor_version }}.{{ go.patch_version }}.linux-amd64.tar.gz
   args:
     executable: /bin/bash
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+ 
   when: go_bin_existed.stat.exists != True
 
 # echo $PATH
 # /home/hadoop/hadoop-3.3.5/sbin:/home/hadoop/hadoop-3.3.5/bin:/usr/lib64/ccache:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/root/bin:/usr/local/go/bin:/opt/vmware/postgres/15/bin
-

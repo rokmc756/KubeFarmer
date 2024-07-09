@@ -1,4 +1,3 @@
-
 # 2024-06-30 - First Deployment with the following versions and without any errrors although it's not working correctly yet
 #
 # OS : Rocky Linux 9.x
@@ -7,6 +6,7 @@
 # contour: v1.29.1
 # metrics_server: v0.7.1
 # korifi: v0.10.0
+#
 
 
 base_path: "/root"
@@ -18,18 +18,17 @@ go:
   minor_version: 13
   patch_version: 4
 
-
 kpack:
+  install: true
   major_version: 0
   minor_version: 13
   patch_version: 2
 
-
 contour:
+  install: true
   major_version: 1
   minor_version: 29
   patch_version: 1
-
 
 cert_manager:
   install: false
@@ -37,12 +36,33 @@ cert_manager:
   minor_version: 14
   patch_version: 2
 
-
 metrics_server:
+  install: true
   major_version: 0
   minor_version: 7
   patch_version: 1
 
+servicebinding:
+  install: true
+  major_version: 0
+  minor_version: 9
+  patch_version: 0
+
+kind:
+  install: true
+  cli:
+    download_url: "https://kind.sigs.k8s.io/dl/"
+    major_version: 0
+    minor_version: 23
+    patch_version: 0
+
+ytt:
+  install: true
+  cli:
+    download_url: "https://github.com/vmware-tanzu/carvel-ytt/releases/download/"
+    major_version: 0
+    minor_version: 49
+    patch_version: 1
 
 korifi:
   install_cli: true
@@ -54,32 +74,12 @@ korifi:
   root_namespace: "cf"
   korifi_namespace: "korifi"
   admin_username: "cf-admin"
-  base_domain: "jtest.suse.com"
+  domain_prefix: "jtest.suse.com"
   gateway_class_name: "contour"
-
-
-servicebinding:
-  major_version: 0
-  minor_version: 9
-  patch_version: 0
-
-
-kind:
-  cli:
-    download_url: "https://kind.sigs.k8s.io/dl/"
-    major_version: 0
-    minor_version: 23
-    patch_version: 0
-
-ytt:
-  cli:
-    download_url: "https://github.com/vmware-tanzu/carvel-ytt/releases/download/"
-    major_version: 0
-    minor_version: 49
-    patch_version: 1
-
+  container_repo: "jproject01"
 
 bosh:
+  install: true
   environment: "192.168.0.181"
   director_name: bosh-1
   deploy_dir: "{{ base_path }}/bosh-deploy"
@@ -94,8 +94,8 @@ bosh:
   internal_ip: "192.168.0.181"
   vm_network: "VM Network"
 
-
 cf:
+  install: true
   deploy_dir: "{{ base_path }}/cf-release"
   dns_recursor_ip: "8.8.8.8"
   cli:
@@ -130,36 +130,15 @@ cf:
   domain: jtest.weka.io
 
 app:
+  install: true
   version: ""
 
-
 stemcell:
+  install: true
   release_version: 1017
-
-
-esxi:
-  hostname: "esxi8.jtest.weka.io"
-  ipaddr: "192.168.0.201"
-  username: "root"
-  password: "Changeme34#$"
-vcenter:
-  hostname: "vcenter8"
-  ip_addr: "192.168.0.202"
-  username: "administrator@vsphere.local"
-  password: "Changeme34#$"
-  vm_user: "root"
-  vm_password: 'Changeme34#$'
-  dns: '192.168.0.90'
-  domain: 'vcenter8.jtest.weka.io'
-  searchpath: 'jtest.weka.io'
-  datacenter: 'wDC01'
-  cluster: 'wClu01'
-  datastore: 'datastore3'
-
 
 helm:
   enable_repo: true
-
 
 metallb:
   install: false
@@ -191,7 +170,11 @@ metallb:
               protocol: layer2
               ips_range: 192.168.1.210-192.168.1.250
 
+apps:
+  install: false
+
 nginx:
+  install: true
   major_version:
   minor_version:
   patch_version:
@@ -205,5 +188,25 @@ nginx:
     minor_version:
     patch_version:
     build_version:
+
+
+esxi:
+  hostname: "esxi8.jtest.weka.io"
+  ipaddr: "192.168.0.201"
+  username: "root"
+  password: "Changeme34#$"
+vcenter:
+  hostname: "vcenter8"
+  ip_addr: "192.168.0.202"
+  username: "administrator@vsphere.local"
+  password: "Changeme34#$"
+  vm_user: "root"
+  vm_password: 'Changeme34#$'
+  dns: '192.168.0.90'
+  domain: 'vcenter8.jtest.weka.io'
+  searchpath: 'jtest.weka.io'
+  datacenter: 'wDC01'
+  cluster: 'wClu01'
+  datastore: 'datastore3'
 
 

@@ -22,6 +22,9 @@
   shell: wget https://dl.google.com/go/go{{ go.major_version }}.{{ go.minor_version }}.{{ go.patch_version }}.linux-amd64.tar.gz -P /root/
   args:
     executable: /bin/bash
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
   when: go.download == true
   # when: go_file_copied is not succeeded and go.download == true
 
@@ -31,6 +34,9 @@
   shell: tar -C /usr/local -xf /root/go{{ go.major_version }}.{{ go.minor_version }}.{{ go.patch_version }}.linux-amd64.tar.gz
   args:
     executable: /bin/bash
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
   when: go_bin_existed.stat.exists != True
 
 # echo $PATH

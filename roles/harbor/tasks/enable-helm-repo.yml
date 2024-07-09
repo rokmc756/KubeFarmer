@@ -15,35 +15,55 @@
 
 - name: Add Metallb Helm Repo
   shell: |
-    /usr/local/bin/helm repo add metallb https://metallb.github.io/metallb
+    helm repo add metallb https://metallb.github.io/metallb
   register: add_metallb_helm_repo
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ add_metallb_helm_repo }}
 
 
 - name: Add NGINX Helm Repo
   shell: |
-    /usr/local/bin/helm repo add nginx-stable https://helm.nginx.com/stable
+    helm repo add nginx-stable https://helm.nginx.com/stable
   register: add_nginx_helm_repo
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ add_nginx_helm_repo }}
 
 
 - name: Add Harbor Helm Repo
   shell: |
-    /usr/local/bin/helm repo add harbor https://helm.goharbor.io
+    helm repo add harbor https://helm.goharbor.io
   register: add_harbor_helm_repo
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ add_harbor_helm_repo }}
 
 
 - name: Add Jetstack Helm Repo
   shell: |
-    /usr/local/bin/helm repo add jetstack https://charts.jetstack.io
+    helm repo add jetstack https://charts.jetstack.io
   register: add_jetstack_helm_repo
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ add_jetstack_helm_repo }}
 
 
 - name: Update Helm Repo
   shell: |
-    /usr/local/bin/helm repo update
+    helm repo update
   register: update_helm_repo
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ update_helm_repo }}
 

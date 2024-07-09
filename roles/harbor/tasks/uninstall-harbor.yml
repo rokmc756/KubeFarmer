@@ -1,8 +1,12 @@
 - name: Uninstall Harbor
   shell: |
-    /usr/local/bin/helm uninstall harbor -n harbor
+    helm uninstall harbor -n harbor
   register: uninstall_harbor
   ignore_errors: true
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ uninstall_harbor }}
   when: print_debug == true
 
@@ -15,15 +19,23 @@
   until: delete_harbor_container.stdout.find("") != -1
   retries: 100
   delay: 10
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ delete_harbor_container }}
   when: print_debug == true
 
 
 - name: Uninstall Contour
   shell: |
-    /usr/local/bin/helm uninstall ingress -n contour
-  register: uninstall_controu
+    helm uninstall ingress -n contour
+  register: uninstall_contour
   ignore_errors: true
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ uninstall_contour }}
   when: print_debug == true
 
@@ -39,6 +51,8 @@
     - "local-storage-class.yaml"
   args:
     chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ delete_pvc }}
   when: print_debug == true
 
@@ -65,6 +79,10 @@
   with_items:
     - harbor
     - contour
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ delete_namespace }}
   when: print_debug == true
 
@@ -83,13 +101,17 @@
   when: print_debug == true
 
 
-#- name: Validate if Harbor Containers are Running
-#  shell: |
-#    kubectl -n harbor get pod | grep harbor | awk '{print $3}' | cut -d : -f 1
-#  register: check_harbor_container
-#  until: check_harbor_container.stdout.find("Running") != -1
-#  retries: 100
-#  delay: 10
-#- debug: msg={{ check_harbor_container }}
-#  when: print_debug == true
+- name: Validate if Harbor Containers are Running
+  shell: |
+    kubectl -n harbor get pod | grep harbor | awk '{print $3}' | cut -d : -f 1
+  register: check_harbor_container
+  until: check_harbor_container.stdout.find("") != -1
+  retries: 100
+  delay: 10
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ check_harbor_container }}
+  when: print_debug == true
 

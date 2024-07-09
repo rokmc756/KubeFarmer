@@ -7,6 +7,10 @@
   delegate_to: "{{ item }}"
   delegate_facts: True
   with_items: "{{ groups['all'] }}"
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ flush_ip_route_cache }}
 
 
@@ -15,6 +19,10 @@
     kubectl get configmap kube-proxy -n kube-system -o yaml | \
     sed -e "s/strictARP: false/strictARP: true/" | kubectl apply -f - -n kube-system
   register: apply_strict_arp
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ apply_strict_arp }}
 
 
@@ -22,6 +30,10 @@
   shell: |
     kubectl create namespace metallb-system
   register: create_metallb_namespace
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ create_metallb_namespace }}
 
 
@@ -30,6 +42,10 @@
     /usr/local/bin/helm install metallb metallb/metallb -n metallb-system
   register: apply_metallb_native_config
   ignore_errors: yes
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ apply_metallb_native_config }}
 
 
@@ -38,6 +54,10 @@
 #    kubectl apply -f \
 #    https://raw.githubusercontent.com/metallb/metallb/v{{ metallb.major_version }}.{{ metallb.minor_version }}.{{ metallb.patch_version }}/config/manifests/metallb-native.yaml
 #  register: apply_metallb_native_config
+#  args:
+#    chdir: "{{ base_path }}/"
+#  environment:
+#    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 #- debug: msg={{ apply_metallb_native_config }}
 
 
@@ -46,6 +66,11 @@
     kubectl create secret generic -n metallb-system memberlist --from-literal=secretkey="$(openssl rand -base64 128)"
   register: create_metallb_secret
   ignore_errors: yes
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+-
 - debug: msg={{ create_metallb_secret }}
 
 
@@ -54,6 +79,10 @@
     src: metallb-config-vmware.yaml.j2
     dest: "{{ base_path }}/metallb-config-vmware.yaml"
   register: copy_metallb_vmware_yaml
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ copy_metallb_vmware_yaml }}
 
 
@@ -63,6 +92,10 @@
   register: apply_metallb_config
   until: apply_metallb_config is succeeded
   retries: 20
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ apply_metallb_config }}
 
 

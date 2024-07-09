@@ -51,7 +51,7 @@
 - name: Distribute Applictions
   import_tasks: deploy-apps.yml
   tags: install
-  when: korifi.deploy == true and inventory_hostname in groups['master']
+  when: apps.install == true and inventory_hostname in groups['master']
 
 
 - name: Destroy Korifi

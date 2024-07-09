@@ -2,15 +2,15 @@ adminUserName: "cf-admin"
 rootNamespace: cf
 debug: false
 logLevel: info
-defaultAppDomainName: "apps.jtest.suse.com"
+defaultAppDomainName: "apps.{{ korifi.domain_prefix }}"
 generateIngressCertificates: true
-containerRepositoryPrefix: "harbor.jtest.suse.com/jproject01/korifi"
+containerRepositoryPrefix: "harbor.{{ korifi.domain_prefix }}/{{ korifi.container_repo }}/korifi"
 containerRegistrySecrets:
 - image-registry-credentials
 eksContainerRegistryRoleARN: ""
 containerRegistryCACertSecret:
 systemImagePullSecrets: []
-# containerRepositoryPrefix: "harbor.jtest.suse.com/library"
+# containerRepositoryPrefix: "harbor.{{ korifi.domain_prefix }}/library"
 
 reconcilers:
   build: kpack-image-builder
@@ -37,7 +37,7 @@ api:
       memory: 1Gi
 
   apiServer:
-    url: "api.jtest.suse.com"
+    url: "api.{{ korifi.domain_prefix }}"
     # To override default port, set port to a non-zero value
     port: 0
     internalPort: 9000
@@ -96,8 +96,8 @@ kpackImageBuilder:
   clusterStackID: io.buildpacks.stacks.jammy
   clusterStackBuildImage: paketobuildpacks/build-jammy-full
   clusterStackRunImage: paketobuildpacks/run-jammy-full
-  builderRepository: "harbor.jtest.suse.com/jproject01/korifi/kpack-builder"
-  # builderRepository: "harbor.jtest.suse.com/library"
+  builderRepository: "harbor.{{ korifi.domain_prefix }}/{{ korifi.container_repo }}/korifi/kpack-builder"
+  # builderRepository: "harbor.{{ korifi.domain_prefix }}/library"
 
 statefulsetRunner:
   include: true

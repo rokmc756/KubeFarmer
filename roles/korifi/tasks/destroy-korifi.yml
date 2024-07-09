@@ -1,41 +1,53 @@
 - name: Uninstall Korifi
   shell: |
-    /usr/local/bin/helm uninstall korifi -n korifi
+    helm uninstall korifi -n korifi
   register: uninstall_korifi
   ignore_errors: true
   args:
     chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ uninstall_korifi }}
+  when: print_debug == true
 
 
-- name: Delete the role to the cf-admin.
+- name: Delete the Role to the cf-admin.
   shell: |
     kubectl delete rolebinding developer-binding-cf-admin
   register: delete_bind_role
   ignore_errors: true
   args:
     chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ delete_bind_role }}
+  when: print_debug == true
 
 
-- name: Delete developer role for the cf-admin.
+- name: Delete Developer Role for the cf-admin.
   shell: |
     kubectl delete role developer
   register: delete_developer_role
   ignore_errors: true
   args:
     chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ delete_developer_role }}
+  when: print_debug == true
 
 
-- name: Delete context for the cf-admin.
+- name: Delete Context For the cf-admin.
   shell: |
     kubectl config delete-context cf-admin --cluster=kubernetes --user=cf-admin
   register: delete_context
   ignore_errors: true
   args:
     chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ delete_context }}
+  when: print_debug == true
 
 
 #- name: Unset embed the certificate and key in the kubeconfig.
@@ -58,17 +70,20 @@
 #- debug: msg={{ deny_cert_request }}
 
 
-- name: Delete the manifest using the file you created in previous step
+- name: Delete the Manifest Using the File You Created in Previous Step
   shell: |
     kubectl delete -f cert-request.yaml
   register: delete_manifest_created
   ignore_errors: true
   args:
     chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ delete_manifest_created }}
+  when: print_debug == true
 
 
-- name: Delete a Yaml file for the Certificate Request whose Content are like below
+- name: Delete a Yaml File For the Certificate Request Whose Content are Like Below
   file:
     path: "{{ base_path }}/{{ item }}"
     state: absent
@@ -79,6 +94,7 @@
     - "cf-admin.key"
     - "cf-admin.csr"
 - debug: msg={{ delete_cert_request_yaml }}
+  when: print_debug == true
 
 
 # kubectl get secret --all-namespaces --field-selector type=Opaque
@@ -94,7 +110,10 @@
   ignore_errors: yes
   args:
     chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ delete_docker_secret }}
+  when: print_debug == true
 
 
 #- name: Delete Service Binding Runtime
@@ -135,7 +154,10 @@
   ignore_errors: true
   args:
     chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ uninstall_contour }}
+  when: print_debug == true
   # v1.29.1
 
 
@@ -146,7 +168,10 @@
   ignore_errors: true
   args:
     chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ delete_kpack }}
+  when: print_debug == true
 
 
 # --version should be helm chart version, not app version
@@ -161,7 +186,6 @@
 #  # 7.1.262
 
 
-
 - name: Delete Namespaces
   shell: |
     kubectl delete namespace {{ item }}
@@ -171,10 +195,12 @@
     - korifi
   args:
     chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ delete_namespaces }}
   when: print_debug == true
-  #  - reflector
-  #  - metrics-server
+#  - reflector
+#  - metrics-server
 
 
 - name: Delete CF Namespace
@@ -183,7 +209,12 @@
     sleep 10
   register: delete_cf_namespace
   ignore_errors: yes
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ delete_cf_namespace }}
+  when: print_debug == true
 
 
 - name: Force Delete CF Namespace
@@ -192,7 +223,12 @@
     kubectl replace --raw /api/v1/namespaces/cf/finalize -f -
   register: force_delete_cf_namespace
   ignore_errors: yes
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ force_delete_cf_namespace }}
+  when: print_debug == true
 
 
 - name: Delete Namespaces Config Yaml
@@ -205,16 +241,20 @@
     - "korifi-ns.yaml"
     - "cf-ns.yaml"
 - debug: msg={{ delete_namespaces_config_yaml }}
+  when: print_debug == true
 
 
 - name: Unintall Reflector
   shell: |
-   /usr/local/bin/helm uninstall reflector -n reflector
+    helm uninstall reflector -n reflector
   register: install_reflector
   ignore_errors: yes
   args:
     chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ install_reflector }}
+  when: print_debug == true
   # 7.1.262
 
 
@@ -231,5 +271,4 @@
     - "{{ groups['all'] }}"
 - debug: msg={{ delete_korifi_pv_dir }}
   when: print_debug == true
-
 

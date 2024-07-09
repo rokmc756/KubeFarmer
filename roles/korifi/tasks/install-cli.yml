@@ -20,6 +20,10 @@
   shell: |
     wget -O- https://carvel.dev/install.sh | bash
   register: install_kapp
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ install_kapp }}
 
 

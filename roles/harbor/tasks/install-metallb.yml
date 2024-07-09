@@ -1,5 +1,5 @@
 # https://oopflow.medium.com/setup-install-rancher-onto-existing-kubernetes-cluster-for-high-availability-7351f0284592
-
+#
 - name: Flush IP Route Cache
   shell: |
     ip route flush cache
@@ -7,6 +7,10 @@
   delegate_to: "{{ item }}"
   delegate_facts: True
   with_items: "{{ groups['all'] }}"
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ flush_ip_route_cache }}
 
 
@@ -15,6 +19,10 @@
     kubectl get configmap kube-proxy -n kube-system -o yaml | \
     sed -e "s/strictARP: false/strictARP: true/" | kubectl apply -f - -n kube-system
   register: apply_strict_arp
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ apply_strict_arp }}
 
 
@@ -22,14 +30,22 @@
   shell: |
     kubectl create namespace metallb-system
   register: create_metallb_namespace
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ create_metallb_namespace }}
 
 
 - name: Apply the Metallb
   shell:
-    /usr/local/bin/helm install metallb metallb/metallb -n metallb-system
+    helm install metallb metallb/metallb -n metallb-system
   register: apply_metallb_native_config
   ignore_errors: yes
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ apply_metallb_native_config }}
 
 
@@ -38,6 +54,10 @@
 #    kubectl apply -f \
 #    https://raw.githubusercontent.com/metallb/metallb/v{{ metallb.major_version }}.{{ metallb.minor_version }}.{{ metallb.patch_version }}/config/manifests/metallb-native.yaml
 #  register: apply_metallb_native_config
+#  args:
+#    chdir: "{{ base_path }}/"
+#  environment:
+#    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 #- debug: msg={{ apply_metallb_native_config }}
 
 
@@ -46,6 +66,10 @@
     kubectl create secret generic -n metallb-system memberlist --from-literal=secretkey="$(openssl rand -base64 128)"
   register: create_metallb_secret
   ignore_errors: yes
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ create_metallb_secret }}
 
 
@@ -63,6 +87,10 @@
   register: apply_metallb_config
   until: apply_metallb_config is succeeded
   retries: 20
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ apply_metallb_config }}
 
 
@@ -108,4 +136,4 @@
 #  args:
 #    chdir: "{{ base_path }}/kubernetes-ingress/deployments/helm-chart"
 #- debug: msg={{ upgrade_nginx_ingress_crds }}
-#
+
