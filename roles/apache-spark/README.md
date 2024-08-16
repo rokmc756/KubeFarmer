@@ -1,9 +1,7 @@
 ## What is Apache Spark
-~~~
 Apache Spark is a powerful distributed big data processing and analytics engine that can handle large-scale data processing tasks efficiently.
 Spark is a cluster computing framework which offers a complete solution to many of the common problems like ETL and warehousing,
 Stream data processing, common use case of supervised and unsupervised learning for data analytics and predictive modelling.
-~~~
 
 Spark is known for its speed and efficiency. It will explore the following topics:
 
@@ -13,20 +11,17 @@ Spark is known for its speed and efficiency. It will explore the following topic
 * Cluster Manager Types
 * Execution Modes
 
-~~~
 Combining Spark and Kubernetes allows to harness the benefits of both technologies for running Spark workloads in a scalable and flexible manner.
 With Kubernetes, the scalability aspect just becomes so easy for Spark, as you just scale the master or worker nodes by running a simple command.
 In this article, It will guide you through the process of setting up a Spark cluster on Kubernetes using Helm, a package manager for Kubernetes.
-~~~
 
 
 ## Apache Spark Architecutre
 ![alt text](https://github.com/rokmc756/KubeFarmer/blob/main/roles/apache-spark/files/apache-spark-architecture.webp)\
-Reference:https://www.analyticsvidhya.com
-~~~
+Reference:https://www.analyticsvidhya.com\
+
 The Apache Spark framework uses a master-slave architecture that consists of a driver, which runs as a master node, and many executors that run across as worker nodes in the cluster. Apache Spark can be used for batch processing and real-time processing as well.
 Before understanding the Spark architecture let's understand the Applications of Spark Architecture which exists in the above diagram:
-~~~
 
 ### The Spark driver
 The driver is the program or process responsible for coordinating the execution of the Spark application. It runs the main function and creates the SparkContext, which connects to the cluster manager.
