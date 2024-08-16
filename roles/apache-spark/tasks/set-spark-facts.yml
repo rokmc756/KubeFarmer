@@ -1,0 +1,18 @@
+- debug: msg={{ "Need to check if set_facts is needed" }}
+
+
+# while ! kustomize build example | kubectl apply -f -; do echo "Retrying to apply resources"; sleep 10; done
+#- name: Deploy jenkins
+#  shell: |
+#    /usr/local/bin/kustomize build example | /usr/bin/kubectl apply -f -
+#  args:
+#    chdir: "{{ base_path }}/manifests"
+#  register: deploy_jenkins
+#  until: deploy_jenkins is succeeded
+#  retries: 20
+#  delay: 60
+#- debug: msg={{ deploy_jenkins }}
+#  when: print_debug == true
+#
+#
+#- meta: end_play

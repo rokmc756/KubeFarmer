@@ -1,0 +1,104 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: data-spark-redis-0
+  namespace: {{ spark.namespace }}
+spec:
+  storageClassName: {{ spark.namespace}}-storage
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: data-spark-trivy-0
+  namespace: {{ spark.namespace }}
+spec:
+  storageClassName: {{ spark.namespace}}-storage
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: database-data-spark-database-0
+  namespace: {{ spark.namespace }}
+spec:
+  storageClassName: {{ spark.namespace}}-storage
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+#---
+#apiVersion: v1
+#kind: PersistentVolumeClaim
+#metadata:
+#  name: spark
+#  namespace: {{ spark.namespace }}
+#spec:
+#  storageClassName: {{ spark.namespace}}-storage
+#  accessModes:
+#    - ReadWriteOnce
+#  resources:
+#    requests:
+#      storage: 10Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: spark-jobservice
+  namespace: {{ spark.namespace }}
+spec:
+  storageClassName: {{ spark.namespace}}-storage
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: spark-registry
+  namespace: {{ spark.namespace }}
+spec:
+  storageClassName: {{ spark.namespace}}-storage
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: data-spark-postgresql-0
+  namespace: {{ spark.namespace }}
+spec:
+  storageClassName: {{ spark.namespace}}-storage
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redis-data-spark-redis-master-0
+  namespace: {{ spark.namespace }}
+spec:
+  storageClassName: {{ spark.namespace}}-storage
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi

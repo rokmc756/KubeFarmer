@@ -1,0 +1,107 @@
+# https://psawesome.tistory.com/123
+- name: Create Directory for Persistent Volumes
+  file:
+    path: "{{ spark.storage_path }}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0777
+  register: create_pv_dir
+  delegate_to: "{{ item }}"
+  delegate_facts: True
+  with_items:
+    - "{{ groups['all'] }}"
+- debug: msg={{ create_pv_dir }}
+  when: print_debug == true
+
+
+- name: Create Namespace for Persistent Volumes
+  shell: |
+    kubectl create namespace {{ item }}
+  register: create_namespace
+  with_items:
+    - contour
+    - spark
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ create_namespace }}
+  when: print_debug == true
+
+
+- name: Copy Cluster Local PVC Config Yaml
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ base_path }}/{{ item }}"
+  register: copy_cluster_local_pvc_config_yaml
+  with_items:
+    - "local-storage-class.yaml"
+    - "local-storage-pv.yaml"
+    - "local-storage-pvc.yaml"
+- debug: msg={{ copy_cluster_local_pvc_config_yaml }}
+
+
+- name: Cluster Settings for a Production Cluster Running in a Dynamic Cloud Environment including VMware
+  shell: |
+    kubectl create -f {{ item }}
+  register: create_pvc
+  with_items:
+    - "local-storage-class.yaml"
+    - "local-storage-pv.yaml"
+    - "local-storage-pvc.yaml"
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ create_pvc }}
+  when: print_debug == true
+
+
+- name: Copy Apache Spark Loadbalancer Config Yaml
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ base_path }}/{{ item }}"
+  register: copy_spark_lb_config_yaml
+  with_items:
+    - "spark-values.yaml"
+- debug: msg={{ copy_spark_lb_config_yaml }}
+
+
+- name: Deploy Contour
+  shell: |
+    helm install ingress bitnami/contour --create-namespace -n contour --wait
+  register: deploy_contour
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ deploy_contour }}
+  when: print_debug == true
+
+
+- name: Deploy Apache Spark
+  shell: |
+    helm install spark bitnami/spark --set service.type=LoadBalancer -n spark
+  register: deploy_spark
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ deploy_spark }}
+  when: print_debug == true
+
+
+- name: Validate if Apache Spark Containers are Running
+  shell: |
+    kubectl -n spark get pods
+  register: check_spark_container
+  until: check_spark_container.stdout.find("ContainerCreating") == -1
+  retries: 100
+  delay: 10
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ check_spark_container }}
+  when: print_debug == true

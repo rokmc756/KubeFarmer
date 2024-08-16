@@ -1,9 +1,4 @@
-#- hosts: harbor
-#  become: yes
-#  vars:
-#    print_debug: true
-#  roles:
-#    - harbor
+---
 
 - hosts: all
   become: yes
@@ -16,25 +11,25 @@
     enable_firewall: false
     reboot_required: true
   roles:
-    - harbor
+    - apache-spark
 
-#    - korifi
 #    - k8s
+#    - init-hosts
+#    - rook-ceph
+#    - kubeflow
+#    - harbor
+#    - korifi
 #    - harbor-non-k8s
 #    - cf-k8s
 #    - stratos
 #    - mongodb
 #    - geode
-#    - init-hosts
 #    - rabbitmq
-#    - kubeflow
 #    - hadoop
 #    - kafka
 #    - jenkins
 #    - awx
 #    - rancher
-#    - rook-ceph
 #    - nginx
 #    - dashboard
-
 

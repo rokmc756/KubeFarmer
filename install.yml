@@ -1,10 +1,4 @@
 ---
-#- hosts: harbor
-#  become: yes
-#  vars:
-#    print_debug: true
-#  roles:
-#    - harbor
 
 - hosts: all
   become: yes
@@ -18,23 +12,25 @@
     stop_services: true
     upload_calico: true
   roles:
-    - harbor
-#    - korifi
+    - apache-spark
+
 #    - k8s
+#    - init-hosts
+#    - rook-ceph
+#    - kubeflow
+#    - harbor
+#    - korifi
 #    - harbor-non-k8s
 #    - cf-k8s
 #    - stratos
 #    - mongodb
 #    - geode
-#    - init-hosts
 #    - rabbitmq
-#    - kubeflow
 #    - hadoop
 #    - kafka
 #    - jenkins
 #    - awx
 #    - rancher
-#    - rook-ceph
 #    - nginx
 #    - dashboard
 
