@@ -73,6 +73,10 @@ We learned about the Apache Spark Architecture in order to understand how to bui
 
 ## References
 - https://medium.com/@amitjoshi7/spark-architecture-a-deep-dive-2480ef45f0be
+- https://medium.com/@psakets/setting-up-a-spark-cluster-on-kubernetes-using-helm-f1f03ca7106
+- https://medium.com/empathyco/running-apache-spark-on-kubernetes-2e64c73d0bb2
+- https://medium.com/@prateek.dubey/apache-spark-on-kubernetes-on-premise-ceph-and-aws-s3-d02b79760cc4
+
 
 ## TODO
 - Finding 
