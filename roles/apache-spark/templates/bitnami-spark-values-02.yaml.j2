@@ -1,0 +1,351 @@
+# Default values for spark-services.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+tags:
+  livy: true
+  historyserver: false
+  jupyterhub: false
+
+nameOverride: ""
+fullnameOverride: ""
+
+livy:
+  
+  rbac:
+    create: true
+
+  service:
+    name: livy-server
+  
+  ingress:
+    enabled: false
+    # annotations: {}
+    #   kubernetes.io/ingress.class: nginx
+    #   kubernetes.io/tls-acme: "true"
+    #
+    #   External auth with OAuth2: https://kubernetes.github.io/ingress-nginx/examples/auth/oauth-external-auth/#external-oauth-authentication
+    #   nginx.ingress.kubernetes.io/auth-url: "https://$host/oauth2/auth"
+    #   nginx.ingress.kubernetes.io/auth-signin: "https://$host/oauth2/start?rd=$escaped_request_uri"
+    #
+    #   Basic auth
+    #   nginx.ingress.kubernetes.io/auth-type: basic
+    #   nginx.ingress.kubernetes.io/auth-secret: secret-namespace/auth-secret
+    #   nginx.ingress.kubernetes.io/auth-realm: 'Authentication Required'
+    #
+    #   Rewrite target URI without basePath part: https://kubernetes.github.io/ingress-nginx/examples/rewrite/#rewrite
+    #   nginx.ingress.kubernetes.io/rewrite-target: /$1
+    # path: /livy/?(.*) # Capture target URI part to remove basePath on `rewrite-target` above
+    # hosts:
+    # - cluster.example.com # Set to endpoint hostname to accept requests to
+    # tls: # Configure tls, Certmanager will do the work with Certs for you if properly configured
+    # - secretName: spark-cluster-tls
+    #   hosts:
+    #   - cluster.example.com
+  
+  # env:
+    # LIVY_LIVY_UI_BASE1PATH: {value: "/livy"}
+    # LIVY_SPARK_KUBERNETES_CONTAINER_IMAGE_PULL1POLICY: {value: "Always"}
+    
+    # Configure Ingresses for Spark UIs
+    # LIVY_LIVY_SERVER_KUBERNETES_INGRESS_CREATE: {value: "true"}
+    # LIVY_LIVY_SERVER_KUBERNETES_INGRESS_PROTOCOL: {value: "https"}
+    # LIVY_LIVY_SERVER_KUBERNETES_INGRESS_HOST: {value: "my-cluster.example.com"}
+    # LIVY_LIVY_SERVER_KUBERNETES_INGRESS_TLS_SECRET1NAME: {value: "spark-cluster-tls"}
+    # LIVY_LIVY_SERVER_KUBERNETES_INGRESS_ADDITIONAL1ANNOTATIONS: {value: "kubernetes.io/tls-acme=true;nginx.ingress.kubernetes.io/auth-url=https://$host/oauth2/auth;nginx.ingress.kubernetes.io/auth-signin=https://$host/oauth2/start?rd=$escaped_request_uri"}
+    
+    # Configure History Server log directory to write Spark logs to
+    # LIVY_SPARK_EVENT1LOG_ENABLED: {value: "false"}
+    # LIVY_SPARK_EVENT1LOG_DIR: {value: "file:///tmp/history-server"}
+    # LIVY_LIVY_UI_HISTORY0SERVER0URL: {value: "https://my-cluster.example.com/history-server"}
+
+    # Configure Grafana Loki integration to build links to Spark logs on Livy UI
+    # LIVY_LIVY_SERVER_KUBERNETES_GRAFANA_LOKI_ENABLED: {value: "true"}
+    # LIVY_LIVY_SERVER_KUBERNETES_GRAFANA_URL: {value: "https://my-cluster.example.com/grafana"}
+
+    # Configure default nodepool for Spark Pods
+    # LIVY_SPARK_KUBERNETES_NODE_SELECTOR_AGENTPOOL: {value: "sparkpool"}
+
+  # Add Kubernetes Secret values to Spark defaults
+  # sparkDefaultsConf:
+  #   fromSecret: "livy-client-conf-secret"
+  
+  # affinity:
+  #   nodeAffinity:
+  #     requiredDuringSchedulingIgnoredDuringExecution:
+  #       nodeSelectorTerms:
+  #       - matchExpressions:
+  #         - key: autoscale-retain
+  #           operator: In
+  #           values:
+  #           - "true"
+
+historyserver:
+
+  image:
+    repository: sasnouskikh/history-server
+    # https://github.com/jahstreet/spark-history-server-docker/blob/spark-3.0.1/Dockerfile
+    tag: 3.0.1_2.12-hadoop_3.2.0_cloud
+    pullPolicy: IfNotPresent
+
+  service:
+    type: ClusterIP
+    port:
+      number: 80
+      name: http-historyport
+
+  ingress:
+    enabled: false
+    # annotations:
+    #   kubernetes.io/ingress.class: nginx
+    #   kubernetes.io/tls-acme: "true"
+    #
+    #   External auth with OAuth2: https://kubernetes.github.io/ingress-nginx/examples/auth/oauth-external-auth/#external-oauth-authentication
+    #   nginx.ingress.kubernetes.io/auth-url: "https://$host/oauth2/auth"
+    #   nginx.ingress.kubernetes.io/auth-signin: "https://$host/oauth2/start?rd=$escaped_request_uri"
+    #
+    #   Basic auth
+    #   nginx.ingress.kubernetes.io/auth-type: basic
+    #   nginx.ingress.kubernetes.io/auth-secret: secret-namespace/auth-secret
+    #   nginx.ingress.kubernetes.io/auth-realm: 'Authentication Required'
+    #
+    #   Rewrite target URI without basePath part: https://kubernetes.github.io/ingress-nginx/examples/rewrite/#rewrite
+    #   nginx.ingress.kubernetes.io/rewrite-target: /$1
+    #
+    #   Handle server-side redirects to the Locations without basePath prepended: https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/annotations/#proxy-redirect
+    #   nginx.ingress.kubernetes.io/proxy-redirect-from: http://$host/history/
+    #   nginx.ingress.kubernetes.io/proxy-redirect-to: /history-server/history/
+    #
+    #   Add custom config snippet to rewrite url links to pages and static files
+    #   nginx.ingress.kubernetes.io/configuration-snippet: |
+    #     proxy_set_header Accept-Encoding ""; # disable compression of static files to apply sub_filter
+    #     sub_filter_last_modified off;
+    #     # Adding a `base href` and stripping the leading `/` from href/src tightly covers most all URL
+    #     sub_filter '<head>' '<head> <base href="/history-server/">'; # add base url
+    #     sub_filter 'href="/' 'href="'; # remove absolute URL path so base url applies
+    #     sub_filter 'src="/' 'src="'; # remove absolute URL path so base url applies
+    #
+    #     sub_filter '/{{num}}/jobs/' '/jobs/';
+    #
+    #     sub_filter "setUIRoot('')" "setUIRoot('/history-server')"; # Set UI root for JS scripts
+    #     sub_filter "document.baseURI.split" "document.documentURI.split"; # Executors page issue fix
+    #
+    #     sub_filter_once off;
+    #     sub_filter_types text/html text/css text/javascript application/javascript; # Specify filter types to prevent processing all files
+    # path: /history-server/?(.*) # Capture target URI part to remove basePath on `rewrite-target` above
+    # hosts:
+    # - cluster.example.com # Set to endpoint hostname to accept requests to
+    # tls: # Configure tls, Certmanager will do the work with Certs for you if properly configured
+    # - secretName: spark-cluster-tls
+    #   hosts:
+    #   - cluster.example.com
+
+# pvc:
+#   enablePVC: false
+# nfs:
+#   enableExampleNFS: false
+# wasbs:
+#   enableWASBS: true
+#   sasKeyMode: true
+#   secret: spark-history-server-secret # see examples/spark-history-server-secret-example.yaml
+#   logDirectory: wasbs:///history-server
+#
+# affinity:
+#   nodeAffinity:
+#     requiredDuringSchedulingIgnoredDuringExecution:
+#       nodeSelectorTerms:
+#       - matchExpressions:
+#         - key: autoscale-retain
+#           operator: In
+#           values:
+#           - "true"
+
+notebooks:
+  examples:
+    fromDir: notebooks
+
+jupyterhub:
+
+  ingress:
+    enabled: false
+    # annotations:
+    #   kubernetes.io/ingress.class: nginx
+    #   kubernetes.io/tls-acme: "true"
+    #
+    #   External auth with OAuth2: https://kubernetes.github.io/ingress-nginx/examples/auth/oauth-external-auth/#external-oauth-authentication
+    #   nginx.ingress.kubernetes.io/auth-url: "https://$host/oauth2/auth"
+    #   nginx.ingress.kubernetes.io/auth-signin: "https://$host/oauth2/start?rd=$escaped_request_uri"
+    #
+    #   Basic auth
+    #   nginx.ingress.kubernetes.io/auth-type: basic
+    #   nginx.ingress.kubernetes.io/auth-secret: secret-namespace/auth-secret
+    #   nginx.ingress.kubernetes.io/auth-realm: 'Authentication Required'
+    # hosts:
+    # - cluster.example.com # Set to endpoint hostname to accept requests to
+    # pathSuffix: ''
+    # tls: # Configure tls, Certmanager will do the work with Certs for you if properly configured
+    # - secretName: spark-cluster-tls
+    #   hosts:
+    #   - cluster.example.com
+
+  hub:
+
+    # Cookie secret to use, to generate run:
+    # $> openssl rand -hex 32
+    cookieSecret: ""
+
+    resources:
+      requests:
+        cpu: 200m
+        memory: 512Mi
+
+    # Set up in addition to ingress
+    # baseUrl: /jupyterhub
+    # publicURL: "https://{your-domain}"
+    
+    # activeServerLimit: 10
+
+    # Use JupyterLab by default
+    # extraConfig:
+    #   jupyterlab: |
+    #     c.Spawner.cmd = ['jupyter-labhub']
+
+    # For Azure AD OAuthenticator (https://github.com/jupyterhub/oauthenticator/issues/218)
+    # extraEnv:
+    #   AAD_TENANT_ID: "{AAD-TENANT-ID}"
+
+    # nodeSelector:
+    #   autoscale-retain: "true"
+    
+    # pdb:
+    #   enabled: true
+    #   minAvailable: 0
+
+  proxy:
+
+    https:
+      enabled: false
+
+    # Secret token to use, to generate run:
+    # $> openssl rand -hex 32
+    secretToken: ""
+
+    service:
+      type: ClusterIP
+    
+    # configurable-http-proxy
+    chp:
+      resources:
+        requests:
+          cpu: 200m
+          memory: 512Mi
+
+    # nodeSelector:
+    #   autoscale-retain: "true"
+
+    # pdb:
+    #   enabled: true
+    #   minAvailable: 0
+
+  auth:
+
+    # Azure AD OAuthenticator
+    # type: custom
+    # custom:
+    #   className: oauthenticator.azuread.AzureAdOAuthenticator
+    #   config:
+    #     oauth_callback_url: 'https://{your-domain}/{jupyterhub-base-path}/hub/oauth_callback'
+    #     client_id: '{AAD-APP-CLIENT-ID}'
+    #     client_secret: '{AAD-APP-CLIENT-SECRET}'
+    #     # https://github.com/jupyterhub/oauthenticator/issues/218
+    #     tenant_id: "{AAD-TENANT-ID}"
+    # NOTE: do not forget to set `AAD_TENANT_ID` env var above
+
+    type: dummy
+    whitelist:
+      users:
+      - admin
+    admin:
+      access: true
+      users:
+      - admin
+    dummy:
+      password: admin
+
+  singleuser:
+    startTimeout: 600
+    # nodeSelector:
+    #   agentpool: sparkpool
+    # extraNodeAffinity:
+    #   preferred:
+    #   - weight: 10
+    #     preference:
+    #       matchExpressions:
+    #       - key: autoscale-retain
+    #         operator: NotIn
+    #         values:
+    #         - "true"
+    # extraEnv:
+    #   ENV_NAME: "env-value"
+    
+    storage:
+      capacity: 2Gi
+      homeMountPath: /home/jovyan/notebooks
+      extraVolumes:
+      - name: spark-cluster-notebooks-examples
+        configMap:
+          name: spark-cluster-notebooks-examples
+      extraVolumeMounts:
+      - name: spark-cluster-notebooks-examples
+        mountPath: /home/jovyan/notebooks/examples
+        readOnly: true
+    
+    image:
+      name: sasnouskikh/jupyter
+      tag: 4.6.3-sparkmagic_0.15.0
+      pullPolicy: Always
+
+    cpu:
+      limit: 0.5
+      guarantee: 0.25
+    memory:
+      limit: 2G
+      guarantee: 1G
+
+    profileList:
+    # https://jupyter-docker-stacks.readthedocs.io/en/latest/using/specifics.html#apache-spark
+    - display_name: "Jupyter Notebooks"
+      description: "Sparkmagic kernel"
+      default: True
+      # https://jupyterhub-kubespawner.readthedocs.io/en/latest/spawner.html#kubespawner.KubeSpawner
+      kubespawner_override:
+        environment:
+          # For Sparkmagic Kernel
+          LIVY_ENDPOINT: "http://livy-server:80"
+        cmd:
+        - "/opt/singleuser-entrypoint.sh"
+        - "--NotebookApp.notebook_dir=/home/jovyan/notebooks"
+    
+    # defaultUrl: "/lab"
+    # extraTolerations: []
+    # nodeSelector: {}
+    # extraNodeAffinity:
+    #   required: []
+    #   preferred: []
+    # extraPodAffinity:
+    #   required: []
+    #   preferred: []
+    # extraPodAntiAffinity:
+    #   required: []
+    #   preferred: []
+
+  # cull:
+  #   enabled: true
+  #   users: false
+  #   timeout: 3600
+  #   every: 600
+  #   concurrency: 10
+  #   maxAge: 0
+
+  debug:
+    enabled: false
