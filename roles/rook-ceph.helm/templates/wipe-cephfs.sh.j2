@@ -1,0 +1,18 @@
+#!/bin/bash
+
+for vg in $(`vgs | grep ceph | awk '{print $1}'`)
+do
+    vgremove $vg -f
+done
+
+for dm in $(fdisk -l | grep mapper | grep ceph | awk '{print $2}' | cut -d : -f 1)
+do
+    dmsetup remove $dm
+done
+
+for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do pvremove -y -ff /dev/$nb ;done
+for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do dd if=/dev/zero of=/dev/$nb bs=4096 count=1 conv=notrunc ;done
+for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do nvme format /dev/$nb --force ;done
+for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do wipefs -a /dev/$nb ;done
+for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do sgdisk --zap-all --delete /dev/$nb ;done
+for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do blkdiscard /dev/$nb ;done

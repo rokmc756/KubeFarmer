@@ -56,7 +56,7 @@
   when: print_debug == true
 
 
-- name: Config image pull
+- name: Config Image Pull
   command: kubeadm config images pull
   when: inventory_hostname in groups['master']
 
@@ -95,7 +95,7 @@
   when: print_debug == true and inventory_hostname in groups['master']
 
 
-- name: Enable Your User to Start Using the Cluster.
+- name: Enable Your User to Start Using the Cluster
   shell: |
     rm -rf $HOME/.kube
     rm -rf "{{ k8s.base_path }}"/calico.yaml
@@ -119,13 +119,11 @@
   when: inventory_hostname in groups['master']
 - debug: msg={{ kubectl_configured }}
   when: print_debug == true and inventory_hostname in groups['master']
-  # For higher versions than 1.26
-  # kubectl taint nodes  {{ hostvars[groups['master'][0]].ansible_hostname }} node-role.kubernetes.io/control-plane:NoSchedule-
-  # For earlier versions than 1.21
-  # kubectl taint nodes --all node-role.kubernetes.io/master-
+  # For higher than 1.26.x version  - kubectl taint nodes  {{ hostvars[groups['master'][0]].ansible_hostname }} node-role.kubernetes.io/control-plane:NoSchedule-
+  # For earlier than 1.21.x version - kubectl taint nodes --all node-role.kubernetes.io/master-
 
 
-- name: Confirm that the Kubectl Command is activated.
+- name: Confirm that the Kubectl Command is Activated
   command: kubectl get nodes
   register: kubectl_get_nodes
   when: inventory_hostname in groups['master']
@@ -133,7 +131,7 @@
   when: print_debug == true and inventory_hostname in groups['master']
 
 
-- name: Create POD for Master as well
+- name: Create POD for Master As Well
   lineinfile:
     path: "{{ k8s.base_path }}/.bashrc"
     line: "{{ item.content }}"
@@ -165,7 +163,7 @@
   when: ( k8s.cni.name == "tigera" and k8s.cni.operator == "tigera" ) and inventory_hostname in groups['master']
 
 
-- name: Confirm that the Kubectl Command is Activated.
+- name: Confirm that the Kubectl Command is Activated
   command: kubectl get nodes
   register: kubectl_get_nodes
   when: inventory_hostname in groups['master']
@@ -193,7 +191,7 @@
   when: print_debug == true and inventory_hostname in groups['workers']
 
 
-- name: Confirm that the kubectl command is activated
+- name: Confirm the Kubectl Command is Activated
   command: kubectl get nodes
   register: kubectl_get_nodes
   when: inventory_hostname in groups['master']
@@ -211,8 +209,9 @@
   when: print_debug == true and inventory_hostname in groups['master']
 
 
-- name: Validate if Kubernetes Workers are all Ready
-  shell: kubectl get nodes
+- name: Validate if Kubernetes Workers are All Ready
+  shell: |
+    kubectl get nodes
   register: check_k8s_workers_status
   until: check_k8s_workers_status.stdout.find("NotReady") == -1
   retries: 30
@@ -222,7 +221,8 @@
 
 
 - name: Validate if All Containers are Running
-  shell: kubectl get pods --all-namespaces -o wide
+  shell: |
+    kubectl get pods --all-namespaces -o wide
   register: all_containers_running_checked
   until: all_containers_running_checked.stdout.find("ContainerCreating") == -1
   retries: 60

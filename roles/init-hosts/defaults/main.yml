@@ -1,4 +1,4 @@
-rh_common_pkgs: "firewalld,sshpass,cifs-utils,nfs-utils,lsof,elfutils-libelf-devel,glibc-headers,glibc-devel,rpcbind,xfsprogs,kernel-devel,jq,expect,net-tools,ipvsadm,lvm2,bind-utils,python3-passlib"
+rh_common_pkgs: "firewalld,sshpass,cifs-utils,nfs-utils,lsof,elfutils-libelf-devel,glibc-headers,glibc-devel,rpcbind,xfsprogs,kernel-devel,jq,expect,net-tools,ipvsadm,lvm2,bind-utils,python3-passlib,open-vm-tools"
 rh_common_devel_pkgs: "git"
 # libxml2-python,s3cmd
 

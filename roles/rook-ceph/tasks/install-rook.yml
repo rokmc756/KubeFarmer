@@ -2,6 +2,7 @@
 # kubectl logs pod/csi-rbdplugin-4jbgn -n rook-ceph
 # kubectl get csinodes
 
+# https://devocean.sk.com/blog/techBoardDetail.do?ID=163760
 # https://github.com/rook/rook/issues/5065
 # https://docs.ceph.com/en/latest/rados/configuration/network-config-ref/
 # MON, MDS, OSD
@@ -9,6 +10,9 @@
 # iptables -A INPUT -i ens192  -m multiport -p tcp -s 192.168.0.0/24 --dports 6800:7568 -j ACCEPT
 # iptables -A INPUT -i ens192 -m multiport -p tcp -s 192.168.0.0/24 --dports 6800:7568 -j ACCEPT
 
+
+# Helm
+# https://www.talos.dev/v1.7/kubernetes-guides/configuration/ceph-with-rook/
 
 - name: Cleanup the Ceph Block Devices
   shell: |
@@ -193,22 +197,22 @@
 # (toolbox)$ ceph osd status
 
 
-#- name: Create Ceph Filesystem
-#  shell: |
-#    kubectl create -f filesystem.yaml
-#  register: create_cephfs
-#  args:
-#    chdir: "{{ base_path }}/rook/deploy/examples/"
-#- debug: msg={{ create_cephfs }}
+- name: Create Ceph Filesystem
+  shell: |
+    kubectl create -f filesystem.yaml
+  register: create_cephfs
+  args:
+    chdir: "{{ base_path }}/rook/deploy/examples/"
+- debug: msg={{ create_cephfs }}
 
 
-#- name: Check if Rook Ceph is Deployed Successfully
-#  shell: kubectl get CephFileSystem -n rook-ceph
-#  register: check_rook_deployment
-#  ignore_errors: yes
-#  until: check_rook_deployment.stdout.find("Progressing") == -1
-#  retries: 100
-#- debug: msg={{ check_rook_deployment }}
+- name: Check if Rook Ceph is Deployed Successfully
+  shell: kubectl get CephFileSystem -n rook-ceph
+  register: check_rook_deployment
+  ignore_errors: yes
+  until: check_rook_deployment.stdout.find("Progressing") == -1
+  retries: 100
+- debug: msg={{ check_rook_deployment }}
 
 
 #- name: Apply Kube Registry

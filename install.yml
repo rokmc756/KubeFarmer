@@ -12,13 +12,12 @@
     stop_services: true
     upload_calico: true
   roles:
-    - apache-spark
-
+    - rook-ceph
+#    - harbor
 #    - k8s
 #    - init-hosts
-#    - rook-ceph
+#    - apache-spark
 #    - kubeflow
-#    - harbor
 #    - korifi
 #    - harbor-non-k8s
 #    - cf-k8s
@@ -33,4 +32,3 @@
 #    - rancher
 #    - nginx
 #    - dashboard
-

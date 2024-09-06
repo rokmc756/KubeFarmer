@@ -13,7 +13,7 @@ wheel_group: "wheel"            # RHEL / CentOS / Rocky / SUSE / OpenSUSE
 root_user_pass: "changeme"
 sudo_user_pass: "changeme"
 sudo_user_home_dir: "/home/{{ sudo_user }}"
-domain_name: "jtest.suse.com"
+domain_name: "jtest.pivotal.io"
 
 uninstall_deps_pkgs: false
 

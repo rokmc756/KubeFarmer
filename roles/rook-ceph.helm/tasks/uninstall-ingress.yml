@@ -1,0 +1,18 @@
+- name: Uninstall NGINX Ingress
+  shell: |
+    /usr/local/bin/helm uninstall nginx-ingress --namespace=nginx-ingress
+  register: uninstall_nginx_ingress
+  ignore_errors: yes
+  args:
+    chdir: "{{ base_path }}/kubernetes-ingress/deployments/helm-chart"
+- debug: msg={{ uninstall_nginx_ingress }}
+
+
+- name: Delete NGINX Ingress CRDs
+  shell: |
+    kubectl delete -f crds/ --namespace=nginx-ingress
+  register: delete_nginx_ingress_crds
+  ignore_errors: yes
+  args:
+    chdir: "{{ base_path }}/kubernetes-ingress/deployments/helm-chart"
+- debug: msg={{ delete_nginx_ingress_crds }}

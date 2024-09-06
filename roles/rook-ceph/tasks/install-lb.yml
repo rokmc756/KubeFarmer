@@ -1,3 +1,10 @@
+- name: Add IP Address of Load Balancer
+  lineinfile:
+    path: "{{ base_path }}/rook/deploy/examples/dashboard-loadbalancer.yaml"
+    insertafter: "  type: LoadBalancer"
+    line: "  loadBalancerIP: {{ rook.lb_ip_addr }}"
+
+
 - name: Apply Rook Load Balancer
   shell: |
     kubectl apply -f dashboard-loadbalancer.yaml
@@ -7,3 +14,41 @@
     chdir: "{{ base_path }}/rook/deploy/examples/"
 - debug: msg={{ apply_rook_lb }}
 
+
+- name: Copy Rancher Ingress Config Yaml
+  template:
+    src: rook-ingress.yaml.j2
+    dest: "{{ base_path }}/rook-ingress.yaml"
+  register: copy_rook_ingress_config_yaml
+- debug: msg={{ copy_rook_ingress_config_yaml }}
+
+
+- name: Create Rook Ingress
+  shell: |
+    kubectl create -f "{{ base_path }}"/rook-ingress.yaml
+  register: create_rook_ingress
+- debug: msg={{ create_rook_ingress }}
+
+
+#- name: Check Rook Pods
+#  shell: |
+#    kubectl get all -n cattle-system
+#  register: check_rook_pods
+#  until: check_rook_pods.stdout.find("pending") == -1
+#  retries: 30
+#- debug: msg={{ check_rook_pods }}
+#
+#
+#- pause:
+#    seconds: 15
+#
+#
+#- name: Check if the status of ContainerCreating is Still Existing
+#  shell: |
+#    kubectl get all -A | grep cattle-
+#  register: check_container_creating
+#  until: check_container_creating.stdout.find("ContainerCreating") == -1
+#  retries: 30
+#  delay: 10
+#- debug: msg={{ check_container_creating }}
+#

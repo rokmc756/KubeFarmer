@@ -1,0 +1,10 @@
+- name: Deploy Contour
+  shell: |
+    helm install ingress bitnami/contour --create-namespace -n contour --wait
+  register: deploy_contour
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ deploy_contour }}
+  when: print_debug == true

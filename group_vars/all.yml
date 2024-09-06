@@ -43,3 +43,10 @@ k8s:
     # pod_network: "192.168.0.0/16"
     # pod_network: "192.167.0.0/16"
 
+
+
+vmware:
+  esxi_hostname: "192.168.0.231"
+  esxi_username: "root"
+  esxi_password: "Changeme34#$"
+

@@ -110,8 +110,8 @@
 #  args:
 #    chdir: "{{ base_path }}/kubernetes-ingress/deployments/helm-chart"
 #- debug: msg={{ install_nginx_ingress }}
-#
-#
+
+
 #- name: Upgrade NGINX Ingress CRDs
 #  shell: |
 #    /usr/local/bin/helm upgrade nginx-ingress nginx-stable/nginx-ingress --namespace=nginx-ingress
@@ -120,6 +120,7 @@
 #  args:
 #    chdir: "{{ base_path }}/kubernetes-ingress/deployments/helm-chart"
 #- debug: msg={{ upgrade_nginx_ingress_crds }}
+
 
 # [ Check Rook and NGINX Ingress ]
 # kubectl get events --all-namespaces  --sort-by='.metadata.creationTimestamp'

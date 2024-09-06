@@ -1,0 +1,18 @@
+- hosts: localhost
+
+  tasks:
+    - name: "{{ power_title }} Virtual Machines Without the Answer Param"
+      vmware_guest_powerstate:
+        hostname: "{{ vmware.esxi_hostname }}"
+        username: "{{ vmware.esxi_username }}"
+        password: "{{ vmware.esxi_password }}"
+        validate_certs: false
+        name: "{{ item }}"
+        state: "{{ power_state }}"
+      loop:
+        - rk9-freeipa
+        - rk9-node01
+        - rk9-node02
+        - rk9-node03
+        - rk9-node04
+        - rk9-node05

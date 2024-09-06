@@ -4,7 +4,7 @@ expose:
   type: ingress
   ingress:
     hosts:
-      core: harbor.jtest.suse.com
+      core: harbor.jtest.pivotal.io
     annotations:
       ingress.kubernetes.io/ssl-redirect: "true"
       ingress.kubernetes.io/proxy-body-size: "0"
@@ -30,7 +30,7 @@ expose:
 
 
 ## The external URL for Harbor core service.
-externalURL: "https://harbor.jtest.suse.com"
+externalURL: "https://harbor.jtest.pivotal.io"
 adminPassword: "changeme"
 service:
   loadBalancerIP: 192.168.1.249

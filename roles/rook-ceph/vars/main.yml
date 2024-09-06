@@ -9,23 +9,25 @@ rook:
   enable_discovery_daemon: false
   clone_git: true
   nvme: true
+  lb_ip_addr: "192.168.1.219"
   k8s:
     major_version: 1
     minor_version: 28
     patch_version: 0
     build_version:
-  hostname: "rook.jtest.suse.com"
+  hostname: "rook.jtest.pivotal.io"
   service:
     metadata:
       name: rook-loadbalancer
-      namespace: cattle-system
+      namespace: rook-ceph
   ingress:
     metadata:
       name: rook-ingress
-      namespace: cattle-system
-    hostname: "rook.jtest.suse.com"
+      namespace: nginx-ingress
+    hostname: "rook.jtest.pivotal.io"
   kernel_parameters:
     - "net.ipv4.neigh.default.gc_thresh1 = 0"   # For ARP Cache
+
 
 metallb:
   install: true
@@ -64,24 +66,65 @@ helm:
   patch_version:
   build_version:
 
+
 cert_manager:
   install: false
   major_version: 1
   minor_version: 7
   patch_version: 1
 
-nginx:
+
+ingress:
+  install: true
   major_version:
   minor_version:
   patch_version:
-  k8s_ingress:
+  k8s:
+    name: k8s-ingress
     major_version: 3
     minor_version: 0
     patch_version: 2
-  ingress:
+  nginx:
     name: nginx-ingress
     major_version:
     minor_version:
     patch_version:
     build_version:
+
+
+cephfs:
+  pool:
+    - { name: "default-p01", pg_count: 100 }
+    - { name: "cephfs-p01", pg_count: 100 }
+    - { name: "block-p01", pg_count: 100 }
+    - { name: "rgw-p01", pg_count: 100 }
+    - { name: "nfs-p01", pg_count: 100 }
+  fs:
+    - { pool: "cephfs-p01", name: "cephfs-p01-fs01", size: "1G", mount_dir: "/mnt/cephfs-p01-fs01" }
+    - { pool: "default-p01", name: "default-p01-fs01", size: "1G", mount_dir: "/mnt/default-p01-fs01" }
+    - { pool: "block-p01", name: "block-p01-fs01", size: "1G", mount_dir: "/mnt/block-p01-fs01" }
+    - { pool: "rgw-p01", name: "rgw-p01-fs01", size: "1G", mount_dir: "/mnt/rgw-p01-fs01" }
+    - { pool: "nfs-p01", name: "nfs-p01-fs01", size: "1G", mount_dir: "/mnt/nfs-p01-fs01" }
+  image:
+    default:
+      - { name: "default-img01", pool: "default-p01", size: "1G" }
+      - { name: "default-img02", pool: "default-p01", size: "1G" }
+      - { name: "default-img03", pool: "default-p01", size: "1G" }
+    cephfs:
+      - { name: "cephfs-img01", pool: "cephfs-p01", size: "1G" }
+      - { name: "cephfs-img02", pool: "cephfs-p01", size: "1G" }
+      - { name: "cephfs-img03", pool: "cephfs-p01", size: "1G" }
+    block:
+      - { name: "block-img01", pool: "block-p01", size: "1G" }
+      - { name: "block-img02", pool: "block-p01", size: "1G" }
+      - { name: "block-img03", pool: "block-p01", size: "1G" }
+    rgw:
+      - { name: "rgw-img01", pool: "rgw-p01", size: "1G" }
+      - { name: "rgw-img02", pool: "rgw-p01", size: "1G" }
+      - { name: "rgw-img03", pool: "rgw-p01", size: "1G" }
+    nfs:
+      - { name: "nfs-img01", pool: "nfs-p01", size: "1G" }
+      - { name: "nfs-img02", pool: "nfs-p01", size: "1G" }
+      - { name: "nfs-img03", pool: "nfs-p01", size: "1G" }
+
 
