@@ -10,9 +10,3 @@
     upload_calico: true
   roles:
     - k8s
-#    - init-hosts
-#    - dashboard
-#    - nginx
-#    - rancher
-#    - rook-ceph
-
