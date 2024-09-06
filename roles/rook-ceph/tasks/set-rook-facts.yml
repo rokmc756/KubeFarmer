@@ -1,8 +1,4 @@
 ---
-- debug: msg={{ "Need to Check If set_facts is Needed" }}
-  when: print_debug == true
-
-
 - name: Get NVME Devices
   shell: |
     nvme list | sed 1,2d | awk '{print $1}' | cut -d "/" -f 3
@@ -12,7 +8,14 @@
   when: print_debug == true
 
 
-- name: Set volume Fact with list
+- name: Get Number of NVME Devices
+  set_fact:
+    nvme_device_count: "{{ nvme_device_list.stdout_lines | length }}"
+- debug: msg={{ nvme_device_count }}
+  when: print_debug == true
+
+
+- name: Set volume Fact with List
   set_fact:
     volume_mode: "{{ volume_modes | list }}"
   vars:
@@ -59,5 +62,4 @@
       {%- endfor -%}
       ]
   when: print_debug == true and inventory_hostname in groups['master']
-
 

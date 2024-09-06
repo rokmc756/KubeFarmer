@@ -1,9 +1,9 @@
 ###################################################################################################################
 # Define the settings for the rook-ceph cluster with common settings for a production cluster on top of bare metal.
-
+#
 # This example expects three nodes, each with two available disks. Please modify it according to your environment.
 # See the documentation for more details on storage settings available.
-
+#
 # For example, to create the cluster:
 #   kubectl create -f crds.yaml -f common.yaml -f operator.yaml
 #   kubectl create -f cluster-on-local-pvc.yaml
@@ -79,7 +79,7 @@ spec:
   storage:
     storageClassDeviceSets:
       - name: set1
-        count: {{ groups['workers'] | length * 4 }}  # 4 is the number of nvme deivces in each worker nodes
+        count: {{ groups['workers'] | length * ( nvme_device_count | int ) }}  # 4 is the number of nvme deivces in each worker nodes
         portable: false
         tuneDeviceClass: true
         tuneFastDeviceClass: false
