@@ -186,5 +186,3 @@
   delay: 10
 - debug: msg={{ enable_kubelet }}
   when: print_debug == true
-
-

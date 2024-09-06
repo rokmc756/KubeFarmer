@@ -26,7 +26,7 @@
   when: print_debug == true and inventory_hostname in groups['master']
 
 
-- name: Setup Networking with Calico
+- name: Setup Calico Networking
   command: kubectl apply -f /root/calico.yaml
   register: calico_network_setup
   when: inventory_hostname in groups['master']

@@ -88,4 +88,3 @@
   register: enable_kubelet
 - debug: msg={{ enable_kubelet }}
 
-
