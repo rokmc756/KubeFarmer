@@ -86,7 +86,7 @@
 - name: Clone Kubernetest Ingress
   shell: |
     git -C "{{ base_path }}" clone https://github.com/nginxinc/kubernetes-ingress.git \
-    --branch v{{ nginx.k8s_ingress.major_version }}.{{ nginx.k8s_ingress.minor_version }}.{{ nginx.k8s_ingress.patch_version }}
+    --branch v{{ ingress.k8s.major_version }}.{{ ingress.k8s.minor_version }}.{{ ingress.k8s.patch_version }}
   register: clone_k8s_ingress
   when: kube_ingress_dir_existed.stat.exists != True
 - debug: msg={{ clone_k8s_ingress }}

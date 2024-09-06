@@ -197,22 +197,22 @@
 # (toolbox)$ ceph osd status
 
 
-- name: Create Ceph Filesystem
-  shell: |
-    kubectl create -f filesystem.yaml
-  register: create_cephfs
-  args:
-    chdir: "{{ base_path }}/rook/deploy/examples/"
-- debug: msg={{ create_cephfs }}
+#- name: Create Ceph Filesystem
+#  shell: |
+#    kubectl create -f filesystem.yaml
+#  register: create_cephfs
+#  args:
+#    chdir: "{{ base_path }}/rook/deploy/examples/"
+#- debug: msg={{ create_cephfs }}
 
 
-- name: Check if Rook Ceph is Deployed Successfully
-  shell: kubectl get CephFileSystem -n rook-ceph
-  register: check_rook_deployment
-  ignore_errors: yes
-  until: check_rook_deployment.stdout.find("Progressing") == -1
-  retries: 100
-- debug: msg={{ check_rook_deployment }}
+#- name: Check if Rook Ceph is Deployed Successfully
+#  shell: kubectl get CephFileSystem -n rook-ceph
+#  register: check_rook_deployment
+#  ignore_errors: yes
+#  until: check_rook_deployment.stdout.find("Progressing") == -1
+#  retries: 100
+#- debug: msg={{ check_rook_deployment }}
 
 
 #- name: Apply Kube Registry

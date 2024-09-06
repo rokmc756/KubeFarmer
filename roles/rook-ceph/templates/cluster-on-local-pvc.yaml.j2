@@ -1,4 +1,4 @@
-#################################################################################################################
+###################################################################################################################
 # Define the settings for the rook-ceph cluster with common settings for a production cluster on top of bare metal.
 
 # This example expects three nodes, each with two available disks. Please modify it according to your environment.
@@ -7,7 +7,8 @@
 # For example, to create the cluster:
 #   kubectl create -f crds.yaml -f common.yaml -f operator.yaml
 #   kubectl create -f cluster-on-local-pvc.yaml
-#################################################################################################################
+###################################################################################################################
+
 kind: StorageClass
 apiVersion: storage.k8s.io/v1
 metadata:
@@ -55,7 +56,7 @@ metadata:
 spec:
   dataDirHostPath: /var/lib/rook
   mon:
-    count: 3
+    count: {{ groups['workers'] | length }}
     allowMultiplePerNode: false
     volumeClaimTemplate:
       spec:
@@ -78,7 +79,7 @@ spec:
   storage:
     storageClassDeviceSets:
       - name: set1
-        count: 4
+        count: {{ groups['workers'] | length * 3 }}
         portable: false
         tuneDeviceClass: true
         tuneFastDeviceClass: false
