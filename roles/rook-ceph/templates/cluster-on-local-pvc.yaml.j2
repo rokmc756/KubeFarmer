@@ -79,7 +79,7 @@ spec:
   storage:
     storageClassDeviceSets:
       - name: set1
-        count: {{ groups['workers'] | length * 3 }}
+        count: {{ groups['workers'] | length * 4 }}  # 4 is the number of nvme deivces in each worker nodes
         portable: false
         tuneDeviceClass: true
         tuneFastDeviceClass: false
