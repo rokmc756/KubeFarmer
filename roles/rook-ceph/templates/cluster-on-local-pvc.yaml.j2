@@ -79,7 +79,8 @@ spec:
   storage:
     storageClassDeviceSets:
       - name: set1
-        count: {{ groups['workers'] | length * ( nvme_device_count | int ) }}  # 4 is the number of nvme deivces in each worker nodes
+        # 4 is the number of nvme deivces in each worker nodes. 3 is block and 1 is filesystem
+        count: {{ groups['workers'] | length * ( nvme_device_count | int - 1 ) }}
         portable: false
         tuneDeviceClass: true
         tuneFastDeviceClass: false

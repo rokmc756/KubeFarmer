@@ -21,6 +21,7 @@
 #  delay: 10
 #  when: ansible_distribution == "openSUSE Leap"
 
+
 - name: Load Kernel Modules for Kurbernetes
   shell: |
     modprobe {{ item }}
@@ -40,7 +41,7 @@
   # when: ( k8s.major_version|int == 1 and k8s.minor_version|int > 24 ) and inventory_hostname in groups['master']
 
 
-- name: Initialize Kubernetest Master and Create Cluster
+- name: Initialize Kubernetes Master and Create Cluster
   shell: |
     kubeadm init --apiserver-advertise-address={{ hostvars[groups['master'][0]]['ansible_'~netdev1]['ipv4']['address'] }} \
     --pod-network-cidr=10.142.0.0/16 --cri-socket=unix:///run/containerd/containerd.sock --ignore-preflight-errors=all
@@ -110,7 +111,7 @@
 
 - name: Create POD for Master as well
   lineinfile:
-    path: /root/.bashrc
+    path: "{{ k8s.base_path }}/.bashrc"
     line: "{{ item.content }}"
     insertafter: EOF
     create: true
@@ -260,11 +261,3 @@
 # kubectl get all
 # ~~ snip
 # service/nginx        NodePort    10.96.0.2    192.168.1.194   80:30001/TCP   2m30s
-
-
-# [ References ]
-# https://kubernetes.io/docs/tutorials/services/connect-applications-service/
-# https://coredns.io/2018/01/29/deploying-kubernetes-with-coredns-using-kubeadm/#understanding-coredns-configuration
-# https://github.com/projectcalico/calico/issues/2695
-# https://tech.kakao.com/2021/03/03/network-node-manager/
-# https://deploy.live/blog/kubernetes-networking-problems-due-to-the-conntrack/

@@ -16,3 +16,4 @@ for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do nvme format /dev/$nb --f
 for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do wipefs -a /dev/$nb ;done
 for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do sgdisk --zap-all --delete /dev/$nb ;done
 for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do blkdiscard /dev/$nb ;done
+

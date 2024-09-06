@@ -1,7 +1,7 @@
 ---
 # Deploy Kubernetes Cluster
-
-# for now fail if it's not a Red Hat based system
+#
+# For now fail if it's not a Red Hat, OpenSUSE and Ubuntu Based System
 - name: Check OS ( Kubernetes )
   fail: msg="Not a Red Hat or SuSE based system!"
   when: ansible_os_family != 'RedHat' or  ansible_os_family != 'CentOS' or  ansible_os_family != 'Rocky' or ansible_os_family != 'Suse'
@@ -18,25 +18,24 @@
 - name: Install Prerequistes Packages for Ubuntu
   import_tasks: install-ubt-pkgs.yml
   tags: install
-  when: install_pkgs and ( ansible_distribution == "Ubuntu" or ansible_distribution == "Debian" )
+  when: ( install_pkgs is defined and install_pkgs == true ) and ( ansible_distribution == "Ubuntu" or ansible_distribution == "Debian" )
 
 
 - name: Install Prerequistes Packages for OpenSUSE
   import_tasks: install-suse-pkgs.yml
   tags: install
-  when: install_pkgs and ansible_distribution == "openSUSE Leap"
+  when: ( install_pkgs is defined and install_pkgs == true ) and ansible_distribution == "openSUSE Leap"
 
 
 - name: Install Prerequistes Packages for RedHat/CentOS/Rocky
   import_tasks: install-rh-pkgs.yml
   tags: install
-  when: install_pkgs and ( ansible_distribution == "RedHat" or ansible_distribution == "CentOS" or ansible_distribution == "Rocky" )
+  when: ( install_pkgs is defined and install_pkgs == true ) and ( ansible_distribution == "RedHat" or ansible_distribution == "CentOS" or ansible_distribution == "Rocky" )
 
 
 - name: Enable Firewall
   import_tasks: enable-firewall.yml
-  tags:
-    - uninstall
+  tags: uninstall
   when: enable_firewall
 
 
@@ -51,25 +50,25 @@
 - name: Launch Kubernetes Software for SuSE
   import_tasks: config-suse-kube-software.yml
   tags: install
-  when: config_kube_software and ansible_distribution == "openSUSE Leap"
+  when: ( config_kube_software is defined and config_kube_software == true ) and ansible_distribution == "openSUSE Leap"
 
 
 - name: Launch Kubernetes Software for Red Hat
   import_tasks: config-rh-kube-software.yml
   tags: install
-  when: config_kube_software and ( ansible_distribution == "RedHat" or ansible_distribution == "CentOS" or ansible_distribution == "Rocky" )
+  when: ( config_kube_software is defined and config_kube_software === true ) and ( ansible_distribution == "RedHat" or ansible_distribution == "CentOS" or ansible_distribution == "Rocky" )
 
 
 - name: Launch Kubernetes Software for Ubuntu
   import_tasks: config-ubt-kube-software.yml
   tags: install
-  when: config_kube_software and ( ansible_distribution == "Ubuntu" or ansible_distribution == "Debian" )
+  when: ( config_kube_software is defined and config_kube_software == true ) and ( ansible_distribution == "Ubuntu" or ansible_distribution == "Debian" )
 
 
 - name: Initialize Kubernetes Cluster
   import_tasks: init-k8s.yml
   tags: install
-  when: init_k8s
+  when: init_k8s is defined and init_k8s == true
 
 
 - name: Stop Docker and Kube Services
@@ -77,7 +76,7 @@
   tags:
     - reinit
     - uninstall
-  when: stop_services
+  when: stop_services is defined and stop_services == true
 
 
 - name: Reinitialize Kubernetes Cluster
@@ -88,17 +87,17 @@
 - name: Uninstall Prerequistes Packages
   import_tasks: uninstall-pkgs.yml
   tags: uninstall
-  when: uninstall_pkgs
+  when: uninstall_pkgs is defined and uninstall_pkgs == true
 
 
 - name: Delete Kube Config Files
   import_tasks: uninstall-config.yml
   tags: uninstall
-  when: uninstall_config
+  when: uninstall_config is defined and uninstall_config == true
 
 
 - name: Reboot all Systems
   import_tasks: reboot-required.yml
   tags: uninstall
-  when: reboot_required
+  when: reboot_required is defined and reboot_required == true
 

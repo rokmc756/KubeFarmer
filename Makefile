@@ -53,7 +53,7 @@ init:	setup-host.yml update-host.yml
 install: role-update install.yml
 	ansible-playbook -i ansible-hosts --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} install.yml --tags="install"
 
-reinit: role-update reinit-hosts.yml
+reinit: role-update reinit.yml
 	ansible-playbook -i ansible-hosts --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} reinit.yml --tags="reinit"
 
 uninstall: role-update uninstall.yml

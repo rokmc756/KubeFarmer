@@ -18,3 +18,13 @@ https://psawesome.tistory.com/123
 https://docs.vmware.com/en/VMware-Tanzu-Application-Catalog/services/apps/GUID-apps-spark-index.html
 https://www.ridge.co/developer/how-to/deploying-apache-spark-on-rks/
 https://faun.pub/apache-spark-on-aws-eks-3f6737d61d35
+
+
+
+[ k8s ]
+https://kubernetes.io/docs/tutorials/services/connect-applications-service/
+https://coredns.io/2018/01/29/deploying-kubernetes-with-coredns-using-kubeadm/#understanding-coredns-configuration
+https://github.com/projectcalico/calico/issues/2695
+https://tech.kakao.com/2021/03/03/network-node-manager/
+https://deploy.live/blog/kubernetes-networking-problems-due-to-the-conntrack/
+
