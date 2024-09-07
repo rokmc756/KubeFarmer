@@ -1,15 +1,14 @@
 ---
 - name: Setup Calico CNI Networking without Operator
   import_tasks: apply-calico-cni.yml
-  when: ( k8s.cni.name == "calico" and k8s.cni.operator == "" )
+  when: ( k8s.cni.name == "calico" and k8s.cni.operator == "" ) and inventory_hostname in groups['master']
 
 
 - name: Setup Kube Flannel CNI Networking without Operator
   import_tasks: apply-kube-flannel-cni.yml
-  when: ( k8s.cni.name == "kube-flannel" and k8s.cni.operator == "" )
+  when: ( k8s.cni.name == "kube-flannel" and k8s.cni.operator == "" ) and inventory_hostname in groups['master']
 
 
 - name: Setup Calico CNI Networking with Tigera Operator
   import_tasks: apply-tigera-operator.yml
-  when: ( k8s.cni.name == "tigera" and k8s.cni.operator == "tigera" )
-
+  when: ( k8s.cni.name == "tigera" and k8s.cni.operator == "tigera" ) and inventory_hostname in groups['master']

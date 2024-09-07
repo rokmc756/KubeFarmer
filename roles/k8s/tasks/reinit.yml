@@ -3,10 +3,10 @@
   import_tasks: disable-selinux.yml
 
 
-- name: Initialize Containerd
-  shell: |
-    mkdir /etc/containerd
-    containerd config default > /etc/containerd/config.toml
+#- name: Initialize Containerd
+#  shell: |
+#    mkdir /etc/containerd
+#    containerd config default > /etc/containerd/config.toml
 
 
 - name: Stop Services Before Reinitializating Kubernetes
@@ -17,6 +17,10 @@
     - Stop Containerd
     - Stop Kubelet
     - Restart Containerd
+
+
+- name: Force to Stop and Restart Services
+  meta: flush_handlers
 
 
 - name: Reset Kubernetes
@@ -115,7 +119,7 @@
 
 - name: Setup CNI Networking Plugin
   import_tasks: setup-cni-plugin.yml
-  when: inventory_hostname in groups['master']
+  when: k8s.cni.install == true and inventory_hostname in groups['master']
 
 
 - name: Confirm that the Kubectl Command is Activated
@@ -126,12 +130,12 @@
   when: print_debug == true and inventory_hostname in groups['master']
 
 
-- name: Reset Kubernetes on Cluster Nodes
-  command:  kubeadm reset -f
-  register: kube_cluster_reset
-  when: inventory_hostname in groups['workers']
-- debug: msg={{ kube_cluster_reset }}
-  when: print_debug == true and inventory_hostname in groups['master']
+#- name: Reset Kubernetes on Cluster Nodes
+#  command:  kubeadm reset -f
+#  register: kube_cluster_reset
+#  when: inventory_hostname in groups['workers']
+#- debug: msg={{ kube_cluster_reset }}
+#  when: print_debug == true and inventory_hostname in groups['workers']
 
 
 - name: Join the Other Kubernetes Nodes to Cluster, the Command must be Run on the Worker Nodes Only
@@ -148,11 +152,30 @@
 - name: Confirm the Kubectl Command is Activated
   command: kubectl get nodes
   register: kubectl_get_nodes
-  notify:
-    - Restart Kubelet
   when: inventory_hostname in groups['master']
 - debug: msg={{ kubectl_get_nodes }}
   when: print_debug == true and inventory_hostname in groups['master']
+
+
+#- name: Disable and Stop Docker
+#  systemd:
+#    name: docker
+#    state: stopped
+#    enabled: no
+#  register: docker_stopped
+#  ignore_errors: true
+#  until: docker_stopped is succeeded
+
+
+#- name: Enable and Start Kubelet in Master Node
+#  systemd:
+#    name: kubelet
+#    state: restarted
+#    enabled: yes
+#  register: master_kubelet_restarted
+#  when: inventory_hostname in groups['master']
+#- debug: msg={{ master_kubelet_restarted }}
+#  when: print_debug == true and inventory_hostname in groups['master']
 
 
 - name: Validate if Kubernetes Workers are All Ready
@@ -189,6 +212,11 @@
     - Stop Firewalld
     - Restart Docker
     - Restart Containerd
+    - Restart Kubelet
+
+
+- name: Force to Stop and Restart Services
+  meta: flush_handlers
 
 
 # Calico CNI

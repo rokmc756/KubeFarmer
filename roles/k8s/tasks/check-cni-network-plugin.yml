@@ -14,7 +14,7 @@
 
 - name: Check Calicoctl Node Status
   shell: |
-    calicoctl node status
+    /usr/local/bin/calicoctl node status
   register: check_calico_node_status
   environment:
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"

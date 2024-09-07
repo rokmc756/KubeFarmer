@@ -26,6 +26,7 @@
     name: docker
     state: started
     enabled: yes
+    daemon_reload: yes
   register: start_docker
   ignore_errors: true
   until: start_docker is succeeded
@@ -36,6 +37,7 @@
     name: docker
     state: stopped
     enabled: no
+    daemon_reload: yes
   register: stop_docker
   ignore_errors: true
   until: stop_docker is succeeded
@@ -46,6 +48,7 @@
     name: docker
     state: restarted
     enabled: yes
+    daemon_reload: yes
   register: restart_docker
   ignore_errors: true
   until: restart_docker is succeeded
@@ -56,6 +59,7 @@
     name: containerd
     state: started
     enabled: yes
+    daemon_reload: yes
   register: start_containerd
   ignore_errors: true
   until: start_containerd is succeeded
@@ -66,6 +70,7 @@
     name: containerd
     state: stopped
     enabled: no
+    daemon_reload: yes
   register: stop_containerd
   ignore_errors: true
   until: stop_containerd is succeeded
@@ -76,6 +81,7 @@
     name: containerd
     state: restarted
     enabled: yes
+    daemon_reload: yes
   register: restart_containerd
   until: restart_containerd is succeeded
   retries: 20
@@ -87,6 +93,7 @@
     name: kubelet
     state: started
     enabled: yes
+    daemon_reload: yes
   register: start_kubelet
   ignore_errors: true
   until: start_kubelet is succeeded
@@ -97,6 +104,7 @@
     name: kubelet
     state: restarted
     enabled: yes
+    daemon_reload: yes
   register: restart_kubelet
   ignore_errors: true
   until: restart_kubelet is succeeded
@@ -107,6 +115,7 @@
     name: kubelet
     state: stopped
     enabled: no
+    daemon_reload: yes
   register: stop_kubelet
   ignore_errors: true
   until: stop_kubelet is succeeded
