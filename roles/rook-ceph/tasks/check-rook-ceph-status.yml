@@ -4,9 +4,9 @@
 # rook-ceph-mon-c-789f5749c4-tljnb   1/1     Running   0               11m
 
 
-- name: Wait for Mon Alive
-  pause:
-    minutes: 20
+#- name: Wait for Mon Alive
+#  pause:
+#    minutes: 20
 
 
 - name: Check All Mon are Running Normally

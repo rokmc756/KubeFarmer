@@ -1,0 +1,6 @@
+---
+- name: Set SELinux Permissive Mode
+  shell: |
+    setenforce 0
+    sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config
+  when: ansible_distribution == "RedHat" or ansible_distribution == "CentOS" or ansible_distribution == "Rocky"

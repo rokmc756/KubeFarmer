@@ -15,6 +15,15 @@
     # ipaddr2: "{{ hostvars[inventory_hostname]['ansible_'~netdev2].ipv4.address }}"
 
 
+- name: Set Default Network Device and Address
+  set_fact:
+    _netdev: "{{ 'ansible_'~ netdev1 }}"
+    _ipaddr: "{{ ipaddr1 }}"
+  delegate_to: "{{ item }}"
+  delegate_facts: true
+  with_items: "{{ groups['all'] }}"
+
+
 # https://stackoverflow.com/questions/36328907/ansible-get-all-the-ip-addresses-of-a-group
 #- name: Define Facts for All Worker's Hostname
 #  set_fact:

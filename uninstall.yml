@@ -11,10 +11,10 @@
     enable_firewall: false
     reboot_required: true
   roles:
-    - rook-ceph
-#    - harbor
+    - k8s
 #    - init-hosts
-#    - k8s
+#    - rook-ceph
+#    - harbor
 #    - apache-spark
 #    - kubeflow
 #    - korifi

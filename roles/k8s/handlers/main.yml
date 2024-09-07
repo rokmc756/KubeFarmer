@@ -8,3 +8,106 @@
   async: 30
   poll: 0
 
+
+- name: Start Firewalld
+  service: name=firewalld state=started enabled=yes
+
+
+- name: Stop Firewalld
+  service: name=firewalld state=stopped enabled=no
+
+
+- name: Restart Firewalld
+  service: name=firewalld state=restarted enabled=yes
+
+
+- name: Start Docker
+  systemd:
+    name: docker
+    state: started
+    enabled: yes
+  register: start_docker
+  ignore_errors: true
+  until: start_docker is succeeded
+
+
+- name: Stop Docker
+  systemd:
+    name: docker
+    state: stopped
+    enabled: no
+  register: stop_docker
+  ignore_errors: true
+  until: stop_docker is succeeded
+
+
+- name: Restart Docker
+  systemd:
+    name: docker
+    state: restarted
+    enabled: yes
+  register: restart_docker
+  ignore_errors: true
+  until: restart_docker is succeeded
+
+
+- name: Start Containerd
+  systemd:
+    name: containerd
+    state: started
+    enabled: yes
+  register: start_containerd
+  ignore_errors: true
+  until: start_containerd is succeeded
+
+
+- name: Stop Containerd
+  systemd:
+    name: containerd
+    state: stopped
+    enabled: no
+  register: stop_containerd
+  ignore_errors: true
+  until: stop_containerd is succeeded
+
+
+- name: Restart Containerd
+  systemd:
+    name: containerd
+    state: restarted
+    enabled: yes
+  register: restart_containerd
+  until: restart_containerd is succeeded
+  retries: 20
+  delay: 10
+
+
+- name: Start Kubelet
+  systemd:
+    name: kubelet
+    state: started
+    enabled: yes
+  register: start_kubelet
+  ignore_errors: true
+  until: start_kubelet is succeeded
+
+
+- name: Restart Kubelet
+  systemd:
+    name: kubelet
+    state: restarted
+    enabled: yes
+  register: restart_kubelet
+  ignore_errors: true
+  until: restart_kubelet is succeeded
+
+
+- name: Stop Kubelet
+  systemd:
+    name: kubelet
+    state: stopped
+    enabled: no
+  register: stop_kubelet
+  ignore_errors: true
+  until: stop_kubelet is succeeded
+

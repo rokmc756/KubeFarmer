@@ -1,3 +1,4 @@
+---
 - name: Clear Cache Memory
   shell: |
     sync && echo 3 > /proc/sys/vm/drop_caches
@@ -6,8 +7,8 @@
   when: print_debug == true
 
 
-- name: Reboot required
-  shell: ( /bin/sleep 5 ; /sbin/shutdown -r now "Ansible updates triggered" ) &
+- name: Reboot Required
+  shell: ( /bin/sleep 5 ; /sbin/shutdown -r now "Ansible Updates Triggered" ) &
   async: 30
   poll: 0
   notify:

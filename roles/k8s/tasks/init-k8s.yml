@@ -1,25 +1,14 @@
+---
 # https://k21academy.com/docker-kubernetes/container-runtime-is-not-running/
-#- name: Delete config.toml
-#  file:
-#    path: "{{ item }}"
-#    state: absent
-#  register: config_toml_deleted
-#  with_items:
-#    - "/etc/containerd/config.toml"
-#  when: ansible_distribution == "openSUSE Leap"
-#- debug: msg={{ config_toml_deleted }}
-#  when: print_debug and ansible_distribution == "openSUSE Leap"
 
-
-#- name: Restart Containerd to Apply Changes in config.toml
-#  systemd:
-#    name: containerd
-#    state: restarted
-#  register: containerd_restarted
-#  until: containerd_restarted is succeeded
-#  retries: 20
-#  delay: 10
-#  when: ansible_distribution == "openSUSE Leap"
+- name: Restart Containerd to Apply Changes in config.toml
+  systemd:
+    name: containerd
+    state: restarted
+  register: restart_containerd
+  until: restart_containerd
+  retries: 20
+  delay: 10
 
 
 - name: Load Kernel Modules for Kurbernetes
@@ -35,7 +24,7 @@
   when: inventory_hostname in groups['master']
 
 
-- name: Config image pull
+- name: Config Image Pull
   command: kubeadm config images pull
   # Latest version is k8s v1.24.17 for cf-for-k8s
   # when: ( k8s.major_version|int == 1 and k8s.minor_version|int > 24 ) and inventory_hostname in groups['master']
@@ -43,8 +32,8 @@
 
 - name: Initialize Kubernetes Master and Create Cluster
   shell: |
-    kubeadm init --apiserver-advertise-address={{ hostvars[groups['master'][0]]['ansible_'~netdev1]['ipv4']['address'] }} \
-    --pod-network-cidr=10.142.0.0/16 --cri-socket=unix:///run/containerd/containerd.sock --ignore-preflight-errors=all
+    kubeadm init --apiserver-advertise-address={{ hostvars[groups['master'][0]][_netdev]['ipv4']['address'] }} \
+    --pod-network-cidr={{ k8s.cni.pod_network }} --cri-socket=unix:///run/containerd/containerd.sock --ignore-preflight-errors=all
   async: 360
   poll: 5
   register: kubeadm_init
@@ -76,16 +65,9 @@
   when: print_debug == true and inventory_hostname in groups['master']
 
 
-- name: Enable Your User to Start Using the Cluster.
-  shell: |
-    mkdir -p $HOME/.kube
-    rm -f $HOME/.kube/config
-    cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
-    chown $(id -u):$(id -g) $HOME/.kube/config
-  register: start_using_cluster_enabled
+- name: Enable User as Admin Kube Environment
+  import_tasks: enable-default-kube-env.yml
   when: inventory_hostname in groups['master']
-- debug: msg={{ start_using_cluster_enabled }}
-  when: print_debug == true and inventory_hostname in groups['master']
 
 
 - name: Configure Kubectl Config
@@ -126,14 +108,9 @@
   when: print_debug == true and inventory_hostname in groups['master']
 
 
-- name: Setup Calico CNI Networking without Operator
-  import_tasks: apply-calico.yml
-  when: ( k8s.cni.name == "calico" and k8s.cni.operator == "" ) and inventory_hostname in groups['master']
-
-
-- name: Setup Calico CNI Networking with Tigera Operator
-  import_tasks: apply-tigera-operator.yml
-  when: ( k8s.cni.name == "tigera" and k8s.cni.operator == "tigera" ) and inventory_hostname in groups['master']
+- name: Setup CNI Network Plugin
+  import_tasks: setup-cni-plugin.yml
+  when: k8s.cni.install == true and inventory_hostname in groups['master']
 
 
 - name: Confirm that the Kubectl Command is Activated.
@@ -144,7 +121,6 @@
   when: print_debug == true and inventory_hostname in groups['master']
 
 
-# Initialize Workder Nodes in Kubernetes Cluster
 - name: Reset Kubernetes on Cluster Nodes
   command:  kubeadm reset -f
   register: kube_cluster_reset
@@ -154,7 +130,7 @@
 
 
 - name: Join the Other Kubernetes Nodes to Cluster, the Command must be run on the Worker Nodes Only
-  command: kubeadm join "{{ hostvars[groups['master'][0]]['ansible_'~netdev1]['ipv4']['address'] }}:6443" --token "{{ k8s_token }}" --discovery-token-ca-cert-hash "{{ k8s_token_ca_cert }}"
+  command: kubeadm join "{{ hostvars[groups['master'][0]][_netdev]['ipv4']['address'] }}:6443" --token "{{ k8s_token }}" --discovery-token-ca-cert-hash "{{ k8s_token_ca_cert }}"
   register: store_it_copied
   ignore_errors: yes
   when: inventory_hostname in groups['workers']
@@ -191,7 +167,7 @@
   when: print_debug == true and inventory_hostname in groups['master']
 
 
-- name: Validate if k8s Workers are all Ready
+- name: Validate If Kubernetes Workers Are All Ready
   shell: kubectl get nodes
   register: check_k8s_workers_status
   until: check_k8s_workers_status.stdout.find("NotReady") == -1
@@ -201,7 +177,7 @@
   when: print_debug == true and inventory_hostname in groups['master']
 
 
-- name: Validate if All Containers are Running
+- name: Validate If All Containers Are All Running
   shell: kubectl get pods --all-namespaces -o wide
   register: all_containers_running_checked
   until: all_containers_running_checked.stdout.find("ContainerCreating") == -1
@@ -210,46 +186,9 @@
 - debug: msg={{ all_containers_running_checked }}
 
 
-- name: Validate if All Calico Nodes are Running
-  shell: |
-    kubectl get all -n kube-system | grep "pod/calico-node" |  grep -v Running | awk '{print $3}'
-  register: check_all_calico_nodes
-  ignore_errors: true
-  until: check_all_calico_nodes.stdout.find("") != -1
-  retries: 100
-  delay: 10
-  when: inventory_hostname in groups['master']
-- debug: msg={{ check_all_calico_nodes }}
-  when: print_debug == true and inventory_hostname in groups['master']
-
-
-- name: Check Calicoctl Node Status
-  shell: |
-    /usr/local/bin/calicoctl node status
-  register: check_calico_node_status
-  when: inventory_hostname in groups['master']
-- debug: msg={{ check_calico_node_status }}
-  when: print_debug == true and inventory_hostname in groups['master']
-
-
-- name: Enable and Restart Docker
-  systemd:
-    name: docker
-    state: restarted
-    enabled: yes
-  register: docker_restarted
-  ignore_errors: true
-  until: docker_restarted is succeeded
-
-
-- name: Enable and Restart Containerd
-  systemd:
-    name: containerd
-    state: restarted
-    enabled: yes
-  register: containerd_restarted
-  ignore_errors: true
-  until: containerd_restarted is succeeded
+- name: Check the Status fo CNI Network Plugin
+  import_tasks: check-cni-network-plugin.yml
+  when: k8s.cni.install == true and inventory_hostname in groups['master']
 
 
 # erinformations/default": x509: certificate signed by unknown authority 
@@ -261,3 +200,4 @@
 # kubectl get all
 # ~~ snip
 # service/nginx        NodePort    10.96.0.2    192.168.1.194   80:30001/TCP   2m30s
+

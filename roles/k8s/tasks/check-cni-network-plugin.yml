@@ -1,0 +1,24 @@
+---
+- name: Validate If All Calico Nodes Are All Running
+  shell: |
+    kubectl get all -n kube-system | grep "pod/calico-node" |  grep -v Running | awk '{print $3}'
+  register: check_all_calico_nodes
+  ignore_errors: true
+  until: check_all_calico_nodes.stdout.find("") != -1
+  retries: 100
+  delay: 10
+  when: inventory_hostname in groups['master']
+- debug: msg={{ check_all_calico_nodes }}
+  when: print_debug == true and inventory_hostname in groups['master']
+
+
+- name: Check Calicoctl Node Status
+  shell: |
+    calicoctl node status
+  register: check_calico_node_status
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+  when: inventory_hostname in groups['master']
+- debug: msg={{ check_calico_node_status }}
+  when: print_debug == true and inventory_hostname in groups['master']
+

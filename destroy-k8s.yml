@@ -1,0 +1,14 @@
+---
+
+- hosts: all
+  become: yes
+  vars:
+    container_runtime: "containerd"   # containerd
+    print_debug: true
+    stop_services: true
+    uninstall_pkgs: true
+    uninstall_config: true
+    enable_firewall: false
+    reboot_required: true
+  roles:
+    - k8s

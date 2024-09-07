@@ -1,12 +1,77 @@
 ---
-#major_version: "8"
-#minor_version: "5"
-#patch_version: ""
-#rhel_version: "7"
-
 dashboard_port: "10443"
 
-# latest k8s version : 1.26.2
+cont_pv_dirs:
+  - "awx-storage"
+  - "katib-storage"
+  - "authservice-storage"
+  - "jenkins-storage"
+  - "harbor-storage"
+  - "kafka-storage"
+  - "hadoop-storage"
+  - "geode-storage"
+  - "mongodb-storage"
+  - "stratos-storage"
+  - "cf-k8s-storage"
+  - "cf-db-storage"
+  - "cf-blobstore-storage"
+  - "cf-for-k8s"
+
+
+common_conf_files:
+  - "/etc/containerd/config.toml"
+  - "/root/.docker"
+  - "/root/calico.yaml"
+  - "/etc/docker"
+  - "/var/lib/docker"
+  - "/var/lib/kubelet"
+  - "/var/lib/containerd"
+  - "/var/lib/kubelet"
+  - "/var/lib/containerd"
+  - "/etc/kubernetes/kubelet.conf"
+  - "/etc/cni/net.d/*"
+  - "$HOME/.kube"
+  - "/etc/sysctl.d/sysctl-k8s.conf"
+  - "/etc/docker/daemon.json"
+  - "/root/cluster-config.yaml"
+  - "/var/lib/docker/devicemapper"
+  - "/var/lib/docker/containers"
+  - "/var/lib/docker/overlay2"
+  - "/etc/modules-load.d/containerd.conf"
+  - "/mnt/awx-storage"
+  - "/mnt/cf-k8s-storage"
+  - "/mnt/cf-db-storage"
+  - "/mnt/cf-blobstore-storage"
+  - "/root/cf-for-k8s"
+
+
+ubt_conf_files:
+  - "/etc/default/kubelet"
+  - "/root/change-ubuntu-mirror.sh"
+  - "/etc/apt/keyrings/kubernetes-apt-keyring.gpg"
+  - "/etc/apt/sources.list.d/kubernetes.list"
+
+
+rh_conf_files:
+  - "/etc/kubernetes/pki/ca.crt"
+  - "/usr/lib/systemd/system/kubelet.service"
+  - "/etc/sysconfig/kubelet"
+  - "/etc/sysctl.d/99-kubernetes-cir.conf"
+  - "/etc/yum.repos.d/kubernetes.repo"
+  - "/etc/yum.repos.d/docker-ce.repo"
+
+
+suse_conf_files:
+  - "/usr/lib/systemd/system/kubelet.service"
+  - "/etc/sysconfig/kubelet"
+  - "/root/zypper-refresh.sh"
+  - "/root/install-kube-pkgs.sh"
+  - "/etc/zypp/repos.d/SELinux-Legacy.repo"
+  - "/etc/zypp/repos.d/kubernetes.repo"
+  - "/etc/zypp/repos.d/conntrack.repo"
+  - "/etc/zypp/repos.d/public.repo"
+  - "/etc/zypp/repos.d/virt.repo"
+
 
 master_ports:
   - { "port" : "22", "proto" : "tcp", "state" : "enabled", "zone" : "public" }
@@ -84,9 +149,18 @@ workers_ports:
   - { "port" : "30000-32767", "proto" : "tcp", "state" : "enabled", "zone" : "public" }
   - { "port" : "30000-32767", "proto" : "udp", "state" : "enabled", "zone" : "public" }  # Checking why it's needed to add
 
-# References of firewalld rule for Rancher
+
+########################################################################################################################################################
+# References of Firewalld Rule for Rancher
+########################################################################################################################################################
+#
 # - https://ranchermanager.docs.rancher.com/v2.5/getting-started/installation-and-upgrade/advanced-options/advanced-use-cases/open-ports-with-firewalld
 # - https://medium.com/platformer-blog/kubernetes-on-centos-7-with-firewalld-e7b53c1316af
 #
+#
+########################################################################################################################################################
+#
 # References of Calico CNI Requirements
 # https://docs.tigera.io/calico/latest/getting-started/kubernetes/requirements
+#
+

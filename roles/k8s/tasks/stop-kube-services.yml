@@ -1,3 +1,13 @@
+---
+- name: Reset Kubernetes
+  command: kubeadm reset -f
+  register: reset_kube
+  ignore_errors: yes
+  # when: inventory_hostname in groups['master']
+- debug: msg={{ reset_kube }}
+  when: print_debug == true   # and inventory_hostname in groups['master']
+
+
 - name: Disable and Stop Docker
   systemd:
     name: docker

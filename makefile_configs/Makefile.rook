@@ -1,0 +1,10 @@
+rook:
+	@if [ "${r}" = "install" ]; then\
+		ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-rook.yml --tags='install';\
+	elif [ "${r}" = "uninstall" ]; then\
+		ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-rook.yml --tags='uninstall';\
+	else\
+		echo "No Actions for Rook Ceph Role";\
+		exit;\
+	fi
+

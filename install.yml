@@ -1,20 +1,20 @@
 ---
-
 - hosts: all
   become: yes
   vars:
     container_runtime: "containerd"   # crio or podman
     print_debug: true
-    install_pkgs: true
     disable_firewall: true
     config_kube_software: true
     init_k8s: true
     stop_services: true
     upload_calico: true
+    install_kube_pkgs: true
   roles:
-    - rook-ceph
+    - k8s
+
+#    - rook-ceph
 #    - harbor
-#    - k8s
 #    - init-hosts
 #    - apache-spark
 #    - kubeflow

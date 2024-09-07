@@ -17,31 +17,7 @@
     state: absent
   register: kube_dir_removed
   ignore_errors: true
-  with_items:
-    - "/etc/containerd/config.toml"
-    - "/root/.docker"
-    - "/root/calico.yaml"
-    - "/etc/docker"
-    - "/var/lib/docker"
-    - "/var/lib/kubelet"
-    - "/var/lib/containerd"
-    - "/var/lib/kubelet"
-    - "/var/lib/containerd"
-    - "/etc/kubernetes/kubelet.conf"
-    - "/etc/cni/net.d/*"
-    - "$HOME/.kube"
-    - "/etc/sysctl.d/sysctl-k8s.conf"
-    - "/etc/docker/daemon.json"
-    - "/root/cluster-config.yaml"
-    - "/var/lib/docker/devicemapper"
-    - "/var/lib/docker/containers"
-    - "/var/lib/docker/overlay2"
-    - "/etc/modules-load.d/containerd.conf"
-    - "/mnt/awx-storage"
-    - "/mnt/cf-k8s-storage"
-    - "/mnt/cf-db-storage"
-    - "/mnt/cf-blobstore-storage"
-    - "/root/cf-for-k8s"
+  with_items: "{{ common_conf_files }}"
 - debug: msg={{ kube_dir_removed }}
   when: print_debug == true
 
@@ -52,11 +28,7 @@
     state: absent
   register: kube_dir_removed
   ignore_errors: true
-  with_items:
-    - "/etc/default/kubelet"
-    - "/root/change-ubuntu-mirror.sh"
-    - "/etc/apt/keyrings/kubernetes-apt-keyring.gpg"
-    - "/etc/apt/sources.list.d/kubernetes.list"
+  with_items: "{{ ubt_conf_files }}"
   when: ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
 - debug: msg={{ kube_dir_removed }}
   when: print_debug == true and ( ansible_distribution == "Ubuntu" or ansible_distribution == "Debian" )
@@ -68,13 +40,7 @@
     state: absent
   register: kube_dir_removed
   ignore_errors: true
-  with_items:
-    - "/etc/kubernetes/pki/ca.crt"
-    - "/usr/lib/systemd/system/kubelet.service"
-    - "/etc/sysconfig/kubelet"
-    - "/etc/sysctl.d/99-kubernetes-cir.conf"
-    - "/etc/yum.repos.d/kubernetes.repo"
-    - "/etc/yum.repos.d/docker-ce.repo"
+  with_items: "{{ rh_conf_files }}"
   when: ansible_distribution == "RedHat" or ansible_distribution == "CentOS" or ansible_distribution == "Rocky"
 - debug: msg={{ kube_dir_removed }}
   when: print_debug and ( ansible_distribution == "RedHat" or ansible_distribution == "CentOS" or ansible_distribution == "Rocky" )
@@ -86,16 +52,7 @@
     state: absent
   register: kube_dir_removed
   ignore_errors: true
-  with_items:
-    - "/usr/lib/systemd/system/kubelet.service"
-    - "/etc/sysconfig/kubelet"
-    - "/root/zypper-refresh.sh"
-    - "/root/install-kube-pkgs.sh"
-    - "/etc/zypp/repos.d/SELinux-Legacy.repo"
-    - "/etc/zypp/repos.d/kubernetes.repo"
-    - "/etc/zypp/repos.d/conntrack.repo"
-    - "/etc/zypp/repos.d/public.repo"
-    - "/etc/zypp/repos.d/virt.repo"
+  with_items: "{{ suse_conf_files }}"
   when: ansible_distribution == "openSUSE Leap"
 - debug: msg={{ kube_dir_removed }}
   when: print_debug and ansible_distribution == "openSUSE Leap"
@@ -109,7 +66,7 @@
   when: print_debug == true
 
 
-- name: Remove kubectl commnd in .bashrc
+- name: Remove Kubectl Commnd in .bashrc
   lineinfile:
     path: "{{ item.file }}"
     regexp: "{{ item.regexp }}"
@@ -119,4 +76,3 @@
   register: remove_kubectl_command_bashrc
 - debug: msg={{ remove_kubectl_command_bashrc }}
   when: print_debug
-

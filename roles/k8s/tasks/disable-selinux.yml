@@ -1,0 +1,19 @@
+---
+- name: Disabling SELinux Policy Required by Kubnernetes
+  selinux:
+    state: disabled
+  register: selinux_disabled
+  notify:
+    - Restart System
+    - Waiting for Server to Come Back After Reboot
+  failed_when: selinux_disabled.msg | default('ok', True) is not search('(^ok$|libselinux-python|(SELinux state changed))')
+- debug: msg={{ selinux_disabled }}
+  when: print_debug == true
+
+
+- name: Check if SELinux Have Been Disabled in Configurtion File
+  command: grep SELINUX /etc/selinux/config
+  register: sevalue
+- debug: msg={{ sevalue }}
+  when: print_debug == true
+

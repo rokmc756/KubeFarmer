@@ -1,41 +1,38 @@
 ---
-# Install Kubernetes Software
-
 - name: Install RPM Packages of Dependenies to Need Installing Packages Regarding Kubernates
   package:
     name: "{{ install_pkgs }}"
     state: present
   ignore_errors: yes
-  when: install_pkgs
+#  when: install_pkgs
 #  and hostvars[inventory_hostname].ansible_distribution_major_version|int >= 9
 
-#
+
 - name: Install RPM Packages of Dependenies to Need Installing Packages Regarding Kubernates
   package:
     name: "{{ rh8_common_devel_pkgs }}"
     state: present
   register: selinux_policy_installed
-  when: install_pkgs and ( ansible_distribution == "RedHat" or ansible_distribution == "CentOS" or ansible_distribution == "Rocky" ) and ansible_distribution_major_version|int <= 8
-#
+  when: ansible_distribution_major_version|int <= 8
 - debug:
     var: selinux_policy_installed
   when: print_debug
 
-#
+
 - name: Add Docker Repository in All Nodes
   yum_repository:
     name: docker-ce
     description: Add docker repsotiry
     baseurl: "https://download.docker.com/linux/centos/{{ hostvars[inventory_hostname].ansible_distribution_major_version }}/x86_64/stable/"
     gpgcheck: "no"
-  when: ( ansible_distribution == "RedHat" or ansible_distribution == "CentOS" or ansible_distribution == "Rocky" ) and ansible_distribution_major_version|int >= 9
+  when: ansible_distribution_major_version|int >= 9
 
 
 - name: Install Docker-CE Packages of the Latest Version in All Nodes
   package:
     name: "{{ rh_docker_pkgs }}"
     state: present
-  when: install_pkgs and ( ansible_distribution == "RedHat" or ansible_distribution == "CentOS" or ansible_distribution == "Rocky" ) and ansible_distribution_major_version|int >= 9
+  when: ansible_distribution_major_version|int >= 9
 
 
 - name: Add Kubernetes Repositories in All Nodes
@@ -53,7 +50,7 @@
     - "kubeadm-{{ k8s.major_version }}.{{ k8s.minor_version }}.{{ k8s.patch_version }}"
   when: install_pkgs
 
-#
+
 - name: Install Cgroup Packages in All Nodes
   package:
     name: "{{ item }}"
@@ -61,5 +58,5 @@
   with_items:
     - libcgroup
     - libcgroup-tools
-  when: install_pkgs and hostvars[inventory_hostname].ansible_distribution_major_version|int < 9
+  when: hostvars[inventory_hostname].ansible_distribution_major_version|int < 9
 

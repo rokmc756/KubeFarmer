@@ -3,16 +3,17 @@
   lineinfile:
     path: /etc/locale.conf
     line: "LC_CTYPE=en_US.UTF-8"
+  ignore_errors: true
   register: lctype_line_added
 
 
-- name: Unset Variables of Token and Certs Generated Previously by Kubeadm Init
-  set_fact:
-    k8s_token_ca_cert:
-    k8s_token:
+- name: Lock Versions to Avoid Unwanted Packages Updated
+  shell: |
+    {{ lock_kube_cmds }}
+  register: kube_versions_lock
 
 
-- name: Enable br_netfilter and Overlay Module for iptables
+- name: Enable br_netfilter and Overlay Kernel Module for IPTables
   copy:
     dest: /etc/modules-load.d/containerd.conf
     content: |
@@ -31,6 +32,7 @@
 
 - name: Initialize Containerd
   shell: |
+    mkdir /etc/containerd
     containerd config default > /etc/containerd/config.toml
 
 
@@ -44,18 +46,6 @@
     - { regexp: '            SystemdCgroup = false', line: '            SystemdCgroup = true', state: present, backrefs: no }
 
 
-- name: Start Containerd to Apply SystemdCgroup in config.toml
-  systemd:
-    name: containerd
-    state: restarted
-    enabled: yes
-    daemon_reload: yes
-  register: restart_containerd
-  until: restart_containerd is succeeded
-  retries: 20
-  delay: 10
-
-
 - name: Creates Docker Directory Under /etc
   file:
     path: /etc/docker
@@ -66,42 +56,36 @@
 - name: Configure the Docker Daemon to Use Systemd for the Management of the Cotainer's CGroups
   template: src=daemon.json.j2 dest=/etc/docker/daemon.json owner=root group=root mode=644 force=yes
   register: cgroup_docker_configured
-
-
-- name: Start Docker Daemon
-  systemd:
-    name: docker
-    state: started
-    enabled: yes
-    daemon_reload: yes
-  register: start_docker
-  until: start_docker is succeeded
-  retries: 20
-  delay: 10
+  notify:
+    - Start Docker
 
 
 - name: Configure the Kubelet Daemon to Use Systemd for the Management of the Cotainer's CGroups
   template: src=kubelet.j2 dest=/etc/sysconfig/kubelet owner=root group=root mode=644 force=yes
   register: kubernetes_repo_added
+  notify:
+    - Start Kubelet
+  when: ansible_distribution == "RedHat"
+  # No in SUSE
+  # No in Ubuntu
+
+
+- name: Configure the Kubelet Daemon to Use Systemd for the Management of the Cotainer's CGroups
+  template: src=kubelet.ubt.j2 dest=/etc/default/kubelet owner=root group=root mode=644 force=yes
+  register: config_kubelet
+  notify:
+    - Start Kubelet
+  when: ansible_distribution == "Ubuntu"
+- debug: msg={{ config_kubelet }}
+  when: print_debug == true and ansible_distribution == "Ubuntu"
+  # For Ubuntu Only
 
 
 - name: Copy CGroup Config File
   template: src=cgconfig.conf.j2 dest=/etc/cgconfig.conf owner=root group=root mode=644 force=yes
   register: cgroup_config_file_copied
-
-
-#- name: Enable CGroup
-#  systemd:
-#    name: cgconfig
-#    state: started
-#    enabled: yes
-#    daemon_reload: yes
-#  when: ansible_distribution == "openSUSE Leap" and ansible_distribution_major_version|int <= 15
-
-
-- name: Lock Versions to Avoid Unwanted Updated YUM Updates
-  command: yum versionlock kubelet kubeadm kubectl
-  register: rh_virsions_lock
+  when: ansible_distribution == "openSUSE Leap" or ansible_distribution == "RedHat"
+  # No in Ubuntu
 
 
 - name: Create Cluster Configuration in Master Node
@@ -120,7 +104,7 @@
     backrefs: "{{ item.backrefs }}"
   with_items:
     - { regexp: "^  name: node", line: "  name: {{ ansible_hostname }}", state: present, backrefs: yes }
-    - { regexp: "^  advertiseAddress: 1.2.3.4", line: "  advertiseAddress: {{ hostvars[inventory_hostname]['ansible_'~netdev1]['ipv4']['address'] }}", state: present, backrefs: yes }
+    - { regexp: "^  advertiseAddress: 1.2.3.4", line: "  advertiseAddress: {{ hostvars[inventory_hostname][_netdev]['ipv4']['address'] }}", state: present, backrefs: yes }
     - { regexp: "^  criSocket: /var/run/dockershim.sock", line: "  criSocket: /run/containerd/containerd.sock", state: present, backrefs: yes }
   when: inventory_hostname in groups['master']
 
@@ -148,6 +132,9 @@
 - name: Change Kubelet Systemd File
   template: src=kubelet.systemd.j2 dest=/usr/lib/systemd/system/kubelet.service owner=root group=root mode=644 force=yes
   register: kubelet_systemd_changed
+  when: ansible_distribution == "openSUSE Leap" or ansible_distribution == "RedHat"
+  # No in SUSE
+  # No in Ubuntu
 
 
 - name: Add Kubelet Args Line
@@ -156,33 +143,36 @@
     line: "Environment=\"KUBELET_EXTRA_ARGS=--fail-swap-on=false\""
     state: present
   register: add_kubelet_args_line
+  notify:
+    - Restart Kubelet
 - debug: msg={{ add_kubelet_args_line }}
   when: print_debug == true
 
 
-- name: Start Container Runtime to Apply Changes in config.toml
+- name: Replace a Line to Comment Conflict for Docker and Containerd
+  lineinfile:
+    dest: /usr/lib/systemd/system/containerd.service
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    state: "{{ item.state }}"
+  register: replace_conflict_line
+  with_items:
+    - { regexp: '^Conflicts=docker.service', line: '#Conflicts=docker.service', state: present }
+  when: ansible_distribution == "openSUSE Leap" and ansible_distribution_major_version|int <= 15
+- debug: msg={{ replace_conflict_line }}
+  when: print_debug == true and ansible_distribution == "openSUSE Leap" and ansible_distribution_major_version|int <= 15
+
+
+- name: Enable CGroup
   systemd:
-    name: "{{ container_runtime }}"
+    name: cgconfig
     state: started
     enabled: yes
     daemon_reload: yes
-  register: start_containerd
-  until: start_containerd is succeeded
-  retries: 20
-  delay: 10
-- debug: msg={{ start_containerd }}
-  when: print_debug == true
+  register: enable_cgroup
+  when: ansible_distribution == "openSUSE Leap" and ansible_distribution_major_version|int <= 15
+- debug: msg={{ enable_cgroup }}
+  when: print_debug == true and ansible_distribution == "openSUSE Leap" and ansible_distribution_major_version|int <= 15
+  #  No In Red Hat
+  #  No in Ubuntu
 
-
-- name: Enable and Start Kubelet
-  systemd:
-    name: kubelet
-    state: started
-    enabled: yes
-    daemon_reload: yes
-  register: enable_kubelet
-  until: enable_kubelet is succeeded
-  retries: 20
-  delay: 10
-- debug: msg={{ enable_kubelet }}
-  when: print_debug == true

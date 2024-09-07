@@ -38,6 +38,7 @@
 #  ignore_errors: yes
 #  with_items: "{{ install_pkgs }}"
 
+
 #- name: Remove Kubernetes Repository
 #  shell: |
 #    zypper ar -f https://pkgs.k8s.io/core:/stable:/v{{ k8s.major_version }}.{{ k8s.minor_version }}/rpm/ kubernetes
@@ -54,4 +55,3 @@
     - "{{ docker_pkgs }}"
 - debug: msg={{ uninstall_docker_pkgs }}
   when: print_debug == true
-

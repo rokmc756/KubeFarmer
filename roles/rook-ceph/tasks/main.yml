@@ -50,10 +50,10 @@
   when: metallb.install == true and inventory_hostname in groups['master']
 
 
-- name: Check the Status of Rook Ceph and Print Connection Info
-  import_tasks: check-rook-ceph-status.yml
-  tags: install
-  when: rook.install == true and inventory_hostname in groups['master']
+#- name: Check the Status of Rook Ceph and Print Connection Info
+#  import_tasks: check-rook-ceph-status.yml
+#  tags: install
+#  when: rook.install == true and inventory_hostname in groups['master']
 
 
 - name: Uninstall Load Balancer

@@ -3,13 +3,14 @@
   import_tasks: disable-selinux.yml
 
 
-- name: Initialize Containerd
-  shell: |
-    mkdir /etc/containerd
-    containerd config default > /etc/containerd/config.toml
+#- name: Set SELinux Permissive Mode
+#  shell: |
+#    setenforce 0
+#    sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config
+#  when: ansible_distribution == "RedHat" or ansible_distribution == "CentOS" or ansible_distribution == "Rocky"
 
 
-- name: Stop Services Before Reinitializating Kubernetes
+- name: X
   shell: |
     echo "Stop Services Before Reinitialization"
   notify:
@@ -24,9 +25,33 @@
   when: inventory_hostname in groups['master'] or inventory_hostname in groups['workers']
 
 
-- name: Remove Directories Used by Persistenct Volumes
-  import_tasks: remove-pv-dirs.yml
-  when: inventory_hostname in groups['master'] or inventory_hostname in groups['workers']
+#- name: Reset Kubernetes for Workers
+#  command: kubeadm reset -f
+#  when: inventory_hostname in groups['workers']
+
+
+- name: Remove Directory for Persistent Volumes
+  file:
+    path: "/mnt/{{ item }}"
+    state: absent
+  register: remove_pv_dir
+  with_items:
+    - "awx-storage"
+    - "katib-storage"
+    - "authservice-storage"
+    - "jenkins-storage"
+    - "harbor-storage"
+    - "kafka-storage"
+    - "hadoop-storage"
+    - "geode-storage"
+    - "mongodb-storage"
+    - "stratos-storage"
+    - "cf-k8s-storage"
+    - "cf-db-storage"
+    - "cf-blobstore-storage"
+    - "cf-for-k8s"
+- debug: msg={{ remove_pv_dir }}
+  when: print_debug == true
 
 
 - name: Config Image Pull
@@ -69,9 +94,18 @@
   when: print_debug == true and inventory_hostname in groups['master']
 
 
-- name: Enable User as Admin Kube Environment
-  import_tasks: enable-default-kube-env.yml
+- name: Enable Your User to Start Using the Cluster
+  shell: |
+    rm -rf $HOME/.kube
+    rm -rf "{{ k8s.base_path }}"/calico.yaml
+    mkdir -p $HOME/.kube
+    rm -f $HOME/.kube/config
+    cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+    chown $(id -u):$(id -g) $HOME/.kube/config
+  register: start_using_cluster_enabled
   when: inventory_hostname in groups['master']
+- debug: msg={{ start_using_cluster_enabled }}
+  when: print_debug == true and inventory_hostname in groups['master']
 
 
 - name: Configure Kubectl Config
@@ -118,6 +152,21 @@
   when: inventory_hostname in groups['master']
 
 
+#- name: Setup Calico CNI Networking without Operator
+#  import_tasks: apply-calico-cni.yml
+#  when: ( k8s.cni.name == "calico" and k8s.cni.operator == "" ) and inventory_hostname in groups['master']
+#
+#
+#- name: Setup Kube Flannel CNI Networking without Operator
+#  import_tasks: apply-kube-flannel-cni.yml
+#  when: ( k8s.cni.name == "kube-flannel" and k8s.cni.operator == "" ) and inventory_hostname in groups['master']
+#
+#
+#- name: Setup Calico CNI Networking with Tigera Operator
+#  import_tasks: apply-tigera-operator.yml
+#  when: ( k8s.cni.name == "tigera" and k8s.cni.operator == "tigera" ) and inventory_hostname in groups['master']
+#
+
 - name: Confirm that the Kubectl Command is Activated
   command: kubectl get nodes
   register: kubectl_get_nodes
@@ -126,6 +175,7 @@
   when: print_debug == true and inventory_hostname in groups['master']
 
 
+# Initialize Workder Nodes in Kubernetes Cluster
 - name: Reset Kubernetes on Cluster Nodes
   command:  kubeadm reset -f
   register: kube_cluster_reset
@@ -134,6 +184,7 @@
   when: print_debug == true and inventory_hostname in groups['master']
 
 
+# kubeadm join "{{ hostvars[groups['master'][0]]['ansible_'~netdev1]['ipv4']['address'] }}:6443" \
 - name: Join the Other Kubernetes Nodes to Cluster, the Command must be Run on the Worker Nodes Only
   shell: |
     kubeadm join "{{ hostvars[groups['master'][0]][_netdev]['ipv4']['address'] }}:6443" \
@@ -153,6 +204,16 @@
   when: inventory_hostname in groups['master']
 - debug: msg={{ kubectl_get_nodes }}
   when: print_debug == true and inventory_hostname in groups['master']
+
+
+#- name: Restart Kubelet in Master Node
+#  systemd:
+#    name: kubelet
+#    state: restarted
+#    enabled: yes
+#  register: kubelet_restarted
+#- debug: msg={{ kubelet_restarted }}
+#  when: print_debug == true and inventory_hostname in groups['master']
 
 
 - name: Validate if Kubernetes Workers are All Ready
@@ -177,18 +238,56 @@
   when: print_debug == true and inventory_hostname in groups['master']
 
 
-- name: Check the Status fo CNI Network Plugin
-  import_tasks: check-cni-network-plugin.yml
-  when: k8s.cni.install == true and inventory_hostname in groups['master']
+- name: Validate if All Calico Nodes Are Running
+  shell: |
+    kubectl get all -n kube-system | grep "pod/calico-node" |  grep -v Running | awk '{print $3}'
+  register: check_all_calico_nodes
+  ignore_errors: true
+  until: check_all_calico_nodes.stdout.find("") != -1
+  retries: 100
+  delay: 10
+  when: inventory_hostname in groups['master']
+- debug: msg={{ check_all_calico_nodes }}
+  when: print_debug == true and inventory_hostname in groups['master']
 
 
-- name: Restart Services for Kubernetes After Reinitialization
+- name: X
   shell: |
     echo "Restart Services After Reinitialization"
   notify:
     - Stop Firewalld
     - Restart Docker
     - Restart Containerd
+
+
+#- name: Stop and Disable Firewalld
+#  systemd:
+#    name: firewalld
+#    state: stopped
+#    enabled: no
+#  register: firewalld_started
+#- debug: msg={{ firewalld_started }}
+#  when: print_debug == true
+
+
+#- name: Enable and Restart Docker
+#  systemd:
+#    name: docker
+#    state: restarted
+#    enabled: yes
+#  register: docker_restarted
+#  ignore_errors: true
+#  until: docker_restarted is succeeded
+
+
+#- name: Enable and Restart Containerd
+#  systemd:
+#    name: containerd
+#    state: restarted
+#    enabled: yes
+#  register: containerd_restarted
+#  ignore_errors: true
+#  until: containerd_restarted is succeeded
 
 
 # Calico CNI
@@ -204,3 +303,4 @@
 # host-cidr, pod-cidr and service-cidrs need to be disjoint (i.e. separate and non-overlapping)
 #
 # https://www.centlinux.com/2022/11/install-kubernetes-master-node-rocky-linux.html
+
