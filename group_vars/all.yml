@@ -34,16 +34,38 @@ k8s:
       ipaddr0: "192.168.0."
       ipaddr1: "192.168.1."
   cni:
-    install: true
-    name: calico  # kube-flannel
-    operator: ""
-    major_version: 3
-    minor_version: 27
-    patch_version: 3
-    pod_network: "10.142.0.0/16"
     # pod_network: "10.142.0.0/16"
     # pod_network: "192.168.0.0/16"
     # pod_network: "192.167.0.0/16"
+    install: true
+    pod_network: "10.142.0.0/16"
+    calico:
+      install: true
+      operator: ""
+      major_version: 3
+      minor_version: 27
+      patch_version: 3
+      download_url: "https://raw.githubusercontent.com/projectcalico/calico"
+    cilium:
+      install: true
+      major_version: 1
+      minor_version: 15
+      patch_version: 6
+      download_url: "https://github.com/cilium/cilium-cli/releases/download"
+      api_server_port: 6443
+      cli:
+        install: true
+        major_version: 0
+        minor_version: 16
+        patch_version: 15
+        arch: "amd64"
+        download_url: "https://github.com/cilium/cilium-cli/releases/download"
+    kube_flannel:
+      install: false
+      major_version: 1
+      minor_version: 1
+      patch_version: 1
+      download_url: "https://raw.githubusercontent.com/coreos/flannel"
 
 
 

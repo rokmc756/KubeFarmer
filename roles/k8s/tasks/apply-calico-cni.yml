@@ -1,8 +1,8 @@
 # url: https://raw.githubusercontent.com/projectcalico/calico/v3.25.0/manifests/calico.yaml
 - name: Download Calico Networking
   get_url:
-    url: https://raw.githubusercontent.com/projectcalico/{{ k8s.cni.name }}/v{{ k8s.cni.major_version }}.{{ k8s.cni.minor_version }}.{{ k8s.cni.patch_version }}/manifests/calico.yaml
-    dest: /root/calico.yaml
+    url: {{ k8s.cni.calico.download_url }}/v{{ k8s.cni.calico.major_version }}.{{ k8s.cni.calico.minor_version }}.{{ k8s.cni.calico.patch_version }}/manifests/calico.yaml
+    dest: "{{ k8s.base_path }}/calico.yaml"
     mode: 0644
   register: calico_downloaded
   when: inventory_hostname in groups['master']
@@ -10,9 +10,9 @@
   when: print_debug == true and inventory_hostname in groups['master']
 
 
-- name: Modify /root/calica.yaml for CIDR
+- name: Modify {{ k8s.base_path }}/calica.yaml for CIDR
   lineinfile:
-    dest: /root/calico.yaml
+    dest: "{{ k8s.base_path }}/calico.yaml"
     regexp: "{{ item.regexp }}"
     line: "{{ item.line }}"
     state: "{{ item.state }}"
@@ -27,7 +27,7 @@
 
 
 - name: Setup Calico Networking
-  command: kubectl apply -f /root/calico.yaml
+  command: kubectl apply -f {{ k8s.base_path }}/calico.yaml
   register: calico_network_setup
   when: inventory_hostname in groups['master']
 - debug: msg={{ calico_network_setup }}
@@ -35,7 +35,7 @@
 
 
 - name: Check if Calicoctl exists
-  stat: path=/root/calicoctl
+  stat: path={{ k8s.base_path }}/calico.yaml
   register: calicoctl_bin_exists
 - debug: msg={{ calicoctl_bin_exists }}
   when: print_debug == true
@@ -43,7 +43,7 @@
 
 - name: Unarchive Calicoctl Tarball
   unarchive:
-    src: "calicoctl-v{{ k8s.cni.major_version }}.{{ k8s.cni.minor_version }}.{{ k8s.cni.patch_version }}.tar.gz"
+    src: "calicoctl-v{{ k8s.cni.calico.major_version }}.{{ k8s.cni.calico.minor_version }}.{{ k8s.cni.calico.patch_version }}.tar.gz"
     dest: "/usr/local/bin/"
     mode: 0755
     owner: root
@@ -58,9 +58,9 @@
 # curl -L https://github.com/projectcalico/calico/releases/download/v3.27.3/calicoctl-linux-amd64 -o /root/calicoctl
 - name: Install Calicoctl
   shell: |
-    curl -o /root/calicoctl -O -L https://github.com/projectcalico/calico/releases/download/v{{ k8s.cni.major_version }}.{{ k8s.cni.minor_version }}.{{ k8s.cni.patch_version }}/calicoctl-linux-amd64
-    chmod +x /root/calicoctl
-    mv /root/calicoctl /usr/local/bin
+    curl -o {{ k8s.base_path }}/calicoctl -O -L https://github.com/projectcalico/calico/releases/download/v{{ k8s.cni.calico.major_version }}.{{ k8s.cni.calico.minor_version }}.{{ k8s.cni.calico.patch_version }}/calicoctl-linux-amd64
+    chmod +x {{ k8s.base_path }}/calicoctl
+    mv {{ k8s.base_path }}/calicoctl /usr/local/bin/
   register: install_calicoctl
   when: upload_calico == false and calicoctl_bin_exists.stat.exists == true and inventory_hostname in groups['master']
 - debug: msg={{ install_calicoctl }}

@@ -1,2 +1,79 @@
+---
 # https://itnext.io/run-your-kubernetes-cluster-on-bare-metal-with-cilium-cni-part-1-e88028800d90
 # https://docs.cilium.io/en/stable/gettingstarted/k8s-install-default/
+
+- name: Add Cilium CNI Plugin Helm Repo
+  shell: |
+    helm repo add cilium https://helm.cilium.io/
+  register: add_jetstack_helm_repo
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+  when: inventory_hostname in groups['master']
+- debug: msg={{ add_jetstack_helm_repo }}
+  when: print_debug == true and inventory_hostname in groups['master']
+
+
+- name: Update Helm Repo
+  shell: |
+    helm repo update
+  register: update_helm_repo
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+  when: inventory_hostname in groups['master']
+- debug: msg={{ update_helm_repo }}
+  when: print_debug == true and inventory_hostname in groups['master']
+
+
+- name: Install Cilium CNI Plugin to Define a Bunch of Options That Subsequently Enable Capabilities
+  shell: |
+    helm install cilium cilium/cilium --version {{ k8s.cni.cilium.major_version }}.{{ k8s.cni.cilium.minor_version }}.{{ k8s.cni.cilium.patch_version }} \
+    --namespace kube-system \
+    --set k8sServiceHost={{ hostvars[groups['master'][0]][_netdev]['ipv4']['address'] }} \
+    --set k8sServicePort={{ k8s.cni.cilium.api_server_port }} \
+    --set kubeProxyReplacement=true \
+    --set l2announcements.enabled=true \
+    --set encryption.enabled=true \
+    --set encryption.type=wireguard \
+    --set ingressController.enabled=true \
+    --set ingressController.loadbalancerMode=dedicated \
+    --set hubble.relay.enabled=true \
+    --set hubble.ui.enabled=true
+  register: install_cilium_cni_plugin
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+  when: inventory_hostname in groups['master']
+- debug: msg={{ install_cilium_cni_plugin }}
+  when: print_debug == true and inventory_hostname in groups['master']
+
+#
+# The important ones to mention are:
+#
+# Replacement of the kube-proxy by Cilium
+# L2announcements for ipv4 support on our LoadBalancer objects
+# Pod-to-Pod encryption using Wireguard*
+# Hubble relay for observability.
+# Dedicated mode for LoadBalancer objects as to avoid potential conflicts (e.g. path prefix) between resources.
+# Hubble UI to enable the Hubble web interface.
+# *Not for pods that are in the same node.
+
+
+- name: Install Cilium CLI
+  shell: |
+    curl -L --fail --remote-name-all {{ k8s.cni.cilium.cli.download_path }}/v{{ k8s.cni.cilium.cli.major_version }}.{{ k8s.cni.cilium.cli.minor_version }}.{{ k8s.cni.cilium.cli.patch_version }}/cilium-linux-{{ k8s.cni.cilium.cli.arch }}.tar.gz
+    mv {{ k8s.base_path }}/calicoctl /usr/local/bin/
+  register: install_calicoctl
+  when: upload_calico == false and calicoctl_bin_exists.stat.exists == true and inventory_hostname in groups['master']
+- debug: msg={{ install_calicoctl }}
+  when: print_debug == true and upload_calico == false and calicoctl_bin_exists.stat.exists == false and inventory_hostname in groups['master']
+
+
+
+# CILIUM_CLI_VERSION=$(curl -s https://raw.githubusercontent.com/cilium/cilium-cli/main/stable.txt)
+# CLI_ARCH=amd64
+# if [ "$(uname -m)" = "aarch64" ]; then CLI_ARCH=arm64; fi
+# curl -L --fail --remote-name-all https://github.com/cilium/cilium-cli/releases/download/${CILIUM_CLI_VERSION}/cilium-linux-${CLI_ARCH}.tar.gz{,.sha256sum}
+# sha256sum --check cilium-linux-${CLI_ARCH}.tar.gz.sha256sum
+# sudo tar xzvfC cilium-linux-${CLI_ARCH}.tar.gz /usr/local/bin
+# rm cilium-linux-${CLI_ARCH}.tar.gz{,.sha256sum}
+
+
