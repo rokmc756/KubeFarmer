@@ -11,5 +11,5 @@
 
 - name: Setup Calico CNI Networking With Tigera Operator
   import_tasks: apply-tigera-operator.yml
-  when: ( k8s.cni.tigera.install == true and k8s.cni.tigera.operator == "tigera" ) and inventory_hostname in groups['master']
+  when: ( k8s.cni.tigera.install == true and k8s.cni.tigera.operator == "" ) and inventory_hostname in groups['master']
 

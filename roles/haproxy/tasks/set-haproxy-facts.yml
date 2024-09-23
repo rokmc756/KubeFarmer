@@ -1,0 +1,32 @@
+---
+- name: Get Network Interface name From Prefix of IP Addresses Provided for Greenplum Nodes
+  set_fact:
+    netdev0: "{{ ansible_interfaces | map('regex_replace', '^', 'ansible_') | map('extract', vars) | selectattr('ipv4', 'defined') | selectattr('ipv4.address', 'match', k8s.net.ipaddr0 ) | map(attribute='device') | first }}"
+    netdev1: "{{ ansible_interfaces | map('regex_replace', '^', 'ansible_') | map('extract', vars) | selectattr('ipv4', 'defined') | selectattr('ipv4.address', 'match', k8s.net.ipaddr1 ) | map(attribute='device') | first }}"
+    netdev2: "{{ ansible_interfaces | map('regex_replace', '^', 'ansible_') | map('extract', vars) | selectattr('ipv4', 'defined') | selectattr('ipv4.address', 'match', k8s.net.ipaddr2 ) | map(attribute='device') | first }}"
+
+
+- name: Get IP Address from Provided Network Device Name
+  set_fact:
+    ipaddr0: "{{ hostvars[inventory_hostname]['ansible_'~netdev0].ipv4.address }}"
+    ipaddr1: "{{ hostvars[inventory_hostname]['ansible_'~netdev1].ipv4.address }}"
+    ipaddr2: "{{ hostvars[inventory_hostname]['ansible_'~netdev2].ipv4.address }}"
+
+
+- name: Set Default Network Device and Address
+  set_fact:
+    _netdev: "{{ 'ansible_'~ netdev1 }}"
+    _ipaddr: "{{ ipaddr1 }}"
+
+
+- name: Define Fact of Network Address
+  set_fact:
+    keepalived_network_range: "{{ hostvars[inventory_hostname][_netdev]['ipv4']['network'] }}/{{ ( hostvars[inventory_hostname][_netdev]['ipv4']['address'] + '/' + hostvars[inventory_hostname][_netdev]['ipv4']['netmask'] ) | ansible.utils.ipaddr('prefix') }}"
+
+
+- name: Define Fact of Specific IP Address Range
+  set_fact:
+    keepalived_ip_addr_range: "{{ item }}"
+  with_items: "{{ ansible_all_ipv4_addresses }}"
+  when: "item | ansible.utils.ipaddr( keepalived_network_range )"
+

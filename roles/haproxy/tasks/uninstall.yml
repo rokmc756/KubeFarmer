@@ -1,43 +1,31 @@
 ---
-# https://blog.dbi-services.com/using-ansible-to-bring-up-a-three-node-patroni-cluster-in-minutes/
-
-# we need to set this so that haproxy can not be started
-- name: Set selinux context for haproxy
-  become: true
+- name: Set SELinux Context for HA Proxy
   shell: setsebool -P haproxy_connect_any=0
   ignore_errors: yes
-  when: not inventory_hostname in groups['workers']
 
-#
-- name: Disable the systemd haproxy service
-  become: true
+
+- name: Disable the Systemd HA Proxy Service
   systemd:
     name: haproxy
     enabled: no
     state: stopped
   ignore_errors: yes
-  when: not inventory_hostname in groups['workers']
 
-#
-- name: force systemd to reread configs
-  become: true
+
+- name: Force Systemd to Reread Configs
   systemd:
     daemon_reload: yes
-  when: not inventory_hostname in groups['workers']
 
-#
-- name: Uninstall all rpm packages for haproxy
-  become: true
+
+- name: Uninstall All Packages for HA Proxy
   yum: name={{item}} state=absent
   with_items:
    - bind-utils
    - haproxy
-  when: not inventory_hostname in groups['workers']
 
-#
+
 - name: Delete haproxy.cfg
-  become: true
   file:
     path: /etc/haproxy/haproxy.cfg
     state: absent
-  when: not inventory_hostname in groups['workers']
+

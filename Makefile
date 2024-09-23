@@ -49,11 +49,21 @@ init:	setup-host.yml update-host.yml
 	done
 	ansible-playbook -i ansible-hosts -u ${USERNAME} --ssh-common-args='-o UserKnownHostsFile=./known_hosts -o VerifyHostKeyDNS=true' install-ansible-prereqs.yml
 
+hosts:
+	make -f ./makefile_configs/Makefile.hosts r=${r} s=${s} c=${c} USERNAME=${USERNAME}
+
 k8s:
 	make -f ./makefile_configs/Makefile.k8s r=${r} s=${s} c=${c} USERNAME=${USERNAME}
 
 rook:
 	make -f ./makefile_configs/Makefile.rook r=${r} s=${s} c=${c} USERNAME=${USERNAME}
+
+kubeflow:
+	make -f ./makefile_configs/Makefile.kubeflow r=${r} s=${s} c=${c} USERNAME=${USERNAME}
+
+haproxy:
+	make -f ./makefile_configs/Makefile.haproxy r=${r} s=${s} c=${c} USERNAME=${USERNAME}
+
 
 
 # - https://ansible-tutorial.schoolofdevops.com/control_structures/

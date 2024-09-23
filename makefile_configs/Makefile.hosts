@@ -1,0 +1,9 @@
+hosts:
+	@if [ "${r}" = "init" ]; then\
+		ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} init-hosts.yml --tags='install';\
+	elif [ "${r}" = "uninit" ]; then\
+		ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} init-hosts.yml --tags='uninstall';\
+	else\
+		echo "No Actions to Initialize All Hosts";\
+		exit;\
+	fi

@@ -1,42 +1,36 @@
 ---
 # https://blog.dbi-services.com/using-ansible-to-bring-up-a-three-node-patroni-cluster-in-minutes/
 
-- name: Install all rpm packages for haproxy
-  become: true
-  yum: name={{item}} state=present
+- name: Install All Packages for HA Proxy
+  package: name={{item}} state=present
   with_items:
    - bind-utils
    - haproxy
-  when: not inventory_hostname in groups['workers']
+
 
 - name: Copy haproxy.cfg
-  become: true
   template:
     src: haproxy.cfg.j2
     dest: /etc/haproxy/haproxy.cfg
     owner: root
     group: root
     mode: 0600
-  when: not inventory_hostname in groups['workers']
 
-- name: force systemd to reread configs
-  become: true
+
+- name: Force Systemd to Reload Configs
   systemd:
     daemon_reload: yes
-  when: not inventory_hostname in groups['workers']
 
-- name: Enable the systemd haproxy service
-  become: true
+
+- name: Enable the Systemd HA Proxy Service
   systemd:
     name: haproxy
     enabled: yes
     state: restarted
-  when: not inventory_hostname in groups['workers']
 
-# we need to set this so haproxy can be started
-- name: Set selinux context for ha proxy
-  become: true
+
+# We need to set this so haproxy can be started
+- name: Set SELinux Context for HA Proxy
   shell: setsebool -P haproxy_connect_any=1
   ignore_errors: yes
-  when: not inventory_hostname in groups['workers']
 

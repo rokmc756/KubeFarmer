@@ -47,14 +47,14 @@ k8s:
       patch_version: 3
       download_url: "https://raw.githubusercontent.com/projectcalico/calico"
     cilium:
-      install: true
+      install: false
       major_version: 1
       minor_version: 15
       patch_version: 6
       download_url: "https://github.com/cilium/cilium-cli/releases/download"
       api_server_port: 6443
       cli:
-        install: true
+        install: false
         major_version: 0
         minor_version: 16
         patch_version: 15
@@ -66,7 +66,12 @@ k8s:
       minor_version: 1
       patch_version: 1
       download_url: "https://raw.githubusercontent.com/coreos/flannel"
-
+    tigera:
+      install: false
+      major_version: 1
+      minor_version: 1
+      patch_version: 1
+      download_url: "https://raw.githubusercontent.com/"
 
 
 vmware:

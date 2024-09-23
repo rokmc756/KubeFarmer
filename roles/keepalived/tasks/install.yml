@@ -1,18 +1,16 @@
 ---
-# This role installs and sets up keepalived
-
-- name: Install keepalived
-  become: true
+- name: Install KeepAlived
   package:
     name: keepalived
     state: latest
   tags: keepalived
   notify: restart keepalived
 
+
 - when: keepalived_notifications_email | default(False)
   block:
    - name: Install postfix to send notifications
-     package: 
+     package:
        name: ['postfix', 'mailutils']
        state: present
 
@@ -21,10 +19,9 @@
        name: postfix
        state: started
        enabled: yes
- 
 
-- name: Install check script
-  become: true
+
+- name: Install Check Script
   become_user: root
   template:
     src: "templates/{{ keepalived_check_script_name }}.sh.j2"
@@ -35,8 +32,8 @@
   tags: keepalived
   notify: restart keepalived
 
-- name: Install email notification script
-  become: true
+
+- name: Install Email Notification Script
   become_user: root
   template:
     src: "templates/email_notify.sh.j2"
@@ -47,8 +44,8 @@
   tags: keepalived
   notify: restart keepalived
 
-- name: Keepalived configuration
-  become: true
+
+- name: KeepAlived Configuration
   become_user: root
   template:
     src: keepalived.conf.j2
@@ -56,10 +53,11 @@
   tags: keepalived
   notify: restart keepalived
 
-- name: Start keepalived
-  become: true
+
+- name: Start KeepAlived
   systemd:
     name: keepalived
     state: started
     enabled: yes
 #  tags: keepalived
+

@@ -1,7 +1,7 @@
 # url: https://raw.githubusercontent.com/projectcalico/calico/v3.25.0/manifests/calico.yaml
 - name: Download Calico Networking
   get_url:
-    url: {{ k8s.cni.calico.download_url }}/v{{ k8s.cni.calico.major_version }}.{{ k8s.cni.calico.minor_version }}.{{ k8s.cni.calico.patch_version }}/manifests/calico.yaml
+    url: "{{ k8s.cni.calico.download_url }}/v{{ k8s.cni.calico.major_version }}.{{ k8s.cni.calico.minor_version }}.{{ k8s.cni.calico.patch_version }}/manifests/calico.yaml"
     dest: "{{ k8s.base_path }}/calico.yaml"
     mode: 0644
   register: calico_downloaded

@@ -1,0 +1,8 @@
+---
+- hosts: all
+  become: yes
+  vars:
+    print_debug: true
+  roles:
+    - init-hosts
+
