@@ -10,6 +10,10 @@ rk9-node01 ansible_ssh_host=192.168.1.71
 rk9-node02 ansible_ssh_host=192.168.1.72
 
 
+[slaves]
+rk9-node02 ansible_ssh_host=192.168.1.72
+
+
 [workers]
 rk9-node03 ansible_ssh_host=192.168.1.73
 rk9-node04 ansible_ssh_host=192.168.1.74
@@ -19,3 +23,4 @@ rk9-node05 ansible_ssh_host=192.168.1.75
 [lb]
 rk9-node06 ansible_ssh_host=192.168.1.76
 rk9-node07 ansible_ssh_host=192.168.1.77
+

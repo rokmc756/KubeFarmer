@@ -20,10 +20,11 @@ defaults
 	timeout client 60s
 	timeout server 60s
 
-frontend postgres-front
+frontend fe-apiserver
 	bind *:{{ frontend_port }}
 	mode tcp
-	default_backend {{ cluster_name }}
+        option tcplog
+	default_backend {{ k8s.cluster_name }}
 
 listen  admin-stats
 	mode http
@@ -32,18 +33,18 @@ listen  admin-stats
 	stats enable
 	stats refresh 30s
 	stats uri /haproxy?stats
-        stats realm PSQL Haproxy\ Statistics  # Title text for popup window
+        stats realm Kubernetes Haproxy\ Statistics  # Title Text for Popup Window
         stats show-node
         stats show-legends
-        stats show-desc PSQL load balancer stats ( master )
+        stats show-desc Kubernetes Master Load Balancer Stats ( Master )
 	stats auth {{ stats_user }}:{{ stats_pass }}
 
-listen  {{ cluster_name }}
-	bind *:{{ pgsql_wrapping_port }}
+listen  {{ k8s.cluster_name }}
+	bind *:{{ k8s_wrapping_port }}
 	mode tcp
 	option tcplog
 	balance {{ balance_algorithm }}
-        option pgsql-check user haproxy
-    {% for h in groups['master'] %}
-    server {{ h }} {{ hostvars[h][_netdev]['ipv4']['address'] }}:5432 weight 1 check inter 2000 rise 2 fall 3
-    {% endfor %}
+        default-server inter 10s downinter 5s rise 2 fall 2 slowstart 60s maxconn 250 maxqueue 256 weight 100
+        {% for h in groups['master'] %}
+            server {{ h }} {{ hostvars[h][_netdev]['ipv4']['address'] }}:6443 check
+        {% endfor %}
