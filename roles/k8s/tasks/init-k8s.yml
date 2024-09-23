@@ -26,6 +26,7 @@
 
 - name: Config Image Pull
   command: kubeadm config images pull
+  when: inventory_hostname in groups['master']
   # Latest version is k8s v1.24.17 for cf-for-k8s
   # when: ( k8s.major_version|int == 1 and k8s.minor_version|int > 24 ) and inventory_hostname in groups['master']
 
@@ -33,7 +34,7 @@
 - name: Initialize Kubernetes Master and Create Cluster
   shell: |
     kubeadm init --apiserver-advertise-address={{ hostvars[groups['master'][0]][_netdev]['ipv4']['address'] }} \
-    --pod-network-cidr={{ k8s.cni.pod_network }} --cri-socket=unix:///run/containerd/containerd.sock --ignore-preflight-errors=all
+    --pod-network-cidr={{ k8s.cni.pod_network }}  --cri-socket=unix:///run/containerd/containerd.sock --ignore-preflight-errors=all
   async: 360
   poll: 5
   register: kubeadm_init
@@ -41,6 +42,7 @@
 - debug: msg={{ kubeadm_init }}
   when: print_debug == true and inventory_hostname in groups['master']
   # command: kubeadm init --control-plane-endpoint={{ hostvars[groups['master'][0]].ansible_hostname }}
+  # --control-plane-endpoint={{ hostvars[groups['master'][0]][_netdev]['ipv4']['address'] }} --upload-certs \
 
 
 - name: Set Fact for Token CA Certificate
@@ -65,9 +67,19 @@
   when: print_debug == true and inventory_hostname in groups['master']
 
 
+#- name: Set Fact for Certificate Key
+#  set_fact:
+#    k8s_cert_key: "{{ (kubeadm_init.stdout_lines | select('search', '--certificate-key') | list | string | split(' '))[1] }}"
+#  delegate_to: "{{ item }}"
+#  delegate_facts: True
+#  with_items: "{{ groups['all'] }}"
+#  when: inventory_hostname in groups['master']
+#- debug: msg={{ k8s_cert_key }}
+#  when: print_debug == true and inventory_hostname in groups['master']
+
+
 - name: Enable User as Admin Kube Environment
   import_tasks: enable-default-kube-env.yml
-  when: inventory_hostname in groups['master']
 
 
 - name: Configure Kubectl Config
@@ -121,12 +133,18 @@
   when: print_debug == true and inventory_hostname in groups['master']
 
 
+#- name: Add New Master Nodes
+#  import_tasks: add-new-masters.yml
+#  tags: install
+#  when: add_new_masters is defined and add_new_masters == true
+
+
 - name: Reset Kubernetes on Cluster Nodes
   command:  kubeadm reset -f
   register: kube_cluster_reset
   when: inventory_hostname in groups['workers']
 - debug: msg={{ kube_cluster_reset }}
-  when: print_debug == true and inventory_hostname in groups['master']
+  when: print_debug == true and inventory_hostname in groups['workers']
 
 
 - name: Join the Other Kubernetes Nodes to Cluster, the Command must be run on the Worker Nodes Only
@@ -135,7 +153,7 @@
   ignore_errors: yes
   when: inventory_hostname in groups['workers']
 - debug: msg={{ store_it_copied }}
-  when: print_debug == true and inventory_hostname in groups['master']
+  when: print_debug == true and inventory_hostname in groups['workers']
 
 
 - name: Confirm that the Kubectl Command is Activated

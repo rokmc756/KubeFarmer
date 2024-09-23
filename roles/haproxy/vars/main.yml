@@ -1,7 +1,7 @@
 cluster_name: k8s-jack-kr
-postgres_user: postgres
-postgres_group: postgres
-k8s_wrapping_port: 16443
+# postgres_user: postgres
+# postgres_group: postgres
+k8s_wrapping_port: 6443
 balance_algorithm: roundrobin
 global_max_connections: 4096
 defaults_max_connections: 2000

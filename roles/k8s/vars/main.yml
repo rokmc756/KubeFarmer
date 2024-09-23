@@ -43,6 +43,7 @@ common_conf_files:
   - "/mnt/cf-db-storage"
   - "/mnt/cf-blobstore-storage"
   - "/root/cf-for-k8s"
+  - "/etc/kubernetes/pki/ca.crt"
 
 
 ubt_conf_files:

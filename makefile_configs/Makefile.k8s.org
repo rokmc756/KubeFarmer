@@ -1,0 +1,11 @@
+k8s:
+	@if [ "${r}" = "reinit" ]; then\
+		ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} reinit-k8s.yml --tags='reinit';\
+	elif [ "${r}" = "install" ]; then\
+		ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} deploy-k8s.yml --tags='install';\
+	elif [ "${r}" = "uninstall" ]; then\
+		ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} destroy-k8s.yml --tags='uninstall';\
+	else\
+		echo "No Actions for Kubernetes Role";\
+		exit;\
+	fi

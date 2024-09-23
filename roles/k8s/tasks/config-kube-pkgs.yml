@@ -132,7 +132,7 @@
 - name: Change Kubelet Systemd File
   template: src=kubelet.systemd.j2 dest=/usr/lib/systemd/system/kubelet.service owner=root group=root mode=644 force=yes
   register: kubelet_systemd_changed
-  when: ansible_distribution == "openSUSE Leap" or ansible_distribution == "RedHat"
+  when: ansible_distribution == "Rocky" or ansible_distribution == "RedHat" or ansible_distribution == "CentOS"
   # No in SUSE
   # No in Ubuntu
 

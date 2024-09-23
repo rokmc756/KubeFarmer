@@ -13,6 +13,7 @@
     - install
     - uninstall
     - reinit
+    - add-node
 
 
 - name: Disable SELinux and Stop Firewalld
@@ -40,6 +41,14 @@
   import_tasks: init-k8s.yml
   tags: install
   when: init_k8s is defined and init_k8s == true
+
+
+- name: Add Additional Master Nodes
+  import_tasks: add-new-masters.yml
+  tags:
+    - install
+    - add-node
+  when: multi_master is defined and multi_master == true
 
 
 - name: Reinitialize Kubernetes Cluster

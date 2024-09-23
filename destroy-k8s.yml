@@ -1,5 +1,4 @@
 ---
-
 - hosts: all
   become: yes
   vars:
@@ -12,3 +11,4 @@
     reboot_required: true
   roles:
     - k8s
+
