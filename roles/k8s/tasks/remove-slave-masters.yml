@@ -24,21 +24,21 @@
 - name: Get List of ETCD ID
   shell:
     cmd: |
-      cat <<EOF | kubectl exec -i -n kube-system $(kubectl get pods -n kube-system | grep {{ item }}) -- sh
+      cat <<EOF | kubectl exec -i -n kube-system $(kubectl get pods -n kube-system | grep {{ inventory_hostname }} ) -- sh
       etcdctl -w table member list --cacert /etc/kubernetes/pki/etcd/ca.crt --cert /etc/kubernetes/pki/etcd/server.crt --key /etc/kubernetes/pki/etcd/server.key
       EOF
   register: get_etcd_id_list
   ignore_errors: true
-  with_items: "{{ groups['slaves'] }}"
   when: inventory_hostname in groups['master']
-- debug: msg={{ get_etcd_id_list }}
+- debug: msg={{ get_etcd_id_list.stdout_lines }}
   when: print_debug == true and inventory_hostname in groups['master']
 
 
 - name: Set ETCD ID
   set_fact:
-    etcd_id: "{{ (get_etcd_id_list.stdout_lines | select('search', 'rk9-node02') | list | string | split('|'))[1] | regex_replace(' ','') }}"
+    etcd_id: "{{ ( get_etcd_id_list.stdout_lines | select('search', hostvars[item].ansible_hostname ) | list | string | split('|') )[1] | regex_replace(' ','') }}"
   ignore_errors: true
+  with_items: "{{ groups['slaves'] }}"
   when: inventory_hostname in groups['master']
 - debug: msg={{ etcd_id }}
   ignore_errors: true
@@ -48,12 +48,11 @@
 - name: Delete ETCD ID
   shell:
     cmd: |
-      cat <<EOF | kubectl exec -i -n kube-system $(kubectl get pods -n kube-system | grep {{ item }}) -- sh
+      cat <<EOF | kubectl exec -i -n kube-system $(kubectl get pods -n kube-system | grep {{ inventory_hostname }} ) -- sh
       etcdctl member remove {{ etcd_id }} --cacert /etc/kubernetes/pki/etcd/ca.crt --cert /etc/kubernetes/pki/etcd/server.crt --key /etc/kubernetes/pki/etcd/server.key
       EOF
   register: delete_etcd_id
   ignore_errors: true
-  with_items: "{{ groups['slaves'] }}"
   when: inventory_hostname in groups['master']
 - debug: msg={{ delete_etcd_id }}
   ignore_errors: true
@@ -63,13 +62,12 @@
 - name: Get List of ETCD ID
   shell:
     cmd: |
-      cat <<EOF | kubectl exec -i -n kube-system $(kubectl get pods -n kube-system | grep {{ item }}) -- sh
+      cat <<EOF | kubectl exec -i -n kube-system $(kubectl get pods -n kube-system | grep {{ inventory_hostname }}) -- sh
       etcdctl -w table member list --cacert /etc/kubernetes/pki/etcd/ca.crt --cert /etc/kubernetes/pki/etcd/server.crt --key /etc/kubernetes/pki/etcd/server.key
       EOF
   register: get_etcd_id_list
   ignore_errors: true
   when: inventory_hostname in groups['master']
-  with_items: "{{ groups['slaves'] }}"
 - debug: msg={{ get_etcd_id_list }}
   ignore_errors: true
   when: print_debug == true and inventory_hostname in groups['master']
@@ -86,7 +84,7 @@
 - name: Modify ControlPlaneEndpoint
   shell: |
     kubectl get configmap kubeadm-config -n kube-system -o yaml | \
-    sed -e "s/    controlPlaneEndpoint: {{ hostvars[groups['master'][0]][_netdev]['ipv4']['address'] }}:6443\n//g" | \
+    sed -e "/^    controlPlaneEndpoint: {{ hostvars[groups['master'][0]][_netdev]['ipv4']['address'] }}:6443$/d" | \
     kubectl apply -f - -n kube-system
   register: modify_endpoint
   ignore_errors: true
@@ -107,7 +105,8 @@
 
 
 # 제거할 node가 master인 경우
-# multi master에선 etcd에 정보가 동기화 되어 있기 때문에 node제거 후, etcd member에서 제거해야 합니다. 제거된 node의 etcd가 메인이 되면 apiserver가 존재하지 않아 통신이 불가능하고 데이터 일관성이 깨질 수 있게 됩니다. 자세한 내용은 RAFT 알고리즘을 참조해주세요.
+# multi master에선 etcd에 정보가 동기화 되어 있기 때문에 node제거 후, etcd member에서 제거해야 합니다.
+# 제거된 node의 etcd가 메인이 되면 apiserver가 존재하지 않아 통신이 불가능하고 데이터 일관성이 깨질 수 있게 됩니다. 자세한 내용은 RAFT 알고리즘을 참조해주세요.
 # 0. 제거할 노드들의 keepalived service를 중지합니다.
 #
 # $ systemctl stop keepalived

@@ -1,0 +1,115 @@
+---
+- name: Modify ControlPlaneEndpoint
+  shell: |
+    kubectl get configmap kubeadm-config -n kube-system -o yaml | \
+    sed -e "s/    networking:/    controlPlaneEndpoint: {{ hostvars[groups['master'][0]][_netdev]['ipv4']['address'] }}:6443\n    networking:/g" | \
+    kubectl apply -f - -n kube-system
+  register: modify_endpoint
+  when: inventory_hostname in groups['master']
+- debug: msg={{ modify_endpoint }}
+  when: print_debug == true and inventory_hostname in groups['master']
+
+
+- name: Get Certificate Key
+  shell: |
+    kubeadm init phase upload-certs --upload-certs
+  register: get_cert_key
+  when: inventory_hostname in groups['master']
+- debug: msg={{ get_cert_key }}
+  when: print_debug == true and inventory_hostname in groups['master']
+
+
+- name: Set Fact for Token CA Certificate
+  set_fact:
+    k8s_cert_key: '{{ get_cert_key.stdout_lines[-1] }}'
+  register: set_cert_key
+  delegate_to: "{{ item }}"
+  delegate_facts: True
+  with_items: "{{ groups['all'] }}"
+  when: inventory_hostname in groups['master']
+- debug: msg={{ set_cert_key }}
+  when: print_debug == true and inventory_hostname in groups['master']
+
+
+- name: Get Command to join cluster
+  shell: |
+    kubeadm token create --certificate-key "{{ k8s_cert_key }}" --print-join-command
+  register: get_join_cmd
+  when: inventory_hostname in groups['master']
+- debug: msg={{ get_join_cmd }}
+  when: print_debug == true and inventory_hostname in groups['master']
+
+
+- name: Set Fact for Join Command
+  set_fact:
+    k8s_join_cmd: '{{ get_join_cmd.stdout_lines[-1] }}'
+  register: master_join_cmd
+  delegate_to: "{{ item }}"
+  delegate_facts: True
+  with_items: "{{ groups['all'] }}"
+  when: inventory_hostname in groups['master']
+- debug: msg={{ master_join_cmd }}
+  when: print_debug == true and inventory_hostname in groups['master']
+
+
+- name: Reset Kubernetes on Cluster Nodes
+  command:  kubeadm reset -f
+  register: kube_cluster_reset
+  when: inventory_hostname in groups['slaves']
+- debug: msg={{ kube_cluster_reset }}
+  when: print_debug == true and inventory_hostname in groups['slaves']
+
+
+- name: Config Image Pull
+  command: kubeadm config images pull
+  when: inventory_hostname in groups['slaves']
+
+
+- name: Join New Master Nodes to Cluster, the Command must be run on the New Master Only
+  shell: |
+    {{ k8s_join_cmd }}
+  register: add_new_masters
+  ignore_errors: yes
+  when: inventory_hostname in groups['slaves']
+- debug: msg={{ add_new_masters }}
+  when: print_debug == true and inventory_hostname in groups['slaves']
+  #  kubeadm join "{{ hostvars[groups['master'][0]][_netdev]['ipv4']['address'] }}:6443" --token "{{ k8s_token }}" --discovery-token-ca-cert-hash "{{ k8s_token_ca_cert }}" \
+  #  --control-plane --certificate-key "{{ k8s_cert_key }}"
+
+
+- name: Enable Your User to Start Using the Cluster
+  shell: |
+    rm -rf $HOME/.kube
+    mkdir -p $HOME/.kube
+    cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+    chown $(id -u):$(id -g) $HOME/.kube/config
+  register: enable_user_kube_env
+  notify:
+    - Restart Kubelet
+    - Restart Containerd
+  when: inventory_hostname in groups['slaves']
+- debug: msg={{ enable_user_kube_env }}
+  when: print_debug == true and inventory_hostname in groups['slaves']
+
+
+- name: Validate If Kubernetes Workers Are All Ready
+  shell: kubectl get nodes
+  register: check_k8s_workers_status
+  until: check_k8s_workers_status.stdout.find("NotReady") == -1
+  retries: 30
+  when: inventory_hostname in groups['master']
+- debug: msg={{ check_k8s_workers_status }}
+  when: print_debug == true and inventory_hostname in groups['master']
+
+
+# kubectl drain rk9-node02 --ignore-daemonsets --delete-local-data
+# kubectl delete node rk9-node02
+
+# kubectl edit configmaps -n kube-system kubeadm-config
+# kubeadm init phase upload-certs --upload-certs
+# kubeadm token create --certificate-key 36e01d86c612453ad9a1af2c5eb696044eaf1506c1eec6626d5543155fd03e9f  --print-join-command
+
+# kubeadm token create --print-join-command
+# kubeadm reset -f
+# kubeadm join 192.168.1.71:6443 --token k4odk8.cnz0eiv7q6zgq6mv --discovery-token-ca-cert-hash sha256:2b0e04c56c2eaf7559e3c48188cbd4d8a3efa396c7910ea8efe08e7d038cfe15 --control-plane --certificate-key 36e01d86c612453ad9a1af2c5eb696044eaf1506c1eec6626d5543155fd03e9f
+
