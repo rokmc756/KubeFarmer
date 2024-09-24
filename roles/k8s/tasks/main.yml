@@ -1,7 +1,4 @@
 ---
-# Deploy Native Kubernetes Cluster
-#
-# For Now Fail If It's not a Red Hat or OpenSUSE or Ubuntu Based System
 - name: Check OS ( Kubernetes )
   fail: msg="Not a Red Hat or SuSE based system!"
   when: ansible_os_family != 'RedHat' or  ansible_os_family != 'CentOS' or  ansible_os_family != 'Rocky' or ansible_os_family != 'Suse' or ansible_os_family != 'Ubuntu'
@@ -44,8 +41,8 @@
   when: init_k8s is defined and init_k8s == true
 
 
-- name: Add Additional Master Nodes
-  import_tasks: add-new-masters.yml
+- name: Add Additional Slave Master Nodes
+  import_tasks: add-slave-masters.yml
   tags:
     - install
     - add-node
@@ -58,6 +55,22 @@
     - uninstall
     - remove-node
   when: multi_master is defined and multi_master == true
+
+
+- name: Add Additional Worker Nodes
+  import_tasks: add-new-workers.yml
+  tags:
+    - install
+    - add-node
+  when: add_workers is defined and add_workers == true
+
+
+- name: Remove Additional Worker Nodes
+  import_tasks: remove-new-workers.yml
+  tags:
+    - uninstall
+    - remove-node
+  when: remove_workers is defined and remove_workers == true
 
 
 - name: Reinitialize Kubernetes Cluster
