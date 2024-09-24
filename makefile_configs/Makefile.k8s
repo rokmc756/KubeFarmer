@@ -63,6 +63,22 @@ k8s:
                 else\
                         echo "No Actions for Adding Nodes";\
                 fi;\
+	elif [ "${r}" = "remove-node" ]; then\
+                if [ ! -z ${r} ] && [ "${s}" = "master" ]; then\
+                        if [ -z ${c} ];  then\
+                                ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} destroy-k8s.yml -e '{single_master: False}' -e '{multi_master: True}' --tags='remove-node';\
+                        else\
+                                echo "No Actions for Removing Master Nodes";\
+                        fi\
+                elif [ ! -z ${r} ] && [ "${s}" = "worker" ]; then\
+                        if [ -z ${c} ];  then\
+                                ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} destroy-k8s.yml -e '{remove_workers: True}' --tags='remove-node';\
+                        else\
+                                echo "No Actions for Removing Worker Nodes";\
+                        fi\
+                else\
+                        echo "No Actions for Removing Nodes";\
+                fi;\
 	else\
 		echo "No Actions for Kubernetes Role";\
 		exit;\

@@ -1,0 +1,37 @@
+#제거할 node가 worker인 경우
+#제거할 노드를 확인합니다.
+#$ kubectl get nodes
+#노드를 클러스터에서 제거합니다.
+#$ kubectl delete node [node-name you want to remove from cluster]
+#노드가 제거 되었는지 확인합니다.
+#$ kubectl get nodes
+#노드에 저장된 클러스터 정보를 초기화 하기 위해 클러스터에 제거한 노드로 접속합니다.
+#❗지금부터 실행되는 명령어는 접속한 노드에서 진행 되는 내용입니다.❗
+#
+#클러스터 정보를 초기화 합니다.
+#
+#$ kubeadm reset --cri-socket=/var/run/crio/crio.sock⭐
+#...
+#The reset process does not clean CNI configuration. To do so, you must remove /etc/cni/net.d
+#
+#The reset process does not reset or clean up iptables rules or IPVS tables.
+#If you wish to reset iptables, you must do so manually by using the "iptables" command.
+#
+#If your cluster was setup to utilize IPVS, run ipvsadm --clear (or similar)
+#to reset your system's IPVS tables.
+#
+#The reset process does not clean your kubeconfig files and you must remove them manually.
+#Please, check the contents of the $HOME/.kube/config file.
+#⭐ dockershim과 cri-o가 동시에 있으면 에러가 발생할 수 있습니다.
+#--cri-socket=/var/run/crio/crio.sock 옵션으로 컨테이너 런타임으로 지정하여 정상적으로 초기화 되도록 합니다.
+#kubeadm reset 만 입력해도 진행되는 경우가 있지만, 완전히 리셋이 되지 않을 수 있습니다.
+#컨테이너 런타임이 cri-o라면 --cri-socket=/var/run/crio/crio.sock 를 사용해줍니다.
+#CNI 구성파일과 kubernetes, kubelet 구성 디렉토리를 삭제합니다.
+#$ rm -rf /var/lib/kubelet
+#$ rm -rf /etc/kubernetes
+#$ rm -rf /etc/cni/net.d
+#kubeadm, kubelet, kubectl 패키지를 삭제합니다.
+#$ yum(dnf) autoremove kubeadm kubelet kubectl
+#autoremove 란? 삭제하는 패키지와 의존성이 있는 패키지도 같이 삭제합니다. 추후 재설치 시, 버전이 변경되는 경우 의존성 패키지가 남아 있으면 충돌이 발생할 수 있기 때문에 autoremove를 통해 의존성 패키지도 모두 삭제합니다.
+#
+#이제 이 node는 kubernets cluster node에서 은퇴입니다❗

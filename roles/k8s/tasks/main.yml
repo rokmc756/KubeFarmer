@@ -10,10 +10,11 @@
 - name: Set Facts For Network and Packages Informations
   import_tasks: set-k8s-facts.yml
   tags:
+    - reinit
     - install
     - uninstall
-    - reinit
     - add-node
+    - remove-node
 
 
 - name: Disable SELinux and Stop Firewalld
@@ -48,6 +49,14 @@
   tags:
     - install
     - add-node
+  when: multi_master is defined and multi_master == true
+
+
+- name: Remove Additional Slave Master Nodes
+  import_tasks: remove-slave-masters.yml
+  tags:
+    - uninstall
+    - remove-node
   when: multi_master is defined and multi_master == true
 
 
