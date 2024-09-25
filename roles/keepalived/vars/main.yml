@@ -10,7 +10,8 @@ keepalived_shared_ips:
 keepalived_check_process: "haproxy"
 keepalived_priority: "100"
 keepalived_backup_priority: "50"
-keepalived_check_script_name: "check_script"
+# keepalived_check_script_name: "check_script"
+keepalived_check_script_name: "check_apiserver"
 keepalived_unicast_mode: False
 keepalived_unicast_source: "10.0.0.1"
 keepalived_unicast_peers:

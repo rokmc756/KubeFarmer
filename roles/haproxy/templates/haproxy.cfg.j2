@@ -22,8 +22,9 @@ defaults
 	timeout server 60s
 
 
-frontend fe-apiserver
-	bind *:{{ frontend_port }}
+# frontend fe-apiserver
+frontend apiserver
+	bind 192.168.1.79:{{ frontend_port }}
 	mode tcp
         option tcplog
 	default_backend {{ k8s.cluster_name }}

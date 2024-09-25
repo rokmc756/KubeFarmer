@@ -73,8 +73,6 @@
   when: inventory_hostname in groups['slaves']
 - debug: msg={{ add_new_masters }}
   when: print_debug == true and inventory_hostname in groups['slaves']
-  #  kubeadm join "{{ hostvars[groups['master'][0]][_netdev]['ipv4']['address'] }}:6443" --token "{{ k8s_token }}" --discovery-token-ca-cert-hash "{{ k8s_token_ca_cert }}" \
-  #  --control-plane --certificate-key "{{ k8s_cert_key }}"
 
 
 - name: Enable Your User to Start Using the Cluster
@@ -100,16 +98,4 @@
   when: inventory_hostname in groups['master']
 - debug: msg={{ check_k8s_workers_status }}
   when: print_debug == true and inventory_hostname in groups['master']
-
-
-# kubectl drain rk9-node02 --ignore-daemonsets --delete-local-data
-# kubectl delete node rk9-node02
-
-# kubectl edit configmaps -n kube-system kubeadm-config
-# kubeadm init phase upload-certs --upload-certs
-# kubeadm token create --certificate-key 36e01d86c612453ad9a1af2c5eb696044eaf1506c1eec6626d5543155fd03e9f  --print-join-command
-
-# kubeadm token create --print-join-command
-# kubeadm reset -f
-# kubeadm join 192.168.1.71:6443 --token k4odk8.cnz0eiv7q6zgq6mv --discovery-token-ca-cert-hash sha256:2b0e04c56c2eaf7559e3c48188cbd4d8a3efa396c7910ea8efe08e7d038cfe15 --control-plane --certificate-key 36e01d86c612453ad9a1af2c5eb696044eaf1506c1eec6626d5543155fd03e9f
 
