@@ -1,12 +1,10 @@
 ---
-# Variables for Ansible Role of KeepAlived
-
 keepalived_auth_pass: "changeme"
 keepalived_role: "MASTER"
 keepalived_router_id: "52"
 keepalived_shared_iface: "{{ netdev1 }}"
 keepalived_shared_ips:
-  - "192.168.1.79/24"
+  - "{{ k8s.net.vipaddr }}/24"
 keepalived_check_process: "haproxy"
 keepalived_priority: "100"
 keepalived_backup_priority: "50"

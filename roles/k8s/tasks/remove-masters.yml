@@ -92,6 +92,7 @@
 - debug: msg={{ modify_endpoint }}
   ignore_errors: true
   when: print_debug == true and inventory_hostname in groups['master']
+  #  sed -e "/^    controlPlaneEndpoint: {{ k8s.net.vipaddr }}:8443$/d" | \
 
 
 - name: Confirm that the Kubectl Command is Activated

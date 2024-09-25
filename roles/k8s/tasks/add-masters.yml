@@ -8,6 +8,7 @@
   when: inventory_hostname in groups['master']
 - debug: msg={{ modify_endpoint }}
   when: print_debug == true and inventory_hostname in groups['master']
+  # sed -e "s/    networking:/    controlPlaneEndpoint: {{ k8s.net.vipaddr }}:8443\n    networking:/g" | \
 
 
 - name: Get Certificate Key

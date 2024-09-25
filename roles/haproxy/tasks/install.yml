@@ -1,6 +1,5 @@
 ---
 # https://blog.dbi-services.com/using-ansible-to-bring-up-a-three-node-patroni-cluster-in-minutes/
-
 - name: Install All Packages for HA Proxy
   package: name={{item}} state=present
   with_items:

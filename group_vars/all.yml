@@ -19,6 +19,7 @@ k8s:
   net:
     type: "virtual"                # Or Physical
     gateway: "192.168.0.1"
+    vipaddr: "192.168.1.79"
     ipaddr0: "192.168.0.7"
     ipaddr1: "192.168.1.7"
     ipaddr2: "192.168.2.7"
@@ -34,9 +35,6 @@ k8s:
       ipaddr0: "192.168.0."
       ipaddr1: "192.168.1."
   cni:
-    # pod_network: "10.142.0.0/16"
-    # pod_network: "192.168.0.0/16"
-    # pod_network: "192.167.0.0/16"
     install: true
     pod_network: "10.142.0.0/16"
     calico:

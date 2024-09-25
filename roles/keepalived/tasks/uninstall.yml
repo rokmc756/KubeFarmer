@@ -5,15 +5,12 @@
     state: stopped
     enabled: no
   ignore_errors: yes
-#  tags: keepalived
 
 
 - name: Uninstall KeepAlived Package
   package:
     name: keepalived
     state: absent
-  tags: keepalived
-# notify: restart keepalived
 
 
 - name: Keepalived Configuration
@@ -21,8 +18,6 @@
   file:
     dest: /etc/keepalived/keepalived.conf
     state: absent
-  tags: keepalived
-#  notify: restart keepalived
 
 
 - name: Uninstall Email Notification Script
@@ -31,8 +26,6 @@
   file:
     path: "/etc/keepalived/email_notify.sh"
     state: absent
-  tags: keepalived
-#  notify: restart keepalived
 
 
 - name: Uninstall Check Script
@@ -41,8 +34,6 @@
   file:
     path: "/etc/keepalived/{{ keepalived_check_script_name }}.sh"
     state: absent
-  tags: keepalived
-#  notify: restart keepalived
 
 
 - when: keepalived_notifications_email | default(False)

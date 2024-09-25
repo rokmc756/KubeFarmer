@@ -42,7 +42,7 @@
 
 
 - name: Add Additional Slave Master Nodes
-  import_tasks: add-slave-masters.yml
+  import_tasks: add-masters.yml
   tags:
     - install
     - add-node
@@ -50,7 +50,7 @@
 
 
 - name: Remove Additional Slave Master Nodes
-  import_tasks: remove-slave-masters.yml
+  import_tasks: remove-masters.yml
   tags:
     - uninstall
     - remove-node

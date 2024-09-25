@@ -3,8 +3,7 @@
   package:
     name: keepalived
     state: latest
-  tags: keepalived
-  notify: restart keepalived
+  notify: Restart KeepAlived
 
 
 - when: keepalived_notifications_email | default(False)
@@ -29,8 +28,7 @@
     mode: 0755
     owner: root
     group: root
-  tags: keepalived
-  notify: restart keepalived
+  notify: Restart KeepAlived
 
 
 - name: Install Email Notification Script
@@ -41,8 +39,7 @@
     mode: 0755
     owner: root
     group: root
-  tags: keepalived
-  notify: restart keepalived
+  notify: Restart KeepAlived
 
 
 - name: KeepAlived Configuration
@@ -50,8 +47,7 @@
   template:
     src: keepalived.conf.j2
     dest: /etc/keepalived/keepalived.conf
-  tags: keepalived
-  notify: restart keepalived
+  notify: Restart KeepAlived
 
 
 - name: Start KeepAlived
@@ -59,5 +55,4 @@
     name: keepalived
     state: started
     enabled: yes
-#  tags: keepalived
 

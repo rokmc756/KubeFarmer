@@ -6,8 +6,7 @@ global_defs {
 }
 
 vrrp_script chk_service {               # Requires keepalived-1.1.13
-        # script /etc/keepalived/{{ keepalived_check_script_name }}.sh
-        script "/etc/keepalived/check_apiserver.sh"
+        script /etc/keepalived/{{ keepalived_check_script_name }}.sh
         interval 3                      # Check every 3 seconds
         weight -2
         fall 3
@@ -46,7 +45,7 @@ vrrp_instance VI_1 {
     {% endif %}
     }
     track_script {
-        chk_apiserver
+        chk_service
     }
     {% if keepalived_notification_email | default(False) %}
     notify /etc/keepalived/email_notify.sh

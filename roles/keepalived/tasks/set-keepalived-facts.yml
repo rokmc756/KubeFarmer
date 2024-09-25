@@ -21,12 +21,12 @@
 
 - name: Define Fact of Network Address
   set_fact:
-    haproxy_network_range: "{{ hostvars[inventory_hostname][_netdev]['ipv4']['network'] }}/{{ ( hostvars[inventory_hostname][_netdev]['ipv4']['address'] + '/' + hostvars[inventory_hostname][_netdev]['ipv4']['netmask'] ) | ansible.utils.ipaddr('prefix') }}"
+    keepalived_network_range: "{{ hostvars[inventory_hostname][_netdev]['ipv4']['network'] }}/{{ ( hostvars[inventory_hostname][_netdev]['ipv4']['address'] + '/' + hostvars[inventory_hostname][_netdev]['ipv4']['netmask'] ) | ansible.utils.ipaddr('prefix') }}"
 
 
 - name: Define Fact of Specific IP Address Range
   set_fact:
-    haproxy_ip_addr_range: "{{ item }}"
+    keepalived_ip_addr_range: "{{ item }}"
   with_items: "{{ ansible_all_ipv4_addresses }}"
-  when: "item | ansible.utils.ipaddr( haproxy_network_range )"
+  when: "item | ansible.utils.ipaddr( keepalived_network_range )"
 

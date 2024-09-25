@@ -1,13 +1,13 @@
 #!/bin/sh
-#
 
 errorExit() {
     echo "*** $*" 1>&2
     exit 1
 }
+
 curl --silent --max-time 2 --insecure https://localhost:8443/ -o /dev/null || errorExit "Error GET https://localhost:8443/"
 
-if ip addr | grep -q 192.168.1.79; then
-    curl --silent --max-time 2 --insecure https://192.168.1.79:8443/ -o /dev/null || errorExit "Error GET https://192.168.1.79:8443/"
+if ip addr | grep -q {{ k8s.net.vipaddr }}; then
+    curl --silent --max-time 2 --insecure https://{{ k8s.net.vipaddr }}:8443/ -o /dev/null || errorExit "Error GET https://{{ k8s.net.vipaddr }}:8443/"
 fi
 
