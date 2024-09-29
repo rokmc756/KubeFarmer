@@ -39,6 +39,8 @@
 
 
 # kubeadm init --apiserver-advertise-address={{ hostvars[groups['master'][0]]['ansible_'~netdev1]['ipv4']['address'] }} \
+# kubeadm init --control-plane-endpoint={{ hostvars[groups['master'][0]][_netdev]['ipv4']['address'] }} --upload-certs \
+# kubeadm init --control-plane-endpoint={{ k8s.net.vipaddr }} --upload-certs \
 - name: Initialize Kubernetes Master to Create Cluster
   shell: |
     kubeadm init --apiserver-advertise-address={{ hostvars[groups['master'][0]][_netdev]['ipv4']['address'] }} \
@@ -138,6 +140,8 @@
 #  when: print_debug == true and inventory_hostname in groups['workers']
 
 
+# kubeadm join "{{ hostvars[groups['master'][0]][_netdev]['ipv4']['address'] }}:6443" \
+# kubeadm join "{{ k8s.net.vipaddr }}:6443" \
 - name: Join the Other Kubernetes Nodes to Cluster, the Command must be Run on the Worker Nodes Only
   shell: |
     kubeadm join "{{ hostvars[groups['master'][0]][_netdev]['ipv4']['address'] }}:6443" \

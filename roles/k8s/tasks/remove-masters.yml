@@ -84,7 +84,7 @@
 - name: Modify ControlPlaneEndpoint
   shell: |
     kubectl get configmap kubeadm-config -n kube-system -o yaml | \
-    sed -e "/^    controlPlaneEndpoint: {{ hostvars[groups['master'][0]][_netdev]['ipv4']['address'] }}:6443$/d" | \
+    sed -e "/^    controlPlaneEndpoint: {{ k8s.net.vipaddr }}:6443$/d" | \
     kubectl apply -f - -n kube-system
   register: modify_endpoint
   ignore_errors: true
@@ -92,7 +92,7 @@
 - debug: msg={{ modify_endpoint }}
   ignore_errors: true
   when: print_debug == true and inventory_hostname in groups['master']
-  #  sed -e "/^    controlPlaneEndpoint: {{ k8s.net.vipaddr }}:8443$/d" | \
+  #  sed -e "/^    controlPlaneEndpoint: {{ hostvars[groups['master'][0]][_netdev]['ipv4']['address'] }}:6443$/d" | \
 
 
 - name: Confirm that the Kubectl Command is Activated

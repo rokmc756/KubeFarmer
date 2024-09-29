@@ -58,7 +58,7 @@
 
 
 - name: Add Additional Worker Nodes
-  import_tasks: add-new-workers.yml
+  import_tasks: add-workers.yml
   tags:
     - install
     - add-node
@@ -66,7 +66,7 @@
 
 
 - name: Remove Additional Worker Nodes
-  import_tasks: remove-new-workers.yml
+  import_tasks: remove-workers.yml
   tags:
     - uninstall
     - remove-node

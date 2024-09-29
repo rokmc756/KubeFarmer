@@ -1,0 +1,146 @@
+Introduction
+Canonical is a technology company known for developing the Ubuntu operating system. Founded in 2004, it continues to drive advancements in Linux and open-source software.
+
+If you’re a software engineer passionate about open-source software and have some experience with Linux, Python, and Golang, you’ll fit right in.
+
+The following guide includes the process, commonly asked Canonical software engineer interview questions, and our handpicked strategies to boost your chances of landing your dream role.
+
+Canonical Software Engineer Interview Process
+Canonical has a pretty detailed interview process that consists of the following stages:
+
+Step 1: Written Interview
+Once your CV is selected, you’ll receive an e-mail from the hiring manager with a list of questions. These are designed to assess your personality and work experience and fall under the following categories:
+
+Education: This is to understand your interests in high school and university.
+Engineering: You’ll be asked questions like “Describe your experience with Linux-based software development” and “Outline your thoughts on performance in software development.”
+Industry leadership: They’ll want to know about your participation in industry events and conferences or if you blog about your engineering journey.
+Context: The questions here aim to draw out your views of Canonical as a company and how well your aspirations align with them.
+Since there are around 38 questions, answer concisely. You’ll have the opportunity to elaborate more during the interviews.
+
+Step 2: Aptitude Test
+This step involves a personality assessment and IQ test. The questions are pretty standard, and the test will take about an hour to complete.
+
+Step 3: Culture/HR Interview
+Then, you will be invited to a video call with someone who isn’t on the team you’ve applied to. You will be asked a series of behavioral questions to understand your fitness for the company.
+
+Step 4: Technical Interviews
+After assessing your cultural fit, you will enter a series of technical interviews (usually 3 rounds). You may also be asked to solve a take-home assignment and discuss the solution in the following round.
+
+Step 5: Manager Interviews
+In the late-stage rounds, you’ll speak to your future teammates and managers. This round is designed to assess how well you’ll fit in the team and for you to ask any questions about the work and team culture.
+
+What Questions Are Asked in a Canonical Software Engineer Interview?
+Canonical Software Engineer
+Average Software Engineer
+Software engineers should expect questions on various engineering concepts, with an emphasis on Python and algorithms. Be prepared to answer questions on the fundamentals of operating systems and whatever language/framework is relevant to your role.
+
+Read on for our handpicked practice problems for the Canonical software engineer interview. For best results, try answering the question yourself before looking at our hints or clicking on the solution!
+
+1. Why do you think your personality matches with the company culture?
+Canonical values community involvement, open communication, and a passion for open-source projects. This question assesses whether your work style aligns with these values.
+
+How to Answer
+
+Read up on Canonical’s culture and relate their values to your personal experiences.
+
+Example
+
+“My enthusiasm for technology and open-source software has always been a driving force in my career. In college, I organized coding workshops and contributed to several open-source projects on GitHub, which made me realize the value of collaboration. I’m someone who thrives on teamwork and is excited to solve complex problems through shared effort.”
+
+2. Why do you want to join Canonical?
+Interviewers will want to know why you chose the software engineer role at Canonical. They want to establish whether you’re passionate about the company’s culture and values or your interest is more opportunistic.
+
+How to Answer
+
+Demonstrate knowledge of Canonical’s work, culture, and the opportunities that appeal to you. Focus on specific aspects of Canonical that attract you, such as its innovative approach to technology.
+
+Example
+
+“Canonical’s leadership in developing Ubuntu, a platform I’ve personally used and contributed to, has always inspired me. The idea of working on projects that have a global impact, alongside a team that values collaboration and open innovation, is incredibly motivating.”
+
+3. What kind of software projects have you worked on before?
+Since Canonical works on a wide array of software projects, from operating systems to cloud computing and IoT, understanding a candidate’s background helps in assessing where they might fit within the company’s ecosystem.
+
+How to Answer
+
+Provide a concise overview of your most significant projects and quantify the impact of your contributions.
+
+Example
+
+“In my previous role, I worked on a cloud-based SaaS platform designed to streamline business operations for small to medium-sized enterprises. I was involved in backend development, primarily using Python and Flask, and I contributed to developing several APIs to facilitate seamless integration with third-party services. Additionally, I volunteered in an open-source project aimed at improving digital literacy in underdeveloped regions, which was built on a Linux-based system. These experiences have honed my skills in cloud computing, API development, and working with open-source software.”
+
+4. Tell me about a time when your colleagues did not agree with your approach.
+Navigating disagreements is key to contributing to the company culture and product development.
+
+How to Answer
+
+Describe a conflict in which you played a role in finding a mutually beneficial outcome. Highlight what you learned from the experience, showing your willingness to adapt and grow.
+
+Example
+
+“I once had a conflict with a co-worker over prioritizing project features. To resolve it, I set up a one-on-one to discuss our viewpoints and come to an agreement. We decided to consult other team members and gather more user data to make an informed decision. This experience helped me appreciate the importance of empathy and flexibility in teamwork.”
+
+5. Please explain how you have kept up with current market problems in the tech industry.
+Canonical values employees who have a keen understanding of market dynamics and challenges the industry faces.
+
+How to Answer
+
+Describe how you stay updated, such as following reputable tech news outlets, participating in community forums, attending conferences, or taking courses. Highlight how this continuous learning has informed your work.
+
+Example
+
+“I regularly follow tech news platforms like TechCrunch and Ars Technica, and I’m an active member of GitHub and Stack Overflow. These interactions allow me to contribute to projects that address evolving challenges in the industry. For instance, learning about the increasing importance of cloud security led me to take a specialized course in cybersecurity. I used the learnings to enhance security features in a project I was working on.”
+
+6. Given an array filled with random values, write a function to rotate the array by 90 degrees clockwise.
+As a software engineer, understanding multidimensional arrays is important to design any system that requires oriental manipulation.
+
+How to Answer Explain the concept of matrix rotation and the steps involved, which is usually transposing the matrix and then flipping it horizontally.
+
+Example
+
+“This can be done using the NumPy library in Python, which efficiently handles arrays. The function will transpose and flip the input matrix horizontally, effectively rotating it 90 degrees clockwise. It’s efficient and works well with matrices of any size.”
+
+7. Write a program that checks if an integer is a vampire number.
+Vampire numbers are a fun and interesting problem that tests understanding of number properties, iteration through possibilities, and string manipulation, which are relevant skills in many software development tasks.
+
+How to Answer
+
+Describe the strategy for identifying vampire numbers. It involves checking if an integer can be factored into two numbers (fangs) of equal length, where the digits of the fangs can be rearranged to form the original number.
+
+Example
+
+“My program would first verify that the number has an even number of digits; if not, it cannot be a vampire number. Next, it would generate all possible pairs of factors (fangs) that are each half the length of the original number. For each pair, the program checks if rearranging the digits of the two fangs can produce the original number. This involves converting the numbers to strings, sorting the digits, and then comparing the sorted string of the original number with the concatenated, sorted strings of the fangs. It’s important to iterate efficiently, only considering fang pairs that meet the criteria (e.g., excluding pairs where both fangs end in zero, as this would not lead to a valid vampire number). If any pair of fangs satisfies these conditions, the number is a vampire number.”
+
+8. Implement the Fibonacci algorithm in three different methods: 1. recursively, 2. iteratively, and 3. using memoization.
+The Fibonacci sequence is a classic problem in software engineering interviews. Canonical needs to implement scalable solutions and your approach to this problem will reveal how well you understand this.
+
+How to Answer
+
+Demonstrate your understanding of the trade-offs between simplicity (recursion), efficiency (iteration), and optimization (memoization). Explain how each approach can be used in different scenarios based on computational resources and execution time.
+
+Example
+
+“A recursive solution involves a function calling itself with a smaller subset of the problem until it reaches a base case. This method is straightforward but can lead to significant inefficiencies due to repeated calculations. The iterative approach calculates each Fibonacci number sequentially, starting from the base cases and building up to the desired number by looping from 0 to n. This method is more efficient as it doesn’t involve repeated calculations or deep call stacks. Memoization optimizes the recursive solution by storing previously calculated Fibonacci numbers in a data structure during the function’s execution. When the function is called again with the same input, it first checks if the result is in the storage to avoid recalculating, which reduces the number of computations needed.”
+
+9. You are given an array of string tokens that represent an arithmetic expression in a Reverse Polish notation. Evaluate the expression.
+Evaluating RPN expressions requires an understanding of stacks and post-order traversal logic, which are crucial for parsing expressions or developing features like calculators, compilers, or interpreters in software development.
+
+How to Answer
+
+Discuss using a stack to evaluate the expression. Explain how you would iterate through the tokens array, pushing numbers onto the stack until an operator is encountered.
+
+Example
+
+“I would use a stack to store operands. While iterating through the array of tokens, I would push any numbers I encounter onto the stack. When I come across an operator, I’d pop the two most recent numbers off the stack, apply the operator (being careful to maintain the correct order), and then push the result back onto the stack. After processing all tokens, if the expression is valid, there should be exactly one number left on the stack, which is the result of the expression.”
+
+10. You’re given a list of sorted integers in which more than 50% of the list is comprised of the same repeating integer. Write a function to return the list’s median value.
+This question tests your understanding of statistics and optimization efficiency based on a given set of conditions.
+
+How to Answer
+
+Mention how the presence of a majority element (more than 50% occurrence) affects the median’s location. With this information, focus on optimizing the median-finding process, highlighting that the median must be the majority element itself due to its frequency and distribution.
+
+Example
+
+“Given the list is sorted and contains a majority element (an element that appears more than 50% of the time), the median will always be this majority element, regardless of whether the list length is odd or even. This is because, in a sorted list, the middle element(s) that determine the median must be part of the majority element’s sequence due to its dominance. Therefore, my function would not need to inspect each element to find the median. Instead, it could directly return the value at the middle index of the list.”
+
