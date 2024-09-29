@@ -3,13 +3,13 @@
 - name: Modify ControlPlaneEndpoint
   shell: |
     kubectl get configmap kubeadm-config -n kube-system -o yaml | \
-    sed -e "s/    networking:/    controlPlaneEndpoint: {{ k8s.net.vipaddr }}:6443\n    networking:/g" | \
+    sed -e "s/    networking:/    controlPlaneEndpoint: {{ hostvars[groups['master'][0]][_netdev]['ipv4']['address'] }}:6443\n    networking:/g" | \
     kubectl apply -f - -n kube-system
   register: modify_endpoint
   when: inventory_hostname in groups['master']
 - debug: msg={{ modify_endpoint }}
   when: print_debug == true and inventory_hostname in groups['master']
-  #  sed -e "s/    networking:/    controlPlaneEndpoint: {{ hostvars[groups['master'][0]][_netdev]['ipv4']['address'] }}:6443\n    networking:/g" | \
+  # sed -e "s/    networking:/    controlPlaneEndpoint: {{ k8s.net.vipaddr }}:6443\n    networking:/g" | \
 
 
 - name: Get Certificate Key
@@ -42,9 +42,10 @@
   when: print_debug == true and inventory_hostname in groups['master']
 
 
+#  k8s_join_cmd: "{{ get_join_cmd.stdout_lines[-1] | regex_replace(hostvars[groups['master'][0]][_netdev]['ipv4']['address'], k8s.net.vipaddr) }}"
 - name: Set Fact for Join Command
   set_fact:
-    k8s_join_cmd: "{{ get_join_cmd.stdout_lines[-1] | regex_replace(hostvars[groups['master'][0]][_netdev]['ipv4']['address'], k8s.net.vipaddr) }}"
+    k8s_join_cmd: "{{ get_join_cmd.stdout_lines[-1] }}"
   register: master_join_cmd
   delegate_to: "{{ item }}"
   delegate_facts: True
