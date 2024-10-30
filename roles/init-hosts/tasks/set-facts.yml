@@ -1,7 +1,7 @@
 ---
 # https://serverfault.com/questions/1040246/how-to-select-network-interface-given-ip-address-in-ansible-across-debian-and-fr
 #
-- name: Get interface name from prefix of IP Addresses provided for Weka Nodes
+- name: Get interface name from prefix of IP Addresses provided for Kubernetes Nodes
   set_fact:
     netdev0: "{{ ansible_interfaces | map('regex_replace', '^', 'ansible_') | map('extract', vars) | selectattr('ipv4', 'defined') | selectattr('ipv4.address', 'match', k8s.net.ipaddr0 ) | map(attribute='device') | first }}"
     netdev1: "{{ ansible_interfaces | map('regex_replace', '^', 'ansible_') | map('extract', vars) | selectattr('ipv4', 'defined') | selectattr('ipv4.address', 'match', k8s.net.ipaddr1 ) | map(attribute='device') | first }}"
@@ -65,5 +65,4 @@
 - set_fact:
     install_pkgs: "{{ suse_install_pkgs }}"
   when: ansible_distribution == "openSUSE Leap" and ansible_distribution_major_version|int <=  15
-
 

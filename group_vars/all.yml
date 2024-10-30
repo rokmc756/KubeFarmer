@@ -6,7 +6,7 @@ k8s:
   # k8s version should be at least v1.25.0 for kpack and korifi
   # k8s version should be v1.24.17 for cf-for-k8s
   cluster_name: jack-kr-k8s
-  domain: "jtest.suse.com"
+  domain: "jtest.pivotal.io"
   major_version: "1"
   minor_version: "28"
   patch_version: "0"
@@ -27,9 +27,9 @@ k8s:
     net:
       type: "virtual"              # Or Physical
       cores: 1
-      ipaddr0: "192.168.0.6"
-      ipaddr1: "192.168.1.6"
-      ipaddr2: "192.168.2.6"
+      ipaddr0: "192.168.0.7"
+      ipaddr1: "192.168.1.7"
+      ipaddr2: "192.168.2.7"
   ext_storage:
     net:
       ipaddr0: "192.168.0."
@@ -41,8 +41,8 @@ k8s:
       install: true
       operator: ""
       major_version: 3
-      minor_version: 27
-      patch_version: 3
+      minor_version: 29
+      patch_version: 0
       download_url: "https://raw.githubusercontent.com/projectcalico/calico"
     cilium:
       install: false

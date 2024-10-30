@@ -1,0 +1,65 @@
+nfs 설치 (nfs 서버가 설치될 곳)
+sudo apt-get install nfs-kernel-server
+nfs server 설정 (nfs 서버가 설치될 곳)
+sudo vi /etc/exports
+/datafolder 192.168.0.0/16(rw,sync,no_subtree_check,no_root_squash)
+
+첫번째는 exports 파일에 위와 같이 작성하면되는대 먼저 서버 폴더를 지정해주는대 일반적으로 디스크를 마운트한 폴더로 지정하면 된다. ex) /mnt/sdb
+두번째로는 nfs 서버가 허용하는 IP를 설정해야되는대 만약 내 아이피가 192.168.~~ 으로 시작하면 위와같이 작성해주면되고 10.0.~~ 으로 시작하면 10.0.0.0/16 과 같이 작성해주면 된다.
+
+sudo exportsfs -a
+
+
+
+
+Prerequisites
+A system running Rocky Linux 9
+Root or sudo privileges
+Access to a terminal
+Basic understanding of Linux commands and networking
+Installing NFS Packages
+To begin, you need to install the necessary NFS packages. You can do this by executing the following command:
+
+sudo dnf install nfs-utils
+Shell
+Configuring the NFS Server
+Once the packages are installed, you must enable and start the NFS services. Enable and start the nfs-server service using the following commands:
+
+sudo systemctl enable --now nfs-server
+Shell
+Verify that the service is running properly:
+
+sudo systemctl status nfs-server
+Shell
+Setting Up the Export Directory
+Choose a directory that you want to share with the clients. For this guide, we will create a new directory called /nfs_share:
+
+sudo mkdir /nfs_share
+Shell
+Change the permissions of the directory to ensure that clients can read and write to it:
+
+sudo chmod 777 /nfs_share
+Shell
+Editing the Exports File
+Next, you need to edit /etc/exports, the configuration file for the NFS exports. Add the following line to specify the directory to share and the permissions:
+
+/nfs_share *(rw,sync,no_subtree_check)
+Shell
+Replace * with specific client IP addresses or subnets if you want to restrict access.
+
+Exporting the Shared Directory
+After modifying the exports file, apply the changes by exporting the shared directories:
+
+sudo exportfs -arv
+Shell
+Opening Firewall Ports
+If you have a firewall enabled, you need to open the necessary ports for NFS:
+
+sudo firewall-cmd --permanent --zone=public --add-service=nfssudo firewall-cmd --permanent --zone=public --add-service=mountdsudo firewall-cmd --permanent --zone=public --add-service=rpc-bindsudo firewall-cmd --reload
+Shell
+Mounting the NFS Share on a Client
+To access the NFS share from a client machine, install the nfs-utils package on the client and mount the share:
+
+sudo mount -t nfs [nfs_server_ip]:/nfs_share /local_directo
+
+

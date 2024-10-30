@@ -1,0 +1,35 @@
+- name: Copy Jenkins Loadbalancer Config Yaml
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ base_path }}/{{ item }}"
+  register: copy_jenkins_lb_config_yaml
+  with_items:
+    - "jenkins-values.yaml"
+- debug: msg={{ copy_jenkins_lb_config_yaml }}
+
+
+- name: Deploy Jenkins
+  shell: |
+    /usr/local/bin/helm upgrade --install -f {{ base_path }}/jenkins-values.yaml -n jenkins --set persistence.existingClaim=jenkins jenkins jenkins/jenkins
+  register: deploy_jenkins
+- debug: msg={{ deploy_jenkins }}
+  when: print_debug == true
+
+
+- name: Validate if Jenkins Containers are Running
+  shell: |
+    kubectl -n jenkins get pod | grep jenkins | awk '{print $3}' | cut -d : -f 1
+  register: check_jenkins_container
+  until: check_jenkins_container.stdout.find("Running") != -1
+  retries: 100
+  delay: 10
+- debug: msg={{ check_jenkins_container }}
+  when: print_debug == true
+
+
+- name: Print Jenkins Admin Password
+  shell: |
+    printf $(kubectl get secret --namespace jenkins jenkins -o jsonpath="{.data.jenkins-admin-password}" | base64 --decode);echo
+  register: print_jenkins_admin_password
+- debug: msg={{ print_jenkins_admin_password }}
+  when: print_debug == true

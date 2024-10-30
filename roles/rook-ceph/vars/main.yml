@@ -3,7 +3,7 @@ base_path: /root
 rook:
   install: true
   major_version: 1
-  minor_version: 14
+  minor_version: 15
   patch_version: 4
   build_version:
   enable_discovery_daemon: false
@@ -32,8 +32,8 @@ rook:
 metallb:
   install: true
   major_version: 0
-  minor_version: 13
-  patch_version: 11
+  minor_version: 14
+  patch_version: 8
   vmware:
     kind:
       ipaddrpool:

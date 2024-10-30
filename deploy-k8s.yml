@@ -8,7 +8,7 @@
     config_kube_software: true
     init_k8s: true
     stop_services: true
-    upload_calico: true
+    upload_calico: false
     install_kube_pkgs: true
   roles:
     - k8s

@@ -149,6 +149,19 @@
   when: print_debug == true
 
 
+#- name: Replace a Line to change MTU for docker0 interface
+#  lineinfile:
+#    dest: /usr/lib/systemd/system/docker.service
+#    regexp: "{{ item.regexp }}"
+#    line: "{{ item.line }}"
+#    state: "{{ item.state }}"
+#  register: replace_conflict_line
+#  with_items:
+#    - { regexp: '^ExecStart=/usr/bin/dockerd', line: 'ExecStart=/usr/bin/dockerd --mtu=9000 -H fd:// --containerd=/run/containerd/containerd.sock', state: present }
+#- debug: msg={{ replace_conflict_line }}
+#  when: print_debug == true
+
+
 - name: Replace a Line to Comment Conflict for Docker and Containerd
   lineinfile:
     dest: /usr/lib/systemd/system/containerd.service

@@ -1,0 +1,26 @@
+
+# mlflow를 위한 artifact 저장소가 준비되었다. 이제 postgresql이 필요한데, 이는 mlflow를 설치할 Helm 차트에서 설치를 제공해서 따로 수행하지 않으려 한다.
+# MLflow 설치
+
+# kubectl create ns mlflow
+
+# kubectl create -n mlflow secret generic mlflow-secret \
+#    --from-literal=AWS_ACCESS_KEY_ID=minio \
+#    --from-literal=AWS_SECRET_ACCESS_KEY='minio123'
+
+#helm repo add bitnami https://charts.bitnami.com/bitnami
+#helm upgrade --install mlflow bitnami/mlflow -n mlflow --version 0.10.3 \
+#--set minio.enabled=false \
+#--set externalS3.host=minio-service.jenkins \
+#--set externalS3.port=9000 \
+#--set externalS3.existingSecret=mlflow-secret \
+#--set externalS3.existingSecretAccessKeyIDKey="AWS_ACCESS_KEY_ID" \
+#--set externalS3.existingSecretKeySecretKey="AWS_SECRET_ACCESS_KEY" \
+#--set externalS3.bucket="mlflow" \
+#--set externalS3.protocol=http
+#
+#위 명령어로 설치가 잘 끝났다면 http://localhost 에 접속하고 로그인하면 아래와 같은 화면이 나와야 한다.
+
+#username: user
+#password: kubectl get secret --namespace mlflow mlflow-tracking -o jsonpath="{.data.admin-password }" | base64 -d
+
