@@ -21,13 +21,27 @@
   with_items:
     - { regexp: "^            # - name: CALICO_IPV4POOL_CIDR", line: "            - name: CALICO_IPV4POOL_CIDR", state: present, backrefs: yes }
     - { regexp: "^            #   value: \"192.168.0.0/16\"", line: "              value: \"{{ k8s.cni.pod_network }}\"", state: present, backrefs: yes }
+    - { regexp: "^  calico_backend: \"bird\"", line: "  calico_backend: \"vxlan\"", state: present, backrefs: yes }
   when: inventory_hostname in groups['master']
 - debug: msg={{ calica_cidr_modified }}
   when: print_debug == true and inventory_hostname in groups['master']
 
 
+- name: Modify {{ k8s.base_path }}/calica.yaml for Network Interface Name
+  lineinfile:
+    path: "{{ k8s.base_path }}/calico.yaml"
+    insertafter: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+  register: modify_default_net_interface
+  with_items:
+    - { regexp: "^            # Enable IPIP", line: "            - name: IP_AUTODETECTION_METHOD\n              value: \"interface={{ netdev1 }}\"", state: present, backrefs: yes }
+  when: inventory_hostname in groups['master']
+- debug: msg={{ modify_default_net_interface }}
+  when: print_debug == true and inventory_hostname in groups['master']
+
+
 - name: Setup Calico Networking
-  command: kubectl apply -f {{ k8s.base_path }}/calico.yaml
+  command: kubectl create -f {{ k8s.base_path }}/calico.yaml
   register: calico_network_setup
   when: inventory_hostname in groups['master']
 - debug: msg={{ calico_network_setup }}
@@ -66,3 +80,8 @@
 - debug: msg={{ install_calicoctl }}
   when: print_debug == true and upload_calico == false and calicoctl_bin_exists.stat.exists == false and inventory_hostname in groups['master']
 
+
+# https://medium.com/@jeetanshu/networking-in-multi-node-kubernetes-cluster-the-role-of-calico-dcd78367845e
+
+# Disable BGP and Enable VXLAN
+# https://cwal.tistory.com/12

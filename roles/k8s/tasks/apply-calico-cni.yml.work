@@ -1,0 +1,88 @@
+# url: https://raw.githubusercontent.com/projectcalico/calico/v3.25.0/manifests/calico.yaml
+- name: Download Calico Networking
+  get_url:
+    url: "{{ k8s.cni.calico.download_url }}/v{{ k8s.cni.calico.major_version }}.{{ k8s.cni.calico.minor_version }}.{{ k8s.cni.calico.patch_version }}/manifests/{{ item }}"
+    dest: "{{ k8s.base_path }}/{{ item }}"
+    mode: 0644
+  register: calico_downloaded
+  with_items:
+    - "tigera-operator.yaml"
+    - "custom-resources.yaml"
+  when: inventory_hostname in groups['master']
+- debug: msg={{ calico_downloaded }}
+  when: print_debug == true and inventory_hostname in groups['master']
+
+
+#- name: Modify {{ k8s.base_path }}/calica.yaml for CIDR
+#  lineinfile:
+#    dest: "{{ k8s.base_path }}/calico.yaml"
+#    regexp: "{{ item.regexp }}"
+#    line: "{{ item.line }}"
+#    state: "{{ item.state }}"
+#    backrefs: "{{ item.backrefs }}"
+#  register: calica_cidr_modified
+#  with_items:
+#    - { regexp: "^            # - name: CALICO_IPV4POOL_CIDR", line: "            - name: CALICO_IPV4POOL_CIDR", state: present, backrefs: yes }
+#    - { regexp: "^            #   value: \"192.168.0.0/16\"", line: "              value: \"{{ k8s.cni.pod_network }}\"", state: present, backrefs: yes }
+#  when: inventory_hostname in groups['master']
+#- debug: msg={{ calica_cidr_modified }}
+#  when: print_debug == true and inventory_hostname in groups['master']
+#
+#
+#- name: Modify {{ k8s.base_path }}/calica.yaml for Network Interface Name
+#  lineinfile:
+#    path: "{{ k8s.base_path }}/calico.yaml"
+#    insertafter: "{{ item.regexp }}"
+#    line: "{{ item.line }}"
+#  register: modify_default_net_interface
+#  with_items:
+#    - { regexp: "^            # Enable IPIP", line: "            - name: IP_AUTODETECTION_METHOD\n              value: \"interface={{ netdev1 }}\"", state: present, backrefs: yes }
+#  when: inventory_hostname in groups['master']
+#- debug: msg={{ modify_default_net_interface }}
+#  when: print_debug == true and inventory_hostname in groups['master']
+
+
+- name: Setup Calico Networking
+  command: kubectl apply -f {{ k8s.base_path }}/{{ item }}
+  register: calico_network_setup
+  with_items:
+    - "tigera-operator.yaml"
+    - "custom-resources.yaml"
+  when: inventory_hostname in groups['master']
+- debug: msg={{ calico_network_setup }}
+  when: print_debug == true and inventory_hostname in groups['master']
+
+
+- name: Check if Calicoctl exists
+  stat: path=/usr/local/bin/calicoctl
+  register: calicoctl_bin_exists
+- debug: msg={{ calicoctl_bin_exists }}
+  when: print_debug == true
+
+
+- name: Unarchive Calicoctl Tarball
+  unarchive:
+    src: "calicoctl-v{{ k8s.cni.calico.major_version }}.{{ k8s.cni.calico.minor_version }}.{{ k8s.cni.calico.patch_version }}.tar.gz"
+    dest: "/usr/local/bin/"
+    mode: 0755
+    owner: root
+    group: root
+  register: unarchive_calicoctl_tarball
+  when: calicoctl_bin_exists.stat.exists == false and upload_calico == true
+- debug: msg={{ unarchive_calicoctl_tarball }}
+  when: print_debug == true and calicoctl_bin_exists.stat.exists == false and upload_calico == true
+
+
+# curl -o /root/calicoctl -O -L https://github.com/projectcalico/calicoctl/releases/download/v{{ k8s.cni.calicoctl.major_version }}.{{ k8s.cni.calicoctl.minor_version }}.{{ k8s.cni.calicoctl.patch_version }}/calicoctl
+# curl -L https://github.com/projectcalico/calico/releases/download/v3.27.3/calicoctl-linux-amd64 -o /root/calicoctl
+- name: Install Calicoctl
+  shell: |
+    curl -o {{ k8s.base_path }}/calicoctl -O -L https://github.com/projectcalico/calico/releases/download/v{{ k8s.cni.calico.major_version }}.{{ k8s.cni.calico.minor_version }}.{{ k8s.cni.calico.patch_version }}/calicoctl-linux-amd64
+    chmod +x {{ k8s.base_path }}/calicoctl
+    mv {{ k8s.base_path }}/calicoctl /usr/local/bin/
+  register: install_calicoctl
+  when: upload_calico == false and calicoctl_bin_exists.stat.exists == true and inventory_hostname in groups['master']
+- debug: msg={{ install_calicoctl }}
+  when: print_debug == true and upload_calico == false and calicoctl_bin_exists.stat.exists == false and inventory_hostname in groups['master']
+# https://medium.com/@jeetanshu/networking-in-multi-node-kubernetes-cluster-the-role-of-calico-dcd78367845e
+

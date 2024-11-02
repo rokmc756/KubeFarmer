@@ -1,0 +1,54 @@
+---
+- name: Check If BGP Peering is Correctly Configured
+  shell: |
+    kubectl get nodes -o json | jq -r '.items[] | {name:.metadata.name, cid:.metadata.annotations."projectcalico.org/IPv4Address"}'
+  register: check_bgp_peering
+  when: inventory_hostname in groups['master']
+- debug: msg={{ check_bgp_peering }}
+  when: print_debug == true and inventory_hostname in groups['master']
+
+
+- name: Copy BGP Config Yaml
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ k8s.base_path }}/{{ item }}"
+  register: copy_bgp_config_yaml
+  with_items:
+    - "bgp-master.yaml"
+    - "bgp-worker.yaml"
+  when: inventory_hostname in groups['master']
+- debug: msg={{ copy_bgp_config_yaml }}
+  when: print_debug == true and inventory_hostname in groups['master']
+
+
+- name: Check If BGP Peering is correctly configured
+  shell: |
+    /usr/local/bin/calicoctl apply -f "{{ k8s.base_path }}/{{ item }}" --allow-version-mismatch
+  register: check_bgp_peering
+  with_items:
+    - "bgp-master.yaml"
+    - "bgp-worker.yaml"
+  when: inventory_hostname in groups['master']
+- debug: msg={{ check_bgp_peering }}
+  when: print_debug == true and inventory_hostname in groups['master']
+
+
+- name: Check the Information of Calico-Node
+  shell: |
+    for i in $(kubectl get all -A | grep pod/calico-node | awk '{print $2}') ; do kubectl -n kube-system describe $i ; done
+  register: check_calico_node
+  when: inventory_hostname in groups['master']
+- debug: msg={{ check_calico_node }}
+  when: print_debug == true and inventory_hostname in groups['master']
+
+
+- name: Open 179 Port
+  shell: |
+    iptables -I INPUT -p tcp --dport 179 -j ACCEPT
+  register: open_179_port
+- debug: msg={{ open_179_port }}
+  when: print_debug == true
+
+
+# https://medium.com/@jeetanshu/networking-in-multi-node-kubernetes-cluster-the-role-of-calico-dcd78367845e
+

@@ -1,3 +1,4 @@
+---
 - name: Install the Tigera Calico Operator
   shell:
     kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v{{ k8s.cni.tigera.major_version }}.{{ k8s.cni.tigera.minor_version }}.{{ k8s.cni.tigera.patch_version }}/manifests/tigera-operator.yaml
@@ -5,12 +6,13 @@
   when: inventory_hostname in groups['master']
 - debug: msg={{ tigera_calico_operator_installed }}
   when: print_debug == true and inventory_hostname in groups['master']
+  # "{{ k8s.cni.calico.download_url }}/v{{ k8s.cni.calico.major_version }}.{{ k8s.cni.calico.minor_version }}.{{ k8s.cni.calico.patch_version }}/manifests/calico.yaml"
 
 
 - name: Download Custom Resource Definitions
   get_url:
     url: https://raw.githubusercontent.com/projectcalico/calico/v{{ k8s.cni.tigera.major_version }}.{{ k8s.cni.tigera.minor_version }}.{{ k8s.cni.tigera.patch_version }}/manifests/custom-resources.yaml
-    dest: /root/custom_resources.yaml
+    dest: "{{ k8s.base_path }}/custom-resources.yaml"
     mode: 0644
   register: custom_resources_downloaded
   when: inventory_hostname in groups['master']
@@ -20,21 +22,21 @@
 
 - name: Modify CIDR of Custom Resources
   lineinfile:
-    dest: "{{ k8s.base_path }}/custom_resources.yaml"
+    dest: "{{ k8s.base_path }}/custom-resources.yaml"
     regexp: "{{ item.regexp }}"
     line: "{{ item.line }}"
     state: "{{ item.state }}"
     backrefs: "{{ item.backrefs }}"
   register: custom_resources_cidr_modified
   with_items:
-    - { regexp: "^      cidr: \"192.168.0.0/16\"", line: "      cidr: \"{{ k8s.cni.pod_network }}\"", state: present, backrefs: yes }
+    - { regexp: "^      cidr: 192.168.0.0/16", line: "      cidr: {{ k8s.cni.pod_network }}", state: present, backrefs: yes }
   when: inventory_hostname in groups['master']
 - debug: msg={{ custom_resources_cidr_modified }}
   when: print_debug == true and inventory_hostname in groups['master']
 
 
 - name: Apply Custom Resources
-  command: kubectl apply -f {{ k8s.base_path }}/custom_resources.yaml
+  command: kubectl create -f {{ k8s.base_path }}/custom-resources.yaml
   register: custom_resources_applied
   when: inventory_hostname in groups['master']
 - debug: msg={{ custom_resources_applied }}

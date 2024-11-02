@@ -101,3 +101,8 @@ https://rook.io/docs/rook/latest-release/Getting-Started/storage-architecture/
 
 * NVME
 https://github.com/rook/rook/issues/7858
+
+
+[ TroubelShooting ]
+https://github.com/projectcalico/calico/issues/6687 - Calico node issue
+

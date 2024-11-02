@@ -44,6 +44,7 @@ common_conf_files:
   - "/mnt/cf-blobstore-storage"
   - "/root/cf-for-k8s"
   - "/etc/kubernetes/pki/ca.crt"
+  - "/var/lib/rook"
 
 
 ubt_conf_files:

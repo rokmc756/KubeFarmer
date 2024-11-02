@@ -80,6 +80,11 @@
   when: inventory_hostname in groups['master']
 
 
+- name: Setup CNI Networking Plugin
+  import_tasks: setup-cni-plugin.yml
+  when: k8s.cni.install == true and inventory_hostname in groups['master']
+
+
 - name: Configure Kubectl Config
   shell: |
     kubectl taint nodes {{ hostvars[groups['master'][0]].ansible_hostname }} node-role.kubernetes.io/control-plane:NoSchedule-
@@ -119,9 +124,9 @@
   when: print_debug == true and inventory_hostname in groups['master']
 
 
-- name: Setup CNI Networking Plugin
-  import_tasks: setup-cni-plugin.yml
-  when: k8s.cni.install == true and inventory_hostname in groups['master']
+#- name: Setup CNI Networking Plugin
+#  import_tasks: setup-cni-plugin.yml
+#  when: k8s.cni.install == true and inventory_hostname in groups['master']
 
 
 - name: Confirm that the Kubectl Command is Activated
@@ -182,6 +187,11 @@
 #  when: print_debug == true and inventory_hostname in groups['master']
 
 
+#- name: Setup Kube Flannel CNI Networking Without Operator
+#  import_tasks: apply-kube-flannel-cni.yml
+#  when: k8s.cni.kube_flannel.install == true and inventory_hostname in groups['master']
+
+
 - name: Validate if Kubernetes Workers are All Ready
   shell: |
     kubectl get nodes
@@ -206,6 +216,11 @@
 
 - name: Check the Status fo CNI Network Plugin
   import_tasks: check-cni-network-plugin.yml
+  when: k8s.cni.install == true and inventory_hostname in groups['master']
+
+
+- name: Apply BGP Network for Calico
+  import_tasks: apply-bgp-network.yaml
   when: k8s.cni.install == true and inventory_hostname in groups['master']
 
 

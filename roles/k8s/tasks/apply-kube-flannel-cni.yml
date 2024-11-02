@@ -1,9 +1,18 @@
 ---
 - name: Setup Networking with Kube-Flannel
   shell: |
-    kubectl apply -f {{ k8s.cni.kube_flannel.download_url }}/flannel/bc79dd1505b0c8681ece4de4c0d86c5cd2643275/Documentation/kube-flannel.yml
+    curl -s https://raw.githubusercontent.com/flannel-io/flannel/master/Documentation/kube-flannel.yml | sed 's|10.244.0.0/16|10.42.0.0/16|g' | kubectl apply -f -
+    # kubectl apply -f {{ k8s.cni.kube_flannel.download_url }}/flannel/bc79dd1505b0c8681ece4de4c0d86c5cd2643275/Documentation/kube-flannel.yml
+    # kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
   register: kube_flannel_network_setup
   when: inventory_hostname in groups['master']
 - debug: msg={{ kube_flannel_network_setup }}
   when: print_debug == true and inventory_hostname in groups['master']
+
+# https://addozhang.medium.com/learning-kubernetes-vxlan-network-with-flannel-2d6a58c95300
+
+
+# sudo mkdir -p /opt/cni/bin
+# curl -sSL https://github.com/containernetworking/plugins/releases/download/v1.1.1/cni-plugins-linux-amd64-v1.1.1.tgz | sudo tar -zxf - -C /opt/cni/bin
+
 
