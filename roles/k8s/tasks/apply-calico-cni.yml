@@ -17,39 +17,58 @@
     line: "{{ item.line }}"
     state: "{{ item.state }}"
     backrefs: "{{ item.backrefs }}"
-  register: calica_cidr_modified
+  register: modify_calica_yaml
   with_items:
-    - { regexp: "^            # - name: CALICO_IPV4POOL_CIDR", line: "            - name: CALICO_IPV4POOL_CIDR", state: present, backrefs: yes }
-    - { regexp: "^            #   value: \"192.168.0.0/16\"", line: "              value: \"{{ k8s.cni.pod_network }}\"", state: present, backrefs: yes }
-    - { regexp: "^  calico_backend: \"bird\"", line: "  calico_backend: \"vxlan\"", state: present, backrefs: yes }
+    - { regexp: "^            # - name: CALICO_IPV4POOL_CIDR",                                line: "            - name: CALICO_IPV4POOL_CIDR",                                                      state: present, backrefs: yes }
+    - { regexp: "^            #   value: \"192.168.0.0/16\"",                                 line: "              value: \"{{ k8s.cni.pod_network }}\"",                                            state: present, backrefs: yes }
+    - { regexp: "^  calico_backend: \"bird\"",                                                line: "  calico_backend: \"vxlan\"",                                                                   state: present, backrefs: yes }
+    - { regexp: "^            # Enable IPIP",                                                 line: "            - name: IP_AUTODETECTION_METHOD\n              value: \"interface={{ netdev1 }}\"", state: present, backrefs: yes }
   when: inventory_hostname in groups['master']
-- debug: msg={{ calica_cidr_modified }}
+- debug: msg={{ modify_calica_yaml }}
   when: print_debug == true and inventory_hostname in groups['master']
 
 
-- name: Modify {{ k8s.base_path }}/calica.yaml for Network Interface Name
-  lineinfile:
+- name: Replace {{ k8s.base_path }}/calica.yaml for CIDR
+  replace:
     path: "{{ k8s.base_path }}/calico.yaml"
-    insertafter: "{{ item.regexp }}"
-    line: "{{ item.line }}"
-  register: modify_default_net_interface
+    regexp: "{{ item.regexp }}"
+    replace: "{{ item.line }}"
+    backup: "{{ item.backup }}"
+  register: replace_calica_yaml
   with_items:
-    - { regexp: "^            # Enable IPIP", line: "            - name: IP_AUTODETECTION_METHOD\n              value: \"interface={{ netdev1 }}\"", state: present, backrefs: yes }
-  when: inventory_hostname in groups['master']
-- debug: msg={{ modify_default_net_interface }}
-  when: print_debug == true and inventory_hostname in groups['master']
+    - { regexp: "^            - name: CALICO_IPV4POOL_IPIP\n              value: \"Always\"", line: "            - name: CALICO_IPV4POOL_IPIP\n              value: \"Never\"",                      state: present, backup: yes }
+    - { regexp: "^            - name: CALICO_IPV4POOL_VXLAN\n              value: \"Never\"", line: "            - name: CALICO_IPV4POOL_VXLAN\n              value: \"Always\"",                    state: present, backup: yes }
+    - { regexp: "^            - name: CALICO_IPV6POOL_VXLAN\n              value: \"Never\"", line: "            - name: CALICO_IPV6POOL_VXLAN\n              value: \"Always\"",                    state: present, backup: yes }
+  when: k8s.cni.calico.enable_vxlan == true and inventory_hostname in groups['master']
+- debug: msg={{ replace_calica_yaml }}
+  when: print_debug == true and k8s.cni.calico.enable_vxlan == true and inventory_hostname in groups['master']
+
+
+- name: Delete Bird Lines In {{ k8s.base_path }}/calica.yaml
+  lineinfile:
+    dest: "{{ k8s.base_path }}/calico.yaml"
+    regexp: "{{ item.regexp }}"
+    state: "{{ item.state }}"
+    backrefs: "{{ item.backrefs }}"
+  register: delete_bird_lines
+  with_items:
+    - { regexp: "^              - -bird-live", state: absent, backrefs: yes }
+    - { regexp: "^              - -bird-ready", state: absent, backrefs: yes }
+  when: k8s.cni.calico.enable_vxlan == true and inventory_hostname in groups['master']
+- debug: msg={{ delete_bird_lines }}
+  when: print_debug == true and k8s.cni.calico.enable_vxlan == true and inventory_hostname in groups['master']
 
 
 - name: Setup Calico Networking
-  command: kubectl create -f {{ k8s.base_path }}/calico.yaml
+  command: kubectl apply -f {{ k8s.base_path }}/calico.yaml
   register: calico_network_setup
   when: inventory_hostname in groups['master']
 - debug: msg={{ calico_network_setup }}
   when: print_debug == true and inventory_hostname in groups['master']
 
 
-- name: Check if Calicoctl exists
-  stat: path={{ k8s.base_path }}/calico.yaml
+- name: Check if Calicoctl Exists
+  stat: path=/usr/local/bin/calicoctl
   register: calicoctl_bin_exists
 - debug: msg={{ calicoctl_bin_exists }}
   when: print_debug == true
@@ -80,8 +99,9 @@
 - debug: msg={{ install_calicoctl }}
   when: print_debug == true and upload_calico == false and calicoctl_bin_exists.stat.exists == false and inventory_hostname in groups['master']
 
-
+# Calico with kubernetes
 # https://medium.com/@jeetanshu/networking-in-multi-node-kubernetes-cluster-the-role-of-calico-dcd78367845e
 
 # Disable BGP and Enable VXLAN
 # https://cwal.tistory.com/12
+

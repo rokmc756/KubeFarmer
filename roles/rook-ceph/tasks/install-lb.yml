@@ -1,3 +1,4 @@
+---
 - name: Add IP Address of Load Balancer
   lineinfile:
     path: "{{ base_path }}/rook/deploy/examples/dashboard-loadbalancer.yaml"

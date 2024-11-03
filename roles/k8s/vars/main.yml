@@ -45,6 +45,8 @@ common_conf_files:
   - "/root/cf-for-k8s"
   - "/etc/kubernetes/pki/ca.crt"
   - "/var/lib/rook"
+  - "/root/calico.yaml"
+  - "/root/rook"
 
 
 ubt_conf_files:

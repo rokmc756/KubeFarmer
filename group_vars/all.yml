@@ -45,6 +45,8 @@ k8s:
       minor_version: 29
       patch_version: 0
       download_url: "https://raw.githubusercontent.com/projectcalico/calico"
+      enable_bgp: false
+      enable_vxlan: true
     tigera:
       install: false
       operator: ""

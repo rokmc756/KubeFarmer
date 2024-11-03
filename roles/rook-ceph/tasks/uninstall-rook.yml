@@ -152,7 +152,7 @@
   register: remove_rook_source_n_rbd_kernel_module_config
   with_items:
     - "/etc/modules-load.d/rbd.conf"
-    - "{{ base_path }}/rook"
+    - "{{ k8s.base_path }}/rook"
 - debug: msg={{ remove_rook_source_n_rbd_kernel_module_config }}
 
 
