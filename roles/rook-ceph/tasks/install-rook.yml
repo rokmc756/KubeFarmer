@@ -126,25 +126,28 @@
   when: print_debug == true
 
 
-- name: Copy Cluster Local PVC Config Yaml
+- name: Copy Cluster Config Yaml
   template:
-    src: cluster-on-local-pvc.yaml.j2
-    dest: "{{ base_path }}/cluster-on-local-pvc.yaml"
-  register: copy_cluster_local_pvc_config_yaml
+    src: "{{ item }}.j2"
+    dest: "{{ base_path }}/{{ item }}"
+  register: copy_cluster_config_yaml
   ignore_errors: yes
-- debug: msg={{ copy_cluster_local_pvc_config_yaml }}
+  with_items:
+    - rook-pvc-cluster.yaml
+    - rook-host-cluster.yaml
+    - rook-stretch-cluster.yaml
+- debug: msg={{ copy_cluster_config_yaml }}
 
 
 - name: Cluster Settings for a Production Cluster Running in a Dynamic Cloud Environment including VMware
   shell: |
-    kubectl create -f cluster-on-local-pvc.yaml
+    kubectl create -f rook-pvc-cluster.yaml
   register: create_ceph_cluster
   args:
     chdir: "{{ base_path }}/"
 - debug: msg={{ create_ceph_cluster }}
   when: print_debug == true
-  # kubectl apply -f cluster.yaml
-  # chdir: "{{ base_path }}/rook/deploy/examples/"
+
 
 # Need to add each item to create containers and check them
 #- name: Validate if All Containers are Running

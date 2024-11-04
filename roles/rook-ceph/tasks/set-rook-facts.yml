@@ -15,7 +15,7 @@
   when: print_debug == true
 
 
-- name: Set volume Fact with List
+- name: Set Volume Facts with List
   set_fact:
     volume_mode: "{{ volume_modes | list }}"
   vars:

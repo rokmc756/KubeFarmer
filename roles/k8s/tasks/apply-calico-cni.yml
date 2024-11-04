@@ -21,7 +21,6 @@
   with_items:
     - { regexp: "^            # - name: CALICO_IPV4POOL_CIDR",                                line: "            - name: CALICO_IPV4POOL_CIDR",                                                      state: present, backrefs: yes }
     - { regexp: "^            #   value: \"192.168.0.0/16\"",                                 line: "              value: \"{{ k8s.cni.pod_network }}\"",                                            state: present, backrefs: yes }
-    - { regexp: "^  calico_backend: \"bird\"",                                                line: "  calico_backend: \"vxlan\"",                                                                   state: present, backrefs: yes }
     - { regexp: "^            # Enable IPIP",                                                 line: "            - name: IP_AUTODETECTION_METHOD\n              value: \"interface={{ netdev1 }}\"", state: present, backrefs: yes }
   when: inventory_hostname in groups['master']
 - debug: msg={{ modify_calica_yaml }}
@@ -36,9 +35,10 @@
     backup: "{{ item.backup }}"
   register: replace_calica_yaml
   with_items:
-    - { regexp: "^            - name: CALICO_IPV4POOL_IPIP\n              value: \"Always\"", line: "            - name: CALICO_IPV4POOL_IPIP\n              value: \"Never\"",                      state: present, backup: yes }
-    - { regexp: "^            - name: CALICO_IPV4POOL_VXLAN\n              value: \"Never\"", line: "            - name: CALICO_IPV4POOL_VXLAN\n              value: \"Always\"",                    state: present, backup: yes }
-    - { regexp: "^            - name: CALICO_IPV6POOL_VXLAN\n              value: \"Never\"", line: "            - name: CALICO_IPV6POOL_VXLAN\n              value: \"Always\"",                    state: present, backup: yes }
+    - { regexp: "^  calico_backend: \"bird\"",                                                line: "  calico_backend: \"vxlan\"",                                                                   state: present, backup: no }
+    - { regexp: "^            - name: CALICO_IPV4POOL_IPIP\n              value: \"Always\"", line: "            - name: CALICO_IPV4POOL_IPIP\n              value: \"Never\"",                      state: present, backup: no }
+    - { regexp: "^            - name: CALICO_IPV4POOL_VXLAN\n              value: \"Never\"", line: "            - name: CALICO_IPV4POOL_VXLAN\n              value: \"Always\"",                    state: present, backup: no }
+    - { regexp: "^            - name: CALICO_IPV6POOL_VXLAN\n              value: \"Never\"", line: "            - name: CALICO_IPV6POOL_VXLAN\n              value: \"Always\"",                    state: present, backup: no }
   when: k8s.cni.calico.enable_vxlan == true and inventory_hostname in groups['master']
 - debug: msg={{ replace_calica_yaml }}
   when: print_debug == true and k8s.cni.calico.enable_vxlan == true and inventory_hostname in groups['master']
