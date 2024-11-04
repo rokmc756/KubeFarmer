@@ -219,9 +219,9 @@
   when: k8s.cni.install == true and inventory_hostname in groups['master']
 
 
-- name: Apply BGP Network for Calico
-  import_tasks: apply-bgp-network.yaml
-  when: k8s.cni.calico.enable_bgp == true and inventory_hostname in groups['master']
+#- name: Apply BGP Network for Calico
+#  import_tasks: apply-bgp-network.yaml
+#  when: k8s.cni.calico.enable_bgp == true and inventory_hostname in groups['master']
 
 
 - name: Restart Services for Kubernetes After Reinitialization
