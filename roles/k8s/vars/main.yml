@@ -48,6 +48,16 @@ common_conf_files:
   - "/root/calico.yaml"
   - "/root/rook"
 
+cont_conf_files:
+  - "/mnt/awx-storage"
+  - "/mnt/cf-k8s-storage"
+  - "/mnt/cf-db-storage"
+  - "/mnt/cf-blobstore-storage"
+  - "/root/cf-for-k8s"
+  - "/var/lib/rook"
+  - "/root/calico.yaml"
+  - "/root/rook"
+
 
 ubt_conf_files:
   - "/etc/default/kubelet"

@@ -105,3 +105,20 @@
 # Disable BGP and Enable VXLAN
 # https://cwal.tistory.com/12
 
+
+# https://github.com/rook/rook/issues/14445
+# Pod Network
+# Root cause of the problem:
+#
+# The pod CIDR in the clusters (192.168.0.0/16) was overlapping with the host network nodes IP addresses (192.168.35.x).
+# Pod CIDR was configured when creating the cluster, and when deploying Calico.
+#
+# When Calico sees a 192.x.x.x IP, it considers it as an internal IP address to the cluster, so it will not do SNAT for these IPs. The problem was that my external server IP was considered as an internal IP because of the overlap. This was clearly a misconfiguration.
+#
+# How to fix this:
+# If someone is in the same situation, he can check the current pod CIDR with kubectl get ippool -o yaml and compare it with the local network IPs.
+# In order to solve this, I recreated the clusters with kubeadm and using the parameter --pod-network-cidr=10.200.0.0/16. Also, when deploying Calico, I replaced the default CIDR 192.168.0.0/16 with 10.200.0.0/16 (Calico custom resources).
+# And if someone follows the "steps to reproduce" in the first post, you need to enable host networking with sed -i "s/#provider: host/provider: host/g" cluster.yaml in the Storage cluster, before applying the cluster.yaml file. This is required, so that the Ceph services can be properly accessed from outside the Kubernetes Storage cluster.
+#
+# Now I see that the pvc and pv are in the Bound status, so it works as intended. Feel free to close the issue.
+

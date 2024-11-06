@@ -162,6 +162,32 @@
 #  when: print_debug == true
 
 
+- name: Replace the number of LimitNOFILE and LimitNPROC for containerd
+  replace:
+    path: /usr/lib/systemd/system/containerd.service
+    regexp: "{{ item.regexp }}"
+    replace: "{{ item.line }}"
+    backup: "{{ item.backup }}"
+  register: replace_nfile_nproc
+  with_items:
+    - { regexp: "^[Service]", line: "[Service]\nLimitNOFILE=1048576\nLimitNPROC=1048576\n",                    state: present, backup: no }
+- debug: msg={{ replace_nfile_nproc }}
+  when: print_debug == true
+
+
+- name: Replace a Line to Comment Conflict for Docker and Containerd
+  lineinfile:
+    dest: /usr/lib/systemd/system/containerd.service
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    state: "{{ item.state }}"
+  register: replace_conflict_line
+  with_items:
+    - { regexp: '^Conflicts=docker.service', line: '#Conflicts=docker.service', state: present }
+- debug: msg={{ replace_conflict_line }}
+  when: print_debug == true
+
+
 - name: Replace a Line to Comment Conflict for Docker and Containerd
   lineinfile:
     dest: /usr/lib/systemd/system/containerd.service

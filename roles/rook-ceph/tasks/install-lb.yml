@@ -43,7 +43,8 @@
 #- pause:
 #    seconds: 15
 #
-#
+
+
 #- name: Check if the status of ContainerCreating is Still Existing
 #  shell: |
 #    kubectl get all -A | grep cattle-
@@ -53,3 +54,25 @@
 #  delay: 10
 #- debug: msg={{ check_container_creating }}
 #
+
+
+#- name: Check if the Mon is in Quorum
+#  shell: |
+#    kubectl -n rook-ceph logs -l app=rook-ceph-operator
+#  register: check_mon_quorum
+#  until: check_mon_quorum.stdout.find("removed from out timeout list") != -1
+#  retries: 200
+#  delay: 20
+#- debug: msg={{ check_mon_quorum }}
+
+
+#- name: Check Ceph Health
+#  shell: |
+#    kubectl -n rook-ceph exec -it deploy/rook-ceph-tools -- ceph status
+#  register: check_ceph_health
+#  until: check_ceph_health.stdout.find("HEALTH_OK") != -1
+#  retries: 10
+#  delay: 10
+#- debug: msg={{ check_ceph_health }}
+
+

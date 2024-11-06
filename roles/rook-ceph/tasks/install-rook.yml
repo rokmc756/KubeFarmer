@@ -14,6 +14,8 @@
 # Helm
 # https://www.talos.dev/v1.7/kubernetes-guides/configuration/ceph-with-rook/
 
+
+# rm -rf /var/lib/rook
 #- name: Cleanup the Ceph Block Devices
 #  shell: |
 #    lsblk
@@ -32,15 +34,16 @@
 
 - name: Cleanup the Ceph Block Devices
   shell: |
-    for vg in $(`vgs | grep ceph | awk '{print $1}'`); do vgremove $vg -f ;done
-    for dm in $(fdisk -l | grep mapper | grep ceph | awk '{print $2}' | cut -d : -f 1); do dmsetup remove $dm ;done
-    for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do pvremove -y -ff /dev/$nb ; done
-    for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do dd if=/dev/zero of=/dev/$nb bs=4096 count=1 conv=notrunc ; done
-    for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do nvme format /dev/$nb ; done
-    for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do wipefs -a /dev/$nb ; done
-    for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do sgdisk --zap-all --delete /dev/$nb ; done
-    for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do blkdiscard /dev/$nb ; done
-    rm -rf /var/lib/rook/*
+    lsblk
+    for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do nvme format /dev/$nb --force ;done
+    for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do sgdisk --zap-all /dev/$nb ;done
+    for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do dd if=/dev/zero of=/dev/$nb bs=10M count=10 oflag=direct,dsync ;done
+    for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do blkdiscard /dev/$nb ;done
+    for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do partprobe /dev/$nb ;done
+    ls /dev/mapper/ceph-* | xargs -I% -- dmsetup remove %
+    rm -rf /dev/ceph-*
+    rm -rf /dev/mapper/ceph--*
+    rm -rf /var/lib/rook
   delegate_to: "{{ item }}"
   delegate_facts: True
   register: cleanup_ceph_block_devices
@@ -48,6 +51,7 @@
   with_items: "{{ groups['all'] }}"
 - debug: msg={{ cleanup_ceph_block_devices }}
   when: print_debug == true
+
 
 
 - name: Enable Rados Block Device Kernel Module
@@ -122,9 +126,13 @@
   register: enable_rook_discovery_daemon
   with_items:
     - { regexp: '^  ROOK_ENABLE_DISCOVERY_DAEMON:*', line: '  ROOK_ENABLE_DISCOVERY_DAEMON: "true"', state: present }
+    - { regexp: '^      #hostNetwork: true', line: '^      hostNetwork: true', state: present }
+    - { regexp: '^  # CSI_ENABLE_HOST_NETWORK: "true"', line: '  CSI_ENABLE_HOST_NETWORK: "true"', state: present }
   when: rook.enable_discovery_daemon == true
 - debug: msg={{ enable_rook_discovery_daemon }}
   when: rook.enable_discovery_daemon == true and print_debug == true
+#
+# https://github.com/rook/rook/issues/14445
 
 
 - name: Create Operator

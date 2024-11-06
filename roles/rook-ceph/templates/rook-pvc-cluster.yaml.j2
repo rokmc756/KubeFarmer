@@ -81,7 +81,7 @@ spec:
   skipUpgradeChecks: false
   continueUpgradeAfterChecksEvenIfNotHealthy: false
   mgr:
-    count: 2
+    count: 1
     allowMultiplePerNode: false
     modules:
       - name: rook
@@ -167,6 +167,11 @@ spec:
         #   requests:
         #     cpu: "500m"
         #     memory: "4Gi"
+           limits:
+             memory: "2Gi"
+           requests:
+             cpu: "500m"
+             memory: "2Gi"
         volumeClaimTemplates:
           - metadata:
               name: data

@@ -1,0 +1,14 @@
+
+
+https://github.com/rook/rook/issues/10110
+
+https://github.com/ceph/ceph/pull/50622
+
+
+# this works! (oracle linux 9.2, k8s 1.28.1, rook ceph 1.12.3)
+cat /etc/systemd/system/containerd.service.d/LimitNOFILE.conf
+[Service]
+LimitNOFILE=1048576
+
+
+
