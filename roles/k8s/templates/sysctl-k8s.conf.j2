@@ -1,8 +1,23 @@
 net.bridge.bridge-nf-call-iptables = 1
 net.bridge.bridge-nf-call-ip6tables = 1
 net.ipv4.ip_forward = 1
-net.netfilter.nf_conntrack_max=1000000
+
+# net.netfilter.nf_conntrack_max=1000000
 
 # https://deploy.live/blog/kubernetes-networking-problems-due-to-the-conntrack/
 # https://medium.com/@darpanmalhotra/exposing-tftp-server-as-kubernetes-service-part-6-ccee20610eaf
+
+
+# https://github.com/rook/rook/issues/3370
+# In my case it seems to have related to smaller arp table in linux. When there are high number of drives per server, which causes high number of containers per server, the arp table can exhaust creating a liveness probe failure.
+# After applying following changes to sysctl, the issue did not happen.
+
+# net.ipv4.neigh.default.gc_thresh1 = 8192
+# net.ipv4.neigh.default.gc_thresh2 = 32768
+# net.ipv4.neigh.default.gc_thresh3 = 65536
+
+# Do check the ping response/latency for mgr and you may also want to increase mgr liveness time out
+# Edit deploy/rook-ceph-mgr-a and set
+# livenessProbe:
+# timeoutSeconds: 9
 

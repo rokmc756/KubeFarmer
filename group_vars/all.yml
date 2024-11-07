@@ -36,8 +36,8 @@ k8s:
       ipaddr1: "192.168.1."
   cni:
     install: true
-    pod_network: "10.142.0.0/16" # Calico
-    # pod_network: "10.244.0.0/16" # Kube-Flannel
+    # pod_network: "10.142.0.0/16" # Calico
+    pod_network: "10.244.0.0/16" # Kube-Flannel
     calico:
       install: true
       operator: ""
@@ -47,6 +47,9 @@ k8s:
       download_url: "https://raw.githubusercontent.com/projectcalico/calico"
       enable_bgp: true
       enable_vxlan: false
+      vxlan_mtu: 8950
+      ipip_mtu: 8980
+      # https://docs.tigera.io/calico/latest/networking/configuring/mtu#configure-mtu
     tigera:
       install: false
       operator: ""
@@ -60,6 +63,7 @@ k8s:
       minor_version: 1
       patch_version: 1
       download_url: "https://raw.githubusercontent.com/coreos/flannel"
+  lb:
     cilium:
       install: false
       major_version: 1
@@ -74,6 +78,11 @@ k8s:
         patch_version: 15
         arch: "amd64"
         download_url: "https://github.com/cilium/cilium-cli/releases/download"
+    metallb: false
+    loxilb: false
+    # https://blog.devgenius.io/loxilb-another-load-balancer-aabf4a29d810
+    # https://malwareanalysis.tistory.com/267
+
 
 vmware:
   esxi_hostname: "192.168.0.231"

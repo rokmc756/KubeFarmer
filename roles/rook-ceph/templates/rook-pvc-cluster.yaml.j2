@@ -1,3 +1,4 @@
+---
 ###################################################################################################################
 # Define the settings for the rook-ceph cluster with common settings for a production cluster on top of bare metal.
 #
@@ -8,7 +9,6 @@
 #   kubectl create -f crds.yaml -f common.yaml -f operator.yaml
 #   kubectl create -f cluster-on-local-pvc.yaml
 ###################################################################################################################
-
 kind: StorageClass
 apiVersion: storage.k8s.io/v1
 metadata:
@@ -267,5 +267,3 @@ spec:
 #   token: ROOK_TOKEN_CHANGE_ME
 
 # https://rook.io/docs/rook/latest-release/CRDs/Cluster/pvc-cluster/
-
-

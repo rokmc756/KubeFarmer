@@ -126,14 +126,14 @@
   register: enable_rook_discovery_daemon
   with_items:
     - { regexp: '^  ROOK_ENABLE_DISCOVERY_DAEMON:*', line: '  ROOK_ENABLE_DISCOVERY_DAEMON: "true"', state: present }
-    - { regexp: '^      #hostNetwork: true', line: '^      hostNetwork: true', state: present }
-    - { regexp: '^  # CSI_ENABLE_HOST_NETWORK: "true"', line: '  CSI_ENABLE_HOST_NETWORK: "true"', state: present }
   when: rook.enable_discovery_daemon == true
 - debug: msg={{ enable_rook_discovery_daemon }}
   when: rook.enable_discovery_daemon == true and print_debug == true
-#
-# https://github.com/rook/rook/issues/14445
+#  - { regexp: '^      #hostNetwork: true', line: '^      hostNetwork: true', state: present }
+#  - { regexp: '^  # CSI_ENABLE_HOST_NETWORK: "true"', line: '  CSI_ENABLE_HOST_NETWORK: "true"', state: present }
 
+
+# https://github.com/rook/rook/issues/14445
 
 - name: Create Operator
   shell: |
@@ -164,17 +164,19 @@
     - rook-pvc-cluster.yaml
     - rook-host-cluster.yaml
     - rook-stretch-cluster.yaml
+    - cluster-on-local-pvc.yaml
 - debug: msg={{ copy_cluster_config_yaml }}
 
 
 - name: Cluster Settings for a Production Cluster Running in a Dynamic Cloud Environment including VMware
   shell: |
-    kubectl create -f rook-pvc-cluster.yaml
+    kubectl create -f cluster-on-local-pvc.yaml
   register: create_ceph_cluster
   args:
     chdir: "{{ base_path }}/"
 - debug: msg={{ create_ceph_cluster }}
   when: print_debug == true
+  # kubectl create -f rook-pvc-cluster.yaml
 
 
 # Need to add each item to create containers and check them

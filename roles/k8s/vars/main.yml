@@ -48,6 +48,7 @@ common_conf_files:
   - "/root/calico.yaml"
   - "/root/rook"
 
+
 cont_conf_files:
   - "/mnt/awx-storage"
   - "/mnt/cf-k8s-storage"
@@ -57,6 +58,11 @@ cont_conf_files:
   - "/var/lib/rook"
   - "/root/calico.yaml"
   - "/root/rook"
+  - "/etc/cni/net.d/10-calico.conflist"
+  - "/etc/cni/net.d/10-flannel.conflist"
+  - "/etc/cni/net.d/calico-kubeconfig"
+  - "/root/rook-pv-cluster.yaml"
+
 
 
 ubt_conf_files:

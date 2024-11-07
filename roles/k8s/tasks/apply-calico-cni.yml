@@ -35,6 +35,7 @@
     backup: "{{ item.backup }}"
   register: replace_calica_yaml
   with_items:
+    - { regexp: "^  veth_mtu: \"0\"",                                                         line: "  veth_mtu: \"8950\"",                                                                          state: present, backup: no }
     - { regexp: "^  calico_backend: \"bird\"",                                                line: "  calico_backend: \"vxlan\"",                                                                   state: present, backup: no }
     - { regexp: "^            - name: CALICO_IPV4POOL_IPIP\n              value: \"Always\"", line: "            - name: CALICO_IPV4POOL_IPIP\n              value: \"Never\"",                      state: present, backup: no }
     - { regexp: "^            - name: CALICO_IPV4POOL_VXLAN\n              value: \"Never\"", line: "            - name: CALICO_IPV4POOL_VXLAN\n              value: \"Always\"",                    state: present, backup: no }

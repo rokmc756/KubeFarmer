@@ -187,11 +187,6 @@
 #  when: print_debug == true and inventory_hostname in groups['master']
 
 
-#- name: Setup Kube Flannel CNI Networking Without Operator
-#  import_tasks: apply-kube-flannel-cni.yml
-#  when: k8s.cni.kube_flannel.install == true and inventory_hostname in groups['master']
-
-
 - name: Validate if Kubernetes Workers are All Ready
   shell: |
     kubectl get nodes
@@ -221,7 +216,7 @@
 
 - name: Apply BGP Network for Calico
   import_tasks: apply-bgp-network.yaml
-  when: k8s.cni.calico.enable_bgp == true and inventory_hostname in groups['master']
+  when: k8s.cni.calico.install == true and k8s.cni.calico.enable_bgp == true and inventory_hostname in groups['master']
 
 
 #

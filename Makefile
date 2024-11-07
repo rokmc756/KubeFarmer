@@ -58,6 +58,9 @@ k8s:
 rook:
 	make -f ./makefile_configs/Makefile.rook r=${r} s=${s} c=${c} USERNAME=${USERNAME}
 
+rancher:
+	make -f ./makefile_configs/Makefile.rancher r=${r} s=${s} c=${c} USERNAME=${USERNAME}
+
 kubeflow:
 	make -f ./makefile_configs/Makefile.kubeflow r=${r} s=${s} c=${c} USERNAME=${USERNAME}
 

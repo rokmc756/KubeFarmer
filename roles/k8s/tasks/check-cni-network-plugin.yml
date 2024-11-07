@@ -7,9 +7,9 @@
   until: check_all_calico_nodes.stdout.find("") != -1
   retries: 100
   delay: 10
-  when: inventory_hostname in groups['master']
+  when: k8s.cni.calico.install == true and inventory_hostname in groups['master']
 - debug: msg={{ check_all_calico_nodes }}
-  when: print_debug == true and inventory_hostname in groups['master']
+  when: print_debug == true and k8s.cni.calico.install == true and inventory_hostname in groups['master']
 
 
 - name: Check Calicoctl Node Status
@@ -18,7 +18,7 @@
   register: check_calico_node_status
   environment:
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-  when: inventory_hostname in groups['master']
+  when: k8s.cni.calico.install == true and inventory_hostname in groups['master']
 - debug: msg={{ check_calico_node_status }}
-  when: print_debug == true and inventory_hostname in groups['master']
+  when: print_debug == true and k8s.cni.calico.install == true and inventory_hostname in groups['master']
 
