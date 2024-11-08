@@ -106,3 +106,12 @@ https://github.com/rook/rook/issues/7858
 [ TroubelShooting ]
 https://github.com/projectcalico/calico/issues/6687 - Calico node issue
 
+
+[ Kernel Version Config ]
+$ grubby --set-default /boot/vmlinuz-5.14.0-362.24.1.el9_3.x86_64
+$ reboot
+
+
+[ Kernel Parameter ]
+https://www.scaleway.com/en/docs/containers/kubernetes/reference-content/modifying-kernel-parameters-kubernetes-cluster/#creating-a-daemonset-to-modify-kernel-parameters
+

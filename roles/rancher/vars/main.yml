@@ -9,7 +9,7 @@ rancher:
   admin_password: "Changeme123!@#"
   k8s:
     major_version: 1
-    minor_version: 28
+    minor_version: 31
     patch_version: 0
     build_version:
   hostname: "rancher.jtest.suse.com"

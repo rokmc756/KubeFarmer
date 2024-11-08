@@ -216,7 +216,7 @@
 
 - name: Apply BGP Network for Calico
   import_tasks: apply-bgp-network.yaml
-  when: k8s.cni.calico.install == true and k8s.cni.calico.enable_bgp == true and inventory_hostname in groups['master']
+  when: k8s.cni.calico.install == true and k8s.cni.calico.bgp == true and inventory_hostname in groups['master']
 
 
 #
@@ -247,6 +247,27 @@
 
 - name: Force to Stop and Restart Services
   meta: flush_handlers
+
+
+# rm -rf /var/lib/rook
+- name: Cleanup the NVME Devices
+  shell: |
+    rm -rf /var/lib/rook
+    lsblk
+    for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do nvme format --ses=1 /dev/$nb --force ;done
+    for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do wipefs -a /dev/$nb ;done
+    for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do sgdisk --zap-all /dev/$nb ;done
+    for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do dd if=/dev/zero of=/dev/$nb bs=10M count=10 oflag=direct,dsync ;done
+    for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do blkdiscard /dev/$nb ;done
+    for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do partprobe /dev/$nb ;done
+  delegate_to: "{{ item }}"
+  delegate_facts: True
+  register: cleanup_ceph_block_devices
+  ignore_errors: true
+  with_items: "{{ groups['all'] }}"
+  when: inventory_hostname in groups['master']
+- debug: msg={{ cleanup_ceph_block_devices }}
+  when: print_debug == true and inventory_hostname in groups['master']
 
 
 # Calico CNI

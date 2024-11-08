@@ -18,6 +18,7 @@
 # rm -rf /var/lib/rook
 #- name: Cleanup the Ceph Block Devices
 #  shell: |
+#    rm -rf /var/lib/rook
 #    lsblk
 #    for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do nvme format /dev/$nb --force ;done
 #    for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do wipefs -a /dev/$nb ;done
@@ -32,26 +33,25 @@
 #  when: print_debug == true
 
 
-- name: Cleanup the Ceph Block Devices
-  shell: |
-    lsblk
-    for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do nvme format /dev/$nb --force ;done
-    for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do sgdisk --zap-all /dev/$nb ;done
-    for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do dd if=/dev/zero of=/dev/$nb bs=10M count=10 oflag=direct,dsync ;done
-    for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do blkdiscard /dev/$nb ;done
-    for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do partprobe /dev/$nb ;done
-    ls /dev/mapper/ceph-* | xargs -I% -- dmsetup remove %
-    rm -rf /dev/ceph-*
-    rm -rf /dev/mapper/ceph--*
-    rm -rf /var/lib/rook
-  delegate_to: "{{ item }}"
-  delegate_facts: True
-  register: cleanup_ceph_block_devices
-  ignore_errors: true
-  with_items: "{{ groups['all'] }}"
-- debug: msg={{ cleanup_ceph_block_devices }}
-  when: print_debug == true
-
+#- name: Cleanup the Ceph Block Devices
+#  shell: |
+#    lsblk
+#    for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do nvme format /dev/$nb --force ;done
+#    for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do sgdisk --zap-all /dev/$nb ;done
+#    for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do dd if=/dev/zero of=/dev/$nb bs=10M count=10 oflag=direct,dsync ;done
+#    for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do blkdiscard /dev/$nb ;done
+#    for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do partprobe /dev/$nb ;done
+#    ls /dev/mapper/ceph-* | xargs -I% -- dmsetup remove %
+#    rm -rf /dev/ceph-*
+#    rm -rf /dev/mapper/ceph--*
+#    rm -rf /var/lib/rook
+#  delegate_to: "{{ item }}"
+#  delegate_facts: True
+#  register: cleanup_ceph_block_devices
+#  ignore_errors: true
+#  with_items: "{{ groups['all'] }}"
+#- debug: msg={{ cleanup_ceph_block_devices }}
+#  when: print_debug == true
 
 
 - name: Enable Rados Block Device Kernel Module
@@ -161,22 +161,34 @@
   register: copy_cluster_config_yaml
   ignore_errors: yes
   with_items:
-    - rook-pvc-cluster.yaml
-    - rook-host-cluster.yaml
-    - rook-stretch-cluster.yaml
-    - cluster-on-local-pvc.yaml
+    - "cluster-on-local-pvc-{{ rook.major_version }}.{{ rook.minor_version }}.{{ rook.patch_version }}.yaml"
+    # - rook-pvc-cluster.yaml
+    # - rook-host-cluster.yaml
+    # - rook-stretch-cluster.yaml
 - debug: msg={{ copy_cluster_config_yaml }}
 
 
 - name: Cluster Settings for a Production Cluster Running in a Dynamic Cloud Environment including VMware
   shell: |
-    kubectl create -f cluster-on-local-pvc.yaml
+    kubectl create -f cluster-on-local-pvc-{{ rook.major_version }}.{{ rook.minor_version }}.{{ rook.patch_version }}.yaml
   register: create_ceph_cluster
   args:
     chdir: "{{ base_path }}/"
 - debug: msg={{ create_ceph_cluster }}
   when: print_debug == true
-  # kubectl create -f rook-pvc-cluster.yaml
+
+
+#- name: Create Cluster
+#  shell: |
+#    kubectl create -f rook-pvc-cluster.yaml
+#  register: create_cluster
+#  args:
+#    chdir: "{{ base_path }}/"
+#- debug: msg={{ create_cluster }}
+#  when: print_debug == true
+#  # kubectl apply -f cluster.yaml
+#  #  chdir: "{{ base_path }}/rook/deploy/examples/"
+
 
 
 # Need to add each item to create containers and check them

@@ -35,14 +35,14 @@
     backup: "{{ item.backup }}"
   register: replace_calica_yaml
   with_items:
-    - { regexp: "^  veth_mtu: \"0\"",                                                         line: "  veth_mtu: \"8950\"",                                                                          state: present, backup: no }
     - { regexp: "^  calico_backend: \"bird\"",                                                line: "  calico_backend: \"vxlan\"",                                                                   state: present, backup: no }
     - { regexp: "^            - name: CALICO_IPV4POOL_IPIP\n              value: \"Always\"", line: "            - name: CALICO_IPV4POOL_IPIP\n              value: \"Never\"",                      state: present, backup: no }
     - { regexp: "^            - name: CALICO_IPV4POOL_VXLAN\n              value: \"Never\"", line: "            - name: CALICO_IPV4POOL_VXLAN\n              value: \"Always\"",                    state: present, backup: no }
     - { regexp: "^            - name: CALICO_IPV6POOL_VXLAN\n              value: \"Never\"", line: "            - name: CALICO_IPV6POOL_VXLAN\n              value: \"Always\"",                    state: present, backup: no }
-  when: k8s.cni.calico.enable_vxlan == true and inventory_hostname in groups['master']
+  when: k8s.cni.calico.vxlan == true and inventory_hostname in groups['master']
 - debug: msg={{ replace_calica_yaml }}
-  when: print_debug == true and k8s.cni.calico.enable_vxlan == true and inventory_hostname in groups['master']
+  when: print_debug == true and k8s.cni.calico.vxlan == true and inventory_hostname in groups['master']
+  #  - { regexp: "^  veth_mtu: \"0\"",                                                         line: "  veth_mtu: \"8950\"",                                                                          state: present, backup: no }
 
 
 - name: Delete Bird Lines In {{ k8s.base_path }}/calica.yaml
@@ -55,9 +55,9 @@
   with_items:
     - { regexp: "^              - -bird-live", state: absent, backrefs: yes }
     - { regexp: "^              - -bird-ready", state: absent, backrefs: yes }
-  when: k8s.cni.calico.enable_vxlan == true and inventory_hostname in groups['master']
+  when: k8s.cni.calico.vxlan == true and inventory_hostname in groups['master']
 - debug: msg={{ delete_bird_lines }}
-  when: print_debug == true and k8s.cni.calico.enable_vxlan == true and inventory_hostname in groups['master']
+  when: print_debug == true and k8s.cni.calico.vxlan == true and inventory_hostname in groups['master']
 
 
 - name: Setup Calico Networking
@@ -100,6 +100,29 @@
 - debug: msg={{ install_calicoctl }}
   when: print_debug == true and upload_calico == false and calicoctl_bin_exists.stat.exists == false and inventory_hostname in groups['master']
 
+#
+# calicoctl ipam show
+# calicoctl ipam show --show-blocks
+# kubectl get nodes -o jsonpath='{.items[*].spec.podCIDR}' ;echo
+# 172.16.0.0/24 172.16.1.0/24 172.16.2.0/24 172.16.3.0/24
+
+# kubectl get node k8s-m -o json | jq '.spec.podCIDR'
+# "172.16.0.0/24"
+
+# calicoctl get ippool -o wide
+# iptables -t filter -S | grep cali
+# iptables -t nat -S | grep cali
+
+# calicoctl get ippool -o wide
+
+
+# calicoctl node run --ip=autodetect --ip-autodetection-method=can-reach=8.8.8.8
+# calicoctl node run --ip=autodetect --ip-autodetection-method=can-reach=k8s_master_interface
+# calicoctl node run --ip=autodetect --ip-autodetection-method=can-reach=k8s_node_production_interface
+
+
+# https://isn-t.tistory.com/41
+
 # Calico with kubernetes
 # https://medium.com/@jeetanshu/networking-in-multi-node-kubernetes-cluster-the-role-of-calico-dcd78367845e
 
@@ -122,4 +145,14 @@
 # And if someone follows the "steps to reproduce" in the first post, you need to enable host networking with sed -i "s/#provider: host/provider: host/g" cluster.yaml in the Storage cluster, before applying the cluster.yaml file. This is required, so that the Ceph services can be properly accessed from outside the Kubernetes Storage cluster.
 #
 # Now I see that the pvc and pv are in the Bound status, so it works as intended. Feel free to close the issue.
+
+# https://github.com/rook/rook/issues/5065
+# https://github.com/projectcalico/calico/issues/1709#issuecomment-399350737
+# https://docs.tigera.io/calico/latest/reference/architecture/data-path
+
+
+# [ VXLAN Issue ]
+# https://github.com/projectcalico/calico/issues/6160
+#
+
 

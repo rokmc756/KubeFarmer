@@ -8,7 +8,7 @@ k8s:
   cluster_name: jack-kr-k8s
   domain: "jtest.pivotal.io"
   major_version: "1"
-  minor_version: "28"
+  minor_version: "31"
   patch_version: "0"
   build_version: ""
   repo_url: ""
@@ -37,6 +37,7 @@ k8s:
   cni:
     install: true
     # pod_network: "10.142.0.0/16" # Calico
+    # pod_network: "192.167.0.0/16" # Calico
     pod_network: "10.244.0.0/16" # Kube-Flannel
     calico:
       install: true
@@ -45,11 +46,12 @@ k8s:
       minor_version: 29
       patch_version: 0
       download_url: "https://raw.githubusercontent.com/projectcalico/calico"
-      enable_bgp: true
-      enable_vxlan: false
+      vxlan: true
+      bgp: false
       vxlan_mtu: 8950
-      ipip_mtu: 8980
+      bgp_mtu: 8980
       # https://docs.tigera.io/calico/latest/networking/configuring/mtu#configure-mtu
+      # https://docs.tigera.io/calico/latest/getting-started/kubernetes/requirements
     tigera:
       install: false
       operator: ""

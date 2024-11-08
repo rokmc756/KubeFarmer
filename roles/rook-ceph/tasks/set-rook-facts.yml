@@ -21,7 +21,7 @@
   vars:
     volume_modes:
       - "Filesystem"
-      - "Block"
+      - "Filesystem"
       - "Block"
       - "Block"
 - debug: msg={{ volume_mode }}
