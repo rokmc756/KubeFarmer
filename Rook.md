@@ -115,3 +115,12 @@ $ reboot
 [ Kernel Parameter ]
 https://www.scaleway.com/en/docs/containers/kubernetes/reference-content/modifying-kernel-parameters-kubernetes-cluster/#creating-a-daemonset-to-modify-kernel-parameters
 
+
+[ SELinux ]
+https://platform9.com/blog/selinux-kubernetes-rbac-and-shipping-security-policies-for-on-prem-applications/
+https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+
+# semanage fcontext -l  | grep kub | grep container_file
+# /var/lib/kubelet/pod-resources/kubelet.sock        all files          system_u:object_r:container_file_t:s0
+# /var/lib/kubernetes/pods(/.*)?                     all files          system_u:object_r:container_file_t:s0
+

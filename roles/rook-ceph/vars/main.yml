@@ -3,12 +3,12 @@ base_path: /root
 rook:
   install: true
   major_version: 1
-  minor_version: 15
-  patch_version: 5
-  # minor_version: 14
-  # patch_version: 4
+  # minor_version: 15
+  # patch_version: 5
+  minor_version: 14
+  patch_version: 4
   build_version:
-  enable_discovery_daemon: false
+  enable_discovery_daemon: true
   clone_git: true
   nvme: true
   lb_ip_addr: "192.168.1.219"
@@ -28,11 +28,11 @@ rook:
       namespace: nginx-ingress
     hostname: "rook.jtest.pivotal.io"
   kernel_parameters:
-    - "net.netfilter.nf_conntrack_max=1000000"
     - "net.ipv4.neigh.default.gc_thresh1 = 8192"
     - "net.ipv4.neigh.default.gc_thresh2 = 32768"
     - "net.ipv4.neigh.default.gc_thresh3 = 65536"
     # - "net.ipv4.neigh.default.gc_thresh1 = 0"       # For ARP Cache
+    # - "net.netfilter.nf_conntrack_max=1000000"
 
 
 metallb:

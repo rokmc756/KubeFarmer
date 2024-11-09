@@ -1,14 +1,16 @@
 ---
-- name: Disabling SELinux Policy Required by Kubnernetes
-  selinux:
-    state: disabled
-  register: selinux_disabled
-  notify:
-    - Restart System
-    - Waiting for Server to Come Back After Reboot
-  failed_when: selinux_disabled.msg | default('ok', True) is not search('(^ok$|libselinux-python|(SELinux state changed))')
-- debug: msg={{ selinux_disabled }}
-  when: print_debug == true
+#- name: Disabling SELinux Policy Required by Kubnernetes
+#  selinux:
+#    state: permissive
+#  register: selinux_disabled
+#  notify:
+#    - Restart System
+#    - Waiting for Server to Come Back After Reboot
+#  failed_when: selinux_disabled.msg | default('ok', True) is not search('(^ok$|libselinux-python|(SELinux state changed))')
+#- debug: msg={{ selinux_disabled }}
+#  when: print_debug == true
+#  # state: disabled
+#fatal: [rk9-node05]: FAILED! => {"changed": false, "failed_when_result": true, "msg": "Policy is required if state is not 'disabled'"}
 
 
 - name: Check if SELinux Have Been Disabled in Configurtion File

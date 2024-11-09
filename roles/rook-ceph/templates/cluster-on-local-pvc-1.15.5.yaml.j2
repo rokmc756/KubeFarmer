@@ -105,10 +105,12 @@ spec:
         # IMPORTANT: If volumes specified by the storageClassName are not portable across nodes
         # this needs to be set to false. For example, if using the local storage provisioner
         # this should be false.
+        # portable: false
         portable: true
         # Certain storage class in the Cloud are slow
         # Rook can configure the OSD running on PVC to accommodate that by tuning some of the Ceph internal
         # Currently, "gp2-csi" has been identified as such
+        # tuneDeviceClass: false
         tuneDeviceClass: true
         # Certain storage class in the Cloud are fast
         # Rook can configure the OSD running on PVC to accommodate that by tuning some of the Ceph internal
@@ -167,11 +169,6 @@ spec:
         #   requests:
         #     cpu: "500m"
         #     memory: "4Gi"
-           limits:
-             memory: "2Gi"
-           requests:
-             cpu: "500m"
-             memory: "2Gi"
         volumeClaimTemplates:
           - metadata:
               name: data
@@ -232,6 +229,14 @@ spec:
     managePodBudgets: true
     osdMaintenanceTimeout: 30
     pgHealthCheckTimeout: 0
+  #network:
+  #  provider: host
+  #  addressRanges:
+  #    public:
+  #      - "192.168.0.0/24"
+  #      - "192.168.2.0/24"
+  #    cluster:
+  #      - "192.168.1.0/24"
   # security oriented settings
   # security:
   # Settings to enable key rotation for KEK(Key Encryption Key).

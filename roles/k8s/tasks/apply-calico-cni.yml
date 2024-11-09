@@ -27,6 +27,25 @@
   when: print_debug == true and inventory_hostname in groups['master']
 
 
+  # kubectl set env daemonset/calico-node -n kube-system IP_AUTODETECTION_METHOD=can-reach=<up of master node>
+  # or
+  # kubectl set env daemonset/calico-node -n kube-system IP_AUTODETECTION_METHOD=interface=eth.*
+
+
+- name: Apply the MTU for BGP
+  replace:
+    path: "{{ k8s.base_path }}/calico.yaml"
+    regexp: "{{ item.regexp }}"
+    replace: "{{ item.line }}"
+    backup: "{{ item.backup }}"
+  register: apply_bgp_mtu
+  with_items:
+    - { regexp: "^  veth_mtu: \"0\"",                                                         line: "  veth_mtu: \"{{ k8s.cni.calico.bgp_mtu }}\"",                                                  state: present, backup: no }
+  when: k8s.cni.calico.bgp == true and inventory_hostname in groups['master']
+- debug: msg={{ apply_bgp_mtu }}
+  when: print_debug == true and k8s.cni.calico.bgp == true and inventory_hostname in groups['master']
+
+
 - name: Replace {{ k8s.base_path }}/calica.yaml for CIDR
   replace:
     path: "{{ k8s.base_path }}/calico.yaml"
@@ -36,13 +55,13 @@
   register: replace_calica_yaml
   with_items:
     - { regexp: "^  calico_backend: \"bird\"",                                                line: "  calico_backend: \"vxlan\"",                                                                   state: present, backup: no }
+    - { regexp: "^  veth_mtu: \"0\"",                                                         line: "  veth_mtu: \"{{ k8s.cni.calico.vxlan_mtu }}\"",                                                state: present, backup: no }
     - { regexp: "^            - name: CALICO_IPV4POOL_IPIP\n              value: \"Always\"", line: "            - name: CALICO_IPV4POOL_IPIP\n              value: \"Never\"",                      state: present, backup: no }
     - { regexp: "^            - name: CALICO_IPV4POOL_VXLAN\n              value: \"Never\"", line: "            - name: CALICO_IPV4POOL_VXLAN\n              value: \"Always\"",                    state: present, backup: no }
     - { regexp: "^            - name: CALICO_IPV6POOL_VXLAN\n              value: \"Never\"", line: "            - name: CALICO_IPV6POOL_VXLAN\n              value: \"Always\"",                    state: present, backup: no }
   when: k8s.cni.calico.vxlan == true and inventory_hostname in groups['master']
 - debug: msg={{ replace_calica_yaml }}
   when: print_debug == true and k8s.cni.calico.vxlan == true and inventory_hostname in groups['master']
-  #  - { regexp: "^  veth_mtu: \"0\"",                                                         line: "  veth_mtu: \"8950\"",                                                                          state: present, backup: no }
 
 
 - name: Delete Bird Lines In {{ k8s.base_path }}/calica.yaml

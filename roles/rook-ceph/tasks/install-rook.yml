@@ -101,6 +101,7 @@
   shell: |
     kubectl create -f crds.yaml
   register: create_crds
+  ignore_errors: true
   args:
     chdir: "{{ base_path }}/rook/deploy/examples/"
 - debug: msg={{ create_crds }}
@@ -111,6 +112,7 @@
   shell: |
     kubectl create -f common.yaml
   register: create_common
+  ignore_errors: true
   args:
     chdir: "{{ base_path }}/rook/deploy/examples/"
 - debug: msg={{ create_common }}
@@ -129,8 +131,8 @@
   when: rook.enable_discovery_daemon == true
 - debug: msg={{ enable_rook_discovery_daemon }}
   when: rook.enable_discovery_daemon == true and print_debug == true
-#  - { regexp: '^      #hostNetwork: true', line: '^      hostNetwork: true', state: present }
-#  - { regexp: '^  # CSI_ENABLE_HOST_NETWORK: "true"', line: '  CSI_ENABLE_HOST_NETWORK: "true"', state: present }
+  #  - { regexp: '^      #hostNetwork: true', line: '      hostNetwork: true', state: present }
+  #  - { regexp: '^  # CSI_ENABLE_HOST_NETWORK:*', line: '  CSI_ENABLE_HOST_NETWORK: "true"', state: present }
 
 
 # https://github.com/rook/rook/issues/14445
