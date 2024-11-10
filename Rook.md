@@ -108,7 +108,8 @@ https://github.com/projectcalico/calico/issues/6687 - Calico node issue
 
 
 [ Kernel Version Config ]
-$ grubby --set-default /boot/vmlinuz-5.14.0-362.24.1.el9_3.x86_64
+# Default Kernel for Rocky 9.3
+$ grubby --set-default /boot/vmlinuz-5.14.0-362.8.1.el9_3.x86_64
 $ reboot
 
 
@@ -118,6 +119,7 @@ https://www.scaleway.com/en/docs/containers/kubernetes/reference-content/modifyi
 
 [ SELinux ]
 https://platform9.com/blog/selinux-kubernetes-rbac-and-shipping-security-policies-for-on-prem-applications/
+https://platform9.com/learn/v1.0/tutorials/rook-using-ceph-csi
 https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
 
 # semanage fcontext -l  | grep kub | grep container_file
