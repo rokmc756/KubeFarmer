@@ -97,3 +97,19 @@
   when: ansible_distribution == "openSUSE Leap"
 
 
+- set_fact:
+    cni_mtu: "{{ k8s.cni.calico.vxlan.mtu }}"
+  when: k8s.cni.calico.install == true and k8s.cni.calico.vxlan.enable == true
+- set_fact:
+    cni_mtu: "{{ k8s.cni.calico.ipip.mtu }}"
+  when: k8s.cni.calico.install == true and k8s.cni.calico.ipip.enable == true
+- set_fact:
+    cni_mtu: "{{ k8s.cni.tigera.vxlan.mtu }}"
+  when: k8s.cni.tigera.install == true and k8s.cni.tigera.vxlan.enable == true
+- set_fact:
+    cni_mtu: "{{ k8s.cni.tigera.ipip.mtu }}"
+  when: k8s.cni.tigera.install == true and k8s.cni.tigera.ipip.enable == true
+- set_fact:
+    cni_mtu: "{{ k8s.cni.kube_flannel.mtu }}"
+  when: k8s.cni.kube_flannel.install == true
+

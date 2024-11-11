@@ -216,10 +216,15 @@
 
 - name: Apply BGP Network for Calico
   import_tasks: apply-bgp-network.yaml
-  when: k8s.cni.calico.install == true and k8s.cni.calico.bgp == true and inventory_hostname in groups['master']
+  when: k8s.cni.calico.install == true and k8s.cni.calico.ipip.enable == true and inventory_hostname in groups['master']
 
 
-#
+- name: Apply Calico Network and Containerd
+  import_tasks: apply-cni-mtu.yaml
+  when: k8s.cni.mtu == true
+
+
+
 # Testing for fixing the issue of ceph mon quroum failure
 # It's already Infinity
 #- name: Replace the number of LimitNOFILE and LimitNPROC for containerd

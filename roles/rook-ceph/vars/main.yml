@@ -29,11 +29,12 @@ rook:
     hostname: "rook.jtest.pivotal.io"
   kernel_parameters:
     - "net.ipv4.neigh.default.gc_thresh1 = 0"       # For ARP Cache
-    - "net.netfilter.nf_conntrack_max = 1048576"
-    - "net.netfilter.nf_conntrack_tcp_timeout_established = 3600"
-    - "net.netfilter.nf_conntrack_tcp_timeout_close_wait = 60"
-    - "net.netfilter.nf_conntrack_tcp_timeout_fin_wait = 60"
-    - "net.netfilter.nf_conntrack_tcp_timeout_time_wait = 60"
+
+    # - "net.netfilter.nf_conntrack_max = 1048576"
+    # - "net.netfilter.nf_conntrack_tcp_timeout_established = 3600"
+    # - "net.netfilter.nf_conntrack_tcp_timeout_close_wait = 60"
+    # - "net.netfilter.nf_conntrack_tcp_timeout_fin_wait = 60"
+    # - "net.netfilter.nf_conntrack_tcp_timeout_time_wait = 60"
 
     # - "net.ipv4.neigh.default.gc_thresh1 = 8192"
     # - "net.ipv4.neigh.default.gc_thresh2 = 32768"
@@ -70,6 +71,7 @@ metallb:
               name: default
               protocol: layer2
               ips_range: 192.168.1.210-192.168.1.250
+
 
 helm:
   enable_repo: true

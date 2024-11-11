@@ -1,0 +1,43 @@
+---
+- name: Apply the MTU for Docker Container Network
+  lineinfile:
+    dest: "/usr/lib/systemd/system/docker.service"
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    state: "{{ item.state }}"
+    backrefs: "{{ item.backrefs }}"
+  register: apply_docker_mtu
+  with_items:
+    - { regexp: "^ExecStart=/usr/bin/dockerd*", line: "ExecStart=/usr/bin/dockerd --mtu {{ cni_mtu }} -H fd:// --containerd=/run/containerd/containerd.sock", state: present, backrefs: yes }
+  when: cni_mtu
+- debug: msg={{ apply_docker_mtu }}
+  when: print_debug == true and cni_mtu
+
+
+- name: Apply the Max Open Files for Containerd
+  lineinfile:
+    dest: "/usr/lib/systemd/system/containerd.service"
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    state: "{{ item.state }}"
+    backrefs: "{{ item.backrefs }}"
+  register: apply_bgp_mtu
+  with_items:
+    - { regexp: "^LimitNOFILE=infinity", line: "LimitNOFILE=1048576", state: present, backrefs: yes }
+- debug: msg={{ apply_bgp_mtu }}
+  when: print_debug == true
+
+# containerd.service
+# LimitNOFILE=infinity
+# LimitNOFILE=1048576
+
+
+# admin@ip-172-20-33-102:~$ cat /run/flannel/subnet.env
+# FLANNEL_NETWORK=100.96.0.0/16
+# FLANNEL_SUBNET=100.96.1.1/24
+# FLANNEL_MTU=8973
+# FLANNEL_IPMASQ=true
+# This information will be used to configure the docker daemon’s option, so docker can use the FLANNEL_SUBNET as its bridge network, then the in-host container network will work:
+#
+# dockerd --bip=$FLANNEL_SUBNET --mtu=$FLANNEL_MTU
+# https://blog.laputa.io/kubernetes-flannel-networking-6a1cb1f8ec7c
