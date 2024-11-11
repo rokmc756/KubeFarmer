@@ -1,17 +1,68 @@
 ---
-- name: Setup Networking with Kube-Flannel
-  shell: |
-    # curl -s https://raw.githubusercontent.com/flannel-io/flannel/master/Documentation/kube-flannel.yml | sed 's|10.244.0.0/16|10.42.0.0/16|g' | kubectl apply -f -
-    # kubectl apply -f {{ k8s.cni.kube_flannel.download_url }}/flannel/bc79dd1505b0c8681ece4de4c0d86c5cd2643275/Documentation/kube-flannel.yml
-    kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
-  register: kube_flannel_network_setup
-  when: inventory_hostname in groups['master']
-- debug: msg={{ kube_flannel_network_setup }}
-  when: print_debug == true and inventory_hostname in groups['master']
+#- name: Setup Networking with Kube-Flannel
+#  shell: |
+#    # curl -s https://raw.githubusercontent.com/flannel-io/flannel/master/Documentation/kube-flannel.yml | sed 's|10.244.0.0/16|10.42.0.0/16|g' | kubectl apply -f -
+#    # kubectl apply -f {{ k8s.cni.kube_flannel.download_url }}/flannel/bc79dd1505b0c8681ece4de4c0d86c5cd2643275/Documentation/kube-flannel.yml
+#    kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+#  register: kube_flannel_network_setup
+#  when: inventory_hostname in groups['master']
+#- debug: msg={{ kube_flannel_network_setup }}
+#  when: print_debug == true and inventory_hostname in groups['master']
+
 
 # https://addozhang.medium.com/learning-kubernetes-vxlan-network-with-flannel-2d6a58c95300
 
-
 # sudo mkdir -p /opt/cni/bin
 # curl -sSL https://github.com/containernetworking/plugins/releases/download/v1.1.1/cni-plugins-linux-amd64-v1.1.1.tgz | sudo tar -zxf - -C /opt/cni/bin
+
+
+- name: Download Kube-Flannel Networking
+  get_url:
+    url: "https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml"
+    dest: "{{ k8s.base_path }}/kube-flannel.yaml"
+    mode: 0644
+  register: download_kube_flannel
+  when: inventory_hostname in groups['master']
+- debug: msg={{ download_kube_flannel }}
+  when: print_debug == true and inventory_hostname in groups['master']
+
+
+- name: Modify {{ k8s.base_path }}/kube-flannel.yaml for Network Interface
+  lineinfile:
+    dest: "{{ k8s.base_path }}/kube-flannel.yaml"
+    insertafter: "{{ item.insertafter }}"
+    line: "{{ item.line }}"
+    state: "{{ item.state }}"
+    firstmatch: "{{ item.firstmatch }}"
+    backup: "{{ item.backup }}"
+  register: modify_flannel_netdev
+  with_items:
+    - { insertafter: "        - --kube-subnet-mgr", line: "        - --iface={{ netdev1 }}", firstmatch: yes, state: present, backup: no }
+  when: inventory_hostname in groups['master']
+- debug: msg={{ modify_flannel_netdev }}
+  when: print_debug == true and inventory_hostname in groups['master']
+
+
+- name: Modify {{ k8s.base_path }}/kube-flannel.yaml for MTU
+  lineinfile:
+    dest: "{{ k8s.base_path }}/kube-flannel.yaml"
+    insertafter: "{{ item.insertafter }}"
+    line: "{{ item.line }}"
+    state: "{{ item.state }}"
+    firstmatch: "{{ item.firstmatch }}"
+    backup: "{{ item.backup }}"
+  register: modify_flannel_mtu
+  with_items:
+    - { insertafter: "        - --kube-subnet-mgr", line: "        - --mtu={{ cni_mtu }}", firstmatch: yes, state: present, backup: no }
+  when: k8s.cni.change_mtu == true and inventory_hostname in groups['master']
+- debug: msg={{ modify_flannel_mtu }}
+  when: print_debug == true and k8s.cni.change_mtu == true and inventory_hostname in groups['master']
+  #
+  # https://blog.laputa.io/kubernetes-flannel-networking-6a1cb1f8ec7c
+  #
+  # https://medium.com/@anilkreddyr/kubernetes-with-flannel-understanding-the-networking-part-1-7e1fe51820e4
+  # If you happen to have different interfaces to be matched, you can match it on a regex pattern.
+  # Let’s say the worker nodes could’ve enp0s8 or enp0s9 configured, then the flannel args would be — --iface-regex=[enp0s8|enp0s9]
+  #
+  # https://medium.com/@anilkreddyr/kubernetes-with-flannel-understanding-the-networking-part-2-78b53e5364c7
 

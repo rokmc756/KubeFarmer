@@ -9,9 +9,8 @@
   register: apply_docker_mtu
   with_items:
     - { regexp: "^ExecStart=/usr/bin/dockerd*", line: "ExecStart=/usr/bin/dockerd --mtu {{ cni_mtu }} -H fd:// --containerd=/run/containerd/containerd.sock", state: present, backrefs: yes }
-  when: cni_mtu
 - debug: msg={{ apply_docker_mtu }}
-  when: print_debug == true and cni_mtu
+  when: print_debug == true
 
 
 - name: Apply the Max Open Files for Containerd
@@ -41,3 +40,4 @@
 #
 # dockerd --bip=$FLANNEL_SUBNET --mtu=$FLANNEL_MTU
 # https://blog.laputa.io/kubernetes-flannel-networking-6a1cb1f8ec7c
+

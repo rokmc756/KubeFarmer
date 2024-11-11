@@ -221,23 +221,7 @@
 
 - name: Apply Calico Network and Containerd
   import_tasks: apply-cni-mtu.yaml
-  when: k8s.cni.mtu == true
-
-
-
-# Testing for fixing the issue of ceph mon quroum failure
-# It's already Infinity
-#- name: Replace the number of LimitNOFILE and LimitNPROC for containerd
-#  replace:
-#    path: /usr/lib/systemd/system/containerd.service
-#    regexp: "{{ item.regexp }}"
-#    replace: "{{ item.line }}"
-#    backup: "{{ item.backup }}"
-#  register: replace_nfile_nproc
-#  with_items:
-#    - { regexp: "^[Service]", line: "[Service]\nLimitNOFILE=1048576\nLimitNPROC=1048576\n",                    state: present, backup: no }
-#- debug: msg={{ replace_nfile_nproc }}
-#  when: print_debug == true
+  when: k8s.cni.change_mtu == true
 
 
 - name: Restart Services for Kubernetes After Reinitialization
