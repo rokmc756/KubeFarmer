@@ -57,12 +57,24 @@
   when: k8s.cni.change_mtu == true and inventory_hostname in groups['master']
 - debug: msg={{ modify_flannel_mtu }}
   when: print_debug == true and k8s.cni.change_mtu == true and inventory_hostname in groups['master']
-  #
-  # https://blog.laputa.io/kubernetes-flannel-networking-6a1cb1f8ec7c
-  #
-  # https://medium.com/@anilkreddyr/kubernetes-with-flannel-understanding-the-networking-part-1-7e1fe51820e4
-  # If you happen to have different interfaces to be matched, you can match it on a regex pattern.
-  # Let’s say the worker nodes could’ve enp0s8 or enp0s9 configured, then the flannel args would be — --iface-regex=[enp0s8|enp0s9]
-  #
-  # https://medium.com/@anilkreddyr/kubernetes-with-flannel-understanding-the-networking-part-2-78b53e5364c7
+
+
+
+- name: Setup Networking with Kube-Flannel
+  shell: |
+    kubectl apply -f /root/kube-flannel.yml
+  register: kube_flannel_network_setup
+  when: inventory_hostname in groups['master']
+- debug: msg={{ kube_flannel_network_setup }}
+  when: print_debug == true and inventory_hostname in groups['master']
+
+
+
+# https://blog.laputa.io/kubernetes-flannel-networking-6a1cb1f8ec7c
+#
+# https://medium.com/@anilkreddyr/kubernetes-with-flannel-understanding-the-networking-part-1-7e1fe51820e4
+# If you happen to have different interfaces to be matched, you can match it on a regex pattern.
+# Let’s say the worker nodes could’ve enp0s8 or enp0s9 configured, then the flannel args would be — --iface-regex=[enp0s8|enp0s9]
+#
+# https://medium.com/@anilkreddyr/kubernetes-with-flannel-understanding-the-networking-part-2-78b53e5364c7
 

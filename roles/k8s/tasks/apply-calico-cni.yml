@@ -41,9 +41,9 @@
   register: apply_bgp_mtu
   with_items:
     - { regexp: "^  veth_mtu: \"0\"",                                                         line: "  veth_mtu: \"{{ cni_mtu }}\"",                                                  state: present, backup: no }
-  when: k8s.cni.mtu == true and inventory_hostname in groups['master']
+  when: k8s.cni.change_mtu == true and inventory_hostname in groups['master']
 - debug: msg={{ apply_bgp_mtu }}
-  when: print_debug == true and k8s.cni.mtu == true and inventory_hostname in groups['master']
+  when: print_debug == true and k8s.cni.change_mtu == true and inventory_hostname in groups['master']
 
 
 - name: Replace {{ k8s.base_path }}/calica.yaml for CIDR

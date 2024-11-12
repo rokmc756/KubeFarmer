@@ -1,0 +1,218 @@
+---
+###################################################################################################################
+# Define the settings for the rook-ceph cluster with common settings for a production cluster on top of bare metal.
+#
+# This example expects three nodes, each with two available disks. Please modify it according to your environment.
+# See the documentation for more details on storage settings available.
+#
+# For example, to create the cluster:
+#   kubectl create -f crds.yaml -f common.yaml -f operator.yaml
+#   kubectl create -f cluster-on-local-pvc.yaml
+###################################################################################################################
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: local-storage
+provisioner: kubernetes.io/no-provisioner
+volumeBindingMode: WaitForFirstConsumer
+{% for arr1 in all_nvme_info %}
+{% for arr2 in arr1 -%}
+{% for dinfo in arr2.devinfo %}
+{{ "---" }}
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: {{ dinfo[1] }}-{{ arr2.hostname }}
+spec:
+  storageClassName: local-storage
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  # PV for OSD must be a block volume - volumeMode: Block
+  # PV for mon must be a filesystem volume - volumeMode: Filesystem
+  volumeMode: {{ dinfo[0] }}
+  local:
+    path: /dev/{{ dinfo[1] }}
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - {{ arr2.hostname }}
+{{ ""|safe }}
+{%- endfor -%}
+{%- endfor -%}
+{%- endfor -%}
+---
+apiVersion: ceph.rook.io/v1
+kind: CephCluster
+metadata:
+  name: rook-ceph
+  namespace: rook-ceph # namespace:cluster
+spec:
+  # If there are multiple clusters, the directory must be unique for each cluster.
+  dataDirHostPath: /var/lib/rook
+  mon:
+    # Set the number of mons to be started. Generally recommended to be 3.
+    # For highest availability, an odd number of mons should be specified.
+    count: 3
+    # The mons should be on unique nodes. For production, at least 3 nodes are recommended for this reason.
+    # Mons should only be allowed on the same node for test environments where data loss is acceptable.
+    allowMultiplePerNode: false
+    # A volume claim template can be specified in which case new monitors (and
+    # monitors created during fail over) will construct a PVC based on the
+    # template for the monitor's primary storage. Changes to the template do not
+    # affect existing monitors. Log data is stored on the HostPath under
+    # dataDirHostPath. If no storage requirement is specified, a default storage
+    # size appropriate for monitor data will be used.
+    volumeClaimTemplate:
+      spec:
+        storageClassName: local-storage
+        resources:
+          requests:
+            storage: 10Gi
+  cephVersion:
+    image: quay.io/ceph/ceph:v18.2.4
+    allowUnsupported: false
+  skipUpgradeChecks: false
+  continueUpgradeAfterChecksEvenIfNotHealthy: false
+  mgr:
+    count: 2
+    allowMultiplePerNode: false
+    modules:
+      - name: rook
+        enabled: true
+  dashboard:
+    enabled: true
+    ssl: true
+  crashCollector:
+    disable: false
+  logCollector:
+    enabled: true
+    periodicity: daily # one of: hourly, daily, weekly, monthly
+    maxLogSize: 500M # SUFFIX may be 'M' or 'G'. Must be at least 1M.
+  storage:
+    useAllNodes: false
+    useAllDevices: false
+    #deviceFilter:
+    config:
+    #  metadataDevice: "/dev/sde" # specify a non-rotational storage so ceph-volume will use it as block db device of bluestore.
+    nodes:
+    - name: "rk9-node03"
+      devices:
+      - name: "/dev/nvme0n1"
+        config:
+          deviceClass: nvme
+      - name: "/dev/nvme0n2"
+        config:
+          deviceClass: nvme
+      - name: "/dev/nvme0n3"
+        config:
+          deviceClass: nvme
+      - name: "/dev/nvme0n4"
+        config:
+          deviceClass: nvme
+    - name: "rk9-node04"
+      devices:
+      - name: "/dev/nvme0n1"
+        config:
+          deviceClass: nvme
+      - name: "/dev/nvme0n2"
+        config:
+          deviceClass: nvme
+      - name: "/dev/nvme0n3"
+        config:
+          deviceClass: nvme
+      - name: "/dev/nvme0n4"
+        config:
+          deviceClass: nvme
+    - name: "rk9-node05"
+      devices:
+      - name: "/dev/nvme0n1"
+        config:
+          deviceClass: nvme
+      - name: "/dev/nvme0n2"
+        config:
+          deviceClass: nvme
+      - name: "/dev/nvme0n3"
+        config:
+          deviceClass: nvme
+      - name: "/dev/nvme0n4"
+        config:
+          deviceClass: nvme
+    - name: "rk9-node06"
+      devices:
+      - name: "/dev/nvme0n1"
+        config:
+          deviceClass: nvme
+      - name: "/dev/nvme0n2"
+        config:
+          deviceClass: nvme
+      - name: "/dev/nvme0n3"
+        config:
+          deviceClass: nvme
+      - name: "/dev/nvme0n4"
+        config:
+          deviceClass: nvme
+  resources:
+  #  prepareosd:
+  #    requests:
+  #      cpu: "200m"
+  #      memory: "200Mi"
+  priorityClassNames:
+    # If there are multiple nodes available in a failure domain (e.g. zones), the
+    # mons and osds can be portable and set the system-cluster-critical priority class.
+    mon: system-node-critical
+    osd: system-node-critical
+    mgr: system-cluster-critical
+  disruptionManagement:
+    managePodBudgets: true
+    osdMaintenanceTimeout: 30
+    pgHealthCheckTimeout: 0
+  #network:
+  #  provider: host
+  #  addressRanges:
+  #    public:
+  #      - "192.168.0.0/24"
+  #      - "192.168.2.0/24"
+  #    cluster:
+  #      - "192.168.1.0/24"
+  # security oriented settings
+  # security:
+  # Settings to enable key rotation for KEK(Key Encryption Key).
+  # Currently, this is supported only for the default encryption type,
+  # using kubernetes secrets.
+  #   keyRotation:
+  #     enabled: true
+  #     # The schedule, written in [cron format](https://en.wikipedia.org/wiki/Cron),
+  #     # with which key rotation [CronJob](https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/)
+  #     # is created. The default value is `"@weekly"`.
+  #     schedule: "@monthly"
+  # To enable the KMS configuration properly don't forget to uncomment the Secret at the end of the file
+  #   kms:
+  #     # name of the config map containing all the kms connection details
+  #     connectionDetails:
+  #        KMS_PROVIDER: "vault"
+  #        VAULT_ADDR: VAULT_ADDR_CHANGE_ME # e,g: https://vault.my-domain.com:8200
+  #        VAULT_BACKEND_PATH: "rook"
+  #        VAULT_SECRET_ENGINE: "kv"
+  #     # name of the secret containing the kms authentication token
+  #     tokenSecretName: rook-vault-token
+# UNCOMMENT THIS TO ENABLE A KMS CONNECTION
+# Also, do not forget to replace both:
+#   * ROOK_TOKEN_CHANGE_ME: with a base64 encoded value of the token to use
+#   * VAULT_ADDR_CHANGE_ME: with the Vault address
+# ---
+# apiVersion: v1
+# kind: Secret
+# metadata:
+#   name: rook-vault-token
+#   namespace: rook-ceph # namespace:cluster
+# data:
+#   token: ROOK_TOKEN_CHANGE_ME
+
+# https://rook.io/docs/rook/latest-release/CRDs/Cluster/pvc-cluster/

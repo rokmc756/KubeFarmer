@@ -167,6 +167,7 @@
     # - rook-pvc-cluster.yaml
     # - rook-host-cluster.yaml
     # - rook-stretch-cluster.yaml
+    # - "cluster-test-{{ rook.major_version }}.{{ rook.minor_version }}.yaml"
 - debug: msg={{ copy_cluster_config_yaml }}
 
 
@@ -178,6 +179,7 @@
     chdir: "{{ base_path }}/"
 - debug: msg={{ create_ceph_cluster }}
   when: print_debug == true
+  #  kubectl create -f cluster-test-{{ rook.major_version }}.{{ rook.minor_version }}.yaml
 
 
 #- name: Create Cluster

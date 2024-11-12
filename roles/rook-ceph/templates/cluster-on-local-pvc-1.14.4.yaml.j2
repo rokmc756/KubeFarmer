@@ -70,7 +70,7 @@ spec:
   skipUpgradeChecks: false
   continueUpgradeAfterChecksEvenIfNotHealthy: false
   mgr:
-    count: 1
+    count: 2
   dashboard:
     enabled: true
     ssl: true
@@ -141,6 +141,10 @@ spec:
   #    requests:
   #      cpu: "200m"
   #      memory: "200Mi"
+    prepareosd:
+      requests:
+        cpu: "200m"
+        memory: "200Mi"
   priorityClassNames:
     mon: system-node-critical
     osd: system-node-critical
@@ -149,3 +153,4 @@ spec:
     managePodBudgets: true
     osdMaintenanceTimeout: 30
     pgHealthCheckTimeout: 0
+

@@ -3,12 +3,12 @@ base_path: /root
 rook:
   install: true
   major_version: 1
-  # minor_version: 15
-  # patch_version: 5
-  minor_version: 14
-  patch_version: 4
+  minor_version: 15
+  patch_version: 5
+  # minor_version: 14
+  # patch_version: 4
   build_version:
-  enable_discovery_daemon: true
+  enable_discovery_daemon: false
   clone_git: true
   nvme: true
   lb_ip_addr: "192.168.1.219"
@@ -30,6 +30,9 @@ rook:
   kernel_parameters:
     - "net.ipv4.neigh.default.gc_thresh1 = 0"       # For ARP Cache
 
+    # - "net.ipv4.conf.all.arp_ignore = 1"
+    # - "net.ipv4.conf.all.arp_announce = 2"
+    # - "net.ipv4.conf.all.rp_filter = 0"
     # - "net.netfilter.nf_conntrack_max = 1048576"
     # - "net.netfilter.nf_conntrack_tcp_timeout_established = 3600"
     # - "net.netfilter.nf_conntrack_tcp_timeout_close_wait = 60"
@@ -40,6 +43,8 @@ rook:
     # - "net.ipv4.neigh.default.gc_thresh2 = 32768"
     # - "net.ipv4.neigh.default.gc_thresh3 = 65536"
     # - "net.netfilter.nf_conntrack_max=1000000"
+    #
+    # https://blog.aenix.io/configuring-routing-for-metallb-in-l2-mode-7ea26e19219e
 
 
 metallb:

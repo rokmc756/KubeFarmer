@@ -8,7 +8,7 @@ k8s:
   cluster_name: jack-kr-k8s
   domain: "jtest.pivotal.io"
   major_version: "1"
-  minor_version: "28"
+  minor_version: "31"
   patch_version: "0"
   build_version: ""
   repo_url: ""
@@ -37,12 +37,13 @@ k8s:
   cni:
     install: true
     change_mtu: true
-    # pod_network: "10.142.0.0/16" # Calico
-    # pod_network: "192.167.0.0/16" # Calico
-    # pod_network: "100.96.0.0/16"
-    pod_network: "10.244.0.0/16" # Kube-Flannel
+    # Jumbo Frame should be enabled at the side fo Switch as well when it's true.
+    # In iptime, Advanced Setup -> Traffic -> Switch Setup -> Check Enable Jumbo Frame -> Apply
+    pod_network: "10.142.0.0/16"    # Calico
+    # pod_network: "100.96.0.0/16"  # Kube-Flannel
+    # pod_network: "10.244.0.0/16"  # Kube-Flannel : cni0
     calico:
-      install: false
+      install: true
       operator: ""
       major_version: 3
       minor_version: 27
@@ -54,7 +55,7 @@ k8s:
         enable: false
         mtu: 8950
       ipip:            # bgp
-        enable: false
+        enable: true
         mtu: 8980
       # https://docs.tigera.io/calico/latest/networking/configuring/mtu#configure-mtu
       # https://docs.tigera.io/calico/latest/getting-started/kubernetes/requirements
@@ -72,15 +73,15 @@ k8s:
         enable: false
         mtu: 8980
     kube_flannel:
-      install: true
+      install: false
       major_version: 1
       minor_version: 1
       patch_version: 1
       download_url: "https://raw.githubusercontent.com/coreos/flannel"
-      mtu: 8973
+      mtu: 8950
+      # mtu: 8973
       # mtu: 1472
       # mtu: 1400
-      # mtu: 8950
   lb:
     cilium:
       install: false

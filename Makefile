@@ -1,8 +1,5 @@
-# add the IP address, username and hostname of the target hosts here
-
 USERNAME=jomoon
 COMMON="yes"
-# ANSIBLE_HOST_PASS="Mc002661!@"
 ANSIBLE_HOST_PASS="changeme"
 ANSIBLE_TARGET_PASS="changeme"
 # include ./*.mk
@@ -67,6 +64,11 @@ kubeflow:
 ha:
 	make -f ./makefile_configs/Makefile.ha r=${r} s=${s} c=${c} USERNAME=${USERNAME}
 
+korifi:
+	make -f ./makefile_configs/Makefile.korifi r=${r} s=${s} c=${c} USERNAME=${USERNAME}
+
+harbor:
+	make -f ./makefile_configs/Makefile.harbor r=${r} s=${s} c=${c} USERNAME=${USERNAME}
 
 
 # - https://ansible-tutorial.schoolofdevops.com/control_structures/
