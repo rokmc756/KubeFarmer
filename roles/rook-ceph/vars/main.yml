@@ -45,6 +45,9 @@ rook:
     # - "net.netfilter.nf_conntrack_max=1000000"
     #
     # https://blog.aenix.io/configuring-routing-for-metallb-in-l2-mode-7ea26e19219e
+    # https://overcast.blog/11-ways-to-optimize-network-performance-in-kubernetes-9531a69c10c0
+    # https://www.alibabacloud.com/blog/improve-kubernetes-network-performance-with-ebpf_599445
+    # https://overcast.blog/kernel-tuning-and-optimization-for-kubernetes-a-guide-a3bdc8f7d255
 
 
 metallb:

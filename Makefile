@@ -70,6 +70,9 @@ korifi:
 harbor:
 	make -f ./makefile_configs/Makefile.harbor r=${r} s=${s} c=${c} USERNAME=${USERNAME}
 
+dashboard:
+	make -f ./makefile_configs/Makefile.dashboard r=${r} s=${s} c=${c} USERNAME=${USERNAME}
+
 
 # - https://ansible-tutorial.schoolofdevops.com/control_structures/
 install: role-update install.yml
