@@ -77,6 +77,8 @@ spec:
   crashCollector:
     disable: false
   storage:
+    useAllDevices: false
+    deviceFilter: "^nvme$"
     storageClassDeviceSets:
       - name: set1
         count: 9

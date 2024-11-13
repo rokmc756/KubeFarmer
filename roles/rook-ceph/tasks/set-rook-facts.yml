@@ -43,10 +43,10 @@
     volume_mode: "{{ volume_modes | list }}"
   vars:
     volume_modes:
-      - "Block"
-      - "Block"
-      - "Block"
       - "Filesystem"
+      - "Block"
+      - "Block"
+      - "Block"
 - debug: msg={{ volume_mode }}
   when: print_debug == true
 

@@ -1,9 +1,9 @@
 ---
-#- name: Add IP Address of Load Balancer
-#  lineinfile:
-#    path: "{{ base_path }}/rook/deploy/examples/dashboard-loadbalancer.yaml"
-#    insertafter: "  type: LoadBalancer"
-#    line: "  loadBalancerIP: {{ rook.lb_ip_addr }}"
+- name: Add IP Address of Load Balancer
+  lineinfile:
+    path: "{{ base_path }}/rook/deploy/examples/dashboard-loadbalancer.yaml"
+    insertafter: "  type: LoadBalancer"
+    line: "  loadBalancerIP: {{ rook.lb_ip_addr }}"
 
 
 - name: Apply Rook Load Balancer
