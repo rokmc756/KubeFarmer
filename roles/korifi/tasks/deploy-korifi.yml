@@ -140,6 +140,10 @@
   when: print_debug == true
 
 
+# kubectl delete validatingwebhookconfigurations --all
+# kubectl delete mutatingwebhookconfigurations --all
+
+
 # --set=containerRepositoryPrefix="harbor.jtest.suse.com/"  \
 # --set=networking.gatewayClass=contour \
 - name: Install Korifi

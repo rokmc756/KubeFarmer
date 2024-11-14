@@ -52,10 +52,10 @@ k8s:
       # patch_version: 3
       download_url: "https://raw.githubusercontent.com/projectcalico/calico"
       vxlan:
-        enable: false
+        enable: true
         mtu: 8950
       ipip:            # bgp
-        enable: true
+        enable: false
         mtu: 8980
       # https://docs.tigera.io/calico/latest/networking/configuring/mtu#configure-mtu
       # https://docs.tigera.io/calico/latest/getting-started/kubernetes/requirements

@@ -209,6 +209,16 @@
   when: k8s.cni.install == true and inventory_hostname in groups['master']
 
 
+- name: Apply BGP Network for Calico
+  import_tasks: apply-bgp-network.yaml
+  when: k8s.cni.calico.install == true and k8s.cni.calico.ipip.enable == true and inventory_hostname in groups['master']
+
+
+- name: Apply Calico Network and Containerd
+  import_tasks: apply-cni-mtu.yaml
+  when: k8s.cni.change_mtu == true
+
+
 # erinformations/default": x509: certificate signed by unknown authority 
 # (possibly because of "crypto/rsa: verification error" while trying to verify candidate authority certificate
 # docker login --username="rokmc756@gmail.com"

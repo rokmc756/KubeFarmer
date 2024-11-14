@@ -1,0 +1,107 @@
+# https://github.com/goharbor/harbor-helm/blob/main/README.md
+# https://github.com/bitnami/charts/blob/main/bitnami/harbor/values.yaml
+expose:
+  type: ingress
+  ingress:
+    hosts:
+      core: "harbor.jtest.suse.com"
+      notary: "harbor.jtest.suse.com"
+    annotations:
+      ingress.kubernetes.io/ssl-redirect: "true"
+      ingress.kubernetes.io/proxy-body-size: "0"
+      nginx.ingress.kubernetes.io/ssl-redirect: "true"
+      nginx.ingress.kubernetes.io/proxy-body-size: "0"
+      # choose letsencrypt-staging or letsencrypt-prod
+      # cert-manager.io/cluster-issuer: "letsencrypt-prod"
+      # To be used for the nginx ingress on AKS:
+      #kubernetes.io/ingress.class: nginx
+  tls:
+    enabled: true
+    certSource: secret
+    auto:
+      commonName: ""
+    secret:
+      secretName: "harbor-cert"
+      notarySecretName: "harbor-cert"
+  loadBalancer:
+    IP: "{{ harbor.lb_ip_addr }}"
+    # name: harbor
+    # ports:
+    #  httpPort: 80
+    #  httpsPort: 30002
+    # annotations:
+    # sourceRanges: 192.168.1.249-192.168.1.249
+
+
+## The external URL for Harbor core service.
+externalURL: "https://harbor.jtest.suse.com"
+adminPassword: "changeme"
+service:
+  loadBalancerIP: "{{ harbor.lb_ip_addr }}"
+
+# harborAdminPassword: "changeme"
+
+
+persistence:
+  enabled: false
+  resourcePolicy: "keep"
+  persistentVolumeClaim:
+    registry:
+      storageClass: "harbor-storage"
+      accessMode: ReadWriteMany
+      size: 10Gi
+    jobservice:
+      jobLog:
+        storageClass: "harbor-storage"
+        accessMode: ReadWriteMany
+        size: 10Gi
+    redis:
+      storageClass: "harbor-storage"
+      accessMode: ReadWriteMany
+      size: 10Gi
+    trivy:
+      storageClass: "harbor-storage"
+      accessMode: ReadWriteMany
+      size: 10Gi
+  imageChartStorage:
+    disableredirect: false
+    type: filesystem
+    filesystem:
+      rootdirectory: {{ harbor.storage_path }}
+
+core:
+  enabled: true
+chartmuseum:
+  enabled: true
+clair:
+  enabled: true
+notary:
+  enabled: true
+trivy:
+  enabled: true
+  # replicas: 2
+jobservice:
+  enabled: true
+  # replicas: 2
+  jobLogger: stdout
+registry:
+  enabled: true
+  # replicas: 2
+portal:
+  enabled: true
+  # replicas: 2
+cache:
+  enabled: true
+  expireHours: 24
+database:
+  type: internal
+
+#redis:
+#  auth:
+#    enabled: true
+#    passsword: "changeme"
+#  type: internal
+#postgresql:
+#  auth:
+#    postgresPasword: "changeme"
+

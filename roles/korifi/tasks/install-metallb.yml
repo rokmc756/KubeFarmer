@@ -30,6 +30,7 @@
   shell: |
     kubectl create namespace metallb-system
   register: create_metallb_namespace
+  ignore_errors: true
   args:
     chdir: "{{ base_path }}/"
   environment:
@@ -79,10 +80,6 @@
     src: metallb-config-vmware.yaml.j2
     dest: "{{ base_path }}/metallb-config-vmware.yaml"
   register: copy_metallb_vmware_yaml
-  args:
-    chdir: "{{ base_path }}/"
-  environment:
-    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ copy_metallb_vmware_yaml }}
 
 

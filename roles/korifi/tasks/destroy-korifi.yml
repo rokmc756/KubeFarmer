@@ -1,3 +1,4 @@
+---
 - name: Uninstall Korifi
   shell: |
     helm uninstall korifi -n korifi

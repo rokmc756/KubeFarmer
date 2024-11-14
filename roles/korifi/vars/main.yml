@@ -6,7 +6,6 @@
 # contour: v1.29.1
 # metrics_server: v0.7.1
 # korifi: v0.10.0
-#
 
 
 base_path: "/root"
@@ -80,7 +79,7 @@ korifi:
 
 bosh:
   install: true
-  environment: "192.168.0.181"
+  environment: "192.168.1.221"
   director_name: bosh-1
   deploy_dir: "{{ base_path }}/bosh-deploy"
   cli:
@@ -89,9 +88,9 @@ bosh:
     minor_version: 6
     patch_version: 1
   version: ""
-  internal_cidr: "192.168.0.0/24"
-  internal_gw: "192.168.0.1"
-  internal_ip: "192.168.0.181"
+  internal_cidr: "192.168.1.0/24"
+  internal_gw: "192.168.1.1"
+  internal_ip: "192.168.1.221"
   vm_network: "VM Network"
 
 cf:
@@ -127,7 +126,7 @@ cf:
   http_slb_id_arrary: ""
   iaas_info: vsphere-esxi
   os_info: ubuntu-jammy
-  domain: jtest.weka.io
+  domain: jtest.suse.com
 
 app:
   install: true
@@ -138,7 +137,8 @@ stemcell:
   release_version: 1017
 
 helm:
-  enable_repo: true
+  enable_repo: false
+
 
 metallb:
   install: false
@@ -170,8 +170,9 @@ metallb:
               protocol: layer2
               ips_range: 192.168.1.210-192.168.1.250
 
+
 apps:
-  install: false
+  install: true
 
 nginx:
   install: true

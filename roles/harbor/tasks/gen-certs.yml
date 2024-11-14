@@ -1,0 +1,46 @@
+---
+- name: Check if SSL Directory Already Exists
+  stat: path=/root/harbor-certs
+  register: check_dir_sslkey_installed
+
+
+- name: Create SSL Directory
+  file: path=/root/harbor-certs state=directory owner=gpadmin group=gpadmin
+  changed_when: False
+  register: dir_sslkey_installed
+
+
+- name: Create SSL Key to Connect into Harbor
+  shell: ( openssl req -newkey rsa:2048 -x509 -keyout /root/harbor-certs/cert.pem -new -text -out /root/harbor-certs/server.req -days {{ ssl.days }} -nodes -subj "/C={{ ssl.country }}/ST={{ ssl.state }}/L={{ ssl.location }}/O={{ ssl.organization }}/CN={{ ssl.common_name }}/emailAddress={{ ssl.email }}" )
+  args:
+    executable: /bin/bash
+  when: ( inventory_hostname in groups['master'] or inventory_hostname in groups['standby'] ) and enable_ssl == True
+
+
+- name: xxxxx
+  shell: ( openssl rsa -in {{ ssl.dir }}/cert.pem -out {{ ssl.dir }}/server.key )
+  args:
+    executable: /bin/bash
+  when: ( inventory_hostname in groups['master'] or inventory_hostname in groups['standby'] ) and enable_ssl == True
+
+
+- name: Turn the certificate into a self-signed certificate so that the server will look for them.
+  shell: ( openssl req -x509 -in {{ ssl.dir }}/server.req -key {{ ssl.dir }}/server.key -new -text -out {{ ssl.dir }}/server.crt -days {{ ssl.days }} -nodes -subj "/C={{ ssl.country }}/ST={{ ssl.state }}/L={{ ssl.location }}/O={{ ssl.organization }}/CN={{ ssl.common_name }}/emailAddress={{ ssl.email }}" )
+  args:
+    executable: /bin/bash
+  when: ( inventory_hostname in groups['master'] or inventory_hostname in groups['standby'] ) and enable_ssl == True
+
+
+- name: Change Permission of SSL Key Files to Login Greenplum Database via SSL
+  file:
+    path: "{{ ssl.dir }}/{{ item }}"
+    state: file
+    owner: gpadmin
+    group: gpadmin
+    mode: "0600"
+  with_items:
+    - "server.key"
+    - "server.crt"
+    - "server.req"
+    - "cert.pem"
+
