@@ -6,6 +6,7 @@ kustomize:
   minor_version: 4
   patch_version: 2
 
+
 harbor:
   install: true
   major_version: 1
@@ -13,7 +14,7 @@ harbor:
   patch_version: 0
   build_version:
   admin_user: "admin"
-  admin_password: "Changeme123"
+  admin_password: "changeme"
   admin_email: "rokmc756@gmail.com"
   enable_discovery_daemon: false
   clone_git: true
@@ -36,7 +37,7 @@ harbor:
     metadata:
       name: harbor-ingress
       namespace: harbor
-    hostname: "harbor.jtest.pivotal.io"
+    hostname: "harbor.jtest.suse.com"
   kernel_parameters:
     - "net.ipv4.neigh.default.gc_thresh1 = 0"   # For ARP Cache
     - "fs.inotify.max_user_instances=2280"
@@ -103,4 +104,15 @@ nginx:
     minor_version:
     patch_version:
     build_version:
+
+
+ssl:
+  dir: "{{ base_path }}/harbor-certs"
+  days: 3660
+  country: "KR"
+  state: "Seoul"
+  location: "Guro"
+  organization: "Pivogal"
+  common_name: "jest.suse.com"
+  email: "rokmc756@gmail.com"
 

@@ -1,6 +1,5 @@
 ---
 # https://k21academy.com/docker-kubernetes/container-runtime-is-not-running/
-
 - name: Restart Containerd to Apply Changes in config.toml
   systemd:
     name: containerd

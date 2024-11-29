@@ -89,6 +89,34 @@
 # kubectl describe svc ingress-contour-envoy --namespace contour | grep Ingress | awk '{print $3}'
 
 
+#- name: Create a new namespace for harbor
+#  shell: |
+#    kubectl create namespace harbor
+#  register: create_harbor_namespace
+#  args:
+#    chdir: "{{ base_path }}/"
+#  environment:
+#    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+#- debug: msg={{ create_harbor_namespace }}
+#  when: print_debug == true
+
+
+- name: Generate Harbor TLS Cert Files
+  import_tasks: gen-harbor-certs.yml
+
+
+- name: Create a TLS secret with the contents of tls.key and tls.crt in the harbor namespace
+  shell: |
+    kubectl create secret tls harbor-cert --key {{ ssl.dir }}/{{ harbor.hostname }}.key --cert {{ ssl.dir }}/{{ harbor.hostname }}.crt -n harbor
+  register: create_tls_secret
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ create_tls_secret }}
+  when: print_debug == true
+
+
 # /usr/local/bin/helm install harbor harbor/harbor --set harborAdminPassword=changeme -f {{ base_path }}/harbor-values.yaml --create-namespace -n harbor --wait
 - name: Deploy Harbor
   shell: |

@@ -1,0 +1,1 @@
+https://knowledgebase.45drives.com/kb/kb450417-creating-smb-shares-in-ceph/

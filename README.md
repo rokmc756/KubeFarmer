@@ -290,6 +290,11 @@ $ make reinit
 * https://stackoverflow.com/questions/62795930/how-to-install-kubernetes-in-suse-linux-enterprize-server-15-virtual-machines
 
 
+## Similar Playbook
+* https://gist.github.com/allanger/84db2647578316f8e721f7219052788f
+* https://spacelift.io/blog/ansible-kubernetes
+
+
 ## TODO
 * Fixing interaction with harbor
 * Deploy VMware-Postgres and MySQL

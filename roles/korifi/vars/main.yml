@@ -30,7 +30,7 @@ contour:
   patch_version: 1
 
 cert_manager:
-  install: false
+  install: true
   major_version: 1
   minor_version: 14
   patch_version: 2
@@ -65,7 +65,7 @@ ytt:
 
 korifi:
   install_cli: true
-  deploy: true
+  deploy: false
   storage_path: "/mnt/korifi-storage"
   major_version: 0
   minor_version: 10
@@ -137,11 +137,11 @@ stemcell:
   release_version: 1017
 
 helm:
-  enable_repo: false
+  enable_repo: true
 
 
 metallb:
-  install: false
+  install: true
   major_version: 0
   minor_version: 13
   patch_version: 11
@@ -172,10 +172,11 @@ metallb:
 
 
 apps:
-  install: true
+  install: false
+
 
 nginx:
-  install: true
+  install: false
   major_version:
   minor_version:
   patch_version:
