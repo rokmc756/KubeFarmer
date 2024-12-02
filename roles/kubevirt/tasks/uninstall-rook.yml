@@ -1,0 +1,178 @@
+#- name:  Delete Kube Registry
+#  shell: |
+#    kubectl delete -f csi/cephfs/kube-registry.yaml
+#  register: delete_kube_registry
+#  ignore_errors: true
+#  args:
+#    chdir: "{{ base_path }}/rook/deploy/examples/"
+#- debug: msg={{ delete_kube_registry }}
+
+
+#- name: Delete Ceph Filesystem
+#  shell: |
+#    kubectl delete -f filesystem.yaml
+#  register: delete_cephfs
+#  ignore_errors: true
+#  args:
+#    chdir: "{{ base_path }}/rook/deploy/examples/"
+#- debug: msg={{ delete_cephfs }}
+
+
+#- name: Check if Rook is Deployed Successfully
+#  shell: kubectl get CephFileSystem -A
+#  register: check_rook_deployment
+#  ignore_errors: yes
+#  until: check_rook_deployment.stdout.find("Terminating") == -1
+#  retries: 30
+#- debug: msg={{ check_rook_deployment }}
+
+
+- name: Print Rook Ceph Tools
+  shell: |
+    kubectl get deploy rook-ceph-tools -n rook-ceph
+  register: print_rook_ceph_tools
+  ignore_errors: true
+- debug: msg={{ print_rook_ceph_tools }}
+
+
+- name: Delete Toolbox Pod
+  shell: |
+    kubectl delete -f toolbox.yaml
+  register: delete_toolbox
+  ignore_errors: true
+  args:
+    chdir: "{{ base_path }}/rook/deploy/examples/"
+- debug: msg={{ delete_toolbox }}
+
+
+- name: Validate if Toolbox Pod are still Terminating
+  shell: kubectl -n rook-ceph get all | grep tool
+  register: check_toolbox
+  ignore_errors: true
+  until: check_toolbox.stdout.find("") != -1
+  retries: 30
+- debug: msg={{ check_toolbox }}
+  # until: check_toolbos.stdout.find("Terminating") == -1
+
+
+- name: Delete Ceph Cluster Running in a Dynamic Cloud Environment including VMware
+  shell: |
+    kubectl delete -f cluster-on-local-pvc.yaml
+  register: delete_ceph_cluster
+  ignore_errors: true
+  args:
+    chdir: "{{ base_path }}/"
+- debug: msg={{ delete_ceph_cluster }}
+  when: print_debug == true
+
+
+- name: Validate if Rook Ceph Containers are Running
+  shell: kubectl -n rook-ceph get all
+  register: check_rook_ceph_containers
+  ignore_errors: true
+  until: check_rook_ceph_containers.stdout.find("Terminating") == -1
+  retries: 60
+- debug: msg={{ check_rook_ceph_containers }}
+#  until: check_init_pod.stdout.find("PodInitializing") == -1
+
+
+- name: Disable ROOK Discovery Daemon
+  lineinfile:
+    dest: "{{ base_path }}/rook/deploy/examples/operator.yaml"
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    state: "{{ item.state }}"
+  register: disable_rook_discovery_daemon
+  ignore_errors: true
+  with_items:
+    - { regexp: '^  ROOK_ENABLE_DISCOVERY_DAEMON:*', line: '  ROOK_ENABLE_DISCOVERY_DAEMON: "false"', state: present }
+  when: rook.enable_discovery_daemon == true
+- debug: msg={{ disable_rook_discovery_daemon }}
+  when: rook.enable_discovery_daemon == true and print_debug == true
+
+
+- name: Delete Rook Ceph Operator Container
+  shell: |
+    kubectl delete -f operator.yaml
+  register: delete_rook_ceph_operator
+  ignore_errors: true
+  args:
+    chdir: "{{ base_path }}/rook/deploy/examples/"
+- debug: msg={{ delete_rook_ceph_operator }}
+  when: print_debug == true
+
+
+- name: Validate if Rook Operator Containers are Running
+  shell: kubectl -n rook-ceph get all
+  register: check_rook_ceph_operator
+  ignore_errors: true
+  until: check_rook_ceph_operator.stdout.find("Terminating") == -1
+  retries: 60
+- debug: msg={{ check_rook_ceph_operator }}
+
+
+- name: Delete Common
+  shell: |
+    kubectl delete -f common.yaml
+  register: delete_common
+  ignore_errors: true
+  args:
+    chdir: "{{ base_path }}/rook/deploy/examples/"
+- debug: msg={{ delete_common }}
+  when: print_debug == true
+
+
+- name: Delete CRDs
+  shell: |
+    kubectl delete -f crds.yaml
+  register: delete_crds
+  ignore_errors: true
+  args:
+    chdir: "{{ base_path }}/rook/deploy/examples/"
+- debug: msg={{ delete_crds }}
+  when: print_debug == true
+
+
+- name: Remove RBD Kernel Module
+  shell: |
+    rmmod rbd
+  register: remove_rbd_kernel_module
+  delegate_to: "{{ item }}"
+  delegate_facts: True
+  ignore_errors: true
+  with_items: "{{ groups['all'] }}"
+- debug: msg={{ remove_rbd_kernel_module }}
+  when: print_debug == true
+
+
+- name: Remove Rook Source Code and RBD Kernel Module Config
+  file:
+    path: "{{ item }}"
+    state: absent
+  register: remove_rook_source_n_rbd_kernel_module_config
+  with_items:
+    - "/etc/modules-load.d/rbd.conf"
+    - "{{ k8s.base_path }}/rook"
+- debug: msg={{ remove_rook_source_n_rbd_kernel_module_config }}
+
+
+# for j in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do dd if=/dev/zero of=/dev/$j bs=1M count=1000; done
+- name: Cleanup the Ceph Block Devices
+  shell: |
+    lsblk
+    for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do nvme format /dev/$nb --force ;done
+    for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do wipefs -a /dev/$nb ;done
+    for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do sgdisk --zap-all /dev/$nb ;done
+    for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do dd if=/dev/zero of=/dev/$nb bs=10M count=10 ;done
+  delegate_to: "{{ item }}"
+  delegate_facts: True
+  register: cleanup_ceph_block_devices
+  ignore_errors: true
+  with_items: "{{ groups['all'] }}"
+- debug: msg={{ cleanup_ceph_block_devices }}
+  when: print_debug == true
+
+# lsblk
+# for vg in $(`vgs | grep ceph | awk '{print $1}'`); do vgremove $vg -f ;done
+# for dm in $(fdisk -l | grep mapper | grep ceph | awk '{print $2}' | cut -d : -f 1); do dmsetup remove $dm ;done
+

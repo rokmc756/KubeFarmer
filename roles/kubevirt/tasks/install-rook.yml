@@ -1,0 +1,291 @@
+# kubectl get csidrivers
+# kubectl logs pod/csi-rbdplugin-4jbgn -n rook-ceph
+# kubectl get csinodes
+
+# https://devocean.sk.com/blog/techBoardDetail.do?ID=163760
+# https://github.com/rook/rook/issues/5065
+# https://docs.ceph.com/en/latest/rados/configuration/network-config-ref/
+# MON, MDS, OSD
+# iptables -A INPUT -i ens192 -p tcp -s 192.168.0.0/24 --dport 6789 -j ACCEPT
+# iptables -A INPUT -i ens192  -m multiport -p tcp -s 192.168.0.0/24 --dports 6800:7568 -j ACCEPT
+# iptables -A INPUT -i ens192 -m multiport -p tcp -s 192.168.0.0/24 --dports 6800:7568 -j ACCEPT
+
+
+# Helm
+# https://www.talos.dev/v1.7/kubernetes-guides/configuration/ceph-with-rook/
+
+
+# rm -rf /var/lib/rook
+#- name: Cleanup the Ceph Block Devices
+#  shell: |
+#    rm -rf /var/lib/rook
+#    lsblk
+#    for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do nvme format /dev/$nb --force ;done
+#    for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do wipefs -a /dev/$nb ;done
+#    for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do sgdisk --zap-all /dev/$nb ;done
+#    for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do dd if=/dev/zero of=/dev/$nb bs=10M count=10 ;done
+#  delegate_to: "{{ item }}"
+#  delegate_facts: True
+#  register: cleanup_ceph_block_devices
+#  ignore_errors: true
+#  with_items: "{{ groups['all'] }}"
+#- debug: msg={{ cleanup_ceph_block_devices }}
+#  when: print_debug == true
+
+
+#- name: Cleanup the Ceph Block Devices
+#  shell: |
+#    lsblk
+#    for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do nvme format /dev/$nb --force ;done
+#    for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do sgdisk --zap-all /dev/$nb ;done
+#    for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do dd if=/dev/zero of=/dev/$nb bs=10M count=10 oflag=direct,dsync ;done
+#    for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do blkdiscard /dev/$nb ;done
+#    for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do partprobe /dev/$nb ;done
+#    ls /dev/mapper/ceph-* | xargs -I% -- dmsetup remove %
+#    rm -rf /dev/ceph-*
+#    rm -rf /dev/mapper/ceph--*
+#    rm -rf /var/lib/rook
+#  delegate_to: "{{ item }}"
+#  delegate_facts: True
+#  register: cleanup_ceph_block_devices
+#  ignore_errors: true
+#  with_items: "{{ groups['all'] }}"
+#- debug: msg={{ cleanup_ceph_block_devices }}
+#  when: print_debug == true
+
+
+- name: Enable Rados Block Device Kernel Module
+  copy:
+    dest: /etc/modules-load.d/rbd.conf
+    content: |
+      rbd
+  register: enable_rbd_kernel_module
+  delegate_to: "{{ item }}"
+  delegate_facts: True
+  ignore_errors: true
+  with_items: "{{ groups['all'] }}"
+- debug: msg={{ enable_rbd_kernel_module }}
+  when: print_debug == true
+
+
+# If it's not loaded, rbd csiplugin containers will be running and it's Error and Crash
+- name: Load RBD Kernel Module
+  shell: |
+    modprobe rbd
+  register: load_rbd_kernel_module
+  delegate_to: "{{ item }}"
+  delegate_facts: True
+  ignore_errors: true
+  with_items: "{{ groups['all'] }}"
+- debug: msg={{ load_rbd_kernel_module }}
+  when: print_debug == true
+
+
+- name: Check if the Rook Ceph Source Code is already downloaded
+  stat: path={{ base_path }}/rook
+  register: rook_dir_existed
+- debug: msg={{ rook_dir_existed }}
+
+
+- name: Clone Rook Source Code
+  shell: |
+    git -C "{{ base_path }}" clone --single-branch --branch release-{{ rook.major_version }}.{{ rook.minor_version }} https://github.com/rook/rook.git
+  register: git_clone_rook
+  ignore_errors: true
+  when: rook.clone_git == true and rook_dir_existed.stat.exists != True
+- debug: msg={{ git_clone_rook }}
+  when: print_debug == true and rook.clone_git == true and rook_dir_existed.stat.exists != True
+
+
+- name: Creae CRDs
+  shell: |
+    kubectl create -f crds.yaml
+  register: create_crds
+  ignore_errors: true
+  args:
+    chdir: "{{ base_path }}/rook/deploy/examples/"
+- debug: msg={{ create_crds }}
+  when: print_debug == true
+
+
+- name: Create Common
+  shell: |
+    kubectl create -f common.yaml
+  register: create_common
+  ignore_errors: true
+  args:
+    chdir: "{{ base_path }}/rook/deploy/examples/"
+- debug: msg={{ create_common }}
+  when: print_debug == true
+
+
+- name: Enable ROOK Discovery Daemon
+  lineinfile:
+    dest: "{{ base_path }}/rook/deploy/examples/operator.yaml"
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    state: "{{ item.state }}"
+  register: enable_rook_discovery_daemon
+  with_items:
+    - { regexp: '^  ROOK_ENABLE_DISCOVERY_DAEMON:*', line: '  ROOK_ENABLE_DISCOVERY_DAEMON: "true"', state: present }
+  when: rook.enable_discovery_daemon == true
+- debug: msg={{ enable_rook_discovery_daemon }}
+  when: rook.enable_discovery_daemon == true and print_debug == true
+  #  - { regexp: '^      #hostNetwork: true', line: '      hostNetwork: true', state: present }
+  #  - { regexp: '^  # CSI_ENABLE_HOST_NETWORK:*', line: '  CSI_ENABLE_HOST_NETWORK: "true"', state: present }
+
+
+# https://github.com/rook/rook/issues/14445
+
+- name: Create Operator
+  shell: |
+    kubectl apply -f operator.yaml
+  register: create_operator
+  args:
+    chdir: "{{ base_path }}/rook/deploy/examples/"
+- debug: msg={{ create_operator }}
+  when: print_debug == true
+
+
+- name: Validate if All Containers are Running
+  shell: kubectl -n rook-ceph get all
+  register: check_operator_containers
+  until: check_operator_containers.stdout.find("ContainerCreating") == -1
+  retries: 60
+- debug: msg={{ check_operator_containers }}
+  when: print_debug == true
+
+
+- name: Copy Cluster Config Yaml
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ base_path }}/{{ item }}"
+  register: copy_cluster_config_yaml
+  ignore_errors: yes
+  with_items:
+    - "cluster-on-local-pvc-{{ rook.major_version }}.{{ rook.minor_version }}.{{ rook.patch_version }}.yaml"
+    # - rook-pvc-cluster.yaml
+    # - rook-host-cluster.yaml
+    # - rook-stretch-cluster.yaml
+    # - "cluster-test-{{ rook.major_version }}.{{ rook.minor_version }}.yaml"
+- debug: msg={{ copy_cluster_config_yaml }}
+
+
+- name: Cluster Settings for a Production Cluster Running in a Dynamic Cloud Environment including VMware
+  shell: |
+    kubectl create -f cluster-on-local-pvc-{{ rook.major_version }}.{{ rook.minor_version }}.{{ rook.patch_version }}.yaml
+  register: create_ceph_cluster
+  args:
+    chdir: "{{ base_path }}/"
+- debug: msg={{ create_ceph_cluster }}
+  when: print_debug == true
+  #  kubectl create -f cluster-test-{{ rook.major_version }}.{{ rook.minor_version }}.yaml
+
+
+#- name: Create Cluster
+#  shell: |
+#    kubectl create -f rook-pvc-cluster.yaml
+#  register: create_cluster
+#  args:
+#    chdir: "{{ base_path }}/"
+#- debug: msg={{ create_cluster }}
+#  when: print_debug == true
+#  # kubectl apply -f cluster.yaml
+#  #  chdir: "{{ base_path }}/rook/deploy/examples/"
+
+
+
+# Need to add each item to create containers and check them
+#- name: Validate if All Containers are Running
+#  shell: kubectl -n rook-ceph get all
+#  register: check_create_containers
+#  until: check_create_containers.stdout.find("Terminating") == -1
+#  retries: 60
+#- debug: msg={{ check_create_containers }}
+#  until: check_create_containers.stdout.find("PodInitializing") == -1
+#  until: check_create_containers.stdout.find("ContainerCreating") == -1
+#  until: check_create_containers.stdout.find("Init") == -1
+
+
+- name: Check if OSD Pod are Running Normally
+  shell: kubectl -n rook-ceph get all | grep pod/rook-ceph-osd-{{ item }}
+  register: check_osd_pod
+  ignore_errors: yes
+  until: check_osd_pod.stdout.find("Running") != -1
+  retries: 100
+  with_sequence: start=0 end=2
+- debug: msg={{ check_osd_pod }}
+
+
+- name: Create Toolbox Pod
+  shell: |
+    kubectl create -f toolbox.yaml
+  register: create_toolbox_pod
+  args:
+    chdir: "{{ base_path }}/rook/deploy/examples/"
+- debug: msg={{ create_toolbox_pod }}
+
+
+- name: Validate if Toolbox Container is Running Normally
+  shell: kubectl -n rook-ceph get pods | grep tool
+  register: check_toolbox_containers
+  until: check_toolbox_containers.stdout.find("ContainerCreating") == -1
+  retries: 10
+- debug: msg={{ check_toolbox_containers }}
+
+
+- name: Print Rook Ceph Tools
+  shell: |
+    kubectl get deploy rook-ceph-tools -n rook-ceph
+  register: print_rook_ceph_tools
+- debug: msg={{ print_rook_ceph_tools }}
+
+
+# $ kubectl -n rook-ceph exec -it $(kubectl -n rook-ceph get pod -l "app=rook-ceph-tools" -o jsonpath='{.items[0].metadata.name}') bash
+# (toolbox)$ ceph -s
+# (toolbox)$ ceph osd status
+
+
+#- name: Create Ceph Filesystem
+#  shell: |
+#    kubectl create -f filesystem.yaml
+#  register: create_cephfs
+#  args:
+#    chdir: "{{ base_path }}/rook/deploy/examples/"
+#- debug: msg={{ create_cephfs }}
+
+
+#- name: Check if Rook Ceph is Deployed Successfully
+#  shell: kubectl get CephFileSystem -n rook-ceph
+#  register: check_rook_deployment
+#  ignore_errors: yes
+#  until: check_rook_deployment.stdout.find("Progressing") == -1
+#  retries: 100
+#- debug: msg={{ check_rook_deployment }}
+
+
+#- name: Apply Kube Registry
+#  shell: |
+#    kubectl apply -f csi/cephfs/kube-registry.yaml
+#  register: apply_kube_registry
+#  args:
+#    chdir: "{{ base_path }}/rook/deploy/examples/"
+#- debug: msg={{ apply_kube_registry }}
+
+#
+# Restart All Processes in rook-ceph namespace
+# kubectl rollout restart deployment -n rook-ceph
+
+
+# [ Check Rook and NGINX Ingress ]
+# kubectl get events --all-namespaces  --sort-by='.metadata.creationTimestamp'
+# kubectl -n cattle-system describe pods
+# kubectl -n cattle-system get all
+# kubectl -n cattle-system get pods
+# kubectl -n cattle-system logs <pod-name>
+
+# OSD or OSD Prepare can not be created
+# https://github.com/rook/rook/issues/2916
+# https://stackoverflow.com/questions/62045052/why-cant-find-osd-pod-in-kubernetes-after-deploying-rook-ceph
+# https://1week.tistory.com/16
+

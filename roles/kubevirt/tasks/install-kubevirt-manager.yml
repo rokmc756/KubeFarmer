@@ -1,0 +1,88 @@
+- name: Check if the KubeVirt Manager Source Code is already downloaded
+  stat: path={{ base_path }}/kubevirt-manager
+  register: kubevirt_manager_dir_existed
+- debug: msg={{ kubevirt_manager_dir_existed }}
+
+
+- name: Clone KubeVirt Manager
+  shell: |
+    git -C /root clone https://github.com/kubevirt-manager/kubevirt-manager
+  register: create_kubevirt_operator
+  when: kubevirt_manager_dir_existed.stat.exists != True
+  ignore_errors: true
+- debug: msg={{ create_kubevirt_operator }}
+  when: print_debug == true
+  # git -C "{{ base_path }}" clone --single-branch --branch release-{{ rook.major_version }}.{{ rook.minor_version }} https://github.com/rook/rook.git
+
+
+- name: Create the Namespace
+  shell: |
+    kubectl apply -f kubernetes/ns.yaml
+  register: X
+  args:
+    chdir: "/root/kubevirt-manager"
+- debug: msg={{ X }}
+  when: print_debug == true
+
+
+- name: Create the Custom Resource Definition
+  shell: |
+    kubectl apply -f kubernetes/crd.yaml
+  register: X
+  args:
+    chdir: "/root/kubevirt-manager"
+- debug: msg={{ X }}
+  when: print_debug == true
+
+
+- name: Create the Service Account and RBAC
+  shell: |
+    kubectl apply -f kubernetes/rbac.yaml
+  register: X
+  args:
+    chdir: "/root/kubevirt-manager"
+- debug: msg={{ X }}
+  when: print_debug == true
+
+
+- name: Create the FrontEnd Deployment
+  shell: |
+    kubectl apply -f kubernetes/deployment.yaml
+  register: X
+  args:
+    chdir: "/root/kubevirt-manager"
+- debug: msg={{ X }}
+  when: print_debug == true
+
+
+- name: Create the Priority Classes
+  shell: |
+    kubectl apply -f kubernetes/pc.yaml
+  register: X
+  args:
+    chdir: "/root/kubevirt-manager"
+- debug: msg={{ X }}
+  when: print_debug == true
+
+
+- name: Create the FrontEnd Service
+  shell: |
+    kubectl apply -f kubernetes/service.yaml
+  register: X
+  args:
+    chdir: "/root/kubevirt-manager"
+- debug: msg={{ X }}
+  when: print_debug == true
+
+
+# PROMETHEUS INTEGRATION
+# , you need to edit kubernetes/prometheus-config.yaml and adjust your endpoint on line 21. After adjusting the endpoint, apply the configmap:
+- name: To integrate kubevirt-manager with prometheus
+  shell: |
+    kubectl apply -f kubernetes/prometheus-config.yaml
+  register: X
+  args:
+    chdir: "/root/kubevirt-manager"
+- debug: msg={{ X }}
+  when: print_debug == true
+

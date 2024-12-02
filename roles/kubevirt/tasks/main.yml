@@ -1,0 +1,96 @@
+---
+- name: Check OS ( KubeVirt )
+  fail: msg="Not a Red Hat or SUSE based System!"
+  when: ansible_os_family != 'RedHat' or  ansible_os_family != 'CentOS' or  ansible_os_family != 'Rocky' or ansible_os_family != 'openSUSE Leap'
+
+
+- name: Set Facts for KubeVirt
+  import_tasks: set-kubevirt-facts.yml
+  tags:
+    - install
+    - uninstall
+
+
+- name: Enable Helm Repository
+  import_tasks: enable-helm-repo.yml
+  tags: install
+  when: helm.enable_repo == true and inventory_hostname in groups['master']
+
+
+- name: Deploy KubeVirt
+  import_tasks: install-kubevirt.yml
+  tags: install
+  when: kubevirt.install == true and inventory_hostname in groups['master']
+
+
+- name: Deploy KubeVirt Manager
+  import_tasks: install-kubevirt-manager.yml
+  tags: install
+  when: kubevirt.manager.install == true and inventory_hostname in groups['master']
+
+
+- name: Install Metallb
+  import_tasks: install-metallb.yml
+  tags: install
+  when: metallb.install == true and inventory_hostname in groups['master']
+
+
+- name: Install Ingress
+  import_tasks: install-ingress.yml
+  tags: install
+  when: ingress.install == true and inventory_hostname in groups['master']
+
+
+- name: Install Cert Manager
+  import_tasks: install-cert-manager.yml
+  tags: install
+  when: cert_manager.install == true and inventory_hostname in groups['master']
+
+
+- name: Install Load Balancer
+  import_tasks: install-lb.yml
+  tags: install
+  when: metallb.install == true and inventory_hostname in groups['master']
+
+
+- name: Uninstall Load Balancer
+  import_tasks: uninstall-lb.yml
+  tags: uninstall
+  when: metallb.install == true and inventory_hostname in groups['master']
+
+
+- name: Uninstall Cert Manager
+  import_tasks: uninstall-cert-manager.yml
+  tags: uninstall
+  when: cert_manager.install == true and inventory_hostname in groups['master']
+
+
+- name: Uninstall Ingress
+  import_tasks: uninstall-ingress.yml
+  tags: uninstall
+  when: ingress.install == true and inventory_hostname in groups['master']
+
+
+- name: Uninstall Metallb
+  import_tasks: uninstall-metallb.yml
+  tags: uninstall
+  when: metallb.install == true and inventory_hostname in groups['master']
+
+
+- name: Destroy KubeVirt Manager
+  import_tasks: uninstall-kubevirt-manager.yml
+  tags: uninstall
+  when: kubevirt.manager.install == true and inventory_hostname in groups['master']
+
+
+- name: Destroy KubeVirt
+  import_tasks: uninstall-kubevirt.yml
+  tags: uninstall
+  when: kubevirt.install == true and inventory_hostname in groups['master']
+
+
+- name: Disable Helm Repository
+  import_tasks: disable-helm-repo.yml
+  tags: uninstall
+  when: helm.enable_repo == true and inventory_hostname in groups['master']
+

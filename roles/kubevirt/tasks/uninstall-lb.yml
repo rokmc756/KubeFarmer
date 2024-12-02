@@ -1,0 +1,9 @@
+- name: Delete Rook Load Balancer
+  shell: |
+    kubectl delete -f dashboard-loadbalancer.yaml
+  register: delete_rook_lb
+  ignore_errors: yes
+  args:
+    chdir: "{{ base_path }}/rook/deploy/examples/"
+- debug: msg={{ delete_rook_lb }}
+

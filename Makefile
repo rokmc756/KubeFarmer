@@ -61,6 +61,9 @@ rancher:
 kubeflow:
 	make -f ./makefile_configs/Makefile.kubeflow r=${r} s=${s} c=${c} USERNAME=${USERNAME}
 
+kubevirt:
+	make -f ./makefile_configs/Makefile.kubevirt r=${r} s=${s} c=${c} USERNAME=${USERNAME}
+
 ha:
 	make -f ./makefile_configs/Makefile.ha r=${r} s=${s} c=${c} USERNAME=${USERNAME}
 

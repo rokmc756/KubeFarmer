@@ -1,0 +1,44 @@
+# https://oopflow.medium.com/setup-install-rancher-onto-existing-kubernetes-cluster-for-high-availability-7351f0284592
+
+- name: Remove NGINX Helm Repo
+  shell: |
+    /usr/local/bin/helm repo remove nginx-stable
+  register: remove_nginx_helm_repo
+  ignore_errors: yes
+- debug: msg={{ remove_nginx_helm_repo }}
+
+
+- name: Remove Jetstack Helm Repo
+  shell: |
+    /usr/local/bin/helm repo remove jetstack
+  register: remove_jetstack_helm_repo
+  ignore_errors: yes
+- debug: msg={{ remove_jetstack_helm_repo }}
+
+
+- name: Remove Rook Helm Repo
+  shell: |
+    /usr/local/bin/helm repo remove rook-release
+  register: remove_rook_helm_repo
+  ignore_errors: yes
+- debug: msg={{ remove_rook_helm_repo }}
+
+
+- name: Remove Metallb Helm Repo
+  shell: |
+    /usr/local/bin/helm repo remove metallb
+  register: remove_metallb_helm_repo
+  ignore_errors: yes
+- debug: msg={{ remove_metallb_helm_repo }}
+
+
+- name: Delete Helm Install Script
+  file:
+    path: "{{ item }}"
+    state: absent
+  register: delete_helm
+  with_items:
+    - "{{ base_path }}/get_helm.sh"
+    - "/usr/local/bin/helm"
+- debug: msg={{ delete_helm }}
+

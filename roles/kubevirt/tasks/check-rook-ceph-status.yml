@@ -1,0 +1,70 @@
+# kubectl -n rook-ceph get pod -l app=rook-ceph-mon | sed 1d
+# rook-ceph-mon-a-5f75665476-tsvt5   1/1     Running   1 (3m41s ago)   12m
+# rook-ceph-mon-b-7d4b8c9949-j8dn5   0/1     Running   1 (3m27s ago)   12m
+# rook-ceph-mon-c-789f5749c4-tljnb   1/1     Running   0               11m
+
+
+#- name: Wait for Mon Alive
+#  pause:
+#    minutes: 20
+
+
+- name: Check All Mon are Running Normally
+  shell: |
+    kubectl -n rook-ceph get pod -l app=rook-ceph-mon | sed 1d | awk '{print $2}' | cut -d / -f 1 | sort | uniq
+  args:
+    executable: /bin/bash
+  register: check_mon_status
+  until: check_mon_status.stdout.find("0") == -1
+  retries: 100
+  delay: 20
+- debug: msg={{ check_mon_status }}
+  when: print_debug == true
+
+
+- name: Check Health of Rook Ceph till HEALTH_OK
+  shell:
+    cmd: |
+      cat <<EOF | kubectl -n rook-ceph exec -i $(kubectl -n rook-ceph get pod | grep rook-ceph-tools | awk '{print $1}') -- bash
+      ceph -s | grep health | awk '{print \$2}'
+      exit
+      EOF
+  args:
+    executable: /bin/bash
+  register: check_rook_status
+  until: check_rook_status.stdout.find("HEALTH_OK") != -1
+  retries: 100
+  delay: 20
+- debug: msg={{ check_rook_status }}
+  when: print_debug == true
+
+
+- name: Change Admin Password to Login into Dashboard
+  shell:
+    cmd: |
+      cat <<EOF | kubectl -n rook-ceph exec -i $(kubectl -n rook-ceph get pod | grep rook-ceph-tools | awk '{print $1}') -- bash
+      echo "changeme" > /tmp/dashbaord-password.yml
+      ceph dashboard ac-user-create admin -i /tmp/dashbaord-password.yml administrator
+      ceph dashboard ac-user-show admin
+  args:
+    executable: /bin/bash
+  register: change_rook_admin_passwd
+- debug: msg={{ change_rook_admin_passwd }}
+  when: print_debug == true
+
+
+- name: Print Ceph Admin Password
+  shell: |
+    kubectl -n rook-ceph get secret rook-ceph-dashboard-password -o jsonpath="{['data']['password']}" | base64 --decode && echo
+  register: print_ceph_admin_password
+- debug: msg={{ print_ceph_admin_password }}
+  when: print_debug == true
+
+
+- name: Print IP Address for Ceph Admin UI
+  shell: |
+    kubectl get all -A | grep LoadBalancer
+  register: print_ip_addr_ceph_admin_ui
+- debug: msg={{ print_ip_addr_ceph_admin_ui }}
+  when: print_debug == true
+

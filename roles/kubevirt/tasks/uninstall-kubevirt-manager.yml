@@ -1,0 +1,80 @@
+# PROMETHEUS INTEGRATION
+# , you need to edit kubernetes/prometheus-config.yaml and adjust your endpoint on line 21. After adjusting the endpoint, apply the configmap:
+- name: Delete kubevirt-manager with prometheus
+  shell: |
+    kubectl delete -f kubernetes/prometheus-config.yaml
+  register: X
+  args:
+    chdir: "/root/kubevirt-manager"
+- debug: msg={{ X }}
+  when: print_debug == true
+
+
+- name: Delete the FrontEnd Service
+  shell: |
+    kubectl delete -f kubernetes/service.yaml
+  register: X
+  args:
+    chdir: "/root/kubevirt-manager"
+- debug: msg={{ X }}
+  when: print_debug == true
+
+
+- name: Delete the Priority Classes
+  shell: |
+    kubectl delete -f kubernetes/pc.yaml
+  register: X
+  args:
+    chdir: "/root/kubevirt-manager"
+- debug: msg={{ X }}
+  when: print_debug == true
+
+
+- name: Delete the FrontEnd Deployment
+  shell: |
+    kubectl apply -f kubernetes/deployment.yaml
+  register: X
+  args:
+    chdir: "/root/kubevirt-manager"
+- debug: msg={{ X }}
+  when: print_debug == true
+
+
+- name: Delete the Service Account and RBAC
+  shell: |
+    kubectl delete -f kubernetes/rbac.yaml
+  register: X
+  args:
+    chdir: "/root/kubevirt-manager"
+- debug: msg={{ X }}
+  when: print_debug == true
+
+
+- name: Delete the Custom Resource Definition
+  shell: |
+    kubectl delete -f kubernetes/crd.yaml
+  register: X
+  args:
+    chdir: "/root/kubevirt-manager"
+- debug: msg={{ X }}
+  when: print_debug == true
+
+
+- name: Delete the Namespace
+  shell: |
+    kubectl delete -f kubernetes/ns.yaml
+  register: X
+  args:
+    chdir: "/root/kubevirt-manager"
+- debug: msg={{ X }}
+  when: print_debug == true
+
+
+- name: Remove KubeVirt Manager Git Source Directory
+  shell: |
+    rm -rf /root/kubevirt-manager
+  register: remove_kubevirt_source
+- debug: msg={{ remove_kubevirt_source }}
+  when: print_debug == true
+
+
