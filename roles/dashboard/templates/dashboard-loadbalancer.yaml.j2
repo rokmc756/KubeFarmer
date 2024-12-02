@@ -1,0 +1,45 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dashboard-loadbalancer
+  namespace: kubernetes-dashboard
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-protocol: "true"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  selector:
+    app: kubernetes-dashboard
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 80
+    - name: https
+      protocol: TCP
+      port: 10443
+      targetPort: 443
+  type: LoadBalancer
+  loadBalancerIP: 192.168.1.217
+
+#---
+#apiVersion: networking.k8s.io/v1
+#kind: Ingress
+#metadata:
+#  name: dashboard-ingress
+#  namespace: kubernetes-dashboard
+#  annotations:
+#    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+#spec:
+#  rules:
+#    - host: dashboard.jtest.pivotal.io
+#      http:
+#        paths:
+#          - path: /
+#            pathType: Prefix
+#            backend:
+#              service:
+#                name: kubernetes-dashboard
+#                port:
+#                  name: http
+

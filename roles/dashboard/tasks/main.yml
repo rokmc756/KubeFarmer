@@ -1,23 +1,50 @@
 ---
 # Install Kubernetes Dashboard
-
-# for now fail if it's not a Red Hat based system
-- name: Check OS ( GPDB )
+- name: Check OS ( Kubernetes Dashboard )
   fail: msg="Not a Red Hat based system!"
   when: ansible_os_family != 'RedHat' or ansible_os_family != 'CentOS' or ansible_os_family != 'Rocky'
 
-- name: Installation of kubernetes dashboard
-  import_tasks: install.yml
+
+- name: Set Facts for Dashboard
+  import_tasks: set-dashboard-facts.yml
+  tags:
+    - install
+    - uninstall
+    - reinit
+
+
+- name: Enable Helm Repository
+  import_tasks: enable-helm-repo.yml
   tags: install
+  when: helm.enable_repo == true and inventory_hostname in groups['master']
 
-- name: Reinitialize kubernetes dashboard
-  import_tasks: reinit.yml
-  tags: reinit
 
-- name: Uninstall kubernetes dashboard
-  import_tasks: uninstall.yml
+- name: Deploy Dashboard
+  import_tasks: install-dashboard.yml
+  tags: install
+  when: dashboard.install == true and inventory_hostname in groups['master']
+
+
+- name: Install Load Balancer
+  import_tasks: install-lb.yml
+  tags: install
+  when: metallb.install == true and inventory_hostname in groups['master']
+
+
+- name: Uninstall Load Balancer
+  import_tasks: uninstall-lb.yml
   tags: uninstall
+  when: metallb.install == true and inventory_hostname in groups['master']
 
-- name: Upgrad kubernetes dashboard
-  import_tasks: upgrade.yml
-  tags: upgrade
+
+- name: Destroy Dashboard
+  import_tasks: uninstall-dashboard.yml
+  tags: uninstall
+  when: dashboard.install == true and inventory_hostname in groups['master']
+
+
+- name: Disable Helm Repository
+  import_tasks: disable-helm-repo.yml
+  tags: uninstall
+  when: helm.enable_repo == true and inventory_hostname in groups['master']
+

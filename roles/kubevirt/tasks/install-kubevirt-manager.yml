@@ -86,3 +86,20 @@
 - debug: msg={{ X }}
   when: print_debug == true
 
+
+#
+# echo "changeme" > htpasswd-file
+#
+# cat htpasswd-file | base64 -w0
+# After adjusting secret contents, apply the configmap and the secret:
+#
+# kubectl apply -f kubernetes/auth-config.yaml
+# kubectl apply -f kubernetes/auth-secret.yaml
+#
+# echo -n 'admin:' > /root/.htpasswd
+# openssl passwd -apr1 changeme >> /root/.htpasswd
+# cat /root/.htpasswd
+# admin:$apr1$PK5v6nYU$tznI3lUvVVH0HMDMgVotw1
+#
+# kubectl rollout restart deployment.apps/kubevirt-manager -n kubevirt-manager
+

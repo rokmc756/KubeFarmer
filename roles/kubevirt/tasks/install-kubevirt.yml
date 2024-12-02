@@ -117,3 +117,6 @@
 - debug: msg={{ get_kubevirt_cli_version }}
   when: print_debug == true
 
+# https://kubevirt.io/2023/Managing-KubeVirt-VMs-with-Ansible.html
+
+
