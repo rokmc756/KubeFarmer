@@ -25,14 +25,51 @@
   when: dashboard.install == true and inventory_hostname in groups['master']
 
 
+- name: Install Metallb
+  import_tasks: install-metallb.yml
+  tags: install
+  when: metallb.install == true and inventory_hostname in groups['master']
+
+
+- name: Install Ingress
+  import_tasks: install-ingress.yml
+  tags: install
+  when: ingress.install == true and inventory_hostname in groups['master']
+
+
+- name: Install Cert Manager
+  import_tasks: install-cert-manager.yml
+  tags: install
+  when: cert_manager.install == true and inventory_hostname in groups['master']
+
+
 - name: Install Load Balancer
   import_tasks: install-lb.yml
   tags: install
   when: metallb.install == true and inventory_hostname in groups['master']
 
 
+
 - name: Uninstall Load Balancer
   import_tasks: uninstall-lb.yml
+  tags: uninstall
+  when: metallb.install == true and inventory_hostname in groups['master']
+
+
+- name: Uninstall Cert Manager
+  import_tasks: uninstall-cert-manager.yml
+  tags: uninstall
+  when: cert_manager.install == true and inventory_hostname in groups['master']
+
+
+- name: Uninstall Ingress
+  import_tasks: uninstall-ingress.yml
+  tags: uninstall
+  when: ingress.install == true and inventory_hostname in groups['master']
+
+
+- name: Uninstall Metallb
+  import_tasks: uninstall-metallb.yml
   tags: uninstall
   when: metallb.install == true and inventory_hostname in groups['master']
 
@@ -47,4 +84,5 @@
   import_tasks: disable-helm-repo.yml
   tags: uninstall
   when: helm.enable_repo == true and inventory_hostname in groups['master']
+
 

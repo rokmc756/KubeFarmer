@@ -1,0 +1,44 @@
+- name: Check if the Kube Ingress is Already Downloaded
+  stat: path={{ base_path }}/kubernetes-ingress
+  register: kube_ingress_dir_existed
+- debug: msg={{ kube_ingress_dir_existed }}
+
+
+- name: Clone Kubernetest Ingress
+  shell: |
+    git -C "{{ base_path }}" clone https://github.com/nginxinc/kubernetes-ingress.git \
+    --branch v{{ ingress.k8s.major_version }}.{{ ingress.k8s.minor_version }}.{{ ingress.k8s.patch_version }}
+  register: clone_k8s_ingress
+  when: kube_ingress_dir_existed.stat.exists != True
+- debug: msg={{ clone_k8s_ingress }}
+
+
+- name: Apply NGINX Ingress CRDs
+  shell: |
+    kubectl create -f crds/ --namespace=nginx-ingress
+  register: apply_nginx_ingress_crds
+  ignore_errors: yes
+  args:
+    chdir: "{{ base_path }}/kubernetes-ingress/deployments/helm-chart"
+- debug: msg={{ apply_nginx_ingress_crds }}
+
+
+- name: Install NGINX Ingress
+  shell: |
+    /usr/local/bin/helm install nginx-ingress nginx-stable/nginx-ingress --namespace=nginx-ingress --create-namespace
+  register: install_nginx_ingress
+  ignore_errors: yes
+  args:
+    chdir: "{{ base_path }}/kubernetes-ingress/deployments/helm-chart"
+- debug: msg={{ install_nginx_ingress }}
+
+
+- name: Upgrade NGINX Ingress CRDs
+  shell: |
+    /usr/local/bin/helm upgrade nginx-ingress nginx-stable/nginx-ingress --namespace=nginx-ingress
+  register: upgrade_nginx_ingress_crds
+  ignore_errors: yes
+  args:
+    chdir: "{{ base_path }}/kubernetes-ingress/deployments/helm-chart"
+- debug: msg={{ upgrade_nginx_ingress_crds }}
+
