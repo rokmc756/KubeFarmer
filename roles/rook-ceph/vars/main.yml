@@ -29,7 +29,6 @@ rook:
     hostname: "rook.jtest.pivotal.io"
   kernel_parameters:
     - "net.ipv4.neigh.default.gc_thresh1 = 0"       # For ARP Cache
-
     # - "net.ipv4.conf.all.arp_ignore = 1"
     # - "net.ipv4.conf.all.arp_announce = 2"
     # - "net.ipv4.conf.all.rp_filter = 0"
@@ -38,12 +37,10 @@ rook:
     # - "net.netfilter.nf_conntrack_tcp_timeout_close_wait = 60"
     # - "net.netfilter.nf_conntrack_tcp_timeout_fin_wait = 60"
     # - "net.netfilter.nf_conntrack_tcp_timeout_time_wait = 60"
-
     # - "net.ipv4.neigh.default.gc_thresh1 = 8192"
     # - "net.ipv4.neigh.default.gc_thresh2 = 32768"
     # - "net.ipv4.neigh.default.gc_thresh3 = 65536"
     # - "net.netfilter.nf_conntrack_max=1000000"
-    #
     # https://blog.aenix.io/configuring-routing-for-metallb-in-l2-mode-7ea26e19219e
     # https://overcast.blog/11-ways-to-optimize-network-performance-in-kubernetes-9531a69c10c0
     # https://www.alibabacloud.com/blog/improve-kubernetes-network-performance-with-ebpf_599445
@@ -51,7 +48,7 @@ rook:
 
 
 metallb:
-  install: true
+  install: false
   major_version: 0
   minor_version: 14
   patch_version: 8
@@ -82,7 +79,7 @@ metallb:
 
 
 helm:
-  enable_repo: true
+  enable_repo: false
   major_version: 3
   minor_version:
   patch_version:
@@ -97,7 +94,7 @@ cert_manager:
 
 
 ingress:
-  install: true
+  install: false
   major_version:
   minor_version:
   patch_version:

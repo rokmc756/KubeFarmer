@@ -364,5 +364,6 @@ The push refers to repository [harbor.jtest.suse.com/library/ubuntu]
 ~~~
 
 ### IP Addresses for Services
-- KubeVirt : 192.168.1.218
+- KubeVirt : 192.168.1.218:8080
+- Rook     : 192.168.1.219:8443
 
