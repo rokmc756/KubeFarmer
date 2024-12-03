@@ -1,5 +1,4 @@
-
-# VERSION="$(curl --silent https://storage.googleapis.com/kubevirt-prow/release/kubevirt/kubevirt/stable.txt)"
+---
 - name: Get KubeVirt Version
   shell: |
     curl --silent https://storage.googleapis.com/kubevirt-prow/release/kubevirt/kubevirt/stable.txt
@@ -40,6 +39,7 @@
     - "controller"
     - "api"
 - debug: msg={{ delete_kubevirt_crds }}
+
 
 - name: Delete KubeVirt Operator
   shell: |

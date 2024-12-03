@@ -95,28 +95,29 @@
   when: print_debug == true
 
 
-- name: Get KubeVirt CLI
+- name: Install KubeVirt CLI
   shell: |
     sudo install virtctl /usr/local/bin
-  register: get_kubevirt_cli
+  register: install_kubevirt_cli
   ignore_errors: true
   args:
     chdir: "/root"
-- debug: msg={{ get_kubevirt_cli }}
+- debug: msg={{ install_kubevirt_cli }}
   when: print_debug == true
 
 
-- name: Get KubeVirt CLI Version
+- name: Print KubeVirt CLI Version
   shell: |
     virtctl version
-  register: get_kubevirt_cli_version
+  register: print_kubevirt_cli_version
   ignore_errors: true
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
   args:
-    chdir: "/root"
     executable: /bin/bash
-- debug: msg={{ get_kubevirt_cli_version }}
+    chdir: "/root"
+- debug: msg={{ print_kubevirt_cli_version }}
   when: print_debug == true
 
 # https://kubevirt.io/2023/Managing-KubeVirt-VMs-with-Ansible.html
-
 

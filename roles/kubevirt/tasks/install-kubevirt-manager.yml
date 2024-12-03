@@ -18,81 +18,105 @@
 - name: Create the Namespace
   shell: |
     kubectl apply -f kubernetes/ns.yaml
-  register: X
+  register: create_namespace
   args:
     chdir: "/root/kubevirt-manager"
-- debug: msg={{ X }}
+- debug: msg={{ create_namespace }}
   when: print_debug == true
 
 
 - name: Create the Custom Resource Definition
   shell: |
     kubectl apply -f kubernetes/crd.yaml
-  register: X
+  register: create_custom_resource_definition
   args:
     chdir: "/root/kubevirt-manager"
-- debug: msg={{ X }}
+- debug: msg={{ create_custom_resource_definition }}
   when: print_debug == true
 
 
 - name: Create the Service Account and RBAC
   shell: |
     kubectl apply -f kubernetes/rbac.yaml
-  register: X
+  register: create_service_account_rbac
   args:
     chdir: "/root/kubevirt-manager"
-- debug: msg={{ X }}
+- debug: msg={{ create_service_account_rbac }}
   when: print_debug == true
 
 
 - name: Create the FrontEnd Deployment
   shell: |
     kubectl apply -f kubernetes/deployment.yaml
-  register: X
+  register: create_frontend_deployment
   args:
     chdir: "/root/kubevirt-manager"
-- debug: msg={{ X }}
+- debug: msg={{ create_frontend_deployment }}
   when: print_debug == true
 
 
 - name: Create the Priority Classes
   shell: |
     kubectl apply -f kubernetes/pc.yaml
-  register: X
+  register: create_priority_classes
   args:
     chdir: "/root/kubevirt-manager"
-- debug: msg={{ X }}
+- debug: msg={{ create_priority_classes }}
   when: print_debug == true
 
 
 - name: Create the FrontEnd Service
   shell: |
     kubectl apply -f kubernetes/service.yaml
-  register: X
+  register: create_frontend_service
   args:
     chdir: "/root/kubevirt-manager"
-- debug: msg={{ X }}
+- debug: msg={{ create_frontend_service }}
   when: print_debug == true
 
 
 # PROMETHEUS INTEGRATION
 # , you need to edit kubernetes/prometheus-config.yaml and adjust your endpoint on line 21. After adjusting the endpoint, apply the configmap:
-- name: To integrate kubevirt-manager with prometheus
+# - name: Integrate KubeVirt Manager With Prometheus
+#  shell: |
+#    kubectl apply -f kubernetes/prometheus-config.yaml
+#  register: integrate_prometheus
+#  args:
+#    chdir: "/root/kubevirt-manager"
+#- debug: msg={{ integrate_prometheus }}
+#  when: print_debug == true
+
+
+- name: Create Auth for KubeVirt Manager
   shell: |
-    kubectl apply -f kubernetes/prometheus-config.yaml
-  register: X
+    kubectl apply -f kubernetes/auth-{{ item }}.yaml
+  register: create_kubevirt_manager_auth
   args:
     chdir: "/root/kubevirt-manager"
-- debug: msg={{ X }}
+  with_items:
+    - config
+    - secret
+- debug: msg={{ create_kubevirt_manager_auth }}
   when: print_debug == true
 
 
-#
+- name: Restart KubeVirt Manager Deployment
+  shell: |
+    kubectl rollout restart deployment.apps/kubevirt-manager -n kubevirt-manager
+  register: restart_kubevirt_manager_deployment
+  args:
+    chdir: "/root/kubevirt-manager"
+  with_items:
+    - config
+    - secret
+- debug: msg={{ restart_kubevirt_manager_deployment }}
+  when: print_debug == true
+
+
 # echo "changeme" > htpasswd-file
-#
 # cat htpasswd-file | base64 -w0
-# After adjusting secret contents, apply the configmap and the secret:
 #
+# After adjusting secret contents, apply the configmap and the secret:
 # kubectl apply -f kubernetes/auth-config.yaml
 # kubectl apply -f kubernetes/auth-secret.yaml
 #

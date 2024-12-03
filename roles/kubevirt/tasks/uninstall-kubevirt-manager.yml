@@ -1,79 +1,79 @@
 # PROMETHEUS INTEGRATION
 # , you need to edit kubernetes/prometheus-config.yaml and adjust your endpoint on line 21. After adjusting the endpoint, apply the configmap:
-- name: Delete kubevirt-manager with prometheus
-  shell: |
-    kubectl delete -f kubernetes/prometheus-config.yaml
-  register: X
-  ignore_errors: true
-  args:
-    chdir: "/root/kubevirt-manager"
-- debug: msg={{ X }}
-  when: print_debug == true
+#- name: Delete KubeVirt Manager With Prometheus
+#  shell: |
+#    kubectl delete -f kubernetes/prometheus-config.yaml
+#  register: delete_prometheus_config
+#  ignore_errors: true
+#  args:
+#    chdir: "/root/kubevirt-manager"
+#- debug: msg={{ delete_prometheus_config }}
+#  when: print_debug == true
 
 
 - name: Delete the FrontEnd Service
   shell: |
     kubectl delete -f kubernetes/service.yaml
-  register: X
+  register: delete_frontend_service
   ignore_errors: true
   args:
     chdir: "/root/kubevirt-manager"
-- debug: msg={{ X }}
+- debug: msg={{ delete_frontend_service }}
   when: print_debug == true
 
 
 - name: Delete the Priority Classes
   shell: |
     kubectl delete -f kubernetes/pc.yaml
-  register: X
+  register: delete_priority_classes
   ignore_errors: true
   args:
     chdir: "/root/kubevirt-manager"
-- debug: msg={{ X }}
+- debug: msg={{ delete_priority_classes }}
   when: print_debug == true
 
 
 - name: Delete the FrontEnd Deployment
   shell: |
     kubectl apply -f kubernetes/deployment.yaml
-  register: X
+  register: delete_frontend_deployment
   ignore_errors: true
   args:
     chdir: "/root/kubevirt-manager"
-- debug: msg={{ X }}
+- debug: msg={{ delete_frontend_deployment }}
   when: print_debug == true
 
 
 - name: Delete the Service Account and RBAC
   shell: |
     kubectl delete -f kubernetes/rbac.yaml
-  register: X
+  register: delete_service_account_rbac
   ignore_errors: true
   args:
     chdir: "/root/kubevirt-manager"
-- debug: msg={{ X }}
+- debug: msg={{ delete_service_account_rbac }}
   when: print_debug == true
 
 
 - name: Delete the Custom Resource Definition
   shell: |
     kubectl delete -f kubernetes/crd.yaml
-  register: X
+  register: delete_custom_resource_definition
   ignore_errors: true
   args:
     chdir: "/root/kubevirt-manager"
-- debug: msg={{ X }}
+- debug: msg={{ delete_custom_resource_definition }}
   when: print_debug == true
 
 
 #- name: Delete the Namespace
 #  shell: |
 #    kubectl delete -f kubernetes/ns.yaml
-#  register: X
+#  register: delete_namespace
 #  ignore_errors: true
 #  args:
 #    chdir: "/root/kubevirt-manager"
-#- debug: msg={{ X }}
+#- debug: msg={{ delete_namespace }}
 #  when: print_debug == true
 
 
