@@ -4,6 +4,7 @@
   shell: |
     kubectl delete -f kubernetes/prometheus-config.yaml
   register: X
+  ignore_errors: true
   args:
     chdir: "/root/kubevirt-manager"
 - debug: msg={{ X }}
@@ -14,6 +15,7 @@
   shell: |
     kubectl delete -f kubernetes/service.yaml
   register: X
+  ignore_errors: true
   args:
     chdir: "/root/kubevirt-manager"
 - debug: msg={{ X }}
@@ -24,6 +26,7 @@
   shell: |
     kubectl delete -f kubernetes/pc.yaml
   register: X
+  ignore_errors: true
   args:
     chdir: "/root/kubevirt-manager"
 - debug: msg={{ X }}
@@ -34,6 +37,7 @@
   shell: |
     kubectl apply -f kubernetes/deployment.yaml
   register: X
+  ignore_errors: true
   args:
     chdir: "/root/kubevirt-manager"
 - debug: msg={{ X }}
@@ -44,6 +48,7 @@
   shell: |
     kubectl delete -f kubernetes/rbac.yaml
   register: X
+  ignore_errors: true
   args:
     chdir: "/root/kubevirt-manager"
 - debug: msg={{ X }}
@@ -54,26 +59,47 @@
   shell: |
     kubectl delete -f kubernetes/crd.yaml
   register: X
+  ignore_errors: true
   args:
     chdir: "/root/kubevirt-manager"
 - debug: msg={{ X }}
   when: print_debug == true
 
 
-- name: Delete the Namespace
+#- name: Delete the Namespace
+#  shell: |
+#    kubectl delete -f kubernetes/ns.yaml
+#  register: X
+#  ignore_errors: true
+#  args:
+#    chdir: "/root/kubevirt-manager"
+#- debug: msg={{ X }}
+#  when: print_debug == true
+
+
+- name: Delete Namespace for KubeVirt Manager
   shell: |
-    kubectl delete -f kubernetes/ns.yaml
-  register: X
-  args:
-    chdir: "/root/kubevirt-manager"
-- debug: msg={{ X }}
-  when: print_debug == true
+    kubectl delete ns kubevirt-manager --grace-period=0 --force &
+    sleep 10
+  register: delete_kubevirt_manager_namespace
+  ignore_errors: yes
+- debug: msg={{ delete_kubevirt_manager_namespace }}
+
+
+#- name: Force Delete Namespace for KubeVirt Manager
+#  shell: |
+#    kubectl get namespace "kubevirt-manager" -o json   | tr -d "\n" | sed "s/\"finalizers\": \[[^]]\+\]/\"finalizers\": []/" | \
+#    kubectl replace --raw /api/v1/namespaces/kubevirt-manager/finalize -f -
+#  register: force_delete_kubevirt_manager_namespace
+#  ignore_errors: yes
+#- debug: msg={{ force_delete_kubevirt_manager_namespace }}
 
 
 - name: Remove KubeVirt Manager Git Source Directory
   shell: |
     rm -rf /root/kubevirt-manager
   register: remove_kubevirt_source
+  ignore_errors: true
 - debug: msg={{ remove_kubevirt_source }}
   when: print_debug == true
 

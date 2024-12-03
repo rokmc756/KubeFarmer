@@ -1,0 +1,62 @@
+
+# VERSION="$(curl --silent https://storage.googleapis.com/kubevirt-prow/release/kubevirt/kubevirt/stable.txt)"
+- name: Get KubeVirt Version
+  shell: |
+    curl --silent https://storage.googleapis.com/kubevirt-prow/release/kubevirt/kubevirt/stable.txt
+  register: kubevirt_version
+  ignore_errors: true
+- debug: msg={{ kubevirt_version }}
+  when: print_debug == true
+
+
+- name: Delete KubeVirt CLI
+  shell: |
+    rm -f /usr/local/bin/virtctl
+  register: delete_kubevirt_cli
+  ignore_errors: true
+  args:
+    chdir: "/root"
+- debug: msg={{ delete_kubevirt_cli }}
+  when: print_debug == true
+
+
+- name: Delete KubeVirt CRDs
+  shell: |
+    kubectl delete -f https://github.com/kubevirt/kubevirt/releases/download/{{ kubevirt_version.stdout }}/kubevirt-cr.yaml
+  register: delete_kubevirt_crds
+  ignore_errors: true
+- debug: msg={{ delete_kubevirt_crds }}
+  when: print_debug == true
+
+
+- name: Check if KubeVirt CRDs Pod are Deleted Normally
+  shell: kubectl get all -n kubevirt | grep pod/virt-{{ item }} | awk '{print $3}' | sort | uniq
+  register: delete_kubevirt_crds
+  ignore_errors: true
+  until: delete_kubevirt_crds.stdout.find("") != -1
+  retries: 50
+  with_items:
+    - "handler"
+    - "controller"
+    - "api"
+- debug: msg={{ delete_kubevirt_crds }}
+
+- name: Delete KubeVirt Operator
+  shell: |
+    kubectl delete -f https://github.com/kubevirt/kubevirt/releases/download/{{ kubevirt_version.stdout }}/kubevirt-operator.yaml
+  register: delete_kubevirt_operator
+  ignore_errors: true
+- debug: msg={{ delete_kubevirt_operator }}
+  when: print_debug == true
+
+
+- name: Check if KubeVirt Operaotr Pod are Deleted Normally
+  shell: kubectl get all -n kubevirt | grep pod/virt-{{ item }} | awk '{print $3}' | sort | uniq
+  register: delete_kubevirt_operator
+  ignore_errors: yes
+  until: delete_kubevirt_operator.stdout.find("") != -1
+  retries: 50
+  with_items:
+    - "operator"
+- debug: msg={{ delete_kubevirt_operator }}
+
