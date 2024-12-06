@@ -1,12 +1,3 @@
-#- name: Check Rook Pods
-#  shell: kubectl get all -n cattle-system
-#  register: check_rook_pods
-#  ignore_errors: yes
-#  until: check_rook_pods.stdout.find("pending") == -1
-#  retries: 10
-#- debug: msg={{ check_rook_pods }}
-
-
 #- name: Uninstall NGINX Ingress
 #  shell: |
 #    /usr/local/bin/helm uninstall nginx-ingress --namespace=nginx-ingress
@@ -94,13 +85,4 @@
     - "{{ base_path }}/metallb-config-vmware.yaml"
     - "{{ base_path }}/kubernetes-ingress"
 - debug: msg={{ remove_config_yaml_and_kube_ingress_dir }}
-
-
-
-# [ Check Rook and NGINX Ingress ]
-# kubectl get events --all-namespaces  --sort-by='.metadata.creationTimestamp'
-# kubectl -n cattle-system describe pods
-# kubectl -n cattle-system get all
-# kubectl -n cattle-system get pods
-# kubectl -n cattle-system logs <pod-name>
 

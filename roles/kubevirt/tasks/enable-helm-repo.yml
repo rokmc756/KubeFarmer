@@ -24,13 +24,6 @@
 - debug: msg={{ add_nginx_helm_repo }}
 
 
-- name: Add Rook Helm Repo
-  shell: |
-    /usr/local/bin/helm repo add rook-release https://charts.rook.io/release
-  register: add_rook_helm_repo
-- debug: msg={{ add_rook_helm_repo }}
-
-
 - name: Add Jetstack Helm Repo
   shell: |
     /usr/local/bin/helm repo add jetstack https://charts.jetstack.io

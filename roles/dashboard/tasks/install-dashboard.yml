@@ -4,21 +4,6 @@
     bearer_token:
 
 
-#- name: Install Helm
-#  become: true
-#  become_user: root
-#  shell: |
-#    cd /root
-#    curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
-#    chmod 700 get_helm.sh
-#    ./get_helm.sh
-#  async: 120
-#  poll: 5
-#  register: helm_installed
-#  ignore_errors: yes
-#- debug: msg={{ helm_installed }}
-
-
 - name: Deploy Kubernetes the Dashboard UI
   become: true
   shell: |
@@ -63,18 +48,6 @@
 - debug: msg={{ bearer_token_gotten }}
 
 
-#- name: Set fact for token ca certificate
-#  set_fact:
-#    token_ca_cert: "{{ (kubeadm_init.stdout_lines | select('search', 'discovery-token-ca-cert-hash') | list | string | split(' '))[1] }}"
-#  delegate_to: "{{ item }}"
-#  delegate_facts: True
-#  with_items: "{{ groups['all'] }}"
-#  when: inventory_hostname in groups['master']
-
-#- debug:
-#  msg: "{{ token_ca_cert }}"
-
-
 #  become_user: root
 #- name: Create hostfile file for multiple nodes
 #  become_user: moonja    # it was pivotal previously
@@ -96,7 +69,6 @@
 #
 #
 #- debug: var=kube_proxy_run
-#
 #
 #
 #- name: Pause for 1 minutes to wait for compleiting to start kube proxy

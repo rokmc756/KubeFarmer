@@ -49,7 +49,6 @@
   when: metallb.install == true and inventory_hostname in groups['master']
 
 
-
 - name: Uninstall Load Balancer
   import_tasks: uninstall-lb.yml
   tags: uninstall

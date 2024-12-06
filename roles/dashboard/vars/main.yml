@@ -11,12 +11,12 @@ base_path: /root
 dashboard:
   install: true
   major_version: 2
-  minor_version: 6
-  patch_version: 1
+  minor_version: 7
+  patch_version: 0
   build_version:
   clone_git: true
   nvme: true
-  lb_ip_addr: "192.168.1.217"
+  lb_ip_addr: "192.168.1.212"
   k8s:
     major_version: 1
     minor_version: 30
@@ -39,7 +39,7 @@ dashboard:
 
 
 metallb:
-  install: false
+  install: true
   major_version: 0
   minor_version: 14
   patch_version: 8
@@ -78,7 +78,7 @@ helm:
 
 
 cert_manager:
-  install: false
+  install: true
   major_version: 1
   minor_version: 7
   patch_version: 1

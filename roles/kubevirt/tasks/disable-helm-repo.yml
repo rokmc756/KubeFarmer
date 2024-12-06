@@ -16,14 +16,6 @@
 - debug: msg={{ remove_jetstack_helm_repo }}
 
 
-- name: Remove Rook Helm Repo
-  shell: |
-    /usr/local/bin/helm repo remove rook-release
-  register: remove_rook_helm_repo
-  ignore_errors: yes
-- debug: msg={{ remove_rook_helm_repo }}
-
-
 - name: Remove Metallb Helm Repo
   shell: |
     /usr/local/bin/helm repo remove metallb

@@ -15,26 +15,25 @@ spec:
       port: 8080
       targetPort: 8080
   type: LoadBalancer
-  loadBalancerIP: 192.168.1.218
-
-#---
-#apiVersion: networking.k8s.io/v1
-#kind: Ingress
-#metadata:
-#  name: minio-ingress
-#  namespace: kubeflow
-#  annotations:
-#    nginx.ingress.kubernetes.io/ssl-redirect: "false"
-#spec:
-#  rules:
-#    - host: minio.jtest.suse.com
-#      http:
-#        paths:
-#          - path: /
-#            pathType: Prefix
-#            backend:
-#              service:
-#                name: minio-service
-#                port:
-#                  name: http
+  loadBalancerIP: {{ kubevirt.lb_ip_addr }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: kubevirt-ingress
+  namespace: kubevirt-manager
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+spec:
+  rules:
+    - host: {{ kubevirt.ingress.hostname }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: kubevirt-manager
+                port:
+                  name: http
 

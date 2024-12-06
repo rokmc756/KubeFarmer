@@ -8,7 +8,7 @@ kubevirt:
   build_version:
   clone_git: true
   nvme: true
-  lb_ip_addr: "192.168.1.218"
+  lb_ip_addr: "192.168.1.217"
   k8s:
     major_version: 1
     minor_version: 30
@@ -23,7 +23,7 @@ kubevirt:
     metadata:
       name: kubevirt-ingress
       namespace: nginx-ingress
-    hostname: "rook.jtest.pivotal.io"
+    hostname: "kubevirt.jtest.pivotal.io"
   kernel_parameters:
     - "net.ipv4.neigh.default.gc_thresh1 = 0"       # For ARP Cache
   manager:
