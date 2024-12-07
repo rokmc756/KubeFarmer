@@ -1,8 +1,4 @@
 ---
-# major_version: 2
-# minor_version: 6
-# patch_version: 1
-# helm_version: 3
 # external_dashboard_port: 10443
 # internal_dashboard_port: 443
 
@@ -35,6 +31,8 @@ dashboard:
   kernel_parameters:
     - "net.ipv4.neigh.default.gc_thresh1 = 0"       # For ARP Cache
   manager:
+    install: true
+  lb:
     install: true
 
 

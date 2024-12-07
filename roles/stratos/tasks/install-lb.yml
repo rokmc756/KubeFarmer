@@ -17,9 +17,9 @@
 
 - name: Validate if Stratos Container is Running
   shell: |
-    kubectl -n stratos get pod | grep stratos-db | awk '{print $3}' | cut -d : -f 1
+    kubectl -n {{ stratos.namespace }} get svc | grep stratos-console-ui-ext | awk '{print $4}'
   register: check_stratos_container
-  until: check_stratos_container.stdout.find("Running") != -1
+  until: check_stratos_container.stdout == "{{ stratos.lb_ip_addr }}"
   retries: 100
   delay: 10
 - debug: msg={{ check_stratos_container }}
@@ -33,4 +33,5 @@
   args:
     chdir: "{{ base_path }}/"
 - debug: msg={{ print_lb_ipaddr }}
+
 

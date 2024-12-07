@@ -32,10 +32,10 @@
   when: metallb.install == true and inventory_hostname in groups['master']
 
 
-#- name: Install Cert Manager
-#  import_tasks: install-cert-manager.yml
-#  tags: install
-#  when: cert_manager.install == true and inventory_hostname in groups['master']
+- name: Install Cert Manager
+  import_tasks: install-cert-manager.yml
+  tags: install
+  when: cert_manager.install == true and inventory_hostname in groups['master']
 
 
 - name: Install Kustomize
@@ -53,13 +53,13 @@
 - name: Install Load Balancer
   import_tasks: install-lb.yml
   tags: install
-  when: metallb.install == true and inventory_hostname in groups['master']
+  when: stratos.lb.install == true and inventory_hostname in groups['master']
 
 
 - name: Uninstall Load Balancer
   import_tasks: uninstall-lb.yml
   tags: uninstall
-  when: metallb.install == true and inventory_hostname in groups['master']
+  when: stratos.lb.install == true and inventory_hostname in groups['master']
 
 
 - name: Destroy Stratos
@@ -68,10 +68,10 @@
   when: stratos.install == true and inventory_hostname in groups['master']
 
 
-#- name: Uninstall Cert Manager
-#  import_tasks: uninstall-cert-manager.yml
-#  tags: uninstall
-#  when: cert_manager.install == true and inventory_hostname in groups['master']
+- name: Uninstall Cert Manager
+  import_tasks: uninstall-cert-manager.yml
+  tags: uninstall
+  when: cert_manager.install == true and inventory_hostname in groups['master']
 
 
 - name: Uninstall Metallb

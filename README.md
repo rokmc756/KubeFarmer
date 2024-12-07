@@ -368,4 +368,5 @@ The push refers to repository [harbor.jtest.suse.com/library/ubuntu]
 - Rook      : 192.168.1.219:8443
 - Harbor    : 192.168.1.218
 - Dashboard : 192.168.1.212
+- Stratos   : 192.168.1.221
 

@@ -21,7 +21,7 @@ stratos:
   clone_git: true
   nvme: true
   namespace: stratos-console
-  lb_ip_addr: 192.168.1.219
+  lb_ip_addr: 192.168.1.221
   storage_path: "/mnt/stratos-storage"
   repo_name: stratos
   download_link: "https://cloudfoundry.github.io/stratos"
@@ -30,7 +30,7 @@ stratos:
     minor_version: 28
     patch_version: 0
     build_version:
-  hostname: "stratos.jtest.suse.com"
+  hostname: "stratos.jtest.pivotal.io"
   service:
     metadata:
       name: stratos-loadbalancer
@@ -39,11 +39,13 @@ stratos:
     metadata:
       name: stratos-ingress
       namespace: stratos-console
-    hostname: "stratos.jtest.suse.com"
+    hostname: "stratos.jtest.pivotal.io"
   kernel_parameters:
     - "net.ipv4.neigh.default.gc_thresh1 = 0"   # For ARP Cache
     - "fs.inotify.max_user_instances=2280"
     - "fs.inotify.max_user_watches=755360"
+  lb:
+    install: true
 
 
 #stratos_ui:
@@ -94,6 +96,13 @@ helm:
   minor_version:
   patch_version:
   build_version:
+
+
+cert_manager:
+  install: false
+  major_version: 1
+  minor_version: 7
+  patch_version: 1
 
 
 nginx:

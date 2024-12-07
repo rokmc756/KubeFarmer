@@ -12,24 +12,25 @@ spec:
       port: 443
       targetPort: 443
   type: LoadBalancer
-#---
-#apiVersion: networking.k8s.io/v1
-#kind: Ingress
-#metadata:
-#  name: {{ stratos.ingress.metadata.name }}
-#  namespace: {{ stratos.ingress.metadata.namespace }}
-#  annotations:
-#    nginx.ingress.kubernetes.io/ssl-redirect: "true"
-#spec:
-#  rules:
-#    - host: {{ stratos.ingress.hostname }}
-#      http:
-#        paths:
-#          - path: /
-#            pathType: Prefix
-#            backend:
-#              service:
-#                name: stratos-portal
-#                port:
-#                  name: http
+  loadBalancerIP: {{ stratos.lb_ip_addr }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ stratos.ingress.metadata.name }}
+  namespace: {{ stratos.ingress.metadata.namespace }}
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  rules:
+    - host: {{ stratos.ingress.hostname }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: stratos-portal
+                port:
+                  name: http
 

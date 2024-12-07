@@ -1,5 +1,4 @@
 # https://oopflow.medium.com/setup-install-rancher-onto-existing-kubernetes-cluster-for-high-availability-7351f0284592
-
 - name: Remove NGINX Helm Repo
   shell: |
     /usr/local/bin/helm repo remove nginx-stable

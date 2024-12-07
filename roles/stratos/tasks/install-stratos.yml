@@ -1,5 +1,4 @@
 # https://stratos.app/docs/4.0.0/deploy/kubernetes/helm-installation/
-#
 - name: Create Directory for Persistent Volumes
   file:
     path: "{{ stratos.storage_path }}"
@@ -47,7 +46,7 @@
     - "local-storage-class.yaml"
     - "local-storage-pv.yaml"
   args:
-    chdir: "{{ base_path }}/"
+    chdir: "{{ base_path }}"
 - debug: msg={{ create_pvc }}
   when: print_debug == true
   # - "local-storage-pvc.yaml"
@@ -58,18 +57,19 @@
     /usr/local/bin/helm install stratos-console stratos/console -n {{ stratos.namespace }} -f stratos-values.yaml
   register: deploy_stratos
   args:
-    chdir: "{{ base_path }}/"
+    chdir: "{{ base_path }}"
 - debug: msg={{ deploy_stratos }}
   when: print_debug == true
 
 
 - name: Validate if Stratos Controller Containers are Running
   shell: |
-    kubectl get pods -n {{ stratos.namespace }} |  grep stratos-db | awk '{print $3}' | sort | uniq
+    kubectl -n {{ stratos.namespace }} get pods | grep stratos-db | awk '{print $3}' | sort | uniq
   register: check_stratos_controller_container
-  until: check_stratos_controller_container.stdout.find("Running") != -1
-  retries: 100
+  until: check_stratos_controller_container.stdout == "Running"
+  retries: 50
   delay: 10
 - debug: msg={{ check_stratos_controller_container }}
   when: print_debug == true
+
 
