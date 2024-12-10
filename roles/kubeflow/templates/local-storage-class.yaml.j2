@@ -2,10 +2,10 @@
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
-  name: {{ kubeflow.namespace }}-storage
+  name: kubeflow-storage
   namespace: {{ kubeflow.namespace }}
 provisioner: kubernetes.io/no-provisioner
-volumeBindingMode: WaitForFirstConsumer
+allowVolumeExpansion: true
 ---
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
@@ -14,4 +14,7 @@ metadata:
   namespace: istio-system
 provisioner: kubernetes.io/no-provisioner
 volumeBindingMode: WaitForFirstConsumer
+
+# allowVolumeExpansion: true
+# reclaimPolicy: Retain
 

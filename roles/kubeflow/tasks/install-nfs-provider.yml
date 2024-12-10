@@ -55,7 +55,6 @@
   when: print_debug == true
 
 
-
 #- name: Enable ROOK Discovery Daemon
 #  lineinfile:
 #    dest: "{{ base_path }}/rook/deploy/examples/operator.yaml"

@@ -1,8 +1,12 @@
 kubeflow:
 	@if [ "${r}" = "install" ]; then\
 		ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-kubeflow.yml --tags='install';\
+	elif [ "${r}" = "deploy" ]; then\
+		ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-kubeflow.yml --tags='deploy';\
 	elif [ "${r}" = "uninstall" ]; then\
 		ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-kubeflow.yml --tags='uninstall';\
+	elif [ "${r}" = "destroy" ]; then\
+		ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-kubeflow.yml --tags='destroy';\
 	else\
 		echo "No Actions for KubeFlow";\
 		exit;\

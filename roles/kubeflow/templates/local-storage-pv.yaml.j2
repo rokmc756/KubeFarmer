@@ -7,12 +7,15 @@ metadata:
   namespace: {{ kubeflow.namespace }}
 spec:
   capacity:
-    storage: 10Gi
-  volumeMode: Filesystem
+    storage: 20Gi
+  # volumeMode: Filesystem
   accessModes:
   - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Delete
-  storageClassName: local-storage
+  persistentVolumeReclaimPolicy: Retain
+  # persistentVolumeReclaimPolicy: Recycle
+  # persistentVolumeReclaimPolicy: Delete
+  # storageClassName: local-storage
+  storageClassName: kubeflow-storage
   local:
     path: /mnt/katib-storage
   nodeAffinity:
@@ -33,12 +36,15 @@ metadata:
   namespace: istio-system
 spec:
   capacity:
-    storage: 10Gi
-  volumeMode: Filesystem
+    storage: 20Gi
+  # volumeMode: Filesystem
   accessModes:
   - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Delete
-  storageClassName: authservice-storage
+  persistentVolumeReclaimPolicy: Retain
+  # persistentVolumeReclaimPolicy: Recycle
+  # persistentVolumeReclaimPolicy: Delete
+  # storageClassName: authservice-storage
+  storageClassName: kubeflow-storage
   local:
     path: /mnt/authservice-storage
   nodeAffinity:

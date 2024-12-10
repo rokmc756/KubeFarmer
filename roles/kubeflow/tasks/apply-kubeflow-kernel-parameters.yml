@@ -1,4 +1,15 @@
 # https://github.com/kubeflow/pipelines/issues/6121
+- name: Load Kernel Modules for KubeFlow
+  shell: |
+    modprobe {{ item }}
+  with_items:
+    - nf_nat
+    - xt_REDIRECT
+    - xt_owner
+    - iptable_nat
+    - iptable_mangle
+    - iptable_filter
+
 
 - name: Create Directory for Persistent Volumes
   file:

@@ -17,7 +17,7 @@
         - "rk9-node04"
         - "rk9-node05"
         - "rk9-node06"
+        - "rk9-node07"
         - "harbor"
         - "VMware vCenter Server"
-        # - "rk9-node07"
 

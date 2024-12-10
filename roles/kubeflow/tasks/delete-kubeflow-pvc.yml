@@ -1,0 +1,40 @@
+---
+- name: Copy Cluster Local PVC Config Yaml
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ base_path }}/{{ item }}"
+  register: copy_cluster_local_pvc_config_yaml
+  ignore_errors: yes
+  with_items:
+    - "local-storage-class.yaml"
+    - "local-storage-pv.yaml"
+    - "local-storage-pvc.yaml"
+- debug: msg={{ copy_cluster_local_pvc_config_yaml }}
+
+
+- name: Delete KubeFlow PVC
+  shell: |
+    kubectl delete -f {{ item }}
+  register: delete_pvc
+  ignore_errors: true
+  with_items:
+    - "local-storage-pvc.yaml"
+    - "local-storage-pv.yaml"
+    - "local-storage-class.yaml"
+  args:
+    chdir: "{{ base_path }}/"
+- debug: msg={{ delete_pvc }}
+  when: print_debug == true
+
+
+#- name: Delete Namespace for Persistent Volumes
+#  shell: |
+#    kubectl delete namespace {{ item }}
+#  register: delete_namespace
+#  ignore_errors: true
+#  with_items:
+#    - istio-system
+#    - kubeflow
+#- debug: msg={{ delete_namespace }}
+#  when: print_debug == true
+

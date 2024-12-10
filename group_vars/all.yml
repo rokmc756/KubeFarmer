@@ -8,7 +8,7 @@ k8s:
   cluster_name: jack-kr-k8s
   domain: "jtest.pivotal.io"
   major_version: "1"
-  minor_version: "30"
+  minor_version: "29"
   patch_version: "0"
   build_version: ""
   repo_url: ""
