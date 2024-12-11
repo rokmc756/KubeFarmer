@@ -1,16 +1,12 @@
+---
 - name: Delete KubeFlow Load Balancer
   shell: |
     kubectl delete -f "{{ base_path }}/{{ item }}"
-  register: create_kubeflow_lb
+  register: delete_kubeflow_lb
   ignore_errors: true
   with_items:
-    - "ml-pipeline-ui-loadbalancer.yaml"
-    - "katib-ui-loadbalancer.yaml"
-    - "minio-loadbalancer.yaml"
-    - "kubeflow-loadbalancer.yaml"
-    - "auth-policy.yaml"
-    - "kubeflow-certs.yaml"
-- debug: msg={{ create_kubeflow_lb }}
+    - "istio-ingressgateway-loadbalancer.yaml"
+- debug: msg={{ delete_kubeflow_lb }}
 
 
 - name: Check KubeFlow Pods
@@ -29,30 +25,15 @@
   register: delete_kubeflow_lb_config_yaml
   ignore_errors: true
   with_items:
-    - "patch-ingress.yaml"
     - "auth-policy.yaml"
     - "kubeflow-certs.yaml"
     - "kubeflow-loadbalancer.yaml"
     - "minio-loadbalancer.yaml"
     - "katib-ui-loadbalancer.yaml"
     - "ml-pipeline-ui-loadbalancer.yaml"
+    - "centraldashboard-loadbalancer.yaml"
+    - "tensorboards-web-app-loadbalancer.yaml"
+    - "istio-ingressgateway-loadbalancer.yaml"
+    - "patch-ingress.yaml"
 - debug: msg={{ delete_kubeflow_lb_config_yaml }}
-
-
-#- name: Check KubeFlow Pods
-#  shell: kubectl get all -n {{ kubeflow.namespace }}
-#  register: check_kubeflow_pods
-#  until: check_kubeflow_pods.stdout.find("pending") == -1
-#  retries: 30
-#- debug: msg={{ check_kubeflow_pods }}
-
-
-#- name: Check if the status of ContainerCreating is Still Creating
-#  shell: kubectl get pods -n {{ kubeflow.namespace }}
-#  register: check_container_creating
-#  until: check_container_creating.stdout.find("ContainerCreating") == -1
-#  retries: 30
-#  delay: 10
-#- debug: msg={{ check_container_creating }}
-
 

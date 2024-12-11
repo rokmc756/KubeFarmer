@@ -1,11 +1,10 @@
-#
+---
 - name: Copy KubeFlow Loadbalancer Config Yaml
   template:
     src: "{{ item }}.j2"
     dest: "{{ base_path }}/{{ item }}"
   register: copy_kubeflow_lb_config_yaml
   with_items:
-    - "patch-ingress.yaml"
     - "auth-policy.yaml"
     - "kubeflow-certs.yaml"
     - "kubeflow-loadbalancer.yaml"
@@ -14,14 +13,17 @@
     - "ml-pipeline-ui-loadbalancer.yaml"
     - "centraldashboard-loadbalancer.yaml"
     - "tensorboards-web-app-loadbalancer.yaml"
+    - "istio-ingressgateway-loadbalancer.yaml"
+    - "patch-ingress.yaml"
 - debug: msg={{ copy_kubeflow_lb_config_yaml }}
 
+
 # --type=strategic
-- name: Apply Ingress Patch for SSL Connection
-  shell: |
-    kubectl -n kubeflow patch --type=merge gateways.networking.istio.io kubeflow-gateway --patch-file {{ base_path }}/patch-ingress.yaml
-  register: apply_ingress_patch
-- debug: msg={{ apply_ingress_patch }}
+#- name: Apply Ingress Patch for SSL Connection
+#  shell: |
+#    kubectl -n kubeflow patch --type=merge gateways.networking.istio.io kubeflow-gateway --patch-file {{ base_path }}/patch-ingress.yaml
+#  register: apply_ingress_patch
+#- debug: msg={{ apply_ingress_patch }}
 
 
 - name: Create KubeFlow Load Balancer
@@ -29,14 +31,7 @@
     kubectl apply -f "{{ base_path }}/{{ item }}"
   register: create_rancher_lb
   with_items:
-    - "kubeflow-certs.yaml"
-    - "auth-policy.yaml"
-    - "kubeflow-loadbalancer.yaml"
-    - "minio-loadbalancer.yaml"
-    - "katib-ui-loadbalancer.yaml"
-    - "ml-pipeline-ui-loadbalancer.yaml"
-    - "centraldashboard-loadbalancer.yaml"
-    - "tensorboards-web-app-loadbalancer.yaml"
+    - "istio-ingressgateway-loadbalancer.yaml"
 - debug: msg={{ create_rancher_lb }}
 
 

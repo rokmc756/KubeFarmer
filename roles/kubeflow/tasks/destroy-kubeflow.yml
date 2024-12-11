@@ -1,4 +1,40 @@
 ---
+- name: Get ISTIO Version
+  shell: |
+    find {{ base_path }}/manifests -name "istio-[0-9]*" | cut -d / -f 5
+  register: get_istio_version
+  args:
+    chdir: "{{ base_path }}/manifests"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ get_istio_version }}
+  when: print_debug == true
+
+
+- name: Get Cert Manager Directory
+  shell: |
+    find {{ base_path }}/manifests/common/cert-manager -name "base" | grep "cert-manager/base" | sed 's/\/root\/manifests\///g'
+  register: get_cert_manager_dir
+  args:
+    chdir: "{{ base_path }}/manifests"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ get_cert_manager_dir }}
+  when: print_debug == true
+
+
+- name: Get KubeFlow Issuer Directory
+  shell: |
+    find {{ base_path }}/manifests/common/cert-manager -name "base" | grep "kubeflow-issuer/base" | sed 's/\/root\/manifests\///g'
+  register: get_kubeflow_issuer_dir
+  args:
+    chdir: "{{ base_path }}/manifests"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ get_kubeflow_issuer_dir }}
+  when: print_debug == true
+
+
 - name: Destory Kubeflow
   shell: |
     kustomize build {{ item }} | kubectl delete -f -
@@ -25,18 +61,18 @@
     - "apps/centraldashboard/overlays/oauth2-proxy"                            # 19
     - "apps/katib/upstream/installs/katib-with-kubeflow"                       # 18
     - "contrib/kserve/models-web-app/overlays/kubeflow"                        # 17
-    - "common/istio-1-22/kubeflow-istio-resources/base"                        # 14
+    - "common/{{ get_istio_version.stdout }}/kubeflow-istio-resources/base"    # 14
     - "common/kubeflow-roles/base"                                             # 13
     - "common/networkpolicies/base"                                            # 12
     - "common/kubeflow-namespace/base"                                         # 11
     - "common/knative/knative-eventing/base"                                   # 10 After Failure
     - "common/dex/overlays/oauth2-proxy"                                       # 7
     - "common/oauth2-proxy/overlays/m2m-dex-only"                              # 6
-    - "common/istio-1-22/istio-install/base"                                   # 5
-    - "common/istio-1-22/istio-namespace/base"                                 # 4
-    - "common/istio-1-22/istio-crds/base"                                      # 3
-    - "common/cert-manager/kubeflow-issuer/base"                               # 2
-    - "common/cert-manager/cert-manager/base"                                               # 1
+    - "common/{{ get_istio_version.stdout }}/istio-install/base"               # 5
+    - "common/{{ get_istio_version.stdout }}/istio-namespace/base"             # 4
+    - "common/{{ get_istio_version.stdout }}/istio-crds/base"                  # 3
+    - "{{ get_kubeflow_issuer_dir.stdout }}"                                   # 2
+    - "{{ get_cert_manager_dir.stdout }}"                                      # 1
 - debug: msg={{ destroy_kubeflow }}
   when: print_debug == true
 
@@ -56,40 +92,21 @@
   with_items:
     - "contrib/kserve/kserve"                                                  # 16
     - "apps/pipeline/upstream/env/cert-manager/platform-agnostic-multi-user"   # 15
-    - "common/istio-1-22/cluster-local-gateway/base"                           # 9
+    - "common/{{ get_istio_version.stdout }}/cluster-local-gateway/base"       # 9
     - "common/knative/knative-serving/overlays/gateways"                       # 8
 - debug: msg={{ destroy_remain_kubeflow }}
   when: print_debug == true
 
 
-- name: Delete KubeFlow PVC
-  import_tasks: delete-kubeflow-pvc.yml
+- name: Check if the status of ContainerCreating is Still Terminating
+  shell: kubectl get pods -A | sed 1d | awk '{print $4}' | sort | uniq
+  register: check_container_terminating
+  until: check_container_terminating.stdout.find("Terminating") == -1
+  retries: 100
+  delay: 10
+- debug: msg={{ check_container_terminating }}
 
 
-#    - "common/user-namespace/base"                                             # 29
-#    - "apps/training-operator/upstream/overlays/kubeflow"                      # 28
-#    - "apps/tensorboard/tensorboard-controller/upstream/overlays/kubeflow"     # 27
-#    - "apps/tensorboard/tensorboards-web-app/upstream/overlays/istio"          # 26
-#    - "apps/volumes-web-app/upstream/overlays/istio"                           # 25
-#    - "apps/profiles/upstream/overlays/kubeflow"                               # 24
-#    - "apps/pvcviewer-controller/upstream/default"                             # 23
-#    - "apps/jupyter/jupyter-web-app/upstream/overlays/istio"                   # 22
-#    - "apps/jupyter/notebook-controller/upstream/overlays/kubeflow"            # 21
-#    - "apps/admission-webhook/upstream/overlays/cert-manager"                  # 20
-#    - "apps/centraldashboard/overlays/oauth2-proxy"                            # 19
-#    - "apps/katib/upstream/installs/katib-with-kubeflow"                       # 18
-#    - "contrib/kserve/models-web-app/overlays/kubeflow"                        # 17
-#    - "common/istio-1-23/kubeflow-istio-resources/base"                        # 14
-#    - "common/kubeflow-roles/base"                                             # 13
-#    - "common/networkpolicies/base"                                            # 12
-#    - "common/kubeflow-namespace/base"                                         # 11
-#    - "common/knative/knative-eventing/base"                                   # 10 After Failure
-#    - "common/dex/overlays/oauth2-proxy"                                       # 7
-#    - "common/oauth2-proxy/overlays/m2m-dex-only"                              # 6
-#    - "common/istio-1-23/istio-install/base"                                   # 5
-#    - "common/istio-1-23/istio-namespace/base"                                 # 4
-#    - "common/istio-1-23/istio-crds/base"                                      # 3
-#    - "common/cert-manager/kubeflow-issuer/base"                               # 2
-#    - "common/cert-manager/base"                                               # 1
-#
+#- name: Remove KubeFlow PVC
+#  import_tasks: remove-kubeflow-pvc.yml
 

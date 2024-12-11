@@ -49,6 +49,12 @@
   when: kubeflow.install == true and inventory_hostname in groups['master']
 
 
+- name: Create KubeFlow Directory
+  import_tasks: create-kubeflow-dirs.yml
+  tags: deploy
+  when: kubeflow.deploy == true
+
+
 - name: Deploy KubeFlow
   import_tasks: deploy-kubeflow.yml
   tags: deploy
@@ -57,13 +63,13 @@
 
 - name: Install Load Balancer
   import_tasks: install-lb.yml
-  tags: install
+  tags: deploy
   when: kubeflow.lb.install == true and inventory_hostname in groups['master']
 
 
 - name: Uninstall Load Balancer
   import_tasks: uninstall-lb.yml
-  tags: uninstall
+  tags: destroy
   when: kubeflow.lb.install == true and inventory_hostname in groups['master']
 
 
@@ -71,6 +77,12 @@
   import_tasks: destroy-kubeflow.yml
   tags: destroy
   when: kubeflow.deploy == true and inventory_hostname in groups['master']
+
+
+- name: Delete KubeFlow Directory
+  import_tasks: remove-kubeflow-dirs.yml
+  tags: destroy
+  when: kubeflow.deploy == true
 
 
 - name: Uninstall KubeFlow

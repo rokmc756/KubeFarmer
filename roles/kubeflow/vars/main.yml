@@ -22,11 +22,12 @@ kubeflow:
   clone_git: true
   nvme: true
   namespace: kubeflow
-  nfs_server: 192.168.1.90
+  nfs_server: "192.168.1.90"
   nfs_root_dir: /nfs-root
+  lb_ip_addr: "192.168.1.223"
   k8s:
     major_version: 1
-    minor_version: 26
+    minor_version: 29
     patch_version: 0
     build_version:
   hostname: "kubeflow.jtest.pivotal.io"
@@ -44,7 +45,7 @@ kubeflow:
     - "fs.inotify.max_user_instances=2280"
     - "fs.inotify.max_user_watches=1255360"
   lb:
-    install: false
+    install: true
 
 
 metallb:
@@ -108,4 +109,9 @@ nginx:
     minor_version:
     patch_version:
     build_version:
+
+
+cont_pv_dirs:
+  - "katib-storage"
+  - "authservice-storage"
 
