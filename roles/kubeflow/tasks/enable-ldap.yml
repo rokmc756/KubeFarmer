@@ -1,0 +1,42 @@
+#3. LDAP 로그인 방법을 추가하는 방법
+## 아래 명령어로 dex-config.yaml 파일을 생성한다
+#kubectl get configmap dex -n auth -o jsonpath='{.data.config\.yaml}' > dex-config.yaml
+#
+## 파일 내용 수정 -> dex-config.yaml 제일 아래에 # LDAP Configuration 부터의 내용을 추가한다.
+## 만약 STARTTLS 미적용 상태라면 startTLS: false로 두고 rootCAData: 줄을 삭제한다.
+## LDAP Configuration
+#connectors:
+#- type: ldap
+#  name: OpenLDAP
+#  id: ldap
+#  config:
+#    host: <Host 주소>
+#    insecureNoSSL: false
+#    insecureSkipVerify: false
+#    startTLS: true
+#    rootCAData: "<CA 증명서 내용 삽입>"
+#    bindDN: <Bind DN 정보>
+#    bindPW: <Bind DN 비밀번호>
+#    usernamePrompt: LDAP Username
+#    userSearch:
+#      baseDN: <Base DN 정보>
+#      filter: "(objectClass=posixAccount)"
+#      username: uid
+#      idAttr: uid
+#      emailAttr: mail
+#      nameAttr: cn
+#    groupSearch:
+#      baseDN: <Group Base DN 정보>
+#      filter: "(objectClass=posixGroup)"
+#      nameAttr: cn
+#      
+## 파일 저장 후 아래 명령어를 통하여 변경 사항을 적용한다.
+#kubectl create configmap dex --from-file=config.yaml=dex-config.yaml -n auth --dry-run -oyaml | kubectl apply -f -
+#kubectl rollout restart deployment dex -n auth
+#Copy
+#5. LDAP 등 로그인 방식 추가 후 계정의 자체 NameSpace를 생성할 수 없는 문제 해결 방법
+#nano apps/centraldashboard/upstream/base/params.env
+#
+## registration flow true
+#
+#kustomize build apps/centraldashboard/upstream/overlays/istio | kubectl apply -f -

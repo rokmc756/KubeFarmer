@@ -1,0 +1,60 @@
+---
+- name: Check Nginx Ingress Pods
+  shell: kubectl get pods -n nginx-ingress
+  register: check_nginx_ingress_pods
+  until: check_nginx_ingress_pods.stdout.find("Terminating") == -1
+  retries: 30
+  delay: 10
+- debug: msg={{ check_nginx_ingress_pods }}
+
+
+- name: Get the list of Metallb Kubernetesa ClusterRoleBindings
+  shell: |
+    kubectl get clusterrolebindings | grep metallb | awk '{print $1}'
+  register: get_metallb_clusterrolebindings
+  ignore_errors: yes
+- debug: msg={{ get_metallb_clusterrolebindings }}
+
+
+- name: Delete each Metallb Kubernetes ClusterRoleBindings
+  shell: |
+    kubectl delete clusterrolebinding {{ item }}
+  register: delete_metallb_clusterrolebindings
+  ignore_errors: yes
+  with_items: "{{ get_metallb_clusterrolebindings.stdout_lines }}"
+- debug: msg={{ delete_metallb_clusterrolebindings }}
+
+
+- name: Get the list of Metallb Kubernetesa ClusterRole
+  shell: |
+    kubectl get clusterrole | grep metallb | awk '{print $1}'
+  register: get_metallb_clusterrole
+  ignore_errors: yes
+- debug: msg={{ get_metallb_clusterrole }}
+
+
+- name: Delete each Metallb Kubernetes ClusterRole
+  shell: |
+    kubectl delete clusterrole {{ item }}
+  register: delete_metallb_clusterrolebindings
+  ignore_errors: yes
+  with_items: "{{ get_metallb_clusterrole.stdout_lines }}"
+- debug: msg={{ delete_metallb_clusterrolebindings }}
+
+
+- name: Get the list of Metallb Kubernetes ValidatingWebHookConfiguration
+  shell: |
+    kubectl get validatingwebhookconfiguration | sed 1d | awk '{print $1}'
+  register: get_metallb_validate_webhook_config
+  ignore_errors: yes
+- debug: msg={{ get_metallb_validate_webhook_config }}
+
+
+- name: Delete each Metallb Kubernetes ValidatingWebHookConfiguration
+  shell: |
+    kubectl delete validatingwebhookconfiguration {{ item }}
+  register: delete_metallb_validate_webhook_config
+  ignore_errors: yes
+  with_items: "{{ get_metallb_validate_webhook_config.stdout_lines }}"
+- debug: msg={{ delete_metallb_validate_webhook_config }}
+

@@ -1,5 +1,4 @@
 ---
-# Install Kubernetes Dashboard
 - name: Check OS ( Kubernetes Dashboard )
   fail: msg="Not a Red Hat based system!"
   when: ansible_os_family != 'RedHat' or ansible_os_family != 'CentOS' or ansible_os_family != 'Rocky'
@@ -25,16 +24,16 @@
   when: dashboard.install == true and inventory_hostname in groups['master']
 
 
-- name: Install Metallb
-  import_tasks: install-metallb.yml
-  tags: install
-  when: metallb.install == true and inventory_hostname in groups['master']
+#- name: Install Metallb
+#  import_tasks: install-metallb.yml
+#  tags: install
+#  when: metallb.install == true and inventory_hostname in groups['master']
 
 
-- name: Install Ingress
-  import_tasks: install-ingress.yml
-  tags: install
-  when: ingress.install == true and inventory_hostname in groups['master']
+#- name: Install Ingress
+#  import_tasks: install-ingress.yml
+#  tags: install
+#  when: ingress.install == true and inventory_hostname in groups['master']
 
 
 - name: Install Cert Manager
@@ -61,16 +60,16 @@
   when: cert_manager.install == true and inventory_hostname in groups['master']
 
 
-- name: Uninstall Ingress
-  import_tasks: uninstall-ingress.yml
-  tags: uninstall
-  when: ingress.install == true and inventory_hostname in groups['master']
+#- name: Uninstall Ingress
+#  import_tasks: uninstall-ingress.yml
+#  tags: uninstall
+#  when: ingress.install == true and inventory_hostname in groups['master']
 
 
-- name: Uninstall Metallb
-  import_tasks: uninstall-metallb.yml
-  tags: uninstall
-  when: metallb.install == true and inventory_hostname in groups['master']
+#- name: Uninstall Metallb
+#  import_tasks: uninstall-metallb.yml
+#  tags: uninstall
+#  when: metallb.install == true and inventory_hostname in groups['master']
 
 
 - name: Destroy Dashboard

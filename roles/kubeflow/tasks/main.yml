@@ -19,16 +19,16 @@
   when: kubeflow.install == true
 
 
-- name: Enable Helm Repository
-  import_tasks: enable-helm-repo.yml
-  tags: install
-  when: helm.enable_repo == true and inventory_hostname in groups['master']
+#- name: Enable Helm Repository
+#  import_tasks: enable-helm-repo.yml
+#  tags: install
+#  when: helm.enable_repo == true and inventory_hostname in groups['master']
 
 
-- name: Install Metallb
-  import_tasks: install-metallb.yml
-  tags: install
-  when: metallb.install == true and inventory_hostname in groups['master']
+#- name: Install Metallb
+#  import_tasks: install-metallb.yml
+#  tags: install
+#  when: metallb.install == true and inventory_hostname in groups['master']
 
 
 - name: Deploy NFS Provider
@@ -97,14 +97,15 @@
   when: nfs_provider.install == true and inventory_hostname in groups['master']
 
 
-- name: Uninstall Metallb
-  import_tasks: uninstall-metallb.yml
-  tags: uninstall
-  when: metallb.install == true and inventory_hostname in groups['master']
+#- name: Uninstall Metallb
+#  import_tasks: uninstall-metallb.yml
+#  tags: uninstall
+#  when: metallb.install == true and inventory_hostname in groups['master']
 
 
-- name: Disable Helm Repository
-  import_tasks: disable-helm-repo.yml
-  tags: uninstall
-  when: helm.enable_repo == true and inventory_hostname in groups['master']
+#- name: Disable Helm Repository
+#  import_tasks: disable-helm-repo.yml
+#  tags: uninstall
+#  when: helm.enable_repo == true and inventory_hostname in groups['master']
+
 

@@ -101,3 +101,8 @@
   tags: uninstall
   when: helm.enable_repo == true and inventory_hostname in groups['master']
 
+
+
+# https://blog.argoproj.io/using-gitops-to-deploy-kubeflow-with-argo-cd-76f6b27807c
+# https://medium.com/@vinoji2005/day-25-kubernetes-ci-cd-pipelines-a432dfdb6e96
+

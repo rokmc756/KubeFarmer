@@ -1,4 +1,6 @@
 ---
+base_path: /root
+
 dashboard_port: "10443"
 
 cont_pv_dirs:
@@ -182,7 +184,7 @@ workers_ports:
 #
 # References of Calico CNI Requirements
 # https://docs.tigera.io/calico/latest/getting-started/kubernetes/requirements
-#
+
 
 
 metallb:
@@ -214,4 +216,23 @@ metallb:
               name: default
               protocol: layer2
               ips_range: 192.168.1.210-192.168.1.250
+
+
+ingress:
+  install: true
+  major_version: 3
+  minor_version: 0
+  patch_version: 2
+  metadata:
+    name: kubeflow-ingress
+    namespace: cattle-system
+  hostname: "kubeflow.jtest.pivotal.io"
+
+
+helm:
+  enable_repo: true
+  major_version: 3
+  minor_version:
+  patch_version:
+  build_version:
 

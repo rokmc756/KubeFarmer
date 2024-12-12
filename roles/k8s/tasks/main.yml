@@ -65,6 +65,38 @@
   when: add_workers is defined and add_workers == true
 
 
+- name: Enable Helm Repository
+  import_tasks: enable-helm-repo.yml
+  tags: install
+  when: helm.enable_repo == true and inventory_hostname in groups['master']
+
+
+- name: Install Metallb
+  import_tasks: install-metallb.yml
+  when: metallb.install == true and inventory_hostname in groups['master']
+
+
+- name: Install NGINX Ingress
+  import_tasks: install-ingress.yml
+  when: ingress.install == true and inventory_hostname in groups['master']
+
+
+- name: Uninstall NGINX Ingress
+  import_tasks: uninstall-ingress.yml
+  when: ingress.install == true and inventory_hostname in groups['master']
+
+
+- name: Uninstall Metallb
+  import_tasks: uninstall-metallb.yml
+  when: metallb.uninstall == true and inventory_hostname in groups['master']
+
+
+- name: Disable Helm Repository
+  import_tasks: disable-helm-repo.yml
+  tags: uninstall
+  when: helm.enable_repo == true and inventory_hostname in groups['master']
+
+
 - name: Remove Additional Worker Nodes
   import_tasks: remove-workers.yml
   tags:

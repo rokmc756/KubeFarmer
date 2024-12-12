@@ -92,6 +92,7 @@ nfs_provider:
   major_version:
   minor_version:
   patch_version:
+  server_ip_addr: "192.168.1.90"
 
 
 nginx:
