@@ -224,8 +224,8 @@ ingress:
   minor_version: 0
   patch_version: 2
   metadata:
-    name: kubeflow-ingress
-    namespace: cattle-system
+    name: nginx-ingress
+    namespace: nginx-ingress
   hostname: "kubeflow.jtest.pivotal.io"
 
 
