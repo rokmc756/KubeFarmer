@@ -1,14 +1,6 @@
 # PROMETHEUS INTEGRATION
 # , you need to edit kubernetes/prometheus-config.yaml and adjust your endpoint on line 21. After adjusting the endpoint, apply the configmap:
-#- name: Delete KubeVirt Manager With Prometheus
-#  shell: |
-#    kubectl delete -f kubernetes/prometheus-config.yaml
-#  register: delete_prometheus_config
-#  ignore_errors: true
-#  args:
-#    chdir: "/root/kubevirt-manager"
-#- debug: msg={{ delete_prometheus_config }}
-#  when: print_debug == true
+# kubectl delete -f kubernetes/prometheus-config.yaml
 
 
 - name: Delete the FrontEnd Service
@@ -17,7 +9,7 @@
   register: delete_frontend_service
   ignore_errors: true
   args:
-    chdir: "/root/kubevirt-manager"
+    chdir: "{{ base_path }}/kubevirt-manager"
 - debug: msg={{ delete_frontend_service }}
   when: print_debug == true
 
@@ -28,7 +20,7 @@
   register: delete_priority_classes
   ignore_errors: true
   args:
-    chdir: "/root/kubevirt-manager"
+    chdir: "{{ base_path }}/kubevirt-manager"
 - debug: msg={{ delete_priority_classes }}
   when: print_debug == true
 
@@ -39,7 +31,7 @@
   register: delete_frontend_deployment
   ignore_errors: true
   args:
-    chdir: "/root/kubevirt-manager"
+    chdir: "{{ base_path }}/kubevirt-manager"
 - debug: msg={{ delete_frontend_deployment }}
   when: print_debug == true
 
@@ -50,7 +42,7 @@
   register: delete_service_account_rbac
   ignore_errors: true
   args:
-    chdir: "/root/kubevirt-manager"
+    chdir: "{{ base_path }}/kubevirt-manager"
 - debug: msg={{ delete_service_account_rbac }}
   when: print_debug == true
 
@@ -61,7 +53,7 @@
   register: delete_custom_resource_definition
   ignore_errors: true
   args:
-    chdir: "/root/kubevirt-manager"
+    chdir: "{{ base_path }}/kubevirt-manager"
 - debug: msg={{ delete_custom_resource_definition }}
   when: print_debug == true
 
@@ -72,7 +64,7 @@
 #  register: delete_namespace
 #  ignore_errors: true
 #  args:
-#    chdir: "/root/kubevirt-manager"
+#    chdir: "{{ base_path }}/kubevirt-manager"
 #- debug: msg={{ delete_namespace }}
 #  when: print_debug == true
 
@@ -97,7 +89,7 @@
 
 - name: Remove KubeVirt Manager Git Source Directory
   shell: |
-    rm -rf /root/kubevirt-manager
+    rm -rf {{ base_path }}/kubevirt-manager
   register: remove_kubevirt_source
   ignore_errors: true
 - debug: msg={{ remove_kubevirt_source }}

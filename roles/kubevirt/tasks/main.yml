@@ -11,12 +11,6 @@
     - uninstall
 
 
-#- name: Enable Helm Repository
-#  import_tasks: enable-helm-repo.yml
-#  tags: install
-#  when: helm.enable_repo == true and inventory_hostname in groups['master']
-
-
 - name: Deploy KubeVirt
   import_tasks: install-kubevirt.yml
   tags: install
@@ -27,18 +21,6 @@
   import_tasks: install-kubevirt-manager.yml
   tags: install
   when: kubevirt.manager.install == true and inventory_hostname in groups['master']
-
-
-#- name: Install Metallb
-#  import_tasks: install-metallb.yml
-#  tags: install
-#  when: metallb.install == true and inventory_hostname in groups['master']
-
-
-#- name: Install Ingress
-#  import_tasks: install-ingress.yml
-#  tags: install
-#  when: ingress.install == true and inventory_hostname in groups['master']
 
 
 - name: Install Cert Manager
@@ -65,18 +47,6 @@
   when: cert_manager.install == true and inventory_hostname in groups['master']
 
 
-#- name: Uninstall Ingress
-#  import_tasks: uninstall-ingress.yml
-#  tags: uninstall
-#  when: ingress.install == true and inventory_hostname in groups['master']
-
-
-#- name: Uninstall Metallb
-#  import_tasks: uninstall-metallb.yml
-#  tags: uninstall
-#  when: metallb.install == true and inventory_hostname in groups['master']
-
-
 - name: Destroy KubeVirt Manager
   import_tasks: uninstall-kubevirt-manager.yml
   tags: uninstall
@@ -87,12 +57,4 @@
   import_tasks: uninstall-kubevirt.yml
   tags: uninstall
   when: kubevirt.install == true and inventory_hostname in groups['master']
-
-
-#- name: Disable Helm Repository
-#  import_tasks: disable-helm-repo.yml
-#  tags: uninstall
-#  when: helm.enable_repo == true and inventory_hostname in groups['master']
-
-
 

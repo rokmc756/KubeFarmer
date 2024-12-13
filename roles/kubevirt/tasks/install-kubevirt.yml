@@ -65,16 +65,9 @@
   until: check_deploy_kubevirt.stdout.find("Deployed") == -1
   retries: 10
 - debug: msg={{ check_deploy_kubevirt }}
-
-
-#- name: Get KubeVirt Version
 #  shell: kubectl get kubevirt.kubevirt.io/kubevirt -n kubevirt -o=jsonpath="{.status.observedKubeVirtVersion}"
-#  register: kubevirt_version
-#- debug: msg={{ kubevirt_version }}
-#  when: print_debug == true
 
 
-# curl --silent https://storage.googleapis.com/kubevirt-prow/release/kubevirt/kubevirt/stable.txt
 - name: Get KubeVirt Version
   shell: |
     echo $(uname --kernel-name | tr A-Z a-z)-$(uname --machine | sed 's/x86_64/amd64/') || windows-amd64.exe
@@ -90,7 +83,7 @@
   register: get_kubevirt_cli
   ignore_errors: true
   args:
-    chdir: "/root"
+    chdir: "{{ base_path }}"
 - debug: msg={{ get_kubevirt_cli }}
   when: print_debug == true
 
@@ -101,7 +94,7 @@
   register: install_kubevirt_cli
   ignore_errors: true
   args:
-    chdir: "/root"
+    chdir: "{{ base_path }}"
 - debug: msg={{ install_kubevirt_cli }}
   when: print_debug == true
 
@@ -115,9 +108,8 @@
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
   args:
     executable: /bin/bash
-    chdir: "/root"
+    chdir: "{{ base_path }}"
 - debug: msg={{ print_kubevirt_cli_version }}
   when: print_debug == true
-
 # https://kubevirt.io/2023/Managing-KubeVirt-VMs-with-Ansible.html
 

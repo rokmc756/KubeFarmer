@@ -14,7 +14,7 @@
   register: delete_kubevirt_cli
   ignore_errors: true
   args:
-    chdir: "/root"
+    chdir: "{{ base_path }}"
 - debug: msg={{ delete_kubevirt_cli }}
   when: print_debug == true
 
