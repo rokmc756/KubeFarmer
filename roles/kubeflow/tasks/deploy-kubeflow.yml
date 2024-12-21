@@ -72,14 +72,12 @@
     state: "{{ item.state }}"
   register: disable_app_secure_cookie
   with_items:
-    - { regexp: "^JWA_APP_SECURE_COOKIES=",            line: "JWA_APP_SECURE_COOKIES=false",            dest: "apps/jupyter/jupyter-web-app/upstream/base/params.env",            state: present }
-    - { regexp: "^TWA_APP_SECURE_COOKIES=",            line: "TWA_APP_SECURE_COOKIES=false",            dest: "apps/tensorboard/tensorboards-web-app/upstream/base/params.env",   state: present }
-    - { regexp: "^VMA_APP_SECURE_COOKIES=",            line: "VMA_APP_SECURE_COOKIES=false",            dest: "apps/volumes-web-app/upstream/base/params.env",                    state: present }
-    - { regexp: "^            claimName: katib-mysql", line: "            claimName: katib-mysql-pvc",  dest: "apps/katib/upstream/components/mysql/mysql.yaml",                  state: present }
+    - { regexp: "^JWA_APP_SECURE_COOKIES=true",            line: "JWA_APP_SECURE_COOKIES=false",            dest: "apps/jupyter/jupyter-web-app/upstream/base/params.env",            state: present }
+    - { regexp: "^TWA_APP_SECURE_COOKIES=true",            line: "TWA_APP_SECURE_COOKIES=false",            dest: "apps/tensorboard/tensorboards-web-app/upstream/base/params.env",   state: present }
+    - { regexp: "^VWA_APP_SECURE_COOKIES=true",            line: "VWA_APP_SECURE_COOKIES=false",            dest: "apps/volumes-web-app/upstream/base/params.env",                    state: present }
+    - { regexp: "^            claimName: katib-mysql",     line: "            claimName: katib-mysql-pvc",  dest: "apps/katib/upstream/components/mysql/mysql.yaml",                     state: present }
 - debug: msg={{ disable_app_secure_cookie }}
   when: print_debug == true
-
- # ./apps/katib/upstream/components/mysql/mysql.yaml:            claimName: katib-mysql
 
 
 - name: Deploy Kubeflow

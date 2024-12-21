@@ -49,6 +49,7 @@ common_conf_files:
   - "/var/lib/rook"
   - "/root/calico.yaml"
   - "/root/rook"
+  - "/root/manifests"
 
 
 cont_conf_files:
