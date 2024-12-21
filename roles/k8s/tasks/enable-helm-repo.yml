@@ -32,6 +32,13 @@
 - debug: msg={{ add_rook_helm_repo }}
 
 
+- name: Add MLFlow Helm Repo
+  shell: |
+    /usr/local/bin/helm repo add community-charts https://community-charts.github.io/helm-charts
+  register: add_mlflow_helm_repo
+- debug: msg={{ add_mlflow_helm_repo }}
+
+
 - name: Add NGINX Helm Repo
   shell: |
     /usr/local/bin/helm repo add nginx-stable https://helm.nginx.com/stable

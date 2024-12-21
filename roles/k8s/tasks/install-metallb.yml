@@ -61,6 +61,6 @@
     kubectl apply -f "{{ base_path }}"/metallb-config-vmware.yaml
   register: apply_metallb_config
   until: apply_metallb_config is succeeded
-  retries: 20
+  retries: 100
 - debug: msg={{ apply_metallb_config }}
 

@@ -11,6 +11,19 @@
 # find ./apps -name *registry-db-deployment.yaml -exec sed -i -e '/mysql_native_password/d' {} \;
 
 
+- name: Remove MySQL Native Password
+  shell: |
+    find ./apps -name *mysql-deployment.yaml -exec sed '/mysql_native_password/d' {}\;
+    find ./apps -name *registry-db-deployment.yaml -exec sed -i -e '/mysql_native_password/d' {} \;
+  register: remove_mysql_native_password
+  args:
+    chdir: "{{ base_path }}/manifests"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ remove_mysql_native_password }}
+  when: print_debug == true
+
+
 - name: Create KubeFlow PVC
   import_tasks: create-kubeflow-pvc.yml
 
@@ -59,11 +72,14 @@
     state: "{{ item.state }}"
   register: disable_app_secure_cookie
   with_items:
-    - { regexp: "^JWA_APP_SECURE_COOKIES=", line: "JWA_APP_SECURE_COOKIES=false", dest: "apps/jupyter/jupyter-web-app/upstream/base/params.env", state: present }
-    - { regexp: "^TWA_APP_SECURE_COOKIES=", line: "TWA_APP_SECURE_COOKIES=false", dest: "apps/tensorboard/tensorboards-web-app/upstream/base/params.env", state: present }
-    - { regexp: "^VMA_APP_SECURE_COOKIES=", line: "VMA_APP_SECURE_COOKIES=false", dest: "apps/volumes-web-app/upstream/base/params.env", state: present }
+    - { regexp: "^JWA_APP_SECURE_COOKIES=",            line: "JWA_APP_SECURE_COOKIES=false",            dest: "apps/jupyter/jupyter-web-app/upstream/base/params.env",            state: present }
+    - { regexp: "^TWA_APP_SECURE_COOKIES=",            line: "TWA_APP_SECURE_COOKIES=false",            dest: "apps/tensorboard/tensorboards-web-app/upstream/base/params.env",   state: present }
+    - { regexp: "^VMA_APP_SECURE_COOKIES=",            line: "VMA_APP_SECURE_COOKIES=false",            dest: "apps/volumes-web-app/upstream/base/params.env",                    state: present }
+    - { regexp: "^            claimName: katib-mysql", line: "            claimName: katib-mysql-pvc",  dest: "apps/katib/upstream/components/mysql/mysql.yaml",                  state: present }
 - debug: msg={{ disable_app_secure_cookie }}
   when: print_debug == true
+
+ # ./apps/katib/upstream/components/mysql/mysql.yaml:            claimName: katib-mysql
 
 
 - name: Deploy Kubeflow
@@ -112,9 +128,9 @@
 - debug: msg={{ deploy_kubeflow }}
   when: print_debug == true
 
-# - "common/knative/knative-eventing/base | kubectl apply -f -"                                    # 9 Failed
 # line 116: mapping key "observedGeneration" already defined at line 85
+#
 # - "apps/pipeline/upstream/env/platform-agnostic | kubectl apply -f - "                                # Additionally appended thirdly
 # - "apps/pipeline/upstream/cluster-scoped-resources | kubectl apply -f -"                              # Additionally appended secondly
-
+# - "apps/katib/upstream/installs/katib-standalone | kubectl apply -f -"                                # 18
 

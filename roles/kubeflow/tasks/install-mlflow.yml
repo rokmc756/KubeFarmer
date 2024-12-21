@@ -24,3 +24,7 @@
 # username: user
 # password: kubectl get secret --namespace mlflow mlflow-tracking -o jsonpath="{.data.admin-password }" | base64 -d
 
+
+
+
+

@@ -1,0 +1,66 @@
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: katib-mysql-pv
+  namespace: kubeflow
+  labels:
+    type: local
+    name: katib-mysql
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/katib-mysql"
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: minio-pv
+  namespace: kubeflow
+  labels:
+    type: local
+    name: kubeflow
+spec:
+  capacity:
+    storage: 20Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/minio"
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: mysql-pv
+  namespace: kubeflow
+  labels:
+    type: local
+    name: kubeflow
+spec:
+  capacity:
+    storage: 20Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/mysql"
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: authservice-pv
+  namespace: istio-system
+  labels:
+    type: local
+    name: authservice
+spec:
+  capacity:
+    storage: 20Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/autoservice"
+
+# https://ithelp.ithome.com.tw/m/articles/10328759
+
