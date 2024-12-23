@@ -29,3 +29,7 @@ rk9-node07 ansible_ssh_host=192.168.1.77
 rk9-node06 ansible_ssh_host=192.168.1.76
 rk9-node07 ansible_ssh_host=192.168.1.77
 
+
+[nfs_server]
+rk9-freeipa ansible_ssh_host=192.168.1.90
+

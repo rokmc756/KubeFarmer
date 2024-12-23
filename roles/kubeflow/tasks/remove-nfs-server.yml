@@ -1,0 +1,44 @@
+---
+- name: Disable NFS Ports for Firewalld
+  firewalld:
+    service: "{{ item }}"
+    permanent: yes
+    immediate: yes
+    state: disabled
+  ignore_errors: true
+  with_items:
+    - nfs
+    - mountd
+    - rpc-bind
+
+
+- name: Stop NFS Server
+  service:
+    name: nfs-server
+    state: stopped
+  ignore_errors: true
+
+
+- name: Remove NFS Exports
+  lineinfile:
+    dest: "{{ item.file }}"
+    regexp: "{{ item.regexp }}"
+    state: "{{ item.state }}"
+  ignore_errors: true
+  with_items:
+    - { file: "/etc/exports", regexp: "^\/nfs-root*", state: absent }
+
+
+- name: Uninstall NFS Server
+  package:
+    name: nfs-utils
+    state: absent
+  ignore_errors: true
+
+
+- name: Remove NFS Directory
+  file:
+    path: "{{ kubeflow.nfs_root_dir }}"
+    state: absent
+  ignore_errors: true
+

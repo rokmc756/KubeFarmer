@@ -1,0 +1,40 @@
+# SELinux for NFS
+#
+# setsebool httpd_use_nfs on
+# setsebool httpd_use_cifs on
+
+# Allow Read/Write for NFS Share Directory
+# setsebool -P nfs_export_all_rw 1
+#
+# Allow Read Only for NFS Share Directory
+# setsebool -P nfs_export_all_ro 1
+#
+# Allow NFS Share for User Home Directory
+# setsetbool -P use_nfs_home_dirs 1
+#
+# 
+# Configure Share Directory
+# mkdir -p /nfs-root/test
+# chmod 756 /nfsshare
+ 
+# Configure Share Directory
+# ls -l -Z /nfs-root/
+# drwxr-xr-x. nfsnobody nobody unconfined_u:object_r:default_t:s0 wasShare
+ 
+# >> Allow Read/Write
+# semanage fcontext -a -t public_content_rw_t  "/nfs-root/*(/.*)?"
+# >> Allow Read Only
+# semanage fcontext -a -t public_content_t  "/nfs-root/*(/.*)?"
+ 
+# restorecon -Rv /nfs-root
+# ls -l -Z /nfsshare/drwxr-xr-x. nfsnobody  nobody    unconfined_u:object_r:public_content_rw_t:s0 wasShare
+
+
+# Check NFS Services
+# systemctl enable nfs-server
+# systemctl enable rpcbind
+ 
+# systemctl start nfs
+# systemctl start rpcbind
+# exportfs -v   >> share된 디렉토리 표시
+# rpcinfo -p     >> rpcbind가 사용하는 포트 표시

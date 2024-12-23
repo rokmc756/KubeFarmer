@@ -24,8 +24,8 @@
   when: print_debug == true
 
 
-- name: Create KubeFlow PVC
-  import_tasks: create-kubeflow-pvc.yml
+#- name: Create KubeFlow PVC
+#  import_tasks: create-kubeflow-pvc.yml
 
 
 - name: Get ISTIO Version

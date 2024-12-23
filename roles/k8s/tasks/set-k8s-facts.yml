@@ -7,7 +7,7 @@
     netdev1: "{{ ansible_interfaces | map('regex_replace', '^', 'ansible_') | map('extract', vars) | selectattr('ipv4', 'defined') | selectattr('ipv4.address', 'match', k8s.net.ipaddr1 ) | map(attribute='device') | first }}"
     netdev2: "{{ ansible_interfaces | map('regex_replace', '^', 'ansible_') | map('extract', vars) | selectattr('ipv4', 'defined') | selectattr('ipv4.address', 'match', k8s.net.ipaddr2 ) | map(attribute='device') | first }}"
 
-#
+
 - name: Get IP Address From Provided Network Device Names
   set_fact:
     ipaddr0: "{{ hostvars[inventory_hostname]['ansible_'~netdev0].ipv4.address }}"
@@ -19,9 +19,16 @@
   set_fact:
     _netdev: "{{ 'ansible_'~ netdev1 }}"
     _ipaddr: "{{ ipaddr1 }}"
-  delegate_to: "{{ item }}"
-  delegate_facts: true
-  with_items: "{{ groups['all'] }}"
+    _netdev0: "{{ 'ansible_'~ netdev0 }}"
+    _netdev1: "{{ 'ansible_'~ netdev1 }}"
+    _netdev2: "{{ 'ansible_'~ netdev2 }}"
+
+
+- name: Get Netmask From Provided Network Device Names
+  set_fact:
+    netmask0: "{{ ( hostvars[inventory_hostname][_netdev0]['ipv4']['address'] + '/' + hostvars[inventory_hostname][_netdev0]['ipv4']['netmask'] ) | ansible.utils.ipaddr('prefix') }}"
+    netmask1: "{{ ( hostvars[inventory_hostname][_netdev1]['ipv4']['address'] + '/' + hostvars[inventory_hostname][_netdev1]['ipv4']['netmask'] ) | ansible.utils.ipaddr('prefix') }}"
+    netmask2: "{{ ( hostvars[inventory_hostname][_netdev2]['ipv4']['address'] + '/' + hostvars[inventory_hostname][_netdev2]['ipv4']['netmask'] ) | ansible.utils.ipaddr('prefix') }}"
 
 
 # https://stackoverflow.com/questions/36328907/ansible-get-all-the-ip-addresses-of-a-group

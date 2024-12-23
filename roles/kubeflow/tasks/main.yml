@@ -19,7 +19,13 @@
 - name: Apply Kernel Parameters for KubeFlow
   import_tasks: apply-kubeflow-kernel-parameters.yml
   tags: install
-  when: kubeflow.install == true
+  when: kubeflow.install == true and inventory_hostname not in groups['nfs_server']
+
+
+- name: Configure NFS Server
+  import_tasks: config-nfs-server.yml
+  tags: install
+  when: nfs_provider.install == true and inventory_hostname in groups['nfs_server']
 
 
 - name: Deploy NFS Provider
@@ -67,7 +73,7 @@
 - name: Destroy KubeFlow
   import_tasks: destroy-kubeflow.yml
   tags: destroy
-  when: kubeflow.deploy == true and inventory_hostname in groups['master']
+  when: kubeflow.destroy == true and inventory_hostname in groups['master']
 
 
 - name: Delete KubeFlow Directory
@@ -76,14 +82,20 @@
   when: kubeflow.deploy == true
 
 
-- name: Uninstall KubeFlow
-  import_tasks: uninstall-kubeflow.yml
-  tags: uninstall
-  when: kubeflow.install == true and inventory_hostname in groups['master']
-
-
 - name: Destroy NFS Provider
   import_tasks: uninstall-nfs-provider.yml
   tags: uninstall
   when: nfs_provider.install == true and inventory_hostname in groups['master']
+
+
+- name: Remove NFS Server
+  import_tasks: remove-nfs-server.yml
+  tags: uninstall
+  when: nfs_provider.install == true and inventory_hostname in groups['nfs_server']
+
+
+- name: Uninstall KubeFlow
+  import_tasks: uninstall-kubeflow.yml
+  tags: uninstall
+  when: kubeflow.install == true and inventory_hostname in groups['master']
 

@@ -1,37 +1,4 @@
-- name: Destroy Kubeflow
-  shell: |
-    kustomize build example | kubectl delete -f -
-  register: deploy_kubeflow
-  ignore_errors: true
-  until: deploy_kubeflow is not succeeded
-  retries: 3
-  delay: 10
-  args:
-    chdir: "{{ base_path }}/manifests"
-  environment:
-    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-  failed_when: deploy_kubeflow.rc in [ 0, 68 ]
-- debug: msg={{ deploy_kubeflow }}
-  when: print_debug == true
-
-
-#- name: Validate if KubeFlow Containers are still Creating
-#  shell: |
-#    kubectl get all -A | grep {{ item }} | awk '{print $4}' | uniq | cut -d : -f 1
-#  register: check_kubeflow_containers
-#  ignore_errors: true
-#  until: check_kubeflow_containers.stdout.find("") != -1
-#  retries: 100
-#  delay: 10
-#  with_items:
-#    - Init
-#    - PodIntializing
-#    - ContainerCreating
-#    - CrashLoopBackOff
-#- debug: msg={{ check_kubeflow_containers }}
-#  when: print_debug == true
-
-
+---
 - name: Copy Cluster Local PVC Config Yaml
   template:
     src: "{{ item }}.j2"
@@ -92,51 +59,5 @@
     state: absent
   register: delete_kubeflow_git
   ignore_errors: true
-- debug: msg={{ delete_kubeflow_git }}
-  when: print_debug == true
-
-
-- name: Delete Deployment for KubeFlow User
-  shell: |
-     kubectl -n kubeflow-user-example-com delete deployment.apps/{{ item }}
-  register: delete_kube_user_deployment
-  ignore_errors: true
-  with_items:
-    - "ml-pipeline-ui-artifact"
-    - "ml-pipeline-visualizationserver"
-- debug: msg={{ delete_kube_user_deployment }}
-  when: print_debug == true
-
-
-- name: Validate if KubeFlow Containers are still Terminating
-  shell: |
-    kubectl get pods -A | grep "{{ item }}" | grep Terminating | awk '{print $4}'
-  register: check_kubeflow_containers
-  ignore_errors: true
-  until: check_kubeflow_containers.stdout.find("") != -1
-  with_items:
-    - "ml-pipeline-ui-artifact"
-    - "ml-pipeline-visualizationserver"
-- debug: msg={{ check_kubeflow_containers }}
-
-
-- name: Delete Service for KubeFlow User
-  shell: |
-     kubectl -n kubeflow-user-example-com delete service/{{ item }}
-  register: delete_kube_user_service
-  ignore_errors: true
-  with_items:
-    - "ml-pipeline-ui-artifact"
-    - "ml-pipeline-visualizationserver"
-- debug: msg={{ delete_kube_user_service }}
-  when: print_debug == true
-
-
-- name: Delete Namespace for KubeFlow User
-  shell: |
-     kubectl delete namespace kubeflow-user-example-com
-  register: delete_kube_user_namespace
-  ignore_errors: true
-- debug: msg={{ delete_kube_user_namespace }}
-  when: print_debug == true
-
+#- debug: msg={{ delete_kubeflow_git }}
+#  when: print_debug == true

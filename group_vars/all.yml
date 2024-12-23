@@ -27,9 +27,9 @@ k8s:
     net:
       type: "virtual"              # Or Physical
       cores: 1
-      ipaddr0: "192.168.0.7"
-      ipaddr1: "192.168.1.7"
-      ipaddr2: "192.168.2.7"
+      ipaddr0: "192.168.0.9"
+      ipaddr1: "192.168.1.9"
+      ipaddr2: "192.168.2.9"
   ext_storage:
     net:
       ipaddr0: "192.168.0."

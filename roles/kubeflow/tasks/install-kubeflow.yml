@@ -31,6 +31,10 @@
   when: print_debug == true and kubeflow.clone_git == true and kubeflow_dir_existed.stat.exists != True
 
 
+- name: Create KubeFlow PVC
+  import_tasks: create-kubeflow-pvc.yml
+
+
 #- name: Validate if KubeFlow Containers are still Creating
 #  shell: |
 #    kubectl get all -A | grep {{ item }} | awk '{print $4}' | uniq | cut -d : -f 1
