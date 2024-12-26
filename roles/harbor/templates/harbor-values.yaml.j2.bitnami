@@ -1,24 +1,37 @@
+#expose:
+#  ingress:
+#    hosts:
+#      # Adjust the domain to suit you
+#      core: harbor.jtest.suse.com
+#
+## Adjust the externalURL https://{domain}
+#externalURL: https://harbor.jtest.suse.com
+#harborAdminPassword: "{{ harbor.admin_password }}"
+#
+#controller:
+#  serviceType: LoadBalancer
+#
+#
+#  https://github.com/goharbor/harbor-helm/blob/main/values.yaml
+#
+---
+
 expose:
-  type: loadBalancer
-  loadBalancer:
-    IP: {{ harbor.lb_ip_addr }}
+  type: ingress
   tls:
     enabled: true
     certSource: secret
-    auto:
-      commonName: ""
     secret:
       secretName: "harbor-cert"
-      notarySecretName: "harbor-cert"
+      # secretName: "harbor-cat-tls"
   ingress:
     hosts:
       core: {{ harbor.hostname }}
-      notary: {{ harbor.hostname }}
+    className: "nginx"
 
 externalURL: https://{{ harbor.hostname }}
-
-existingSecretAdminPasswordKey: "changeme"
 harborAdminPassword: "changeme"
+
 
 persistence:
   enabled: false

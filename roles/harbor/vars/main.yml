@@ -27,7 +27,7 @@ harbor:
     minor_version: 28
     patch_version: 0
     build_version:
-  hostname: "harbor.jtest.suse.com"
+  hostname: "harbor1.jtest.pivotal.io"
   service:
     metadata:
       name: harbor
@@ -45,7 +45,7 @@ harbor:
 
 
 metallb:
-  install: true
+  install: false
   major_version: 0
   minor_version: 13
   patch_version: 11
@@ -78,7 +78,7 @@ metallb:
 cert_manager:
   install: true
   major_version: 1
-  minor_version: 15
+  minor_version: 7
   patch_version: 1
 
 
@@ -112,7 +112,7 @@ ssl:
   country: "KR"
   state: "Seoul"
   location: "Guro"
-  organization: "Pivogal"
-  common_name: "jest.suse.com"
+  organization: "Pivotal"
+  common_name: "jest.pivotal.io"
   email: "rokmc756@gmail.com"
 

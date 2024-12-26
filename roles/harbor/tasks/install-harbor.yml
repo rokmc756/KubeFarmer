@@ -22,7 +22,6 @@
     kubectl create namespace {{ item }}
   register: create_namespace
   with_items:
-    - contour
     - harbor
   args:
     chdir: "{{ base_path }}/"
@@ -70,35 +69,15 @@
 - debug: msg={{ copy_harbor_lb_config_yaml }}
 
 
-- name: Deploy Contour
-  shell: |
-    helm install ingress bitnami/contour --create-namespace -n contour --wait
-  register: deploy_contour
-  args:
-    chdir: "{{ base_path }}/"
-  environment:
-    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-- debug: msg={{ deploy_contour }}
-  when: print_debug == true
-
+# helm install ingress bitnami/contour --create-namespace -n contour --wait
+#
 # You can use the following command to check if the pods are running:
 # kubectl get pods -n contour -w
 # With the following command you can check if and where your ingress is available:
+#
 # kubectl get svc ingress-contour-envoy --namespace contour -wC
 # And:
 # kubectl describe svc ingress-contour-envoy --namespace contour | grep Ingress | awk '{print $3}'
-
-
-#- name: Create a new namespace for harbor
-#  shell: |
-#    kubectl create namespace harbor
-#  register: create_harbor_namespace
-#  args:
-#    chdir: "{{ base_path }}/"
-#  environment:
-#    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-#- debug: msg={{ create_harbor_namespace }}
-#  when: print_debug == true
 
 
 - name: Generate Harbor TLS Cert Files
@@ -117,10 +96,9 @@
   when: print_debug == true
 
 
-# /usr/local/bin/helm install harbor harbor/harbor --set harborAdminPassword=changeme -f {{ base_path }}/harbor-values.yaml --create-namespace -n harbor --wait
 - name: Deploy Harbor
   shell: |
-    helm install harbor -f {{ base_path }}/harbor-values.yaml bitnami/harbor -n harbor --create-namespace
+    helm install harbor -f {{ base_path }}/harbor-values.yaml harbor/harbor -n harbor
   register: deploy_harbor
   args:
     chdir: "{{ base_path }}/"

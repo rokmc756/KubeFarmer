@@ -27,17 +27,7 @@
   when: print_debug == true
 
 
-- name: Uninstall Contour
-  shell: |
-    helm uninstall ingress -n contour
-  register: uninstall_contour
-  ignore_errors: true
-  args:
-    chdir: "{{ base_path }}/"
-  environment:
-    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-- debug: msg={{ uninstall_contour }}
-  when: print_debug == true
+# helm uninstall ingress -n contour
 
 
 - name: Delete Persistent Volumes, Claim and Storage Class
@@ -78,7 +68,6 @@
   ignore_errors: true
   with_items:
     - harbor
-    - contour
   args:
     chdir: "{{ base_path }}/"
   environment:

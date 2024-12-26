@@ -1,6 +1,21 @@
-- name: Intall Cert Manager
+---
+#- name: Intall Cert Manager
+#  shell: |
+#    helm install cert-manager bitnami/cert-manager -n cert-manager --create-namespace --set installCRDs=true --wait
+#  register: install_cert_manager
+#  ignore_errors: yes
+#  args:
+#    chdir: "{{ base_path }}/"
+#  environment:
+#    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+#- debug: msg={{ install_cert_manager }}
+
+
+
+- name: Intall Cert Manager by Helm
   shell: |
-    helm install cert-manager bitnami/cert-manager -n cert-manager --create-namespace --set installCRDs=true --wait
+    /usr/local/bin/helm install cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace --set installCRDs=true \
+    --version v{{ cert_manager.major_version }}.{{ cert_manager.minor_version }}.{{ cert_manager.patch_version }}
   register: install_cert_manager
   ignore_errors: yes
   args:
@@ -8,6 +23,7 @@
   environment:
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ install_cert_manager }}
+
 
 # /usr/local/bin/helm install cert-manager jetstack/cert-manager -n cert-manager --create-namespace --set installCRDs=true \
 # --version v{{ cert_manager.major_version }}.{{ cert_manager.minor_version }}.{{ cert_manager.patch_version }} 
