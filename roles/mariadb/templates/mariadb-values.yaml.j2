@@ -112,7 +112,7 @@ containerSecurityContext:
 
 rootUser:
   user: root
-  password: "Changeme1234"
+  password: "{{ mariadb.root_password }}"
   forcePassword: false
 
 
@@ -122,9 +122,9 @@ customPasswordFiles: {}
 
 
 db:
-  user: "jomoon"
-  password: "Changeme1234"
-  name: powerdns
+  user: "{{ mariadb.db.user }}"
+  password: "{{ mariadb.db.password }}"
+  name: "{{ mariadb.db.name }}"
   forcePassword: false
 
 
@@ -136,7 +136,7 @@ galera:
     forceSafeToBootstrap: false
   mariabackup:
     user: mariabackup
-    password: "Changeme1234"
+    password: "{{ mariadb.mariabackup_password }}"
     forcePassword: false
 
 

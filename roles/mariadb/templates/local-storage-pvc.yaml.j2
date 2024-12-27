@@ -1,8 +1,9 @@
+{% for n in range(0,mariadb.replica|int) %}
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: data-mariadb-galera-0
+  name: data-mariadb-galera-{{ n }}
   namespace: mariadb
 spec:
   storageClassName: mariadb-storage
@@ -11,30 +12,6 @@ spec:
   resources:
     requests:
       storage: 10Gi
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: data-mariadb-galera-1
-  namespace: mariadb
-spec:
-  storageClassName: mariadb-storage
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 10Gi
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: data-mariadb-galera-2
-  namespace: mariadb
-spec:
-  storageClassName: mariadb-storage
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 10Gi
+{% endfor %}
 
+# https://www.codecentric.de/wissens-hub/blog/jinja2-better-ansible-playbooks-templates

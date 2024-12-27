@@ -12,6 +12,12 @@ mariadb:
   lb_ip_addr: "192.168.1.212"
   storage_path: "/mnt/mariadb-storage"
   replica: 3
+  db:
+    name: "powerdns"
+    user: "jomoon"
+    password: "Changeme1234"
+  root_password: "Changeme1234"
+  mariabackup_password: "Changeme1234"
   k8s:
     major_version: 1
     minor_version: 30
@@ -44,7 +50,7 @@ helm:
 
 
 cert_manager:
-  install: true
+  install: false
   major_version: 1
   minor_version: 7
   patch_version: 1
