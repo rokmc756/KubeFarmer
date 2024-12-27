@@ -1,0 +1,51 @@
+---
+# kubectl create namesapce mariadb
+
+- name: Unset variables of bearer token
+  set_fact:
+    bearer_token:
+
+
+- name: Deploy Kubernetes the Dashboard UI
+  become: true
+  shell: |
+    kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v{{ dashboard.major_version }}.{{ dashboard.minor_version }}.{{ dashboard.patch_version }}/aio/deploy/recommended.yaml
+  register: dashboard_ui_deployed
+- debug: msg={{ dashboard_ui_deployed }}
+
+
+- name: Copy config templates of Dashboard
+  template:
+    src: "{{ item }}"
+    dest: "/root/{{ item }}"
+    owner: root
+    group: root
+    mode: 644
+    force: yes
+  register: config_templates_copied
+  with_items:
+    - "dashboard-adminuser.yml"
+    - "rbac.yml"
+- debug: msg={{ config_templates_copied }}
+
+
+- name: Create a Service Account
+  shell: |
+    kubectl apply -f /root/dashboard-adminuser.yml
+  register: service_account_created
+- debug: msg={{ service_account_created }}
+
+
+- name: Create a ClusterRoleBinding
+  shell: |
+    kubectl apply -f /root/rbac.yml
+  register: clusterrolebinding_created
+- debug: msg={{ clusterrolebinding_created }}
+
+
+- name: Get a Bearer Token
+  shell: |
+    kubectl -n kubernetes-dashboard create token admin-user
+  register: bearer_token_gotten
+- debug: msg={{ bearer_token_gotten }}
+

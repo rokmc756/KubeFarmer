@@ -1,11 +1,11 @@
 ---
-- name: Check OS ( Kubernetes Dashboard )
+- name: Check OS ( MariaDB }
   fail: msg="Not a Red Hat based system!"
   when: ansible_os_family != 'RedHat' or ansible_os_family != 'CentOS' or ansible_os_family != 'Rocky'
 
 
-- name: Set Facts for Dashboard
-  import_tasks: set-dashboard-facts.yml
+- name: Set Facts for MariaDB
+  import_tasks: set-mariadb-facts.yml
   tags:
     - install
     - uninstall
@@ -18,16 +18,10 @@
   when: helm.enable_repo == true and inventory_hostname in groups['master']
 
 
-- name: Deploy Dashboard
-  import_tasks: install-dashboard.yml
+- name: Deploy MariaDB
+  import_tasks: install-mariadb.yml
   tags: install
-  when: dashboard.install == true and inventory_hostname in groups['master']
-
-
-#- name: Install Ingress
-#  import_tasks: install-ingress.yml
-#  tags: install
-#  when: ingress.install == true and inventory_hostname in groups['master']
+  when: mariadb.install == true and inventory_hostname in groups['master']
 
 
 - name: Install Cert Manager
@@ -39,13 +33,13 @@
 - name: Install Load Balancer
   import_tasks: install-lb.yml
   tags: install
-  when: dashboard.lb.install == true and inventory_hostname in groups['master']
+  when: mariadb.lb.install == true and inventory_hostname in groups['master']
 
 
 - name: Uninstall Load Balancer
   import_tasks: uninstall-lb.yml
   tags: uninstall
-  when: dashboard.lb.install == true and inventory_hostname in groups['master']
+  when: mariadb.lb.install == true and inventory_hostname in groups['master']
 
 
 - name: Uninstall Cert Manager
@@ -54,16 +48,10 @@
   when: cert_manager.install == true and inventory_hostname in groups['master']
 
 
-#- name: Uninstall Ingress
-#  import_tasks: uninstall-ingress.yml
-#  tags: uninstall
-#  when: ingress.install == true and inventory_hostname in groups['master']
-
-
-- name: Destroy Dashboard
-  import_tasks: uninstall-dashboard.yml
+- name: Destroy MariaDB
+  import_tasks: uninstall-mariadb.yml
   tags: uninstall
-  when: dashboard.install == true and inventory_hostname in groups['master']
+  when: mariadb.install == true and inventory_hostname in groups['master']
 
 
 - name: Disable Helm Repository

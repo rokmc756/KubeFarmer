@@ -1,0 +1,25 @@
+#- name: Apply Cert Manager CRDs
+#  shell: |
+#    kubectl apply --validate=false \
+#    -f https://github.com/jetstack/cert-manager/releases/download/v{{ cm.major_version }}.{{ cm.minor_version }}.{{ cm.patch_version }}/cert-manager.crds.yaml
+#  register: apply_cert_manager_crds
+#  ignore_errors: yes
+#- debug: msg={{ apply_cert_manager_crds }}
+
+
+#- name: Create Namespace for Cert Manager
+#  shell: |
+#    kubectl create namespace cert-manager
+#  register: create_cert_manager_namespace
+#  ignore_errors: yes
+#- debug: msg={{ create_cert_manager_namespace }}
+
+
+- name: Intall Cert Manager by Helm
+  shell: |
+    /usr/local/bin/helm install cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace --set installCRDs=true \
+    --version v{{ cert_manager.major_version }}.{{ cert_manager.minor_version }}.{{ cert_manager.patch_version }}
+  register: install_cert_manager
+  ignore_errors: yes
+- debug: msg={{ install_cert_manager }}
+

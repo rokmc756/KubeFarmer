@@ -1,5 +1,6 @@
 base_path: /root
 
+
 kustomize:
   download_url: "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"
   major_version: 5
@@ -44,39 +45,8 @@ harbor:
     - "fs.inotify.max_user_watches=755360"
 
 
-metallb:
-  install: false
-  major_version: 0
-  minor_version: 13
-  patch_version: 11
-  vmware:
-    kind:
-      ipaddrpool:
-        metadata:
-          name: first-pool
-          namespace: metallb-system
-        spec:
-          ips_range: 192.168.1.210-200.168.1.250
-      l2advertise:
-        metadata:
-          name: example
-          namespace: metallb-system
-  baremetal:
-    kind:
-      configmap:
-        metadata:
-          name: config
-          namespace: metallb-system
-        data:
-          config:
-            ipaddr_pools:
-              name: default
-              protocol: layer2
-              ips_range: 192.168.1.210-192.168.1.250
-
-
 cert_manager:
-  install: true
+  install: false
   major_version: 1
   minor_version: 7
   patch_version: 1

@@ -108,7 +108,7 @@
   when: print_debug == true
 
 
-- name: Validate if Harbor Containers are Running
+- name: Validate if Harbor Containers are Running Normally
   shell: |
     kubectl -n harbor get pods
   register: check_harbor_container
@@ -121,6 +121,22 @@
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ check_harbor_container }}
   when: print_debug == true
+
+
+- name: Validate if Harbor Containers are Running Normally
+  shell: |
+    kubectl -n harbor get pods
+  register: check_harbor_container
+  until: check_harbor_container.stdout.find("CrashLoopBackOff") == -1
+  retries: 100
+  delay: 10
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ check_harbor_container }}
+  when: print_debug == true
+
 
 
 # ** Please be patient while the chart is being deployed **

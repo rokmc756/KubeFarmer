@@ -82,6 +82,9 @@ dashboard:
 stratos:
 	make -f ./makefile_configs/Makefile.stratos r=${r} s=${s} c=${c} USERNAME=${USERNAME}
 
+mariadb:
+	make -f ./makefile_configs/Makefile.mariadb r=${r} s=${s} c=${c} USERNAME=${USERNAME}
+
 
 # - https://ansible-tutorial.schoolofdevops.com/control_structures/
 install: role-update install.yml
