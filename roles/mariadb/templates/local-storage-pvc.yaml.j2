@@ -1,0 +1,40 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: data-mariadb-galera-0
+  namespace: mariadb
+spec:
+  storageClassName: mariadb-storage
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: data-mariadb-galera-1
+  namespace: mariadb
+spec:
+  storageClassName: mariadb-storage
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: data-mariadb-galera-2
+  namespace: mariadb
+spec:
+  storageClassName: mariadb-storage
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+

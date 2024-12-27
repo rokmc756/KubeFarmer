@@ -12,7 +12,7 @@
     /usr/local/bin/helm repo remove bitnami
   register: remove_bitnami_helm_repo
   ignore_errors: yes
-- debug: msg={{ remove_mitnami_helm_repo }}
+- debug: msg={{ remove_bitnami_helm_repo }}
 
 
 - name: Delete Helm Install Script

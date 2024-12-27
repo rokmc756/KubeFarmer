@@ -21,3 +21,10 @@ Volumes:
     Medium:
 
 
+
+https://github.com/bitnami/charts/blob/main/bitnami/mariadb-galera/values.yaml
+
+
+https://artifacthub.io/packages/helm/bitnami/mariadb-galera
+
+

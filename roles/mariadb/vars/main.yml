@@ -10,6 +10,8 @@ mariadb:
   clone_git: true
   nvme: true
   lb_ip_addr: "192.168.1.212"
+  storage_path: "/mnt/mariadb-storage"
+  replica: 3
   k8s:
     major_version: 1
     minor_version: 30
@@ -30,7 +32,7 @@ mariadb:
   manager:
     install: true
   lb:
-    install: true
+    install: false
 
 
 helm:

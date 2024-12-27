@@ -1,18 +1,18 @@
 ---
-- name: Copy Dashboard LoadBalancer Config Yaml
+- name: Copy MariaDB LoadBalancer Config Yaml
   template:
-    src: dashboard-loadbalancer.yaml.j2
-    dest: "{{ base_path }}/dashboard-loadbalancer.yaml"
-  register: copy_dashboard_lb_config_yaml
-- debug: msg={{ copy_dashboard_lb_config_yaml }}
+    src: mariadb-loadbalancer.yaml.j2
+    dest: "{{ base_path }}/mariadb-loadbalancer.yaml"
+  register: copy_mariadb_lb_config_yaml
+- debug: msg={{ copy_mariadb_lb_config_yaml }}
 
 
-- name: Apply Dashboard Load Balancer
+- name: Apply MariaDB Load Balancer
   shell: |
-    kubectl apply -f dashboard-loadbalancer.yaml
-  register: apply_dashboard_lb
+    kubectl apply -f mariadb-loadbalancer.yaml
+  register: apply_mariadb_lb
   ignore_errors: yes
   args:
     chdir: "/root"
-- debug: msg={{ apply_dashboard_lb }}
+- debug: msg={{ apply_mariadb_lb }}
 

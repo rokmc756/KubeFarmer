@@ -4,6 +4,7 @@ base_path: /root
 dashboard_port: "10443"
 
 cont_pv_dirs:
+  - "mariadb-storage"
   - "awx-storage"
   - "katib-storage"
   - "authservice-storage"
