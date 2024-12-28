@@ -17,6 +17,11 @@
 - debug: msg={{ add_powerdns_helm_repo }}
 
 
+# helm repo add fsdrw08 https://fsdrw08.github.io/helm-charts/
+# helm install fsdrw08/powerdns
+
+
+
 - name: Add Jetstack Helm Repo
   shell: |
     /usr/local/bin/helm repo add jetstack https://charts.jetstack.io

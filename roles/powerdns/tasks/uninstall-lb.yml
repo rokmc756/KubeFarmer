@@ -1,9 +1,15 @@
-- name: Delete Dashboard Load Balancer
+---
+- name: Delete PowerDNS Load Balancer
   shell: |
-    kubectl delete -f dashboard-loadbalancer.yaml
-  register: delete_rook_lb
+    kubectl patch svc powerdns-{{ item.proto }} -n powerdns -p '{"spec": {"type": "ClusterIP"}}'
+  register: delete_powerdns_lb
   ignore_errors: yes
   args:
     chdir: "{{ base_path }}"
-- debug: msg={{ delete_rook_lb }}
+  with_items:
+    - { proto: "udp", ip_addr: "192.168.1.222" }
+    - { proto: "tcp", ip_addr: "192.168.1.221" }
+- debug: msg={{ delete_powerdns_lb }}
+
+# kubectl delete -f powerdns-loadbalancer.yaml
 

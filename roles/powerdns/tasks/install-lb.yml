@@ -1,18 +1,22 @@
 ---
-- name: Copy MariaDB LoadBalancer Config Yaml
+- name: Copy PowerDNS LoadBalancer Config Yaml
   template:
-    src: mariadb-loadbalancer.yaml.j2
-    dest: "{{ base_path }}/mariadb-loadbalancer.yaml"
-  register: copy_mariadb_lb_config_yaml
-- debug: msg={{ copy_mariadb_lb_config_yaml }}
+    src: powerdns-loadbalancer.yaml.j2
+    dest: "{{ base_path }}/powerdns-loadbalancer.yaml"
+  register: copy_powerdns_lb_config_yaml
+- debug: msg={{ copy_powerdns_lb_config_yaml }}
 
 
-- name: Apply MariaDB Load Balancer
+# kubectl apply -f powerdns-loadbalancer.yaml
+- name: Apply PowerDNS Load Balancer
   shell: |
-    kubectl apply -f mariadb-loadbalancer.yaml
-  register: apply_mariadb_lb
+    kubectl patch svc powerdns-{{ item.proto }} -n powerdns -p '{"spec": {"type": "LoadBalancer", "loadBalancerIP": "{{ item.ip_addr }}"}}'
+  register: apply_powerdns_lb
   ignore_errors: yes
   args:
-    chdir: "/root"
-- debug: msg={{ apply_mariadb_lb }}
+    chdir: "{{ base_path }}"
+  with_items:
+    - { proto: "udp", ip_addr: "192.168.1.222" }
+    - { proto: "tcp", ip_addr: "192.168.1.221" }
+- debug: msg={{ apply_powerdns_lb }}
 

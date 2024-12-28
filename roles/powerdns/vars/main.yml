@@ -38,7 +38,9 @@ powerdns:
   manager:
     install: true
   lb:
-    install: false
+    install: true
+  admin:
+    replica: 1
 
 
 helm:

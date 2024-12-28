@@ -2,8 +2,36 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ mariadb.service.metadata.name }}
-  namespace: {{ mariadb.service.metadata.namespace }}
+  name: powerdns-udp-lb
+  namespace: powerdns
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-protocol: "true"
 spec:
-  loadBalancerIP: {{ mariadb.lb_ip_addr }}
+  selector:
+    app: powerdns-udp
+  ports:
+    - name: powerdns-udp
+      protocol: UDP
+      port: 53
+      targetPort: 53
+  type: LoadBalancer
+  loadBalancerIP: 192.168.1.221
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: powerdns-tcp-lb
+  namespace: powerdns
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-protocol: "true"
+spec:
+  selector:
+    app: powerdns-tcp
+  ports:
+    - name: powerdns-tcp
+      protocol: TCP
+      port: 53
+      targetPort: 53
+  type: LoadBalancer
+  loadBalancerIP: 192.168.1.222
 

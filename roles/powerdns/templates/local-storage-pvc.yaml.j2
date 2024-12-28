@@ -15,6 +15,19 @@ spec:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
+  name: data-powerdns-mariadb-0
+  namespace: powerdns
+spec:
+  storageClassName: powerdns-storage
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
   name: powerdns-admin-data
   namespace: powerdns
 spec:
@@ -24,4 +37,3 @@ spec:
   resources:
     requests:
       storage: 10Gi
-
