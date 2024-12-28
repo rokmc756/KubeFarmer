@@ -1,0 +1,124 @@
+# https://github.com/cdwv/powerdns-helm
+
+- name: Create Directory for Persistent Volumes
+  file:
+    path: "{{ powerdns.storage_path }}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0777
+  register: create_pv_dir
+  delegate_to: "{{ item }}"
+  delegate_facts: True
+  with_items:
+    - "{{ groups['all'] }}"
+- debug: msg={{ create_pv_dir }}
+  when: print_debug == true
+
+
+- name: Create Namespace for Persistent Volumes
+  shell: |
+    kubectl create namespace {{ item }}
+  register: create_namespace
+  with_items:
+    - powerdns
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ create_namespace }}
+  when: print_debug == true
+
+
+- name: Copy Cluster Local PVC Config Yaml
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ base_path }}/{{ item }}"
+  register: copy_cluster_local_pvc_config_yaml
+  with_items:
+    - "local-storage-class.yaml"
+    - "local-storage-pv.yaml"
+    - "local-storage-pvc.yaml"
+- debug: msg={{ copy_cluster_local_pvc_config_yaml }}
+
+
+- name: Cluster Settings for a Production Cluster Running in a Dynamic Cloud Environment including VMware
+  shell: |
+    kubectl create -f {{ item }}
+  register: create_pvc
+  with_items:
+    - "local-storage-class.yaml"
+    - "local-storage-pv.yaml"
+    - "local-storage-pvc.yaml"
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ create_pvc }}
+  when: print_debug == true
+
+
+- name: Copy powerdns Loadbalancer Config Yaml
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ base_path }}/{{ item }}"
+  register: copy_powerdns_lb_config_yaml
+  with_items:
+    - "powerdns-values.yaml"
+    - "powerdns-admin-values.yaml"
+- debug: msg={{ copy_powerdns_lb_config_yaml }}
+
+
+- name: Deploy PowerDNS
+  shell:
+    helm install powerdns k8s-at-home/powerdns -n powerdns -f {{ base_path }}/powerdns-values.yaml
+  register: deploy_powerdns
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ deploy_powerdns }}
+  when: print_debug == true
+
+
+- name: Validate if PowerDNS Containers are Running Normally
+  shell: |
+    kubectl get pods -n powerdns | grep powerdns- | awk '{print $3}' | grep Running | wc -l
+  register: check_powerdns_container
+  until: check_powerdns_container.stdout|int == 2
+  retries: 60
+  delay: 10
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ check_powerdns_container }}
+  when: print_debug == true
+
+
+- name: Deploy PowerDNS
+  shell:
+    helm install powerdns-admin k8s-at-home/powerdns-admin -n powerdns -f {{ base_path }}/powerdns-admin-values.yaml
+  register: deploy_powerdns_admin
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ deploy_powerdns_admin }}
+  when: print_debug == true
+
+
+- name: Validate if PowerDNS Admin Containers are Running Normally
+  shell: |
+    kubectl get pods -n powerdns | grep powerdns-admin- | awk '{print $3}' | grep Running | wc -l
+  register: check_powerdns_admin_container
+  until: check_powerdns_container.stdout|int == 2
+  retries: 60
+  delay: 10
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ check_powerdns_admin_container }}
+  when: print_debug == true
+

@@ -1,0 +1,87 @@
+replicaCount: 1
+strategyType: Recreate
+
+image:
+  repository: naps/powerdns
+  tag: 4.3.1
+  pullPolicy: Always
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  name:
+
+podSecurityContext: {}
+
+securityContext: {}
+
+service:
+  externalTrafficPolicy: ""
+  type: ClusterIP
+  port: 53
+
+resources: {}
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+powerdns:
+  domain: rose.pivotal.io
+  postgres:
+    username: pdns
+    password: pdnspass
+    database: pdns
+  mysql:
+    username: pdns
+    password: pdnspass
+    database: pdns
+  dnssec: false
+  config: {}
+  additionalEnv: []
+
+mariadb:
+  enabled: false
+  architecture: standalone
+  auth:
+    database: pdns
+    username: pdns
+    password: pdns-pass
+    rootPassword: pdnsrootpass
+  primary:
+    persistence:
+      enabled: true
+
+postgresql:
+  enabled: true
+  postgresqlUsername: pdns
+  postgresqlPassword: pdnspass
+  postgresqlPostgresPassword: pdnsadminpass
+  postgresqlDatabase: pdns
+  persistence:
+    enabled: true
+
+probes:
+  liveness:
+    enabled: true
+    initialDelaySeconds: 30
+    failureThreshold: 5
+    timeoutSeconds: 10
+  readiness:
+    enabled: true
+    initialDelaySeconds: 30
+    failureThreshold: 5
+    timeoutSeconds: 10
+  startup:
+    enabled: false
+    failureThreshold: 30
+    periodSeconds: 10
+
+
+# helm inspect values k8s-at-home/powerdns --version 5.0.0 > powerdns-values.yaml
+
