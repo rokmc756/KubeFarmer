@@ -17,7 +17,7 @@ Supported OS for ansible target host should be prepared with package repository 
 
 ## Prepare ansible host to run gpfarmer
 * MacOS
-```shell
+```sh
 $ xcode-select --install
 $ brew install ansible
 $ brew install https://raw.githubusercontent.com/kadwanev/bigboybrew/master/Library/Formula/sshpass.rb
