@@ -1,23 +1,23 @@
-# What is KubeFarmer
+## What is KubeFarmer
 The KubeFarmer is Ansible Playbook to deploy Native Kubernetes Cluster and deploy bunch of K8S Softwares and Applications on it such as Rancher, Rook Ceph, Postgres, Kubeflow, Kafka and so an.
 
-# Kubernetes Architecutre
+## Kubernetes Architecutre
 ![alt text](https://github.com/rokmc756/kubefarmer/blob/main/roles/k8s/files/kubernetes_architecture.webp)
 
-# Supported Platform and OS
+## Supported Platform and OS
 Virtual Machines\
 Baremetal\
 RHEL and CentOS 9 and Rocky Linux 9.x\
 OpenSUSE 15.x\
 Ubuntu 22.x
 
-# Prerequisite for ansible host
+## Prerequisite for ansible host
 MacOS or Windows Linux Subsysetm or Many kind of Linux Distributions should have ansible as ansible host.\
 Supported OS for ansible target host should be prepared with package repository configured such as yum, dnf and apt as well as zypper\
 
-# Prepare ansible host to run gpfarmer
+## Prepare ansible host to run gpfarmer
 * MacOS
-```
+```bash
 $ xcode-select --install
 $ brew install ansible
 $ brew install https://raw.githubusercontent.com/kadwanev/bigboybrew/master/Library/Formula/sshpass.rb
