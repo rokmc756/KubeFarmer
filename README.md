@@ -17,7 +17,7 @@ Supported OS for ansible target host should be prepared with package repository 
 
 ## Prepare ansible host to run gpfarmer
 * MacOS
-```sh
+```
 $ xcode-select --install
 $ brew install ansible
 $ brew install https://raw.githubusercontent.com/kadwanev/bigboybrew/master/Library/Formula/sshpass.rb
@@ -33,7 +33,7 @@ $ zypper install ansible
 ## How to Deploy and Destroy Kubernetes Cluster
 #### 1) Configure Variables and Inventory with Hostnames, IP Addresses, sudo Username and Password
 ##### Configure Inventory
-```
+```yaml
 $ vi ansible-hosts
 [all:vars]
 ssh_key_filename="id_rsa"
@@ -51,7 +51,7 @@ rk9-node03 ansible_ssh_host=192.168.0.95
 ```
 
 ##### Configure Variables
-```
+```yaml
 $ vi roles/init-hosts/vars/main.yml
 ansible_ssh_pass: "changeme"
 ansible_become_pass: "changeme"
@@ -67,7 +67,7 @@ domain_name: "jtest.suse.com"
 ```
 
 ##### Configure Global Variables
-```
+```yaml
 $ vi group_vars/all.yml
 ansible_ssh_pass: "changeme"
 ansible_become_pass: "changeme"
@@ -102,7 +102,7 @@ k8s:
 
 
 #### 2) Initialize Linux Hosts to exchanges ssh keys for passwordless login and install neccessary packages as well as configure /etc/hosts file
-```
+```yaml
 $ vi install.yml
 ---
 - hosts: all
@@ -124,7 +124,7 @@ $ make install
 
 
 #### 3) Deploy Kubernetes Cluster
-```
+```yaml
 $ vi install.yml
 ---
 - hosts: all
@@ -146,7 +146,7 @@ $ make install
 
 
 #### 4) Destroy Kubernetes Cluster
-```
+```yaml
 $ vi uninstall.yml
 ---
 - hosts: all
@@ -168,7 +168,7 @@ $ make uninstall
 
 
 #### 5) Deploy Rancher
-```
+```yaml
 $ vi install.yml
 ---
 - hosts: all
@@ -191,7 +191,7 @@ $ make install
 
 
 #### 6) Destroy Rancher
-```
+```yaml
 $ vi uninstall.yml
 ---
 - hosts: all
@@ -214,7 +214,7 @@ $ make uninstall
 
 
 #### 7) Deploy Rook Ceph
-```
+```yaml
 $ vi install.yml
 ---
 - hosts: all
@@ -237,7 +237,7 @@ $ make install
 
 
 #### 8) Destroy Rook Ceph
-```
+```yaml
 $ vi uninstall.yml
 ---
 - hosts: all
@@ -261,7 +261,7 @@ $ make uninstall
 
 ### 9) Reinitialize Kubernetes Cluster
 The make reinit will reinitialize k8s cluster referring reinit.yml playbook if you are struggle the uncertain situation such as stuck or panic
-```
+```yaml
 $ vi reinit.yml
 - hosts: all
   become: yes
