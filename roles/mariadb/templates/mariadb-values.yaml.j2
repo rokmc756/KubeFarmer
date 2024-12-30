@@ -41,8 +41,8 @@ podManagementPolicy: OrderedReady
 automountServiceAccountToken: false
 hostAliases: []
 service:
-  # type: LoadBalancer
-  type: ClusterIP
+  # type: ClusterIP
+  type: LoadBalancer
   clusterIP: ""
   ports:
     mysql: 3306
@@ -378,8 +378,8 @@ metrics:
   containerPorts:
     http: 9104
   service:
-    type: ClusterIP
-    # type: LoadBalancer
+    # type: ClusterIP
+    type: LoadBalancer
     port: 9104
     annotations:
       prometheus.io/scrape: "true"

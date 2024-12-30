@@ -47,3 +47,5 @@
   register: bearer_token_gotten
 - debug: msg={{ bearer_token_gotten }}
 
+# https://kyeongseo.tistory.com/entry/kubernetes-dashboard-설치
+

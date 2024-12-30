@@ -47,46 +47,46 @@ init:	setup-host.yml update-host.yml
 	ansible-playbook -i ansible-hosts -u ${USERNAME} --ssh-common-args='-o UserKnownHostsFile=./known_hosts -o VerifyHostKeyDNS=true' install-ansible-prereqs.yml
 
 hosts:
-	make -f ./makefile_configs/Makefile.hosts r=${r} s=${s} c=${c} USERNAME=${USERNAME}
+	make -f ./configs/Makefile.hosts r=${r} s=${s} c=${c} USERNAME=${USERNAME}
 
 k8s:
-	make -f ./makefile_configs/Makefile.k8s r=${r} s=${s} c=${c} USERNAME=${USERNAME}
+	make -f ./configs/Makefile.k8s r=${r} s=${s} c=${c} USERNAME=${USERNAME}
 
 rook:
-	make -f ./makefile_configs/Makefile.rook r=${r} s=${s} c=${c} USERNAME=${USERNAME}
+	make -f ./configs/Makefile.rook r=${r} s=${s} c=${c} USERNAME=${USERNAME}
 
 rancher:
-	make -f ./makefile_configs/Makefile.rancher r=${r} s=${s} c=${c} USERNAME=${USERNAME}
+	make -f ./configs/Makefile.rancher r=${r} s=${s} c=${c} USERNAME=${USERNAME}
 
 kubeflow:
-	make -f ./makefile_configs/Makefile.kubeflow r=${r} s=${s} c=${c} USERNAME=${USERNAME}
+	make -f ./configs/Makefile.kubeflow r=${r} s=${s} c=${c} USERNAME=${USERNAME}
 
 kubevirt:
-	make -f ./makefile_configs/Makefile.kubevirt r=${r} s=${s} c=${c} USERNAME=${USERNAME}
+	make -f ./configs/Makefile.kubevirt r=${r} s=${s} c=${c} USERNAME=${USERNAME}
 
 ha:
-	make -f ./makefile_configs/Makefile.ha r=${r} s=${s} c=${c} USERNAME=${USERNAME}
+	make -f ./configs/Makefile.ha r=${r} s=${s} c=${c} USERNAME=${USERNAME}
 
 korifi:
-	make -f ./makefile_configs/Makefile.korifi r=${r} s=${s} c=${c} USERNAME=${USERNAME}
+	make -f ./configs/Makefile.korifi r=${r} s=${s} c=${c} USERNAME=${USERNAME}
 
 harbor:
-	make -f ./makefile_configs/Makefile.harbor r=${r} s=${s} c=${c} USERNAME=${USERNAME}
+	make -f ./configs/Makefile.harbor r=${r} s=${s} c=${c} USERNAME=${USERNAME}
 
 spark:
-	make -f ./makefile_configs/Makefile.spark r=${r} s=${s} c=${c} USERNAME=${USERNAME}
+	make -f ./configs/Makefile.spark r=${r} s=${s} c=${c} USERNAME=${USERNAME}
 
 dashboard:
-	make -f ./makefile_configs/Makefile.dashboard r=${r} s=${s} c=${c} USERNAME=${USERNAME}
+	make -f ./configs/Makefile.dashboard r=${r} s=${s} c=${c} USERNAME=${USERNAME}
 
 stratos:
-	make -f ./makefile_configs/Makefile.stratos r=${r} s=${s} c=${c} USERNAME=${USERNAME}
+	make -f ./configs/Makefile.stratos r=${r} s=${s} c=${c} USERNAME=${USERNAME}
 
 mariadb:
-	make -f ./makefile_configs/Makefile.mariadb r=${r} s=${s} c=${c} USERNAME=${USERNAME}
+	make -f ./configs/Makefile.mariadb r=${r} s=${s} c=${c} USERNAME=${USERNAME}
 
 powerdns:
-	make -f ./makefile_configs/Makefile.powerdns r=${r} s=${s} c=${c} USERNAME=${USERNAME}
+	make -f ./configs/Makefile.powerdns r=${r} s=${s} c=${c} USERNAME=${USERNAME}
 
 
 # - https://ansible-tutorial.schoolofdevops.com/control_structures/

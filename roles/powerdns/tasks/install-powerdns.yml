@@ -38,6 +38,7 @@
     - "local-storage-class.yaml"
     - "local-storage-pv.yaml"
     - "local-storage-pvc.yaml"
+    - "pdns-storage-pvc.yaml"
 - debug: msg={{ copy_cluster_local_pvc_config_yaml }}
 
 
@@ -49,6 +50,7 @@
     - "local-storage-class.yaml"
     - "local-storage-pv.yaml"
     - "local-storage-pvc.yaml"
+    - "pdns-storage-pvc.yaml"
   args:
     chdir: "{{ base_path }}/"
   environment:
@@ -70,7 +72,7 @@
 
 - name: Deploy PowerDNS
   shell:
-    helm install powerdns k8s-at-home/powerdns -n powerdns -f {{ base_path }}/powerdns-values.yaml
+    helm install powerdns k8s-at-home/powerdns -n powerdns -f {{ base_path }}/powerdns-values.yaml --version 4.1.2
   register: deploy_powerdns
   args:
     chdir: "{{ base_path }}/"
@@ -127,4 +129,4 @@
 
 # curl -H 'X-API-Key: changeme' http://192.168.1.223:80/api/v1/servers | jq .
 # https://medium.com/@fhc.silv/running-powerdns-in-the-local-environment-with-powerdns-admin-d4872c793a9b
-
+#

@@ -218,6 +218,21 @@
   when: k8s.cni.change_mtu == true
 
 
+- name: Enable Helm Repository
+  import_tasks: enable-helm-repo.yml
+  when: helm.enable_repo == true and inventory_hostname in groups['master']
+
+
+- name: Install Metallb
+  import_tasks: install-metallb.yml
+  when: metallb.install == true and inventory_hostname in groups['master']
+
+
+- name: Install NGINX Ingress
+  import_tasks: install-ingress.yml
+  when: ingress.install == true and inventory_hostname in groups['master']
+
+
 # erinformations/default": x509: certificate signed by unknown authority 
 # (possibly because of "crypto/rsa: verification error" while trying to verify candidate authority certificate
 # docker login --username="rokmc756@gmail.com"

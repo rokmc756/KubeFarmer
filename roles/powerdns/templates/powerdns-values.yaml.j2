@@ -35,6 +35,17 @@ tolerations: []
 affinity: {}
 
 
+# Added
+pdns:
+  api:
+    enabled: yes
+    key: changeme
+  webserver:
+    allowFrom: 0.0.0.0/0
+  dnsupdate:
+    enabled: no
+
+
 powerdns:
   domain: rose.pivotal.io
   postgres:
