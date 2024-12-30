@@ -4,6 +4,7 @@ base_path: /root
 dashboard_port: "10443"
 
 cont_pv_dirs:
+  - "grafana-storage"
   - "powerdns-storage"
   - "mariadb-storage"
   - "awx-storage"

@@ -1,0 +1,82 @@
+- name: Check if SSL Directory Already Exists
+  stat: path={{ ssl.dir }}
+  register: check_dir_sslkey_installed
+
+
+- name: Create SSL Directory
+  file: path={{ ssl.dir }} state=directory owner=root group=root
+  changed_when: False
+  register: dir_sslkey_installed
+
+
+- name: Generate a CA certificate private key
+  shell: |
+    openssl genrsa -out {{ ssl.dir }}/ca.key 4096
+  args:
+    executable: /bin/bash
+
+
+- name: Generate the CA certificate
+  shell: |
+    openssl req -x509 -new -nodes -sha512 -days 3650 \
+    -subj "/C={{ ssl.country }}/ST={{ ssl.state }}/L={{ ssl.location }}/O={{ ssl.organization }}/OU={{ ssl.common_name }}/CN={{ grafana.hostname }}" \
+    -key {{ ssl.dir }}/ca.key -out {{ ssl.dir }}/ca.crt
+  args:
+    executable: /bin/bash
+
+
+- name: Generate a private key
+  shell: |
+    openssl genrsa -out {{ ssl.dir }}/{{ grafana.hostname }}.key 4096
+  args:
+    executable: /bin/bash
+
+
+- name: Turn the certificate into a self-signed certificate so that the server will look for them
+  shell: |
+    openssl req -sha512 -new \
+    -subj "/C={{ ssl.country }}/ST={{ ssl.state }}/L={{ ssl.location }}/O={{ ssl.organization }}/OU={{ ssl.common_name }}/CN={{ grafana.hostname }}" \
+    -key {{ ssl.dir }}/{{ grafana.hostname }}.key -out {{ ssl.dir }}/{{ grafana.hostname }}.csr
+  args:
+    executable: /bin/bash
+
+
+- name: Copy an x509 v3 Extension File
+  template: src=v3.ext.j2 dest={{ ssl.dir }}/v3.ext  owner=root group=root mode=644 force=yes
+  register: v3_ext_copied
+- debug: msg={{ v3_ext_copied }}
+  when: print_debug == true
+
+
+- name: Generate an x509 v3 Extension File
+  shell: |
+    openssl x509 -req -sha512 -days 3650 -extfile {{ ssl.dir }}/v3.ext -CA {{ ssl.dir }}/ca.crt \
+    -CAkey {{ ssl.dir }}/ca.key -CAcreateserial -in {{ ssl.dir }}/{{ grafana.hostname }}.csr \
+    -out {{ ssl.dir }}/{{ grafana.hostname }}.crt
+  register: v3_ext_generated
+- debug: msg={{ v3_ext_generated }}
+  when: print_debug == true
+
+
+- name: Convert crt to cert for use by Docker
+  shell: |
+    openssl x509 -inform PEM -in {{ ssl.dir }}/{{ grafana.hostname }}.crt -out {{ ssl.dir }}/{{ grafana.hostname }}.cert
+  register: grafana_crt
+
+
+- name: Change Permission of SSL Key Files to Login via SSL
+  file:
+    path: "{{ ssl.dir }}/{{ item }}"
+    state: file
+    owner: root
+    group: root
+    mode: "0600"
+  with_items:
+    - "{{ grafana.hostname }}.cert"
+    - "{{ grafana.hostname }}.crt"
+    - "{{ grafana.hostname }}.key"
+    - "ca.key"
+    - "ca.crt"
+    # - "server.req"
+    # - "cert.pem"
+

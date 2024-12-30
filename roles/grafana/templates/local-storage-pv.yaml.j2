@@ -1,0 +1,28 @@
+{% for h in groups["workers"] %}
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: grafana-pv-{{ hostvars[h]['ansible_hostname'] }}
+  namespace: grafana
+spec:
+  capacity:
+    storage: 15Gi
+  # volumeMode: Filesystem
+  accessModes:
+  - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  # persistentVolumeReclaimPolicy: Delete
+  storageClassName: grafana-storage
+  local:
+    path: {{ grafana.storage_path }}
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - {{ hostvars[h]['ansible_hostname'] }}
+{% endfor %}
+

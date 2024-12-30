@@ -1,0 +1,57 @@
+---
+base_path: /root
+
+grafana:
+  install: false
+  major_version: 10
+  minor_version: 1
+  patch_version: 0
+  build_version:
+  clone_git: true
+  nvme: true
+  lb_ip_addr: "192.168.1.213"
+  storage_path: "/mnt/grafana-storage"
+  replica: 3
+  db:
+    name: "grafana"
+    user: "jomoon"
+    password: "Changeme1234"
+  root_password: "Changeme1234"
+  mariabackup_password: "Changeme1234"
+  k8s:
+    major_version: 1
+    minor_version: 30
+    patch_version: 0
+    build_version:
+  hostname: "grafana.jtest.pivotal.io"
+  service:
+    metadata:
+      name: grafana-loadbalancer
+      namespace: grafana
+  ingress:
+    metadata:
+      name: grafana-ingress
+      namespace: nginx-ingress
+    hostname: "grafana.jtest.pivotal.io"
+  kernel_parameters:
+    - "net.ipv4.neigh.default.gc_thresh1 = 0"       # For ARP Cache
+  lb:
+    install: false
+  admin:
+    replica: 1
+
+
+helm:
+  enable_repo: true
+  major_version: 3
+  minor_version:
+  patch_version:
+  build_version:
+
+
+cert_manager:
+  install: false
+  major_version: 1
+  minor_version: 7
+  patch_version: 1
+

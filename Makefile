@@ -88,6 +88,10 @@ mariadb:
 powerdns:
 	make -f ./configs/Makefile.powerdns r=${r} s=${s} c=${c} USERNAME=${USERNAME}
 
+grafana:
+	make -f ./configs/Makefile.grafana r=${r} s=${s} c=${c} USERNAME=${USERNAME}
+
+
 
 # - https://ansible-tutorial.schoolofdevops.com/control_structures/
 install: role-update install.yml

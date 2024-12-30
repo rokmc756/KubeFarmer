@@ -1,0 +1,15 @@
+---
+- name: Delete grafana Load Balancer
+  shell: |
+    kubectl patch svc grafana-{{ item.proto }} -n grafana -p '{"spec": {"type": "ClusterIP"}}'
+  register: delete_grafana_lb
+  ignore_errors: yes
+  args:
+    chdir: "{{ base_path }}"
+  with_items:
+    - { proto: "udp", ip_addr: "192.168.1.222" }
+    - { proto: "tcp", ip_addr: "192.168.1.221" }
+- debug: msg={{ delete_grafana_lb }}
+
+# kubectl delete -f grafana-loadbalancer.yaml
+

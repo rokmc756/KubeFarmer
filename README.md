@@ -369,4 +369,5 @@ The push refers to repository [harbor.jtest.suse.com/library/ubuntu]
 - Harbor    : 192.168.1.218
 - Dashboard : 192.168.1.212
 - Stratos   : 192.168.1.221
+- Grafana   : 192.168.1.220
 
