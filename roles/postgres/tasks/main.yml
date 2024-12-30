@@ -1,11 +1,11 @@
 ---
-- name: Check OS ( MariaDB }
+- name: Check OS ( postgres }
   fail: msg="Not a Red Hat based system!"
   when: ansible_os_family != 'RedHat' or ansible_os_family != 'CentOS' or ansible_os_family != 'Rocky'
 
 
-- name: Set Facts for MariaDB
-  import_tasks: set-mariadb-facts.yml
+- name: Set Facts for postgres
+  import_tasks: set-postgres-facts.yml
   tags:
     - install
     - uninstall
@@ -23,10 +23,10 @@
   when: cert_manager.install == true and inventory_hostname in groups['master']
 
 
-- name: Deploy MariaDB
-  import_tasks: install-mariadb.yml
+- name: Deploy postgres
+  import_tasks: install-postgres.yml
   tags: install
-  when: mariadb.install == true and inventory_hostname in groups['master']
+  when: postgres.install == true and inventory_hostname in groups['master']
 
 
 - name: Deploy phpMyAdmin
@@ -38,13 +38,13 @@
 - name: Install Load Balancer
   import_tasks: install-lb.yml
   tags: install
-  when: mariadb.lb.install == true and inventory_hostname in groups['master']
+  when: postgres.lb.install == true and inventory_hostname in groups['master']
 
 
 - name: Uninstall Load Balancer
   import_tasks: uninstall-lb.yml
   tags: uninstall
-  when: mariadb.lb.install == true and inventory_hostname in groups['master']
+  when: postgres.lb.install == true and inventory_hostname in groups['master']
 
 
 - name: Destroy phpMyAdmin
@@ -53,10 +53,10 @@
   when: phpmyadmin.install == true and inventory_hostname in groups['master']
 
 
-- name: Destroy MariaDB
-  import_tasks: uninstall-mariadb.yml
+- name: Destroy postgres
+  import_tasks: uninstall-postgres.yml
   tags: uninstall
-  when: mariadb.install == true and inventory_hostname in groups['master']
+  when: postgres.install == true and inventory_hostname in groups['master']
 
 
 - name: Uninstall Cert Manager

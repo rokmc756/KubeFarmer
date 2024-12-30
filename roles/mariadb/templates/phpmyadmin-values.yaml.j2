@@ -1,0 +1,260 @@
+---
+global:
+  imageRegistry: ""
+  imagePullSecrets: []
+  defaultStorageClass: ""
+  security:
+    allowInsecureImages: false
+  compatibility:
+    openshift:
+      adaptSecurityContext: disabled
+
+
+kubeVersion: ""
+nameOverride: ""
+fullnameOverride: ""
+commonLabels: {}
+commonAnnotations: {}
+clusterDomain: cluster.local
+extraDeploy: []
+
+
+image:
+  registry: docker.io
+  repository: bitnami/phpmyadmin
+  tag: 5.2.1-debian-12-r48
+  digest: ""
+  pullPolicy: IfNotPresent
+  pullSecrets: []
+  debug: false
+
+
+command: []
+args: []
+lifecycleHooks: {}
+extraEnvVars: []
+extraEnvVarsCM: ""
+extraEnvVarsSecret: ""
+automountServiceAccountToken: false
+
+
+hostAliases:
+  - ip: "127.0.0.1"
+    hostnames:
+      - "status.localhost"
+
+
+containerPorts:
+  http: 8080
+  https: 8443
+
+
+extraContainerPorts: []
+
+updateStrategy:
+  type: RollingUpdate
+
+
+podSecurityContext:
+  enabled: true
+  fsGroupChangePolicy: Always
+  sysctls: []
+  supplementalGroups: []
+  fsGroup: 1001
+
+
+containerSecurityContext:
+  enabled: true
+  seLinuxOptions: {}
+  runAsUser: 1001
+  runAsGroup: 1001
+  runAsNonRoot: true
+  privileged: false
+  readOnlyRootFilesystem: true
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop: ["ALL"]
+  seccompProfile:
+    type: "RuntimeDefault"
+replicas: 1
+
+
+resourcesPreset: "micro"
+resources: {}
+
+
+startupProbe:
+  enabled: false
+  initialDelaySeconds: 30
+  timeoutSeconds: 30
+  periodSeconds: 10
+  successThreshold: 1
+  failureThreshold: 6
+  httpGet:
+    path: /
+    port: http
+
+
+livenessProbe:
+  enabled: true
+  initialDelaySeconds: 30
+  timeoutSeconds: 30
+  periodSeconds: 10
+  successThreshold: 1
+  failureThreshold: 6
+  tcpSocket:
+    port: http
+
+
+readinessProbe:
+  enabled: true
+  initialDelaySeconds: 30
+  timeoutSeconds: 30
+  periodSeconds: 10
+  successThreshold: 1
+  failureThreshold: 6
+  httpGet:
+    path: /
+    port: http
+
+
+customStartupProbe: {}
+customLivenessProbe: {}
+customReadinessProbe: {}
+podLabels: {}
+podAnnotations: {}
+podAffinityPreset: ""
+podAntiAffinityPreset: soft
+
+
+nodeAffinityPreset:
+  type: ""
+  key: ""
+  values: []
+
+
+affinity: {}
+nodeSelector: {}
+tolerations: []
+priorityClassName: ""
+schedulerName: ""
+topologySpreadConstraints: []
+extraVolumes: []
+extraVolumeMounts: []
+initContainers: []
+
+
+pdb:
+  create: true
+  minAvailable: ""
+  maxUnavailable: ""
+
+
+sidecars: []
+
+
+service:
+  type: ClusterIP
+  ports:
+    http: 80
+    https: 443
+  nodePorts:
+    http: ""
+    https: ""
+  clusterIP: ""
+  loadBalancerIP: ""
+  loadBalancerSourceRanges: []
+  externalTrafficPolicy: Cluster
+  extraPorts: []
+  annotations: {}
+  sessionAffinity: None
+  sessionAffinityConfig: {}
+
+
+ingress:
+  enabled: false
+  apiVersion: ""
+  hostname: phpmyadmin.jtest.pivotal.io
+  pathType: ImplementationSpecific
+  path: /
+  extraPaths: []
+  annotations: {}
+  tls: false
+  extraHosts: []
+  extraTls: []
+  secrets: []
+  existingSecretName: ""
+  ingressClassName: ""
+  extraRules: []
+
+
+db:
+  allowArbitraryServer: true
+  port: 3306
+  chartName: ""
+  host: ""
+  bundleTestDB: false
+  enableSsl: false
+  ssl:
+    clientKey: ""
+    clientCertificate: ""
+    caCertificate: ""
+    ciphers: []
+    verify: true
+
+
+mariadb: {}
+
+
+serviceAccount:
+  create: true
+  name: ""
+  automountServiceAccountToken: false
+  annotations: {}
+
+
+metrics:
+  enabled: false
+  image:
+    registry: "docker.io"
+    repository: bitnami/apache-exporter
+    tag: "1.0.9-debian-12-r6"
+    digest: ""
+    pullPolicy: IfNotPresent
+    pullSecrets: []
+  resourcesPreset: "nano"
+  resources: {}
+  service:
+    type: ClusterIP
+    port: 9117
+    annotations:
+      prometheus.io/scrape: "true"
+      prometheus.io/port: "{{ .Values.metrics.service.port }}"
+    clusterIP: ""
+    loadBalancerIP: ""
+    loadBalancerSourceRanges: []
+    externalTrafficPolicy: Cluster
+    sessionAffinity: None
+    sessionAffinityConfig: {}
+  serviceMonitor:
+    enabled: false
+    namespace: ""
+    jobLabel: ""
+    interval: 30s
+    scrapeTimeout: ""
+    relabelings: []
+    metricRelabelings: []
+    labels: {}
+    honorLabels: false
+    selector: {}
+
+
+networkPolicy:
+  enabled: true
+  allowExternal: true
+  allowExternalEgress: true
+  extraIngress: []
+  extraEgress: []
+  ingressNSMatchLabels: {}
+  ingressNSPodMatchLabels: {}
+

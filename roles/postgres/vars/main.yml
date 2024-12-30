@@ -1,7 +1,7 @@
 ---
 base_path: /root
 
-mariadb:
+postgres:
   install: true
   major_version: 10
   minor_version: 1
@@ -10,7 +10,7 @@ mariadb:
   clone_git: false
   nvme: false
   lb_ip_addr: "192.168.1.212"
-  storage_path: "/mnt/mariadb-storage"
+  storage_path: "/mnt/postgres-storage"
   replica: 3
   db:
     name: "powerdns"
@@ -23,16 +23,16 @@ mariadb:
     minor_version: 30
     patch_version: 0
     build_version:
-  hostname: "mariadb.jtest.pivotal.io"
+  hostname: "postgres.jtest.pivotal.io"
   service:
     metadata:
-      name: mariadb-loadbalancer
-      namespace: mariadb
+      name: postgres-loadbalancer
+      namespace: postgres
   ingress:
     metadata:
-      name: mariadb-ingress
+      name: postgres-ingress
       namespace: nginx-ingress
-    hostname: "mariadb.jtest.pivotal.io"
+    hostname: "postgres.jtest.pivotal.io"
   kernel_parameters:
     - "net.ipv4.neigh.default.gc_thresh1 = 0"       # For ARP Cache
   manager:

@@ -1,0 +1,688 @@
+global:
+  imageRegistry: ""
+  imagePullSecrets: []
+  defaultStorageClass: ""
+  storageClass: ""
+  security:
+    allowInsecureImages: false
+  postgresql:
+    username: ""
+    password: ""
+    database: ""
+    repmgrUsername: ""
+    repmgrPassword: ""
+    repmgrDatabase: ""
+    existingSecret: ""
+  ldap:
+    bindpw: ""
+    existingSecret: ""
+  pgpool:
+    adminUsername: ""
+    adminPassword: ""
+    existingSecret: ""
+  compatibility:
+    openshift:
+      adaptSecurityContext: auto
+
+
+kubeVersion: ""
+nameOverride: ""
+fullnameOverride: ""
+namespaceOverride: ""
+commonLabels: {}
+commonAnnotations: {}
+clusterDomain: cluster.local
+extraDeploy: []
+
+
+diagnosticMode:
+  enabled: false
+  command:
+    - sleep
+  args:
+    - infinity
+
+
+postgresql:
+  image:
+    registry: docker.io
+    repository: bitnami/postgresql-repmgr
+    tag: 17.2.0-debian-12-r6
+    digest: ""
+    pullPolicy: IfNotPresent
+    pullSecrets: []
+    debug: false
+  labels: {}
+  podLabels: {}
+  serviceAnnotations: {}
+  replicaCount: 3
+  updateStrategy:
+    type: RollingUpdate
+  containerPorts:
+    postgresql: 5432
+  automountServiceAccountToken: false
+  hostAliases: []
+  hostNetwork: false
+  hostIPC: false
+  podAnnotations: {}
+  podAffinityPreset: ""
+  podAntiAffinityPreset: soft
+  nodeAffinityPreset:
+    type: ""
+    key: ""
+    values: []
+  affinity: {}
+  nodeSelector: {}
+  tolerations: []
+  topologySpreadConstraints: []
+  priorityClassName: ""
+  schedulerName: ""
+  terminationGracePeriodSeconds: ""
+  podSecurityContext:
+    enabled: true
+    fsGroupChangePolicy: Always
+    sysctls: []
+    supplementalGroups: []
+    fsGroup: 1001
+  containerSecurityContext:
+    enabled: true
+    seLinuxOptions: {}
+    runAsUser: 1001
+    runAsGroup: 1001
+    runAsNonRoot: true
+    privileged: false
+    readOnlyRootFilesystem: true
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop: ["ALL"]
+    seccompProfile:
+      type: "RuntimeDefault"
+  command: []
+  args: []
+  lifecycleHooks: {}
+  extraEnvVars: []
+  extraEnvVarsCM: ""
+  extraEnvVarsSecret: ""
+  extraVolumes: []
+  extraVolumeMounts: []
+  initContainers: []
+  sidecars: []
+  resourcesPreset: "micro"
+  resources: {}
+  podManagementPolicy: Parallel
+  livenessProbe:
+    enabled: true
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    successThreshold: 1
+    failureThreshold: 6
+  readinessProbe:
+    enabled: true
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 5
+    successThreshold: 1
+    failureThreshold: 6
+  startupProbe:
+    enabled: false
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 5
+    successThreshold: 1
+    failureThreshold: 10
+  customLivenessProbe: {}
+  customReadinessProbe: {}
+  customStartupProbe: {}
+  networkPolicy:
+    enabled: true
+    allowExternal: true
+    allowExternalEgress: true
+    extraIngress: []
+    extraEgress: []
+    ingressNSMatchLabels: {}
+    ingressNSPodMatchLabels: {}
+  pdb:
+    create: true
+    minAvailable: ""
+    maxUnavailable: ""
+  username: postgres
+  password: ""
+  database: ""
+  existingSecret: ""
+  postgresPassword: ""
+  usePasswordFile: ""
+  repmgrUsePassfile: ""
+  repmgrPassfilePath: ""
+  upgradeRepmgrExtension: false
+  pgHbaTrustAll: false
+  syncReplication: false
+  syncReplicationMode: ""
+  repmgrUsername: repmgr
+  repmgrPassword: ""
+  repmgrDatabase: repmgr
+  repmgrLogLevel: NOTICE
+  repmgrConnectTimeout: 5
+  repmgrReconnectAttempts: 2
+  repmgrReconnectInterval: 3
+  repmgrFenceOldPrimary: false
+  repmgrChildNodesCheckInterval: 5
+  repmgrChildNodesConnectedMinCount: 1
+  repmgrChildNodesDisconnectTimeout: 30
+  usePgRewind: false
+  audit:
+    logHostname: true
+    logConnections: false
+    logDisconnections: false
+    pgAuditLog: ""
+    pgAuditLogCatalog: "off"
+    clientMinMessages: error
+    logLinePrefix: ""
+    logTimezone: ""
+  sharedPreloadLibraries: "pgaudit, repmgr"
+  maxConnections: ""
+  postgresConnectionLimit: ""
+  dbUserConnectionLimit: ""
+  tcpKeepalivesInterval: ""
+  tcpKeepalivesIdle: ""
+  tcpKeepalivesCount: ""
+  statementTimeout: ""
+  pghbaRemoveFilters: ""
+  extraInitContainers: []
+  repmgrConfiguration: ""
+  configuration: ""
+  pgHbaConfiguration: ""
+  configurationCM: ""
+  extendedConf: ""
+  extendedConfCM: ""
+  initdbScripts: {}
+  initdbScriptsCM: ""
+  initdbScriptsSecret: ""
+  tls:
+    enabled: false
+    preferServerCiphers: true
+    certificatesSecret: ""
+    certFilename: ""
+    certKeyFilename: ""
+  preStopDelayAfterPgStopSeconds: 25
+  headlessWithNotReadyAddresses: false
+
+
+witness:
+  create: false
+  labels: {}
+  podLabels: {}
+  replicaCount: 1
+  updateStrategy:
+    type: RollingUpdate
+  containerPorts:
+    postgresql: 5432
+  automountServiceAccountToken: false
+  hostAliases: []
+  hostNetwork: false
+  hostIPC: false
+  podAnnotations: {}
+  podAffinityPreset: ""
+  podAntiAffinityPreset: soft
+  nodeAffinityPreset:
+    type: ""
+    key: ""
+    values: []
+  affinity: {}
+  nodeSelector: {}
+  tolerations: []
+  topologySpreadConstraints: []
+  priorityClassName: ""
+  schedulerName: ""
+  terminationGracePeriodSeconds: ""
+  podSecurityContext:
+    enabled: true
+    fsGroupChangePolicy: Always
+    sysctls: []
+    supplementalGroups: []
+    fsGroup: 1001
+  containerSecurityContext:
+    enabled: true
+    seLinuxOptions: {}
+    runAsUser: 1001
+    runAsGroup: 1001
+    runAsNonRoot: true
+    privileged: false
+    readOnlyRootFilesystem: true
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop: ["ALL"]
+    seccompProfile:
+      type: "RuntimeDefault"
+  command: []
+  args: []
+  lifecycleHooks: {}
+  extraEnvVars: []
+  extraEnvVarsCM: ""
+  extraEnvVarsSecret: ""
+  extraVolumes: []
+  extraVolumeMounts: []
+  initContainers: []
+  sidecars: []
+  resourcesPreset: "micro"
+  resources: {}
+  livenessProbe:
+    enabled: true
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    successThreshold: 1
+    failureThreshold: 6
+  readinessProbe:
+    enabled: true
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 5
+    successThreshold: 1
+    failureThreshold: 6
+  startupProbe:
+    enabled: false
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 5
+    successThreshold: 1
+    failureThreshold: 10
+  customLivenessProbe: {}
+  customReadinessProbe: {}
+  customStartupProbe: {}
+  pdb:
+    create: true
+    minAvailable: ""
+    maxUnavailable: ""
+  upgradeRepmgrExtension: false
+  pgHbaTrustAll: false
+  repmgrLogLevel: NOTICE
+  repmgrConnectTimeout: 5
+  repmgrReconnectAttempts: 2
+  repmgrReconnectInterval: 3
+  audit:
+    logHostname: true
+    logConnections: false
+    logDisconnections: false
+    pgAuditLog: ""
+    pgAuditLogCatalog: "off"
+    clientMinMessages: error
+    logLinePrefix: ""
+    logTimezone: ""
+  maxConnections: ""
+  postgresConnectionLimit: ""
+  dbUserConnectionLimit: ""
+  tcpKeepalivesInterval: ""
+  tcpKeepalivesIdle: ""
+  tcpKeepalivesCount: ""
+  statementTimeout: ""
+  pghbaRemoveFilters: ""
+  extraInitContainers: []
+  repmgrConfiguration: ""
+  configuration: ""
+  pgHbaConfiguration: ""
+  configurationCM: ""
+  extendedConf: ""
+  extendedConfCM: ""
+  initdbScripts: {}
+  initdbScriptsCM: ""
+  initdbScriptsSecret: ""
+
+
+pgpool:
+  image:
+    registry: docker.io
+    repository: bitnami/pgpool
+    tag: 4.5.5-debian-12-r0
+    digest: ""
+    pullPolicy: IfNotPresent
+    pullSecrets: []
+    debug: false
+  customUsers:
+    usernames: ""
+    passwords: ""
+  automountServiceAccountToken: false
+  hostAliases: []
+  customUsersSecret: ""
+  existingSecret: ""
+  srCheckDatabase: postgres
+  labels: {}
+  podLabels: {}
+  serviceLabels: {}
+  serviceAnnotations: {}
+  customLivenessProbe: {}
+  customReadinessProbe: {}
+  customStartupProbe: {}
+  command: []
+  args: []
+  lifecycleHooks: {}
+  extraEnvVars: []
+  extraEnvVarsCM: ""
+  extraEnvVarsSecret: ""
+  extraVolumes: []
+  extraVolumeMounts: []
+  initContainers: []
+  sidecars: []
+  replicaCount: 1
+  podAnnotations: {}
+  priorityClassName: ""
+  schedulerName: ""
+  terminationGracePeriodSeconds: ""
+  topologySpreadConstraints: []
+  podAffinityPreset: ""
+  podAntiAffinityPreset: soft
+  nodeAffinityPreset:
+    type: ""
+    key: ""
+    values: []
+  affinity: {}
+  nodeSelector: {}
+  tolerations: []
+  podSecurityContext:
+    enabled: true
+    fsGroupChangePolicy: Always
+    sysctls: []
+    supplementalGroups: []
+    fsGroup: 1001
+  containerSecurityContext:
+    enabled: true
+    seLinuxOptions: {}
+    runAsUser: 1001
+    runAsGroup: 1001
+    runAsNonRoot: true
+    privileged: false
+    readOnlyRootFilesystem: true
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop: ["ALL"]
+    seccompProfile:
+      type: "RuntimeDefault"
+  resourcesPreset: "micro"
+  resources: {}
+  livenessProbe:
+    enabled: true
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    successThreshold: 1
+    failureThreshold: 5
+  readinessProbe:
+    enabled: true
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    timeoutSeconds: 5
+    successThreshold: 1
+    failureThreshold: 5
+  startupProbe:
+    enabled: false
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 5
+    successThreshold: 1
+    failureThreshold: 10
+  networkPolicy:
+    enabled: true
+    allowExternal: true
+    allowExternalEgress: true
+    extraIngress: []
+    extraEgress: []
+    ingressNSMatchLabels: {}
+    ingressNSPodMatchLabels: {}
+  pdb:
+    create: true
+    minAvailable: ""
+    maxUnavailable: ""
+  updateStrategy: {}
+  containerPorts:
+    postgresql: 5432
+  minReadySeconds: ""
+  adminUsername: admin
+  adminPassword: ""
+  usePasswordFile: ""
+  authenticationMethod: scram-sha-256
+  logConnections: false
+  logHostname: true
+  logPerNodeStatement: false
+  logLinePrefix: ""
+  clientMinMessages: error
+  numInitChildren: ""
+  reservedConnections: 1
+  maxPool: ""
+  childMaxConnections: ""
+  childLifeTime: ""
+  clientIdleLimit: ""
+  connectionLifeTime: ""
+  useLoadBalancing: true
+  disableLoadBalancingOnWrite: transaction
+  configuration: ""
+  configurationCM: ""
+  initdbScripts: {}
+  initdbScriptsCM: ""
+  initdbScriptsSecret: ""
+  tls:
+    enabled: false
+    autoGenerated: false
+    preferServerCiphers: true
+    certificatesSecret: ""
+    certFilename: ""
+    certKeyFilename: ""
+    certCAFilename: ""
+
+
+ldap:
+  enabled: false
+  existingSecret: ""
+  uri: ""
+  basedn: ""
+  binddn: ""
+  bindpw: ""
+  bslookup: ""
+  scope: ""
+  tlsReqcert: ""
+  nssInitgroupsIgnoreusers: root,nslcd
+
+
+rbac:
+  create: false
+  rules: []
+serviceAccount:
+  create: true
+  name: ""
+  annotations: {}
+  automountServiceAccountToken: false
+psp:
+  create: false
+
+
+metrics:
+  enabled: false
+  image:
+    registry: docker.io
+    repository: bitnami/postgres-exporter
+    tag: 0.16.0-debian-12-r2
+    digest: ""
+    pullPolicy: IfNotPresent
+    pullSecrets: []
+    debug: false
+  podSecurityContext:
+    enabled: true
+    seLinuxOptions: {}
+    runAsUser: 1001
+    runAsGroup: 1001
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
+  resourcesPreset: "nano"
+  resources: {}
+  containerPorts:
+    http: 9187
+  livenessProbe:
+    enabled: true
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    successThreshold: 1
+    failureThreshold: 6
+  readinessProbe:
+    enabled: true
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 5
+    successThreshold: 1
+    failureThreshold: 6
+  startupProbe:
+    enabled: false
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 5
+    successThreshold: 1
+    failureThreshold: 10
+  customLivenessProbe: {}
+  customReadinessProbe: {}
+  customStartupProbe: {}
+  service:
+    enabled: true
+    type: ClusterIP
+    ports:
+      metrics: 9187
+    nodePorts:
+      metrics: ""
+    clusterIP: ""
+    loadBalancerIP: ""
+    loadBalancerSourceRanges: []
+    externalTrafficPolicy: Cluster
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "9187"
+  customMetrics: {}
+  extraEnvVars: []
+  extraEnvVarsCM: ""
+  extraEnvVarsSecret: ""
+  serviceMonitor:
+    enabled: false
+    namespace: ""
+    interval: ""
+    scrapeTimeout: ""
+    annotations: {}
+    labels: {}
+    selector:
+      prometheus: kube-prometheus
+    relabelings: []
+    metricRelabelings: []
+    honorLabels: false
+    jobLabel: ""
+
+
+volumePermissions:
+  enabled: false
+  image:
+    registry: docker.io
+    repository: bitnami/os-shell
+    tag: 12-debian-12-r34
+    digest: ""
+    pullPolicy: IfNotPresent
+    pullSecrets: []
+  podSecurityContext:
+    enabled: true
+    seLinuxOptions: {}
+    runAsUser: 0
+    runAsGroup: 0
+    runAsNonRoot: false
+    seccompProfile:
+      type: RuntimeDefault
+  resourcesPreset: "nano"
+  resources: {}
+
+
+persistence:
+  enabled: true
+  existingClaim: ""
+  storageClass: ""
+  mountPath: /bitnami/postgresql
+  accessModes:
+    - ReadWriteOnce
+  size: 8Gi
+  annotations: {}
+  labels: {}
+  selector: {}
+persistentVolumeClaimRetentionPolicy:
+  enabled: false
+  whenScaled: Retain
+  whenDeleted: Retain
+
+
+service:
+  type: ClusterIP
+  ports:
+    postgresql: 5432
+  portName: postgresql
+  nodePorts:
+    postgresql: ""
+  loadBalancerIP: ""
+  loadBalancerSourceRanges: []
+  clusterIP: ""
+  externalTrafficPolicy: Cluster
+  extraPorts: []
+  sessionAffinity: "None"
+  sessionAffinityConfig: {}
+  annotations: {}
+  serviceLabels: {}
+  headless:
+    annotations: {}
+backup:
+  enabled: false
+  cronjob:
+    schedule: "@daily"
+    timeZone: ""
+    concurrencyPolicy: Allow
+    failedJobsHistoryLimit: 1
+    successfulJobsHistoryLimit: 3
+    startingDeadlineSeconds: ""
+    ttlSecondsAfterFinished: ""
+    restartPolicy: OnFailure
+    podSecurityContext:
+      enabled: true
+      fsGroupChangePolicy: Always
+      sysctls: []
+      supplementalGroups: []
+      fsGroup: 1001
+    containerSecurityContext:
+      enabled: true
+      seLinuxOptions: {}
+      runAsUser: 1001
+      runAsGroup: 1001
+      runAsNonRoot: true
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+      seccompProfile:
+        type: RuntimeDefault
+      capabilities:
+        drop:
+          - ALL
+    command:
+      - /bin/sh
+      - -c
+      - "pg_dumpall --clean --if-exists --load-via-partition-root --quote-all-identifiers --no-password --file=${PGDUMP_DIR}/pg_dumpall-$(date '+%Y-%m-%d-%H-%M').pgdump"
+    labels: {}
+    annotations: {}
+    nodeSelector: {}
+    tolerations: []
+    extraEnvVars: []
+    extraEnvVarsCM: ""
+    extraEnvVarsSecret: ""
+    extraVolumes: []
+    extraVolumeMounts: []
+    storage:
+      existingClaim: ""
+      resourcePolicy: ""
+      storageClass: ""
+      accessModes:
+        - ReadWriteOnce
+      size: 8Gi
+      annotations: {}
+      mountPath: /backup/pgdump
+      subPath: ""
+      ##
+      volumeClaimTemplates:
+        selector: {}
+
