@@ -1,0 +1,9 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ pgsql.repmgr.service.metadata.name }}
+  namespace: {{ pgsql.repmgr.namespace }}
+spec:
+  loadBalancerIP: {{ pgsql.repmgr.lb_ip_addr }}
+

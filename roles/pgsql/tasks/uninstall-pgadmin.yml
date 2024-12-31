@@ -1,0 +1,102 @@
+---
+- name: Uninstall PGAdmin
+  shell: |
+    helm uninstall {{ _pgadmin.service.metadata.name }} -n {{ _pgadmin.service.metadata.namespace }}
+  register: uninstall_pgadmin
+  ignore_errors: true
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ uninstall_pgadmin }}
+  when: print_debug == true
+
+
+- name: Validate if PGAdmin Containers are Deleted
+  shell: |
+    kubectl get pods -n {{ _pgadmin.service.metadata.namespace }} | grep pgadmin- | awk '{print $3}' | uniq
+  register: delete_pgadmin_container
+  ignore_errors: true
+  until: delete_pgadmin_container.stdout.find("") != -1
+  retries: 100
+  delay: 10
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ delete_pgadmin_container }}
+  when: print_debug == true
+
+
+- name: Delete Persistent Volumes, Claim and Storage Class
+  shell: |
+    kubectl delete -f {{ item }}
+  register: delete_pvc
+  ignore_errors: true
+  with_items:
+    - "pgadmin-storage-pvc.yaml"
+    - "pgadmin-storage-pv.yaml"
+    - "pgadmin-storage-class.yaml"
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ delete_pvc }}
+  when: print_debug == true
+
+
+- name: Delete Cluster Local PVC Config Yaml
+  file:
+    path: "{{ base_path }}/{{ item }}"
+    state: absent
+  register: delete_cluster_local_pvc_config_yaml
+  ignore_errors: true
+  with_items:
+    - "pgadmin-storage-class.yaml"
+    - "pgadmin-storage-pv.yaml"
+    - "pgadmin-storage-pvc.yaml"
+- debug: msg={{ delete_cluster_local_pvc_config_yaml }}
+  when: print_debug == true
+
+
+- name: Delete Namespace for Persistent Volumes
+  shell: |
+    kubectl delete namespace {{ _pgadmin.service.metadata.namespace }}
+  register: delete_namespace
+  ignore_errors: true
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ delete_namespace }}
+  when: print_debug == true
+
+
+- name: Directory for Persistent Volumes
+  file:
+    path: "{{ _pgadmin.storage_path }}"
+    state: absent
+  register: delete_pv_dir
+  ignore_errors: true
+  delegate_to: "{{ item }}"
+  delegate_facts: True
+  with_items:
+    - "{{ groups['all'] }}"
+- debug: msg={{ delete_pv_dir }}
+  when: print_debug == true
+
+
+- name: Validate if PGAdmin Containers are Running
+  shell: |
+    kubectl -n {{ _pgadmin.service.metadata.namespace }} get pod | grep pgadmin4 | awk '{print $3}' | cut -d : -f 1
+  register: check_pgadmin_container
+  until: check_pgadmin_container.stdout.find("") != -1
+  retries: 100
+  delay: 10
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ check_pgadmin_container }}
+  when: print_debug == true
+

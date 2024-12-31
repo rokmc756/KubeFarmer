@@ -1,0 +1,18 @@
+{% for n in range(0,pgsql.repmgr.replica|int) %}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: data-pgsql-repmgr-postgresql-ha-postgresql-{{ n }}
+  namespace: {{ pgsql.repmgr.namespace }}
+spec:
+  storageClassName: {{ pgsql.repmgr.storage_class }}
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+{% endfor %}
+
+# https://www.codecentric.de/wissens-hub/blog/jinja2-better-ansible-playbooks-templates
+

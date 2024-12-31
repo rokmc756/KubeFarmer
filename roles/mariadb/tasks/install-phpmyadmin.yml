@@ -29,7 +29,7 @@
   shell: |
     kubectl -n phpmyadmin get pods | sed 1d | awk '{print $3}' | grep Running | wc -l
   register: check_phpmyadmin_container
-  until: phpmyadmin.replica|int == check_phpmyadmin_container.stdout|int
+  until: check_phpmyadmin_container.stdout|int == 1
   retries: 60
   delay: 10
   args:

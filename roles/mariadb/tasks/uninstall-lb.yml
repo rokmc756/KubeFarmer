@@ -1,14 +1,44 @@
 ---
-- name: Delete Load Balancer for phpMyAdmin and MariaDB
+- name: Delete Load Balancer for phpMyAdmin
   shell: |
     kubectl patch svc {{ item.svc }} -n {{ item.ns }} -p '{"spec": {"type": "ClusterIP"}}'
-  register: delete_lb
+  register: delete_phpmyadmin_lb
   ignore_errors: yes
   args:
     chdir: "{{ base_path }}"
   with_items:
     - { ns: "phpmyadmin", svc: "phpmyadmin" }
+  when: phpmyadmin is defined and phpmyadmin == true
+- debug: msg={{ delete_phpmyadmin_lb }}
+  when: print_debug == true and ( phpmyadmin is defined and phpmyadmin == true )
+
+
+- name: Delete Load Balancer for MariaDB Galera Cluster
+  shell: |
+    kubectl patch svc {{ item.svc }} -n {{ item.ns }} -p '{"spec": {"type": "ClusterIP"}}'
+  register: delete_galera_lb
+  ignore_errors: yes
+  args:
+    chdir: "{{ base_path }}"
+  with_items:
     - { ns: "mariadb-galera", svc: "mariadb-galera" }
-    - { ns: "mariadb-replica", svc: "mariadb-replica" }
-- debug: msg={{ delete_lb }}
+  when: galera is defined and galera == true
+- debug: msg={{ delete_galera_lb }}
+  when: print_debug == true and ( galera is defined and galera == true )
+
+
+- name: Delete Load Balancer for MariaDB Replication
+  shell: |
+    kubectl patch svc {{ item.svc }} -n {{ item.ns }} -p '{"spec": {"type": "ClusterIP"}}'
+  register: delete_replica_lb
+  ignore_errors: yes
+  args:
+    chdir: "{{ base_path }}"
+  with_items:
+    - { ns: "mariadb-replica", svc: "mariadb-replica-secondary" }
+    - { ns: "mariadb-replica", svc: "mariadb-replica-primary" }
+  when: replica is defined and replica == true
+- debug: msg={{ delete_replica_lb }}
+  when: print_debug == true and ( replica is defined and replica == true )
+
 

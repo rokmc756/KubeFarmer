@@ -1,0 +1,169 @@
+replicaCount: 1
+
+
+image:
+  registry: docker.io
+  repository: dpage/pgadmin4
+  tag: ""
+  pullPolicy: IfNotPresent
+
+
+annotations: {}
+commonLabels: {}
+priorityClassName: ""
+
+
+service:
+  type: ClusterIP
+  clusterIP: ""
+  loadBalancerIP: ""
+  port: 80
+  targetPort: 80
+  portName: http
+  annotations: {}
+
+
+serviceAccount:
+  create: false
+  annotations: {}
+  name: ""
+  automountServiceAccountToken: false
+
+
+hostAliases:
+strategy: {}
+
+
+serverDefinitions:
+  enabled: false
+  resourceType: ConfigMap
+  existingConfigmap: ""
+  existingSecret: ""
+  servers:
+
+
+networkPolicy:
+  enabled: true
+
+
+ingress:
+  enabled: false
+  annotations: {}
+  hosts:
+    - host: chart-example.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+
+extraConfigmapMounts: []
+extraSecretMounts: []
+extraVolumeMounts: []
+extraContainers: |
+
+
+existingSecret: ""
+secretKeys:
+  pgadminPasswordKey: changeme
+
+
+env:
+  email: rokmc756@gmail.com
+  password: changeme
+  # password: SuperSecret
+  enhanced_cookie_protection: "False"
+  variables: []
+
+
+envVarsFromConfigMaps: []
+envVarsFromSecrets: []
+envVarsExtra: []
+
+
+persistentVolume:
+  enabled: true
+  existingClaim: pgadmin4
+  annotations: {}
+  accessModes:
+    - ReadWriteOnce
+  size: 10Gi
+  subPath: ""
+
+
+extraVolumes: []
+
+
+securityContext:
+  runAsUser: 5050
+  runAsGroup: 5050
+  fsGroup: 5050
+
+
+containerSecurityContext:
+  enabled: false
+  allowPrivilegeEscalation: false
+
+
+livenessProbe:
+  initialDelaySeconds: 30
+  periodSeconds: 60
+  timeoutSeconds: 15
+  successThreshold: 1
+  failureThreshold: 3
+
+
+readinessProbe:
+  initialDelaySeconds: 30
+  periodSeconds: 60
+  timeoutSeconds: 15
+  successThreshold: 1
+  failureThreshold: 3
+
+
+VolumePermissions:
+  enabled: false
+
+
+extraDeploy: []
+extraInitContainers: |
+
+
+containerPorts:
+  http: 80
+
+
+resources: {}
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+dnsPolicy: ""
+dnsConfig: {}
+podAnnotations: {}
+templatedPodAnnotations: |-
+podLabels: {}
+namespace: null
+
+
+init:
+  resources: {}
+
+
+test:
+  image:
+    registry: docker.io
+    repository: busybox
+    tag: latest
+  resources: {}
+  securityContext:
+    runAsUser: 5051
+    runAsGroup: 5051
+    fsGroup: 5051
+

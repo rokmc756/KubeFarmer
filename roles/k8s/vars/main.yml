@@ -4,6 +4,9 @@ base_path: /root
 dashboard_port: "10443"
 
 cont_pv_dirs:
+  - "repmgr-storage"
+  - "patroni-storage"
+  - "pgautofailover-storage"
   - "grafana-storage"
   - "powerdns-storage"
   - "mariadb-storage"

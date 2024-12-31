@@ -1,0 +1,28 @@
+{% for h in groups["workers"] %}
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mariadb-galera-pv-{{ hostvars[h]['ansible_hostname'] }}
+  namespace: mariadb-galera
+spec:
+  capacity:
+    storage: 15Gi
+  # volumeMode: Filesystem
+  accessModes:
+  - ReadWriteOnce
+  # persistentVolumeReclaimPolicy: Delete
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: mariadb-galera-storage
+  local:
+    path: {{ mariadb.galera.storage_path }}
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - {{ hostvars[h]['ansible_hostname'] }}
+{% endfor %}
+

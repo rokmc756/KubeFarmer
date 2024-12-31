@@ -1,0 +1,28 @@
+{% for h in groups["workers"] %}
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pgadmin-pv-{{ hostvars[h]['ansible_hostname'] }}
+  namespace: {{ _pgadmin.service.metadata.namespace }}
+spec:
+  capacity:
+    storage: 15Gi
+  # volumeMode: Filesystem
+  accessModes:
+  - ReadWriteOnce
+  # persistentVolumeReclaimPolicy: Delete
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: {{ _pgadmin.storage_class }}
+  local:
+    path: {{ _pgadmin.storage_path }}
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - {{ hostvars[h]['ansible_hostname'] }}
+{% endfor %}
+

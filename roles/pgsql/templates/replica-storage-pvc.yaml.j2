@@ -1,0 +1,31 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: data-mariadb-replica-primary-0
+  namespace: mariadb-replica
+spec:
+  storageClassName: mariadb-replica-storage
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+{% for n in range(0,mariadb.replica.replica|int) %}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: data-mariadb-replica-secondary-{{ n }}
+  namespace: mariadb-replica
+spec:
+  storageClassName: mariadb-replica-storage
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+{% endfor %}
+
+# https://www.codecentric.de/wissens-hub/blog/jinja2-better-ansible-playbooks-templates
+

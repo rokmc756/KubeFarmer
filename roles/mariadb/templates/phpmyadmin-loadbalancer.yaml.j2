@@ -2,8 +2,8 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ phpmyadmin.service.metadata.name }}
-  namespace: {{ phpmyadmin.service.metadata.namespace }}
+  name: {{ _phpmyadmin.service.metadata.name }}
+  namespace: {{ _phpmyadmin.service.metadata.namespace }}
 spec:
-  loadBalancerIP: {{ phpmyadmin.lb_ip_addr }}
+  loadBalancerIP: {{ _phpmyadmin.lb_ip_addr }}
 

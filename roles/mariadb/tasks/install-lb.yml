@@ -13,7 +13,7 @@
 
 - name: Apply Load Balancer for phpMyAdmin
   shell: |
-    kubectl patch svc phpmyadmin -n phpmyadmin -p '{"spec": {"type": "LoadBalancer", "loadBalancerIP": "{{ phpmyadmin.lb_ip_addr }}"}}'
+    kubectl patch svc phpmyadmin -n phpmyadmin -p '{"spec": {"type": "LoadBalancer", "loadBalancerIP": "{{ _phpmyadmin.lb_ip_addr }}"}}'
   register: apply_phpmyadmin_lb
   ignore_errors: yes
   args:

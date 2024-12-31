@@ -91,6 +91,10 @@ powerdns:
 grafana:
 	make -f ./configs/Makefile.grafana r=${r} s=${s} c=${c} USERNAME=${USERNAME}
 
+pgsql:
+	make -f ./configs/Makefile.pgsql r=${r} s=${s} c=${c} USERNAME=${USERNAME}
+
+
 
 
 # - https://ansible-tutorial.schoolofdevops.com/control_structures/

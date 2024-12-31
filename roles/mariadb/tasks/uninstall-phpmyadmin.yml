@@ -17,7 +17,7 @@
     kubectl get pods -n phpmyadmin | grep phpmyadmin- | awk '{print $3}' | uniq
   register: delete_phpmyadmin_container
   ignore_errors: true
-  until: delete_phpmyadmin_container.stdout.find("") != -1
+  until: delete_phpmyadmin_container.stdout.find("Terminating") == -1
   retries: 100
   delay: 10
   args:
@@ -41,20 +41,6 @@
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ delete_namespace }}
   when: print_debug == true
-
-
-#- name: Directory for Persistent Volumes
-#  file:
-#    path: "{{ phpmyadmin.storage_path }}"
-#    state: absent
-#  register: delete_pv_dir
-#  ignore_errors: true
-#  delegate_to: "{{ item }}"
-#  delegate_facts: True
-#  with_items:
-#    - "{{ groups['all'] }}"
-#- debug: msg={{ delete_pv_dir }}
-#  when: print_debug == true
 
 
 - name: Validate if phpMyAdmin Containers are Running

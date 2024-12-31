@@ -1,0 +1,95 @@
+---
+- name: Create Directory for Persistent Volumes
+  file:
+    path: "{{ _pgadmin.storage_path }}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0777
+  register: create_pv_dir
+  delegate_to: "{{ item }}"
+  delegate_facts: True
+  with_items:
+    - "{{ groups['all'] }}"
+- debug: msg={{ create_pv_dir }}
+  when: print_debug == true
+
+
+- name: Create Namespace for Persistent Volumes
+  shell: |
+    kubectl create namespace {{ item }}
+  register: create_namespace
+  with_items:
+    - pgadmin
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ create_namespace }}
+  when: print_debug == true
+
+
+- name: Copy Cluster Local PVC Config Yaml
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ base_path }}/{{ item }}"
+  register: copy_cluster_local_pvc_config_yaml
+  with_items:
+    - "pgadmin-storage-class.yaml"
+    - "pgadmin-storage-pv.yaml"
+    - "pgadmin-storage-pvc.yaml"
+- debug: msg={{ copy_cluster_local_pvc_config_yaml }}
+
+
+- name: Cluster Settings for a Production Cluster Running in a Dynamic Cloud Environment including VMware
+  shell: |
+    kubectl create -f {{ item }}
+  register: create_pvc
+  with_items:
+    - "pgadmin-storage-class.yaml"
+    - "pgadmin-storage-pv.yaml"
+    - "pgadmin-storage-pvc.yaml"
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ create_pvc }}
+  when: print_debug == true
+
+
+- name: Copy PGAdmin Config Yaml
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ base_path }}/{{ item }}"
+  register: copy_pgadmin_config_yaml
+  with_items:
+    - "pgadmin4-values.yaml"
+- debug: msg={{ copy_pgadmin_config_yaml }}
+
+
+- name: Deploy PGAdmin
+  shell:
+    helm install pgadmin4 runix/pgadmin4 -n pgadmin -f pgadmin4-values.yaml
+  register: deploy_pgadmin
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ deploy_pgadmin }}
+  when: print_debug == true
+
+
+- name: Validate if PGAdmin Containers are Running Normally
+  shell: |
+    kubectl -n pgadmin get pods | sed 1d | awk '{print $3}' | grep Running | wc -l
+  register: check_pgadmin_container
+  until: _pgadmin.replica|int == check_pgadmin_container.stdout|int
+  retries: 60
+  delay: 10
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ check_pgadmin_container }}
+  when: print_debug == true
+

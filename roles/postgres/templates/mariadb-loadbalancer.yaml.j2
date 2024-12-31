@@ -1,9 +1,0 @@
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: {{ mariadb.service.metadata.name }}
-  namespace: {{ mariadb.service.metadata.namespace }}
-spec:
-  loadBalancerIP: {{ mariadb.lb_ip_addr }}
-

@@ -1,0 +1,14 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ _pgadmin.service.metadata.name }}
+  namespace: {{ _pgadmin.service.metadata.namespace }}
+spec:
+  storageClassName: {{ _pgadmin.storage_class }}
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+

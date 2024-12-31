@@ -1,0 +1,9 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ pgsql.pgautofailover.service.metadata.name }}
+  namespace: {{ pgsql.pgautofailover.namespace }}
+spec:
+  loadBalancerIP: {{ pgsql.pgautofailover.lb_ip_addr }}
+

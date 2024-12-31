@@ -1,0 +1,33 @@
+---
+- name: Delete Load Balancer for PGAdmin
+  shell: |
+    kubectl patch svc {{ item.svc }} -n {{ item.ns }} -p '{"spec": {"type": "ClusterIP"}}'
+  register: delete_pgadmin_lb
+  ignore_errors: yes
+  args:
+    chdir: "{{ base_path }}"
+  with_items:
+    - { ns: "pgadmin", svc: "pgadmin4" }
+  when: pgadmin is defined and pgadmin == true
+- debug: msg={{ delete_pgadmin_lb }}
+  when: print_debug == true and ( pgadmin is defined and pgadmin == true )
+
+
+- name: Delete Load Balancer for RepMgr
+  shell: |
+    kubectl patch svc pgsql-repmgr-postgresql-ha-{{ item }} -n {{ pgsql.repmgr.namespace }} -p '{"spec": {"type": "ClusterIP"}}'
+  register: delete_repmgr_lb
+  ignore_errors: yes
+  args:
+    chdir: "{{ base_path }}"
+  with_items:
+    - "postgresql"
+    - "pgpool"
+  when: repmgr is defined and repmgr == true
+- debug: msg={{ delete_repmgr_lb }}
+  when: print_debug == true and ( repmgr is defined and repmgr == true )
+
+# service/pgsql-repmgr-postgresql-ha-pgpool                ClusterIP   10.96.122.116   <none>        5432/TCP   106s
+# service/pgsql-repmgr-postgresql-ha-postgresql            ClusterIP   10.110.75.200   <none>        5432/TCP   106s
+# service/pgsql-repmgr-postgresql-ha-postgresql-headless   ClusterIP   None            <none>        5432/TCP   106s
+

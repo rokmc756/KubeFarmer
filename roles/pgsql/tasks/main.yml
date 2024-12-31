@@ -1,0 +1,72 @@
+---
+- name: Check OS ( PostgreSQL }
+  fail: msg="Not a Red Hat based system!"
+  when: ansible_os_family != 'RedHat' or ansible_os_family != 'CentOS' or ansible_os_family != 'Rocky'
+
+
+- name: Set Facts for PostgreSQL
+  import_tasks: set-pgsql-facts.yml
+  tags:
+    - install
+    - uninstall
+
+
+- name: Enable Helm Repository
+  import_tasks: enable-helm-repo.yml
+  tags: install
+  when: helm.enable_repo == true and inventory_hostname in groups['master']
+
+
+- name: Install Cert Manager
+  import_tasks: install-cert-manager.yml
+  tags: install
+  when: cert_manager.install == true and inventory_hostname in groups['master']
+
+
+- name: Deploy RepMgr Cluster
+  import_tasks: install-repmgr.yml
+  tags: install
+  when: ( repmgr is defined and repmgr == true ) and inventory_hostname in groups['master']
+
+
+- name: Deploy PGAdmin
+  import_tasks: install-pgadmin.yml
+  tags: install
+  when: ( pgadmin is defined and pgadmin == true ) and inventory_hostname in groups['master']
+
+
+- name: Install Load Balancer
+  import_tasks: install-lb.yml
+  tags: install
+  when: pgsql.lb.install == true and inventory_hostname in groups['master']
+
+
+- name: Uninstall Load Balancer
+  import_tasks: uninstall-lb.yml
+  tags: uninstall
+  when: pgsql.lb.install == true and inventory_hostname in groups['master']
+
+
+- name: Destroy PGAdmin
+  import_tasks: uninstall-pgadmin.yml
+  tags: uninstall
+  when: ( pgadmin is defined and pgadmin == true ) and inventory_hostname in groups['master']
+
+
+- name: Destroy RepMgr Cluster
+  import_tasks: uninstall-repmgr.yml
+  tags: uninstall
+  when: ( repmgr is defined and repmgr == true ) and inventory_hostname in groups['master']
+
+
+- name: Uninstall Cert Manager
+  import_tasks: uninstall-cert-manager.yml
+  tags: uninstall
+  when: cert_manager.install == true and inventory_hostname in groups['master']
+
+
+- name: Disable Helm Repository
+  import_tasks: disable-helm-repo.yml
+  tags: uninstall
+  when: helm.enable_repo == false and inventory_hostname in groups['master']
+

@@ -1,0 +1,9 @@
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: {{ pgsql.repmgr.storage_class }}
+  namespace: {{ pgsql.repmgr.namespace }}
+provisioner: kubernetes.io/no-provisioner
+volumeBindingMode: WaitForFirstConsumer
+
