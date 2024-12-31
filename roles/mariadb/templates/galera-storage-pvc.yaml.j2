@@ -1,12 +1,12 @@
-{% for n in range(0,mariadb.replica|int) %}
+{% for n in range(0,mariadb.galera.replica|int) %}
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: data-mariadb-galera-{{ n }}
-  namespace: mariadb
+  namespace: mariadb-galera
 spec:
-  storageClassName: mariadb-storage
+  storageClassName: mariadb-galera-storage
   accessModes:
     - ReadWriteOnce
   resources:

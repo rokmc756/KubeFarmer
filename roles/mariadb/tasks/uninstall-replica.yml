@@ -1,0 +1,102 @@
+---
+- name: Uninstall MariaDB Replication
+  shell: |
+    helm uninstall mariadb-replica --namespace {{ mariadb.replica.namespace }}
+  register: uninstall_replica
+  ignore_errors: true
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ uninstall_replica }}
+  when: print_debug == true
+
+
+- name: Validate if MariaDB Replication Containers are Deleted
+  shell: |
+    kubectl get pods -n {{ mariadb.replica.namespace }} | grep mariadb- | awk '{print $3}' | uniq
+  register: delete_replica_container
+  ignore_errors: true
+  until: delete_replica_container.stdout.find("") != -1
+  retries: 100
+  delay: 10
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ delete_replica_container }}
+  when: print_debug == true
+
+
+- name: Delete Persistent Volumes, Claim and Storage Class
+  shell: |
+    kubectl delete -f {{ item }}
+  register: delete_pvc
+  ignore_errors: true
+  with_items:
+    - "replica-storage-pvc.yaml"
+    - "replica-storage-pv.yaml"
+    - "replica-storage-class.yaml"
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ delete_pvc }}
+  when: print_debug == true
+
+
+- name: Delete Cluster Local PVC Config Yaml
+  file:
+    path: "{{ base_path }}/{{ item }}"
+    state: absent
+  register: delete_cluster_local_pvc_config_yaml
+  ignore_errors: true
+  with_items:
+    - "replica-storage-class.yaml"
+    - "replica-storage-pv.yaml"
+    - "replica-storage-pvc.yaml"
+- debug: msg={{ delete_cluster_local_pvc_config_yaml }}
+  when: print_debug == true
+
+
+- name: Delete Namespace for Persistent Volumes
+  shell: |
+    kubectl delete namespace {{ mariadb.replica.namespace }}
+  register: delete_namespace
+  ignore_errors: true
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ delete_namespace }}
+  when: print_debug == true
+
+
+- name: Directory for Persistent Volumes
+  file:
+    path: "{{ mariadb.replica.storage_path }}"
+    state: absent
+  register: delete_pv_dir
+  ignore_errors: true
+  delegate_to: "{{ item }}"
+  delegate_facts: True
+  with_items:
+    - "{{ groups['all'] }}"
+- debug: msg={{ delete_pv_dir }}
+  when: print_debug == true
+
+
+- name: Validate if MariaDB Replication Containers are Running
+  shell: |
+    kubectl -n {{ mariadb.replica.namespace }} get pod | grep mariadb | awk '{print $3}' | cut -d : -f 1
+  register: check_replica_container
+  until: check_replica_container.stdout.find("") != -1
+  retries: 100
+  delay: 10
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ check_replica_container }}
+  when: print_debug == true
+

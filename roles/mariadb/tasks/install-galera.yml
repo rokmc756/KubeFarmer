@@ -1,6 +1,6 @@
 - name: Create Directory for Persistent Volumes
   file:
-    path: "{{ mariadb.storage_path }}"
+    path: "{{ mariadb.galera.storage_path }}"
     state: directory
     owner: root
     group: root
@@ -16,10 +16,8 @@
 
 - name: Create Namespace for Persistent Volumes
   shell: |
-    kubectl create namespace {{ item }}
+    kubectl create namespace {{ mariadb.galera.namespace }}
   register: create_namespace
-  with_items:
-    - mariadb
   args:
     chdir: "{{ base_path }}/"
   environment:
@@ -34,9 +32,9 @@
     dest: "{{ base_path }}/{{ item }}"
   register: copy_cluster_local_pvc_config_yaml
   with_items:
-    - "local-storage-class.yaml"
-    - "local-storage-pv.yaml"
-    - "local-storage-pvc.yaml"
+    - "galera-storage-class.yaml"
+    - "galera-storage-pv.yaml"
+    - "galera-storage-pvc.yaml"
 - debug: msg={{ copy_cluster_local_pvc_config_yaml }}
 
 
@@ -45,9 +43,9 @@
     kubectl create -f {{ item }}
   register: create_pvc
   with_items:
-    - "local-storage-class.yaml"
-    - "local-storage-pv.yaml"
-    - "local-storage-pvc.yaml"
+    - "galera-storage-class.yaml"
+    - "galera-storage-pv.yaml"
+    - "galera-storage-pvc.yaml"
   args:
     chdir: "{{ base_path }}/"
   environment:
@@ -60,110 +58,101 @@
   template:
     src: "{{ item }}.j2"
     dest: "{{ base_path }}/{{ item }}"
-  register: copy_mariadb_lb_config_yaml
+  register: copy_galera_config_yaml
   with_items:
-    - "mariadb-values.yaml"
-- debug: msg={{ copy_mariadb_lb_config_yaml }}
+    - "mariadb-galera-values.yaml"
+- debug: msg={{ copy_galera_config_yaml }}
 
 
 - name: Deploy MariaDB Galera Cluster
   shell:
-    helm install mariadb-galera bitnami/mariadb-galera --namespace mariadb -f {{ base_path }}/mariadb-values.yaml
-  register: deploy_mariadb
+    helm install mariadb-galera bitnami/mariadb-galera --namespace {{ mariadb.galera.namespace }} -f {{ base_path }}/mariadb-values.yaml
+  register: deploy_galera
   args:
     chdir: "{{ base_path }}/"
   environment:
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-- debug: msg={{ deploy_mariadb }}
+- debug: msg={{ deploy_galera }}
   when: print_debug == true
 
 
-- name: Validate if MariaDB Containers are Running Normally
+- name: Validate if MariaDB Galera Containers are Running Normally
   shell: |
-    kubectl -n mariadb get pods | sed 1d | awk '{print $3}' | grep Running | wc -l
-  register: check_mariadb_container
-  until: mariadb.replica|int == check_mariadb_container.stdout|int
+    kubectl -n mariadb-galera get pods | sed 1d | awk '{print $3}' | grep Running | wc -l
+  register: check_galera_container
+  until: mariadb.replica.replica|int == check_galera_container.stdout|int
   retries: 60
   delay: 10
   args:
     chdir: "{{ base_path }}/"
   environment:
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-- debug: msg={{ check_mariadb_container }}
+- debug: msg={{ check_galera_container }}
   when: print_debug == true
-
 
 
 # helm search repo mariadb
 # helm inspect values bitnami/mariadb-galera --version 14.1.0 > mariadb-values.yaml
-#
-#
+
 # mysql -h 192.168.1.211 -u root -p"Changeme34#$" -e "SHOW STATUS LIKE 'wsrep_cluster_size'"
 # +--------------------+-------+
 # | Variable_name      | Value |
 # +--------------------+-------+
 # | wsrep_cluster_size | 1     |
 # +--------------------+-------+
-#
+
 # mysql -h 192.168.1.211 -u root -p"Changeme34#$" mysql -e "select * from user where user='jomoon'"
-#
+
 # kubectl get statefulsets.apps galera-mariadb-galera -n mariadb
 # NAME                    READY   AGE
 # galera-mariadb-galera   1/3     14m
-#
+
 # kubectl get pvc -n mariadb
 # NAME                           STATUS   VOLUME                  CAPACITY   ACCESS MODES   STORAGECLASS      VOLUMEATTRIBUTESCLASS   AGE
 # data-galera-mariadb-galera-0   Bound    mariadb-pv-rk9-node04   15Gi       RWO            mariadb-storage   <unset>                 16m
 # data-galera-mariadb-galera-1   Bound    mariadb-pv-rk9-node05   15Gi       RWO            mariadb-storage   <unset>                 16m
-#
+
 # kubectl get svc -n mariadb
 # NAME                             TYPE           CLUSTER-IP     EXTERNAL-IP     PORT(S)                      AGE
 # galera-mariadb-galera            LoadBalancer   10.99.85.184   192.168.1.211   3306:32074/TCP               17m
 # galera-mariadb-galera-headless   ClusterIP      None           <none>          4567/TCP,4568/TCP,4444/TCP   17m
-#
+
 # Watch the deployment status using the command:",
 # $ kubectl get sts -w --namespace mariadb -l app.kubernetes.io/instance=mariadb-galera",
-#
+
 # MariaDB can be accessed via port \"3306\" on the following DNS name from within your cluster:",
-#
+
 # mariadb-galera.mariadb.svc.cluster.local",
-#
-#
+
 # To obtain the password for the MariaDB admin user run the following command:",
 # $ echo "$(kubectl get secret --namespace mariadb mariadb-galera -o jsonpath="{.data.mariadb-root-password}" | base64 -d)"",
-#
+
 # To connect to your database run the following command
 # $ kubectl run mariadb-galera-client --rm --tty -i --restart='Never' --namespace mariadb --image docker.io/bitnami/mariadb-galera:11.4.4-debian-12-r3 --command \\",
 # # mysql -h mariadb-galera -P 3306 -ujomoon -p$(kubectl get secret --namespace mariadb mariadb-galera -o jsonpath=\"{.data.mariadb-password}\" | base64 -d) powerdns",
-#
-#
+
 # To connect to your database from outside the cluster execute the following commands:",
-#
+
 # NOTE: It may take a few minutes for the LoadBalancer IP to be available.",
 # Watch the status with
 # $ kubectl get svc --namespace mariadb -w mariadb-galera
 # $ export SERVICE_IP=$(kubectl get svc --namespace mariadb mariadb-galera --template "{{ range (index .status.loadBalancer.ingress 0) }}{{ . }}{{ end }}")"
-#
+
 # $ mysql -h $SERVICE_IP -P 3306 -ujomoon -p$(kubectl get secret --namespace mariadb mariadb-galera -o jsonpath="{.data.mariadb-password}" | base64 -d) powerdns"
-#
-#
+
 # To upgrade this helm chart
 # $ helm upgrade --namespace mariadb mariadb-galera oci://registry-1.docker.io/bitnamicharts/mariadb-galera \\",
 # --set rootUser.password=$(kubectl get secret --namespace mariadb mariadb-galera -o jsonpath=\"{.data.mariadb-root-password}\" | base64 -d) \\",
 # --set db.user=jomoon --set db.password=$(kubectl get secret --namespace mariadb mariadb-galera -o jsonpath=\"{.data.mariadb-password}\" | base64 -d) --set db.name=powerdns \\",
 # --set galera.mariabackup.password=$(kubectl get secret --namespace mariadb mariadb-galera -o jsonpath=\"{.data.mariadb-galera-mariabackup-password}\" | base64 -d)",
-#
-#
+
 # "WARNING: There are \"resources\" sections in the chart not set. Using \"resourcesPreset\" is not recommended for production.
 # For production installations, please set the following values according to your workload needs:",
 # "  - resources",
 # "+info https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/"
 
-
 # REPLICAS=5
 # kubectl scale statefulsets "$APP_INSTANCE_NAME-galera" --namespace "$NAMESPACE" --replicas=$REPLICAS
 
-
 # https://github.com/bitnami/charts/issues/8256
-
 

@@ -5,21 +5,33 @@
     dest: "{{ base_path }}/{{ item }}"
   register: copy_lb_config_yaml
   with_items:
-    - "mariadb-loadbalancer.yaml"
+    - "galera-loadbalancer.yaml"
+    - "replica-loadbalancer.yaml"
     - "phpmyadmin-loadbalancer.yaml"
 - debug: msg={{ copy_lb_config_yaml }}
 
 
-# kubectl apply -f {{ item }}
-- name: Apply Load Balancer for MariaDB and phpMyAdmin
+- name: Apply Load Balancer for phpMyAdmin
   shell: |
     kubectl patch svc phpmyadmin -n phpmyadmin -p '{"spec": {"type": "LoadBalancer", "loadBalancerIP": "{{ phpmyadmin.lb_ip_addr }}"}}'
-  register: apply_lb
+  register: apply_phpmyadmin_lb
   ignore_errors: yes
   args:
     chdir: "{{ base_path }}"
-  # with_items:
-  #  - "mariadb-loadbalancer.yaml"
-  #  - "phpmyadmin-loadbalancer.yaml"
-- debug: msg={{ apply_lb }}
+  when: phpmyadmin is defined and phpmyadmin == true
+- debug: msg={{ apply_phpmyadmin_lb }}
+  when: phpmyadmin is defined and phpmyadmin == true
+
+
+- name: Apply Load Balancer for MariaDB Replication
+  shell: |
+    kubectl patch svc mariadb-replica-primary -n {{ mariadb.replica.namespace }} -p '{"spec": {"type": "LoadBalancer", "loadBalancerIP": "{{ mariadb.replica.primary.lb_ip_addr }}"}}'
+    kubectl patch svc mariadb-replica-secondary -n {{ mariadb.replica.namespace }} -p '{"spec": {"type": "LoadBalancer", "loadBalancerIP": "{{ mariadb.replica.secondary.lb_ip_addr }}"}}'
+  register: apply_replica_lb
+  ignore_errors: yes
+  args:
+    chdir: "{{ base_path }}"
+  when: replica is defined and replica == true
+- debug: msg={{ apply_replica_lb }}
+  when: replica is defined and replica == true
 

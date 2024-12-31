@@ -13,17 +13,6 @@
   when: print_debug == true
 
 
-#- name: Copy phpMyAdmin Config Yaml
-#  template:
-#    src: "{{ item }}.j2"
-#    dest: "{{ base_path }}/{{ item }}"
-#  register: copy_phpmyadmin_config_yaml
-#  with_items:
-#    - "phpmyadmin-values.yaml"
-#- debug: msg={{ copy_phpmyadmin_config_yaml }}
-
-
-# helm install phpmyadmin bitnami/phpmyadmin -n phpmyadmin -f phpmyadmin-values.yaml
 - name: Deploy phpMyaAmin
   shell:
     helm install phpmyadmin bitnami/phpmyadmin -n phpmyadmin
@@ -36,7 +25,7 @@
   when: print_debug == true
 
 
-- name: Validate if phpmyadmin Containers are Running Normally
+- name: Validate if phpMyAdmin Containers are Running Normally
   shell: |
     kubectl -n phpmyadmin get pods | sed 1d | awk '{print $3}' | grep Running | wc -l
   register: check_phpmyadmin_container

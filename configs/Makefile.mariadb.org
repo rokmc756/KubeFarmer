@@ -1,0 +1,9 @@
+mariadb:
+	@if [ "${r}" = "install" ]; then\
+		ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-mariadb.yml --tags='install';\
+	elif [ "${r}" = "uninstall" ]; then\
+		ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-mariadb.yml --tags='uninstall';\
+	else\
+		echo "No Actions for MariaDB Role";\
+		exit;\
+	fi

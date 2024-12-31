@@ -1,0 +1,27 @@
+{% for h in groups["workers"] %}
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mariadb-replica-pv-{{ hostvars[h]['ansible_hostname'] }}
+  namespace: mariadb-replica-galera
+spec:
+  capacity:
+    storage: 15Gi
+  # volumeMode: Filesystem
+  accessModes:
+  - ReadWriteOnce
+  # persistentVolumeReclaimPolicy: Delete
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: mariadb-replica-storage
+  local:
+    path: {{ mariadb.replica.storage_path }}
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - {{ hostvars[h]['ansible_hostname'] }}
+{% endfor %}

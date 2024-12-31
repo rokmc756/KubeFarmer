@@ -23,16 +23,22 @@
   when: cert_manager.install == true and inventory_hostname in groups['master']
 
 
-- name: Deploy MariaDB
-  import_tasks: install-mariadb.yml
+- name: Deploy MariaDB Galera Cluster
+  import_tasks: install-galera.yml
   tags: install
-  when: mariadb.install == true and inventory_hostname in groups['master']
+  when: ( galera is defined and galera == true ) and inventory_hostname in groups['master']
+
+
+- name: Deploy MariaDB Replication Cluster
+  import_tasks: install-replica.yml
+  tags: install
+  when: ( replica is defined and replica == true ) and inventory_hostname in groups['master']
 
 
 - name: Deploy phpMyAdmin
   import_tasks: install-phpmyadmin.yml
   tags: install
-  when: phpmyadmin.install == true and inventory_hostname in groups['master']
+  when: ( phpmyadmin is defined and phpmyadmin == true ) and inventory_hostname in groups['master']
 
 
 - name: Install Load Balancer
@@ -50,13 +56,19 @@
 - name: Destroy phpMyAdmin
   import_tasks: uninstall-phpmyadmin.yml
   tags: uninstall
-  when: phpmyadmin.install == true and inventory_hostname in groups['master']
+  when: ( phpmyadmin is defined and phpmyadmin == true ) and inventory_hostname in groups['master']
 
 
-- name: Destroy MariaDB
-  import_tasks: uninstall-mariadb.yml
+- name: Destroy MariaDB Replication Cluster
+  import_tasks: uninstall-replica.yml
   tags: uninstall
-  when: mariadb.install == true and inventory_hostname in groups['master']
+  when: ( replica is defined and replica == true ) and inventory_hostname in groups['master']
+
+
+- name: Destroy MariaDB Galera Cluster
+  import_tasks: uninstall-galera.yml
+  tags: uninstall
+  when: ( galera is defined and galera == true ) and inventory_hostname in groups['master']
 
 
 - name: Uninstall Cert Manager
@@ -68,5 +80,5 @@
 - name: Disable Helm Repository
   import_tasks: disable-helm-repo.yml
   tags: uninstall
-  when: helm.enable_repo == true and inventory_hostname in groups['master']
+  when: helm.enable_repo == false and inventory_hostname in groups['master']
 

@@ -8,6 +8,7 @@
     chdir: "{{ base_path }}"
   with_items:
     - { ns: "phpmyadmin", svc: "phpmyadmin" }
-    - { ns: "mariadb", svc: "mariadb-galera" }
+    - { ns: "mariadb-galera", svc: "mariadb-galera" }
+    - { ns: "mariadb-replica", svc: "mariadb-replica" }
 - debug: msg={{ delete_lb }}
 

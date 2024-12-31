@@ -2,6 +2,18 @@
 base_path: /root
 
 mariadb:
+  galera:
+    namespace: mariadb-galera
+    replica: 3
+    storage_path: "/mnt/mariadb-galera-storage"
+  replica:
+    namespace: mariadb-replica
+    replica: 3
+    storage_path: "/mnt/mariadb-replica-storage"
+    primary:
+      lb_ip_addr: "192.168.1.245"
+    secondary:
+      lb_ip_addr: "192.168.1.246"
   install: true
   major_version: 10
   minor_version: 1
@@ -11,7 +23,6 @@ mariadb:
   nvme: false
   lb_ip_addr: "192.168.1.212"
   storage_path: "/mnt/mariadb-storage"
-  replica: 3
   db:
     name: "powerdns"
     user: "jomoon"

@@ -1,30 +1,30 @@
 ---
 - name: Uninstall MariaDB
   shell: |
-    helm uninstall mariadb-galera --namespace mariadb
-  register: uninstall_mariadb
+    helm uninstall mariadb-galera --namespace {{ mariadb.galera.namespace }}
+  register: uninstall_galera
   ignore_errors: true
   args:
     chdir: "{{ base_path }}/"
   environment:
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-- debug: msg={{ uninstall_mariadb }}
+- debug: msg={{ uninstall_galera }}
   when: print_debug == true
 
 
-- name: Validate if MariaDB Containers are Deleted
+- name: Validate if MariaDB Galera Containers are Deleted
   shell: |
-    kubectl get pods -n mariadb | grep mariadb- | awk '{print $3}' | uniq
-  register: delete_mariadb_container
+    kubectl get pods -n {{ mariadb.galera.namespace }} | grep mariadb- | awk '{print $3}' | uniq
+  register: delete_galera_container
   ignore_errors: true
-  until: delete_mariadb_container.stdout.find("") != -1
+  until: delete_galera_container.stdout.find("") != -1
   retries: 100
   delay: 10
   args:
     chdir: "{{ base_path }}/"
   environment:
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-- debug: msg={{ delete_mariadb_container }}
+- debug: msg={{ delete_galera_container }}
   when: print_debug == true
 
 
@@ -34,9 +34,9 @@
   register: delete_pvc
   ignore_errors: true
   with_items:
-    - "local-storage-pvc.yaml"
-    - "local-storage-pv.yaml"
-    - "local-storage-class.yaml"
+    - "galera-storage-pvc.yaml"
+    - "galera-storage-pv.yaml"
+    - "galera-storage-class.yaml"
   args:
     chdir: "{{ base_path }}/"
   environment:
@@ -52,20 +52,18 @@
   register: delete_cluster_local_pvc_config_yaml
   ignore_errors: true
   with_items:
-    - "local-storage-class.yaml"
-    - "local-storage-pv.yaml"
-    - "local-storage-pvc.yaml"
+    - "galera-storage-class.yaml"
+    - "galera-storage-pv.yaml"
+    - "galera-storage-pvc.yaml"
 - debug: msg={{ delete_cluster_local_pvc_config_yaml }}
   when: print_debug == true
 
 
 - name: Delete Namespace for Persistent Volumes
   shell: |
-    kubectl delete namespace {{ item }}
+    kubectl delete namespace {{ mariadb.galera.namespace }}
   register: delete_namespace
   ignore_errors: true
-  with_items:
-    - mariadb
   args:
     chdir: "{{ base_path }}/"
   environment:
@@ -76,7 +74,7 @@
 
 - name: Directory for Persistent Volumes
   file:
-    path: "{{ mariadb.storage_path }}"
+    path: "{{ mariadb.galera.storage_path }}"
     state: absent
   register: delete_pv_dir
   ignore_errors: true
@@ -88,18 +86,17 @@
   when: print_debug == true
 
 
-- name: Validate if MariaDB Containers are Running
+- name: Validate if MariaDB Galera Containers are Running
   shell: |
-    kubectl -n mariadb get pod | grep mariadb | awk '{print $3}' | cut -d : -f 1
-  register: check_mariadb_container
-  until: check_mariadb_container.stdout.find("") != -1
+    kubectl -n {{ mariadb.galera.namespace }} get pod | grep mariadb | awk '{print $3}' | cut -d : -f 1
+  register: check_galera_container
+  until: check_galera_container.stdout.find("") != -1
   retries: 100
   delay: 10
   args:
     chdir: "{{ base_path }}/"
   environment:
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-- debug: msg={{ check_mariadb_container }}
+- debug: msg={{ check_galera_container }}
   when: print_debug == true
-
 
