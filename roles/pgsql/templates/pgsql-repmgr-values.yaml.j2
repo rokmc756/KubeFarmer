@@ -7,19 +7,19 @@ global:
   security:
     allowInsecureImages: false
   postgresql:
-    username: ""
-    password: ""
+    username: "postgres"
+    password: "changeme"
     database: ""
-    repmgrUsername: ""
-    repmgrPassword: ""
-    repmgrDatabase: ""
+    repmgrUsername: "repmgr"
+    repmgrPassword: "changeme"
+    repmgrDatabase: "repmgr"
     existingSecret: ""
   ldap:
     bindpw: ""
     existingSecret: ""
   pgpool:
-    adminUsername: ""
-    adminPassword: ""
+    adminUsername: "pooluser"
+    adminPassword: "changeme"
     existingSecret: ""
   compatibility:
     openshift:
@@ -148,7 +148,7 @@ postgresql:
     minAvailable: ""
     maxUnavailable: ""
   username: postgres
-  password: ""
+  password: "changeme"
   database: ""
   existingSecret: ""
   postgresPassword: ""
@@ -160,7 +160,7 @@ postgresql:
   syncReplication: false
   syncReplicationMode: ""
   repmgrUsername: repmgr
-  repmgrPassword: ""
+  repmgrPassword: "changeme"
   repmgrDatabase: repmgr
   repmgrLogLevel: NOTICE
   repmgrConnectTimeout: 5
@@ -340,8 +340,8 @@ pgpool:
     pullSecrets: []
     debug: false
   customUsers:
-    usernames: ""
-    passwords: ""
+    usernames: "pooluser"
+    passwords: "changeme"
   automountServiceAccountToken: false
   hostAliases: []
   customUsersSecret: ""
@@ -438,7 +438,7 @@ pgpool:
     postgresql: 5432
   minReadySeconds: ""
   adminUsername: admin
-  adminPassword: ""
+  adminPassword: "changeme"
   usePasswordFile: ""
   authenticationMethod: scram-sha-256
   logConnections: false
@@ -686,4 +686,6 @@ backup:
       ##
       volumeClaimTemplates:
         selector: {}
+
+# https://tmaxtibero.blog/4356/
 

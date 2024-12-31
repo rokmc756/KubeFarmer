@@ -3,29 +3,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: {{ pgsql.patroni.service.metadata.name }}
-  namespace: {{ pgsql.patroni.namespace }}
+  namespace: {{ pgsql.patroni.service.metadata.namespace }}
 spec:
   loadBalancerIP: {{ pgsql.patroni.lb_ip_addr }}
-
-#---
-#apiVersion: networking.k8s.io/v1
-#kind: Ingress
-#metadata:
-#  name: postgres-ingress
-#  namespace: postgresql-ha
-#  annotations:
-#    nginx.ingress.kubernetes.io/ssl-redirect: "true"
-#spec:
-#  rules:
-#    - host: postgres.jtest.pivotal.io
-#      http:
-#        paths:
-#          - path: /
-#            pathType: Prefix
-#            backend:
-#              service:
-#                name: postgresql-ha-postgresql
-#                port:
-#                  name: postgres
-
 

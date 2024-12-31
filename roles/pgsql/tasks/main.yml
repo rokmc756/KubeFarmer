@@ -29,6 +29,12 @@
   when: ( repmgr is defined and repmgr == true ) and inventory_hostname in groups['master']
 
 
+- name: Deploy Patroni Cluster
+  import_tasks: install-patroni.yml
+  tags: install
+  when: ( patroni is defined and patroni == true ) and inventory_hostname in groups['master']
+
+
 - name: Deploy PGAdmin
   import_tasks: install-pgadmin.yml
   tags: install
@@ -51,6 +57,12 @@
   import_tasks: uninstall-pgadmin.yml
   tags: uninstall
   when: ( pgadmin is defined and pgadmin == true ) and inventory_hostname in groups['master']
+
+
+- name: Destroy Patroni Cluster
+  import_tasks: uninstall-patroni.yml
+  tags: uninstall
+  when: ( patroni is defined and patroni == true ) and inventory_hostname in groups['master']
 
 
 - name: Destroy RepMgr Cluster

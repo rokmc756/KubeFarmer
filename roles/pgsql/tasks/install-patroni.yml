@@ -1,0 +1,93 @@
+---
+- name: Create Directory for Persistent Volumes
+  file:
+    path: "{{ pgsql.patroni.storage_path }}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0777
+  register: create_pv_dir
+  delegate_to: "{{ item }}"
+  delegate_facts: True
+  with_items:
+    - "{{ groups['all'] }}"
+- debug: msg={{ create_pv_dir }}
+  when: print_debug == true
+
+
+- name: Create Namespace for Persistent Volumes
+  shell: |
+    kubectl create namespace {{ pgsql.patroni.namespace }}
+  register: create_namespace
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ create_namespace }}
+  when: print_debug == true
+
+
+- name: Copy Cluster Local PVC Config Yaml
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ base_path }}/{{ item }}"
+  register: copy_cluster_local_pvc_config_yaml
+  with_items:
+    - "patroni-storage-class.yaml"
+    - "patroni-storage-pv.yaml"
+    - "patroni-storage-pvc.yaml"
+- debug: msg={{ copy_cluster_local_pvc_config_yaml }}
+
+
+- name: Cluster Settings for a Production Cluster Running in a Dynamic Cloud Environment including VMware
+  shell: |
+    kubectl create -f {{ item }}
+  register: create_pvc
+  with_items:
+    - "patroni-storage-class.yaml"
+    - "patroni-storage-pv.yaml"
+    - "patroni-storage-pvc.yaml"
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ create_pvc }}
+  when: print_debug == true
+
+
+- name: Copy Patroni Loadbalancer Config Yaml
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ base_path }}/{{ item }}"
+  register: copy_patroni_lb_config_yaml
+  with_items:
+    - "pgsql-patroni-values.yaml"
+- debug: msg={{ copy_patroni_lb_config_yaml }}
+
+
+- name: Deploy Patroni Cluster
+  shell:
+    helm install pgsql-patroni bitnami/postgresql -n {{ pgsql.patroni.namespace }} -f {{ base_path }}/pgsql-patroni-values.yaml
+  register: deploy_patroni
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ deploy_patroni }}
+  when: print_debug == true
+
+
+- name: Validate if patroni Containers are Running Normally
+  shell: |
+    kubectl -n {{ psql.patroni.namespace }} get pods | sed 1d | grep pgsql-patroni-postgresql- | awk '{print $3}' | grep Running | wc -l
+  register: check_patroni_container
+  until: pgsql.patroni.replica|int == check_patroni_container.stdout|int
+  retries: 60
+  delay: 10
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ check_patroni_container }}
+  when: print_debug == true
+

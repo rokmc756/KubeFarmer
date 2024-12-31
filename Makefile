@@ -96,7 +96,6 @@ pgsql:
 
 
 
-
 # - https://ansible-tutorial.schoolofdevops.com/control_structures/
 install: role-update install.yml
 	ansible-playbook -i ansible-hosts --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} install.yml --tags="install"
