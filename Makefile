@@ -2,139 +2,49 @@ USERNAME=jomoon
 COMMON="yes"
 ANSIBLE_HOST_PASS="changeme"
 ANSIBLE_TARGET_PASS="changeme"
-# include ./*.mk
 
-GPHOSTS := $(shell grep -i '[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}' ./ansible-hosts | sed -e "s/ ansible_ssh_host=/,/g")
+boot:
+	@ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} control-vms.yml --extra-vars "power_state=powered-on power_title=Power-On VMs"
 
-all:
-	@echo ""
-	@echo "[ Available targets ]"
-	@echo ""
-	@echo "init:            will install basic requirements (will ask several times for a password)"
-	@echo "install:         will install the host with what is defined in install.yml"
-	@echo "update:          run OS updates"
-	@echo "ssh:             jump ssh to host"
-	@echo "role-update:     update all downloades roles"
-	@echo "available-roles: list known roles which can be downloaded"
-	@echo "clean:           delete all temporary files"
-	@echo ""
-	@for GPHOST in ${GPHOSTS}; do \
-		IP=$${GPHOST#*,}; \
-	    	HOSTNAME=$${LINE%,*}; \
-		echo "Current used hostname: $${HOSTNAME}"; \
-		echo "Current used IP: $${IP}"; \
-		echo "Current used user: ${USERNAME}"; \
-		echo ""; \
-	done
+shutdown:
+	@ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} control-vms.yml --extra-vars "power_state=shutdown-guest power_title=Shutdown VMs"
 
-init:	setup-host.yml update-host.yml
-	$(shell sed -i -e '2s/.*/ansible_become_pass: ${ANSIBLE_TARGET_PASS}/g' ./group_vars/all.yml)
-	@echo ""
-	@for GPHOST in ${GPHOSTS}; do \
-		IP=$${GPHOST#*,}; \
-	    	HOSTNAME=$${LINE%,*}; \
-		echo "It will init host $${IP} and install ssh key and basic packages"; \
-		echo ""; \
-		echo "Note: NEVER use this step to init a host in an untrusted network!"; \
-		echo "Note: this will OVERWRITE any existing keys on the host!"; \
-		echo ""; \
-		echo "3 seconds to abort ..."; \
-		echo ""; \
-		sleep 3; \
-		echo "IP : $${IP} , HOSTNAME : $${HOSTNAME} , USERNAME : ${USERNAME}"; \
-		./init_host.sh "$${IP}" "${USERNAME}"; \
-	done
-	ansible-playbook -i ansible-hosts -u ${USERNAME} --ssh-common-args='-o UserKnownHostsFile=./known_hosts -o VerifyHostKeyDNS=true' install-ansible-prereqs.yml
-
-hosts:
-	make -f ./configs/Makefile.hosts r=${r} s=${s} c=${c} USERNAME=${USERNAME}
-
-k8s:
-	make -f ./configs/Makefile.k8s r=${r} s=${s} c=${c} USERNAME=${USERNAME}
-
-rook:
-	make -f ./configs/Makefile.rook r=${r} s=${s} c=${c} USERNAME=${USERNAME}
-
-rancher:
-	make -f ./configs/Makefile.rancher r=${r} s=${s} c=${c} USERNAME=${USERNAME}
-
-kubeflow:
-	make -f ./configs/Makefile.kubeflow r=${r} s=${s} c=${c} USERNAME=${USERNAME}
-
-kubevirt:
-	make -f ./configs/Makefile.kubevirt r=${r} s=${s} c=${c} USERNAME=${USERNAME}
-
-ha:
-	make -f ./configs/Makefile.ha r=${r} s=${s} c=${c} USERNAME=${USERNAME}
-
-korifi:
-	make -f ./configs/Makefile.korifi r=${r} s=${s} c=${c} USERNAME=${USERNAME}
-
-harbor:
-	make -f ./configs/Makefile.harbor r=${r} s=${s} c=${c} USERNAME=${USERNAME}
-
-spark:
-	make -f ./configs/Makefile.spark r=${r} s=${s} c=${c} USERNAME=${USERNAME}
-
-dashboard:
-	make -f ./configs/Makefile.dashboard r=${r} s=${s} c=${c} USERNAME=${USERNAME}
-
-stratos:
-	make -f ./configs/Makefile.stratos r=${r} s=${s} c=${c} USERNAME=${USERNAME}
-
-mariadb:
-	make -f ./configs/Makefile.mariadb r=${r} s=${s} c=${c} USERNAME=${USERNAME}
-
-powerdns:
-	make -f ./configs/Makefile.powerdns r=${r} s=${s} c=${c} USERNAME=${USERNAME}
-
-grafana:
-	make -f ./configs/Makefile.grafana r=${r} s=${s} c=${c} USERNAME=${USERNAME}
-
-pgsql:
-	make -f ./configs/Makefile.pgsql r=${r} s=${s} c=${c} USERNAME=${USERNAME}
-
-
-
-# - https://ansible-tutorial.schoolofdevops.com/control_structures/
-install: role-update install.yml
-	ansible-playbook -i ansible-hosts --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} install.yml --tags="install"
-
-reinit: role-update reinit.yml
-	ansible-playbook -i ansible-hosts --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} reinit.yml --tags="reinit"
-
-uninstall: role-update uninstall.yml
-	ansible-playbook -i ansible-hosts --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} uninstall.yml --tags="uninstall"
-
-upgrade: role-update upgrade-hosts.yml
-	ansible-playbook -i ansible-hosts --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} upgrade-hosts.yml --tags="upgrade"
-
-update: role-update update-hosts.yml
-	ansible-playbook -i ansible-hosts --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -i ${IP}, -u ${USERNAME} update-hosts.yml
-
-boot: role-update control-vms.yml
-	ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} control-vms.yml --extra-vars "power_state=powered-on power_title=Power-On VMs"
-
-shutdown: role-update control-vms.yml
-	ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} control-vms.yml --extra-vars "power_state=shutdown-guest power_title=Shutdown VMs"
-
-
-# https://stackoverflow.com/questions/4219255/how-do-you-get-the-list-of-targets-in-a-makefile
-no_targets__:
-role-update:
-	sh -c "$(MAKE) -p no_targets__ | awk -F':' '/^[a-zA-Z0-9][^\$$#\/\\t=]*:([^=]|$$)/ {split(\$$1,A,/ /);for(i in A)print A[i]}' | grep -v '__\$$' | grep '^ansible-update-*'" | xargs -n 1 make --no-print-directory
-        $(shell sed -i -e '2s/.*/ansible_become_pass: ${ANSIBLE_HOST_PASS}/g' ./group_vars/all.yml )
-
-ssh:
-	ssh -o UserKnownHostsFile=./known_hosts ${USERNAME}@${IP}
-
-install-hosts.yml:
-	cp -a install-host.template install-hosts.yml
-
-update-hosts.yml:
-	cp -a update-host.template update-hosts.yml
+# For All Roles
+%:
+	@cp -af setup-hosts.yml.temp setup-${*}.yml
+	@sed -i 's/    - hosts/    - ${*}/g' setup-${*}.yml
+	@make -f ./configs/Makefile.${*} r=${r} s=${s} c=${c} USERNAME=${USERNAME}
+	@rm -rf setup-${*}.yml
 
 # clean:
 # 	rm -rf ./known_hosts install-hosts.yml update-hosts.yml
 
+
+# hosts     :  make hosts r=init ( or uninit )
+# k8s       :  make k8s r=install ( or uninstall ) s=single ( or multi )
+# rook:     :  make rook r=install or r=uninstall
+# rancher   :  make rancher r=install or r=uninstall
+# kubeflow  :  make kubeflow r=insstall or r=uninstall
+# kubevirt  :  make kubevirt r=install or r=uninstall
+# ha        :  haproxy and keeyalived
+# korifi:   :  make korifi r=install or r=uninstall
+# harbor:   :  make harbor r=install or r=uninstall
+# spark     :  make spark r=install or r=uninstall
+# dashboard :  make dashboard r=install or r=uninstall
+# stratos   :  make stratos r=install or r=uninstall
+# mariadb   :  make mariadb r=install ( or uninstall ) s=galera ( replica or phpmyadmin )
+# powerdns  :  make powernds r=install ( or uninstall )
+# grafana   :  make grafana r=install ( or unintll )
+# pgsql     :  make pgsql
+
+
+# https://stackoverflow.com/questions/4219255/how-do-you-get-the-list-of-targets-in-a-makefile
+#no_targets__:
+#role-update:
+#	sh -c "$(MAKE) -p no_targets__ | awk -F':' '/^[a-zA-Z0-9][^\$$#\/\\t=]*:([^=]|$$)/ {split(\$$1,A,/ /);for(i in A)print A[i]}' | grep -v '__\$$' | grep '^ansible-update-*'" | xargs -n 1 make --no-print-directory
+#        $(shell sed -i -e '2s/.*/ansible_become_pass: ${ANSIBLE_HOST_PASS}/g' ./group_vars/all.yml )
+
+
+# Need to check what it should be needed
 .PHONY:	all init install update ssh common clean no_targets__ role-update
+

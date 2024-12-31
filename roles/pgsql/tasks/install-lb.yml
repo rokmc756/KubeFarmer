@@ -24,9 +24,9 @@
   when: pgadmin is defined and pgadmin == true
 
 
-- name: Apply Load Balancer for MariaDB Replication
+- name: Apply Load Balancer for RepMgr Cluster
   shell: |
-    kubectl patch svc pgsql-repmgr-postgresql-ha-{{ item.svc }} -n {{ pgsql.repmgr.namespace }} -p '{"spec": {"type": "LoadBalancer", "loadBalancerIP": "{{ item.lb_ip_addr }}"}}'
+    kubectl patch svc repmgr-postgresql-ha-{{ item.svc }} -n {{ pgsql.repmgr.namespace }} -p '{"spec": {"type": "LoadBalancer", "loadBalancerIP": "{{ item.lb_ip_addr }}"}}'
   register: apply_repmgr_lb
   ignore_errors: yes
   args:
@@ -37,4 +37,19 @@
   when: repmgr is defined and repmgr == true
 - debug: msg={{ apply_repmgr_lb }}
   when: repmgr is defined and repmgr == true
+
+
+- name: Apply Load Balancer for Patroni Cluster
+  shell: |
+    kubectl patch svc patroni-postgresql-{{ item.svc }} -n {{ item.ns }} -p '{"spec": {"type": "LoadBalancer", "loadBalancerIP": "{{ item.lb_ip_addr }}"}}'
+  register: apply_patroni_lb
+  ignore_errors: yes
+  args:
+    chdir: "{{ base_path }}"
+  with_items:
+    - { svc: "primary",  ns: "{{ pgsql.patroni.namespace }}",  lb_ip_addr: "{{ pgsql.patroni.primary.lb_ip_addr }}" }
+    - { svc: "read",     ns: "{{ pgsql.patroni.namespace }}",  lb_ip_addr: "{{ pgsql.patroni.read.lb_ip_addr }}" }
+  when: patroni is defined and patroni == true
+- debug: msg={{ apply_patroni_lb }}
+  when: patroni is defined and patroni == true
 

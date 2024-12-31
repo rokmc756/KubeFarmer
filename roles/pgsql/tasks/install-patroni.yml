@@ -55,19 +55,69 @@
   when: print_debug == true
 
 
-- name: Copy Patroni Loadbalancer Config Yaml
-  template:
-    src: "{{ item }}.j2"
-    dest: "{{ base_path }}/{{ item }}"
-  register: copy_patroni_lb_config_yaml
+#- name: Copy Patroni Helm Config Yaml
+#  template:
+#    src: "{{ item }}.j2"
+#    dest: "{{ base_path }}/{{ item }}"
+#  register: copy_patroni_lb_config_yaml
+#  with_items:
+#    - "pgsql-patroni-values.yaml"
+#- debug: msg={{ copy_patroni_lb_config_yaml }}
+
+
+- name: Generate Patroni Helm Config
+  shell:
+    helm inspect values bitnami/postgresql > {{ base_path }}/pgsql-patroni-values.yaml
+  register: gen_patroni_helm_config
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ gen_patroni_helm_config }}
+  when: print_debug == true
+
+
+- name: Replace lines for Patroni Helm Config
+  lineinfile:
+    dest: "{{ base_path }}/pgsql-patroni-values.yaml"
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    state: "{{ item.state }}"
+  register: replace_patroni_values_lines
   with_items:
-    - "pgsql-patroni-values.yaml"
-- debug: msg={{ copy_patroni_lb_config_yaml }}
+    - { regexp: '^architecture: standalone',        line: 'architecture: replication',                              state: present }
+    - { regexp: '^  numSynchronousReplicas:*',      line: '  numSynchronousReplicas: {{ pgsql.patroni.replica }}',  state: present }
+    - { regexp: '^  replicaCount:*',                line: '  replicaCount: {{ pgsql.patroni.replica }}',            state: present }
+    - { regexp: '^    password:*',                  line: '    password: "changeme"',             state: present }
+    - { regexp: '^    postgresPassword:*',          line: '    postgresPassword: "changeme"',     state: present }
+    - { regexp: '^    replicationPassword:*',       line: '    replicationPassword: "changeme"',  state: present }
+    - { regexp: '^      postgresPassword:*',        line: '      postgresPassword: "changeme"',   state: present }
+    - { regexp: '^      password:*',                line: '      password: "changeme"',           state: present }
+    - { regexp: '^      username:*',                line: '      username: "jomoon"',             state: present }
+    - { regexp: '^      database:*',                line: '      database: "patroni_testdb"',     state: present }
+    - { regexp: '^  postgresPassword:*',            line: '  postgresPassword: "changeme"',       state: present }
+    - { regexp: '^  password:*',                    line: '  password: "changeme"',               state: present }
+    - { regexp: '^  username:*',                    line: '  username: "jomoon"',                 state: present }
+    - { regexp: '^  database:*',                    line: '  database: "patroni_testdb"',         state: present }
+- debug: msg={{ replace_patroni_values_lines  }}
+  when: print_debug == true
+
+
+#- name: Replace lines for Patroni Helm Config to Enable Standby
+#  replace:
+#    dest: "{{ base_path }}/pgsql-patroni-values.yaml"
+#    regexp: "{{ item.regexp }}"
+#    replace: "{{ item.replace }}"
+#  register: replace_patroni_values_standby_lines
+#  with_items:
+#    - { regexp: '^  standby:\n    enabled: false', replace: '  standby:\n    enabled: true', state: present }
+#- debug: msg={{ replace_patroni_values_standby_lines  }}
+#  when: print_debug == true
 
 
 - name: Deploy Patroni Cluster
   shell:
-    helm install pgsql-patroni bitnami/postgresql -n {{ pgsql.patroni.namespace }} -f {{ base_path }}/pgsql-patroni-values.yaml
+    helm install patroni bitnami/postgresql -n {{ pgsql.patroni.namespace }} -f {{ base_path }}/pgsql-patroni-values.yaml
   register: deploy_patroni
   args:
     chdir: "{{ base_path }}/"
@@ -77,9 +127,9 @@
   when: print_debug == true
 
 
-- name: Validate if patroni Containers are Running Normally
+- name: Validate if Patroni Containers are Running Normally
   shell: |
-    kubectl -n {{ psql.patroni.namespace }} get pods | sed 1d | grep pgsql-patroni-postgresql- | awk '{print $3}' | grep Running | wc -l
+    kubectl -n {{ pgsql.patroni.namespace }} get pods | sed 1d | grep patroni-postgresql-read | awk '{print $3}' | grep Running | wc -l
   register: check_patroni_container
   until: pgsql.patroni.replica|int == check_patroni_container.stdout|int
   retries: 60

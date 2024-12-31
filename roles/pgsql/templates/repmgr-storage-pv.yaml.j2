@@ -3,7 +3,7 @@
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: pgsql-repmgr-pv-{{ hostvars[h]['ansible_hostname'] }}
+  name: repmgr-pv-{{ hostvars[h]['ansible_hostname'] }}
   namespace: {{ pgsql.repmgr.namespace }}
 spec:
   capacity:

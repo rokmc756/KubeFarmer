@@ -30,7 +30,7 @@ diagnosticMode:
 
 image:
   registry: docker.io
-  repository: bitnami/mariadb-galera
+  repository: bitnami/mysql-galera
   tag: 11.4.4-debian-12-r3
   digest: ""
   pullPolicy: IfNotPresent
@@ -113,7 +113,7 @@ containerSecurityContext:
 
 rootUser:
   user: root
-  password: "{{ mariadb.root_password }}"
+  password: "{{ mysql.root_password }}"
   forcePassword: false
 
 
@@ -123,9 +123,9 @@ customPasswordFiles: {}
 
 
 db:
-  user: "{{ mariadb.db.user }}"
-  password: "{{ mariadb.db.password }}"
-  name: "{{ mariadb.db.name }}"
+  user: "{{ mysql.db.user }}"
+  password: "{{ mysql.db.password }}"
+  name: "{{ mysql.db.name }}"
   forcePassword: false
 
 
@@ -137,7 +137,7 @@ galera:
     forceSafeToBootstrap: false
   mariabackup:
     user: mariabackup
-    password: "{{ mariadb.mariabackup_password }}"
+    password: "{{ mysql.mariabackup_password }}"
     forcePassword: false
 
 
@@ -164,21 +164,21 @@ tls:
   certCAFilename: ""
 
 
-mariadbConfiguration: |-
+mysqlConfiguration: |-
   [client]
   port=3306
-  socket=/opt/bitnami/mariadb/tmp/mysql.sock
-  plugin_dir=/opt/bitnami/mariadb/plugin
+  socket=/opt/bitnami/mysql/tmp/mysql.sock
+  plugin_dir=/opt/bitnami/mysql/plugin
 
   [mysqld]
   explicit_defaults_for_timestamp
   default_storage_engine=InnoDB
-  basedir=/opt/bitnami/mariadb
-  datadir=/bitnami/mariadb/data
-  plugin_dir=/opt/bitnami/mariadb/plugin
-  tmpdir=/opt/bitnami/mariadb/tmp
-  socket=/opt/bitnami/mariadb/tmp/mysql.sock
-  pid_file=/opt/bitnami/mariadb/tmp/mysqld.pid
+  basedir=/opt/bitnami/mysql
+  datadir=/bitnami/mysql/data
+  plugin_dir=/opt/bitnami/mysql/plugin
+  tmpdir=/opt/bitnami/mysql/tmp
+  socket=/opt/bitnami/mysql/tmp/mysql.sock
+  pid_file=/opt/bitnami/mysql/tmp/mysqld.pid
   bind_address=0.0.0.0
 
   collation_server=utf8_unicode_ci
@@ -229,24 +229,24 @@ mariadbConfiguration: |-
   innodb_buffer_pool_size=2G
   innodb_file_format=Barracuda
 
-  log_error=/opt/bitnami/mariadb/logs/mysqld.log
-  slow_query_log_file=/opt/bitnami/mariadb/logs/mysqld.log
+  log_error=/opt/bitnami/mysql/logs/mysqld.log
+  slow_query_log_file=/opt/bitnami/mysql/logs/mysqld.log
   log_queries_not_using_indexes=1
   slow_query_log=1
 
   [galera]
   wsrep_on=ON
-  wsrep_provider=/opt/bitnami/mariadb/lib/libgalera_smm.so
+  wsrep_provider=/opt/bitnami/mysql/lib/libgalera_smm.so
   wsrep_sst_method=mariabackup
   wsrep_slave_threads=4
   wsrep_cluster_address=gcomm://
   wsrep_cluster_name=galera
-  # wsrep_cluster_name=mariadb-galera
+  # wsrep_cluster_name=mysql-galera
   wsrep_sst_auth="root:"
   innodb_flush_log_at_trx_commit=2
   wsrep_mode=REPLICATE_MYISAM
 
-  [mariadb]
+  [mysql]
   plugin_load_add=auth_pam
 
 
@@ -254,7 +254,7 @@ configurationConfigMap: ""
 initdbScripts: {}
 initdbScriptsConfigMap: ""
 extraFlags: ""
-replicaCount: {{ mariadb.replica }}
+replicaCount: {{ mysql.replica }}
 
 
 updateStrategy:
@@ -290,10 +290,10 @@ containerPorts:
 
 persistence:
   enabled: true
-  # existingClaim: "data-mariadb-galera-0"
+  # existingClaim: "data-mysql-galera-0"
   existingClaim: ""
   subPath: ""
-  mountPath: /bitnami/mariadb
+  mountPath: /bitnami/mysql
   selector: {}
   storageClass: ""
   annotations: {}
@@ -407,7 +407,7 @@ metrics:
       release: prometheus
     rules: {}
 
-# https://artifacthub.io/packages/helm/bitnami/mariadb-galera
-# https://www.dbi-services.com/blog/setting-up-mariadb-galera-cluster/
+# https://artifacthub.io/packages/helm/bitnami/mysql-galera
+# https://www.dbi-services.com/blog/setting-up-mysql-galera-cluster/
 # https://qiita.com/rururu_kenken/items/9dfede810460d6c12d56
 

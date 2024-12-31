@@ -1,0 +1,31 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: data-mysql-replica-primary-0
+  namespace: mysql-replica
+spec:
+  storageClassName: mysql-replica-storage
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+{% for n in range(0,mysql.replica.replica|int) %}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: data-mysql-replica-secondary-{{ n }}
+  namespace: mysql-replica
+spec:
+  storageClassName: mysql-replica-storage
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+{% endfor %}
+
+# https://www.codecentric.de/wissens-hub/blog/jinja2-better-ansible-playbooks-templates
+

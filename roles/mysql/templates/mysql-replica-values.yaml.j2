@@ -1,0 +1,419 @@
+global:
+  imageRegistry: ""
+  imagePullSecrets: []
+  storageClass: ""
+  security:
+    allowInsecureImages: true
+
+
+kubeVersion: ""
+nameOverride: ""
+fullnameOverride: ""
+clusterDomain: cluster.local
+commonAnnotations: {}
+commonLabels: {}
+schedulerName: ""
+runtimeClassName: ""
+extraDeploy: []
+
+
+diagnosticMode:
+  enabled: false
+  command:
+    - sleep
+  args:
+    - infinity
+
+
+image:
+  registry: docker.io
+  repository: bitnami/mysql
+  tag: 10.6.11-debian-11-r22
+  digest: ""
+  pullPolicy: IfNotPresent
+  pullSecrets: []
+  debug: false
+
+
+architecture: replication
+
+
+auth:
+  rootPassword: "changeme"
+  database: replica_testdb
+  username: "jomoon"
+  password: "changeme"
+  replicationUser: replicator
+  replicationPassword: "changeme"
+  existingSecret: ""
+  forcePassword: false
+  usePasswordFiles: false
+  customPasswordFiles: {}
+
+
+initdbScripts: {}
+initdbScriptsConfigMap: ""
+
+
+primary:
+  name: primary
+  command: []
+  args: []
+  lifecycleHooks: {}
+  hostAliases: []
+  configuration: |-
+    [mysqld]
+    skip-name-resolve
+    explicit_defaults_for_timestamp
+    basedir=/opt/bitnami/mysql
+    plugin_dir=/opt/bitnami/mysql/plugin
+    port=3306
+    socket=/opt/bitnami/mysql/tmp/mysql.sock
+    tmpdir=/opt/bitnami/mysql/tmp
+    max_allowed_packet=16M
+    bind-address=*
+    pid-file=/opt/bitnami/mysql/tmp/mysqld.pid
+    log-error=/opt/bitnami/mysql/logs/mysqld.log
+    character-set-server=UTF8
+    collation-server=utf8_general_ci
+    slow_query_log=0
+    slow_query_log_file=/opt/bitnami/mysql/logs/mysqld.log
+    long_query_time=10.0
+
+    [client]
+    port=3306
+    socket=/opt/bitnami/mysql/tmp/mysql.sock
+    default-character-set=UTF8
+    plugin_dir=/opt/bitnami/mysql/plugin
+
+    [manager]
+    port=3306
+    socket=/opt/bitnami/mysql/tmp/mysql.sock
+    pid-file=/opt/bitnami/mysql/tmp/mysqld.pid
+
+  existingConfigmap: ""
+  updateStrategy:
+    type: RollingUpdate
+  rollingUpdatePartition: ""
+  podAnnotations: {}
+  podLabels: {}
+  podAffinityPreset: ""
+  podAntiAffinityPreset: soft
+  nodeAffinityPreset:
+    type: ""
+    key: ""
+    values: []
+  affinity: {}
+  nodeSelector: {}
+  tolerations: []
+  schedulerName: ""
+  podManagementPolicy: ""
+  topologySpreadConstraints: []
+  priorityClassName: ""
+  runtimeClassName: ""
+  podSecurityContext:
+    enabled: true
+    fsGroup: 1001
+  containerSecurityContext:
+    enabled: true
+    runAsUser: 1001
+    runAsNonRoot: true
+  resources:
+    limits: {}
+    requests: {}
+  startupProbe:
+    enabled: false
+    initialDelaySeconds: 120
+    periodSeconds: 15
+    timeoutSeconds: 5
+    failureThreshold: 10
+    successThreshold: 1
+  livenessProbe:
+    enabled: true
+    initialDelaySeconds: 120
+    periodSeconds: 10
+    timeoutSeconds: 1
+    failureThreshold: 3
+    successThreshold: 1
+  readinessProbe:
+    enabled: true
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 1
+    failureThreshold: 3
+    successThreshold: 1
+  customStartupProbe: {}
+  customLivenessProbe: {}
+  customReadinessProbe: {}
+  startupWaitOptions: {}
+  extraFlags: ""
+  extraEnvVars: []
+  extraEnvVarsCM: ""
+  extraEnvVarsSecret: ""
+  persistence:
+    enabled: true
+    existingClaim: ""
+    subPath: ""
+    storageClass: ""
+    annotations: {}
+    accessModes:
+      - ReadWriteOnce
+    size: 8Gi
+    selector: {}
+  extraVolumes: []
+  extraVolumeMounts: []
+  initContainers: []
+  sidecars: []
+  service:
+    type: ClusterIP
+    ports:
+      mysql: 3306
+      metrics: 9104
+    nodePorts:
+      mysql: ""
+    clusterIP: ""
+    loadBalancerIP: ""
+    externalTrafficPolicy: Cluster
+    loadBalancerSourceRanges: []
+    extraPorts: []
+    annotations: {}
+    sessionAffinity: None
+    sessionAffinityConfig: {}
+  pdb:
+    create: false
+    minAvailable: 1
+    maxUnavailable: ""
+  revisionHistoryLimit: 10
+
+
+secondary:
+  name: secondary
+  replicaCount: 3
+  command: []
+  args: []
+  lifecycleHooks: {}
+  hostAliases: []
+  configuration: |-
+    [mysqld]
+    skip-name-resolve
+    explicit_defaults_for_timestamp
+    basedir=/opt/bitnami/mysql
+    port=3306
+    socket=/opt/bitnami/mysql/tmp/mysql.sock
+    tmpdir=/opt/bitnami/mysql/tmp
+    max_allowed_packet=16M
+    bind-address=0.0.0.0
+    pid-file=/opt/bitnami/mysql/tmp/mysqld.pid
+    log-error=/opt/bitnami/mysql/logs/mysqld.log
+    character-set-server=UTF8
+    collation-server=utf8_general_ci
+    slow_query_log=0
+    slow_query_log_file=/opt/bitnami/mysql/logs/mysqld.log
+    long_query_time=10.0
+
+    [client]
+    port=3306
+    socket=/opt/bitnami/mysql/tmp/mysql.sock
+    default-character-set=UTF8
+
+    [manager]
+    port=3306
+    socket=/opt/bitnami/mysql/tmp/mysql.sock
+    pid-file=/opt/bitnami/mysql/tmp/mysqld.pid
+
+  existingConfigmap: ""
+  updateStrategy:
+    type: RollingUpdate
+  rollingUpdatePartition: ""
+  podAnnotations: {}
+  podLabels: {}
+  podAffinityPreset: ""
+  podAntiAffinityPreset: soft
+  nodeAffinityPreset:
+    type: ""
+    key: ""
+    values: []
+  affinity: {}
+  nodeSelector: {}
+  tolerations: []
+  topologySpreadConstraints: []
+  priorityClassName: ""
+  runtimeClassName: ""
+  schedulerName: ""
+  podManagementPolicy: ""
+  podSecurityContext:
+    enabled: true
+    fsGroup: 1001
+  containerSecurityContext:
+    enabled: true
+    runAsUser: 1001
+    runAsNonRoot: true
+  resources:
+    limits: {}
+    requests: {}
+  startupProbe:
+    enabled: false
+    initialDelaySeconds: 120
+    periodSeconds: 15
+    timeoutSeconds: 5
+    failureThreshold: 10
+    successThreshold: 1
+  livenessProbe:
+    enabled: true
+    initialDelaySeconds: 120
+    periodSeconds: 10
+    timeoutSeconds: 1
+    failureThreshold: 3
+    successThreshold: 1
+  readinessProbe:
+    enabled: true
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 1
+    failureThreshold: 3
+    successThreshold: 1
+  customStartupProbe: {}
+  customLivenessProbe: {}
+  customReadinessProbe: {}
+  startupWaitOptions: {}
+  extraFlags: ""
+  extraEnvVars: []
+  extraEnvVarsCM: ""
+  extraEnvVarsSecret: ""
+  persistence:
+    enabled: true
+    subPath: ""
+    storageClass: ""
+    annotations: {}
+    accessModes:
+      - ReadWriteOnce
+    size: 8Gi
+    selector: {}
+  extraVolumes: []
+  extraVolumeMounts: []
+  initContainers: []
+  sidecars: []
+  service:
+    type: ClusterIP
+    ports:
+      mysql: 3306
+      metrics: 9104
+    nodePorts:
+      mysql: ""
+    clusterIP: ""
+    loadBalancerIP: ""
+    externalTrafficPolicy: Cluster
+    loadBalancerSourceRanges: []
+    extraPorts: []
+    annotations: {}
+    sessionAffinity: None
+    sessionAffinityConfig: {}
+  pdb:
+    create: false
+    minAvailable: 1
+    maxUnavailable: ""
+  revisionHistoryLimit: 10
+
+
+serviceAccount:
+  create: true
+  name: ""
+  annotations: {}
+  automountServiceAccountToken: false
+
+
+rbac:
+  create: false
+
+
+volumePermissions:
+  enabled: false
+  image:
+    registry: docker.io
+    repository: bitnami/bitnami-shell
+    tag: 11-debian-11-r71
+    digest: ""
+    pullPolicy: IfNotPresent
+    pullSecrets: []
+  resources:
+    limits: {}
+    requests: {}
+
+
+metrics:
+  enabled: false
+  image:
+    registry: docker.io
+    repository: bitnami/mysqld-exporter
+    tag: 0.14.0-debian-11-r77
+    digest: ""
+    pullPolicy: IfNotPresent
+    pullSecrets: []
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "9104"
+  extraArgs:
+    primary: []
+    secondary: []
+  extraVolumeMounts:
+    primary: []
+    secondary: []
+  containerSecurityContext:
+    enabled: false
+  resources:
+    limits: {}
+    requests: {}
+  livenessProbe:
+    enabled: true
+    initialDelaySeconds: 120
+    periodSeconds: 10
+    timeoutSeconds: 1
+    successThreshold: 1
+    failureThreshold: 3
+  readinessProbe:
+    enabled: true
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 1
+    successThreshold: 1
+    failureThreshold: 3
+  serviceMonitor:
+    enabled: false
+    namespace: ""
+    jobLabel: ""
+    interval: 30s
+    scrapeTimeout: ""
+    relabelings: []
+    metricRelabelings: []
+    honorLabels: false
+    selector: {}
+    labels: {}
+  prometheusRule:
+    enabled: false
+    namespace: ""
+    additionalLabels: {}
+    rules: []
+
+
+networkPolicy:
+  enabled: false
+  metrics:
+    enabled: false
+    podSelector: {}
+    namespaceSelector: {}
+  ingressRules:
+    primaryAccessOnlyFrom:
+      enabled: false
+      namespaceSelector: {}
+      podSelector: {}
+      customRules: {}
+    secondaryAccessOnlyFrom:
+      enabled: false
+      namespaceSelector: {}
+      podSelector: {}
+      customRules: {}
+  egressRules:
+    denyConnectionsToExternal: false
+    customRules: {}
+
+

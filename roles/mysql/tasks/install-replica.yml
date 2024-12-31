@@ -1,7 +1,6 @@
----
 - name: Create Directory for Persistent Volumes
   file:
-    path: "{{ pgsql.repmgr.storage_path }}"
+    path: "{{ mysql.replica.storage_path }}"
     state: directory
     owner: root
     group: root
@@ -17,7 +16,7 @@
 
 - name: Create Namespace for Persistent Volumes
   shell: |
-    kubectl create namespace {{ pgsql.repmgr.namespace }}
+    kubectl create namespace {{ mysql.replica.namespace }}
   register: create_namespace
   args:
     chdir: "{{ base_path }}/"
@@ -33,9 +32,9 @@
     dest: "{{ base_path }}/{{ item }}"
   register: copy_cluster_local_pvc_config_yaml
   with_items:
-    - "repmgr-storage-class.yaml"
-    - "repmgr-storage-pv.yaml"
-    - "repmgr-storage-pvc.yaml"
+    - "replica-storage-class.yaml"
+    - "replica-storage-pv.yaml"
+    - "replica-storage-pvc.yaml"
 - debug: msg={{ copy_cluster_local_pvc_config_yaml }}
 
 
@@ -44,9 +43,9 @@
     kubectl create -f {{ item }}
   register: create_pvc
   with_items:
-    - "repmgr-storage-class.yaml"
-    - "repmgr-storage-pv.yaml"
-    - "repmgr-storage-pvc.yaml"
+    - "replica-storage-class.yaml"
+    - "replica-storage-pv.yaml"
+    - "replica-storage-pvc.yaml"
   args:
     chdir: "{{ base_path }}/"
   environment:
@@ -55,39 +54,39 @@
   when: print_debug == true
 
 
-- name: Copy RepMgr Loadbalancer Config Yaml
+- name: Copy MySQL Replication Config Yaml
   template:
     src: "{{ item }}.j2"
     dest: "{{ base_path }}/{{ item }}"
-  register: copy_repmgr_lb_config_yaml
+  register: copy_replica_config_yaml
   with_items:
-    - "pgsql-repmgr-values.yaml"
-- debug: msg={{ copy_repmgr_lb_config_yaml }}
+    - "mysql-replica-values.yaml"
+- debug: msg={{ copy_replica_config_yaml }}
 
 
-- name: Deploy RepMgr Cluster
+- name: Deploy MySQL Replication Cluster
   shell:
-    helm install repmgr bitnami/postgresql-ha -n {{ pgsql.repmgr.namespace }} -f {{ base_path }}/pgsql-repmgr-values.yaml
-  register: deploy_repmgr
+    helm install mysql-replica bitnami/mysql --namespace {{ mysql.replica.namespace }} -f {{ base_path }}/mysql-replica-values.yaml
+  register: deploy_replica
   args:
     chdir: "{{ base_path }}/"
   environment:
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-- debug: msg={{ deploy_repmgr }}
+- debug: msg={{ deploy_replica }}
   when: print_debug == true
 
 
-- name: Validate if RepMgr Containers are Running Normally
+- name: Validate if MySQL Replication Containers are Running Normally
   shell: |
-    kubectl -n {{ pgsql.repmgr.namespace }} get pods | sed 1d | grep repmgr-postgresql-ha-postgresql- | awk '{print $3}' | grep Running | wc -l
-  register: check_repmgr_container
-  until: pgsql.repmgr.replica|int == check_repmgr_container.stdout|int
+    kubectl -n {{ mysql.replica.namespace }} get pods | sed 1d | grep replica-secondary- | awk '{print $3}' | grep Running | wc -l
+  register: check_replica_container
+  until: mysql.replica.replica|int == check_replica_container.stdout|int
   retries: 60
   delay: 10
   args:
     chdir: "{{ base_path }}/"
   environment:
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-- debug: msg={{ check_repmgr_container }}
+- debug: msg={{ check_replica_container }}
   when: print_debug == true
 

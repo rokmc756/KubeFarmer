@@ -1,7 +1,7 @@
 ---
 - name: Uninstall RepMGr
   shell: |
-    helm uninstall pgsql-repmgr --namespace {{ pgsql.repmgr.namespace }}
+    helm uninstall repmgr --namespace {{ pgsql.repmgr.namespace }}
   register: uninstall_repmgr
   ignore_errors: true
   args:
@@ -14,7 +14,7 @@
 
 - name: Validate if RepMgr Containers are Deleted
   shell: |
-    kubectl get pods -n {{ pgsql.repmgr.namespace }} | grep pgsql-repmgr-postgresql-ha-postgresql- | awk '{print $3}' | uniq
+    kubectl get pods -n {{ pgsql.repmgr.namespace }} | grep repmgr-postgresql-ha-postgresql- | awk '{print $3}' | uniq
   register: delete_repmgr_container
   ignore_errors: true
   until: delete_repmgr_container.stdout.find("") != -1
@@ -88,7 +88,7 @@
 
 - name: Validate if RepMgr Containers are Running
   shell: |
-    kubectl get pods -n {{ pgsql.repmgr.namespace }} | grep pgsql-repmgr-postgresql-ha-postgresql- | awk '{print $3}' | uniq
+    kubectl get pods -n {{ pgsql.repmgr.namespace }} | grep repmgr-postgresql-ha-postgresql- | awk '{print $3}' | uniq
   register: check_repmgr_container
   until: check_repmgr_container.stdout.find("") != -1
   retries: 100

@@ -15,7 +15,7 @@
 
 - name: Delete Load Balancer for RepMgr
   shell: |
-    kubectl patch svc pgsql-repmgr-postgresql-ha-{{ item }} -n {{ pgsql.repmgr.namespace }} -p '{"spec": {"type": "ClusterIP"}}'
+    kubectl patch svc repmgr-postgresql-ha-{{ item }} -n {{ pgsql.repmgr.namespace }} -p '{"spec": {"type": "ClusterIP"}}'
   register: delete_repmgr_lb
   ignore_errors: yes
   args:
@@ -27,7 +27,18 @@
 - debug: msg={{ delete_repmgr_lb }}
   when: print_debug == true and ( repmgr is defined and repmgr == true )
 
-# service/pgsql-repmgr-postgresql-ha-pgpool                ClusterIP   10.96.122.116   <none>        5432/TCP   106s
-# service/pgsql-repmgr-postgresql-ha-postgresql            ClusterIP   10.110.75.200   <none>        5432/TCP   106s
-# service/pgsql-repmgr-postgresql-ha-postgresql-headless   ClusterIP   None            <none>        5432/TCP   106s
+
+- name: Delete Load Balancer for Patroni Cluster
+  shell: |
+    kubectl patch svc patroni-postgresql-{{ item.svc }} -n {{ item.ns }} -p '{"spec": {"type": "ClusterIP"}}'
+  register: delete_patroni_lb
+  ignore_errors: yes
+  args:
+    chdir: "{{ base_path }}"
+  with_items:
+    - { svc: "read",     ns: "{{ pgsql.patroni.namespace }}",  lb_ip_addr: "{{ pgsql.patroni.read.lb_ip_addr }}" }
+    - { svc: "primary",  ns: "{{ pgsql.patroni.namespace }}",  lb_ip_addr: "{{ pgsql.patroni.primary.lb_ip_addr }}" }
+  when: patroni is defined and patroni == true
+- debug: msg={{ delete_patroni_lb }}
+  when: patroni is defined and patroni == true
 

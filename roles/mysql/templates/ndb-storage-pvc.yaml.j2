@@ -1,12 +1,12 @@
-{% for n in range(0,mariadb.replica|int) %}
+{% for n in range(0,mysql.ndb.replica|int) %}
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: data-mariadb-galera-{{ n }}
-  namespace: mariadb
+  name: data-mysql-ndb-{{ n }}
+  namespace: mysql-ndb
 spec:
-  storageClassName: mariadb-storage
+  storageClassName: mysql-ndb-storage
   accessModes:
     - ReadWriteOnce
   resources:

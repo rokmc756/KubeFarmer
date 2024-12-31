@@ -1,7 +1,9 @@
----
+
+# https://github.com/mysql/mysql-ndb-operator
+
 - name: Create Directory for Persistent Volumes
   file:
-    path: "{{ pgsql.repmgr.storage_path }}"
+    path: "{{ mysql.galera.storage_path }}"
     state: directory
     owner: root
     group: root
@@ -17,7 +19,7 @@
 
 - name: Create Namespace for Persistent Volumes
   shell: |
-    kubectl create namespace {{ pgsql.repmgr.namespace }}
+    kubectl create namespace {{ mysql.galera.namespace }}
   register: create_namespace
   args:
     chdir: "{{ base_path }}/"
@@ -33,9 +35,9 @@
     dest: "{{ base_path }}/{{ item }}"
   register: copy_cluster_local_pvc_config_yaml
   with_items:
-    - "repmgr-storage-class.yaml"
-    - "repmgr-storage-pv.yaml"
-    - "repmgr-storage-pvc.yaml"
+    - "galera-storage-class.yaml"
+    - "galera-storage-pv.yaml"
+    - "galera-storage-pvc.yaml"
 - debug: msg={{ copy_cluster_local_pvc_config_yaml }}
 
 
@@ -44,9 +46,9 @@
     kubectl create -f {{ item }}
   register: create_pvc
   with_items:
-    - "repmgr-storage-class.yaml"
-    - "repmgr-storage-pv.yaml"
-    - "repmgr-storage-pvc.yaml"
+    - "galera-storage-class.yaml"
+    - "galera-storage-pv.yaml"
+    - "galera-storage-pvc.yaml"
   args:
     chdir: "{{ base_path }}/"
   environment:
@@ -55,39 +57,39 @@
   when: print_debug == true
 
 
-- name: Copy RepMgr Loadbalancer Config Yaml
+- name: Copy mysql Loadbalancer Config Yaml
   template:
     src: "{{ item }}.j2"
     dest: "{{ base_path }}/{{ item }}"
-  register: copy_repmgr_lb_config_yaml
+  register: copy_galera_config_yaml
   with_items:
-    - "pgsql-repmgr-values.yaml"
-- debug: msg={{ copy_repmgr_lb_config_yaml }}
+    - "mysql-galera-values.yaml"
+- debug: msg={{ copy_galera_config_yaml }}
 
 
-- name: Deploy RepMgr Cluster
+- name: Deploy mysql Galera Cluster
   shell:
-    helm install repmgr bitnami/postgresql-ha -n {{ pgsql.repmgr.namespace }} -f {{ base_path }}/pgsql-repmgr-values.yaml
-  register: deploy_repmgr
+    helm install mysql-galera bitnami/mysql-galera --namespace {{ mysql.galera.namespace }} -f {{ base_path }}/mysql-values.yaml
+  register: deploy_galera
   args:
     chdir: "{{ base_path }}/"
   environment:
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-- debug: msg={{ deploy_repmgr }}
+- debug: msg={{ deploy_galera }}
   when: print_debug == true
 
 
-- name: Validate if RepMgr Containers are Running Normally
+- name: Validate if mysql Galera Containers are Running Normally
   shell: |
-    kubectl -n {{ pgsql.repmgr.namespace }} get pods | sed 1d | grep repmgr-postgresql-ha-postgresql- | awk '{print $3}' | grep Running | wc -l
-  register: check_repmgr_container
-  until: pgsql.repmgr.replica|int == check_repmgr_container.stdout|int
+    kubectl -n mysql-galera get pods | sed 1d | awk '{print $3}' | grep Running | wc -l
+  register: check_galera_container
+  until: mysql.replica.replica|int == check_galera_container.stdout|int
   retries: 60
   delay: 10
   args:
     chdir: "{{ base_path }}/"
   environment:
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-- debug: msg={{ check_repmgr_container }}
+- debug: msg={{ check_galera_container }}
   when: print_debug == true
 

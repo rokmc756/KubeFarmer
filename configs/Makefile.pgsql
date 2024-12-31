@@ -40,13 +40,13 @@ pgsql:
 			fi\
 		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
 			if [ -z ${c} ];  then\
-				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} steup-cbdb.yml -e '{pgsql_all: True}' --tags='uninstall';\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} steup-pgsql.yml -e '{pgsql_all: True}' --tags='uninstall';\
 			else\
 				echo "No Actions for Uninstalling PostgreSQL Database";\
 			fi\
 		elif [ ! -z ${r} ] && [ "${s}" = "common" ]; then\
 			if [ -z ${c} ];  then\
-				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} steup-common.yml -e '{pgsql_all: True}' --tags='uninstall';\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} steup-pgsql.yml -e '{pgsql_all: True}' --tags='uninstall';\
 			else\
 				echo "No Actions for Uninstalling Common Role for PostgreSQL Database";\
 			fi\

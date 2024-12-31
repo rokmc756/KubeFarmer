@@ -1,7 +1,19 @@
 ---
 base_path: /root
 
-mariadb:
+mysql:
+  ndb:
+    namespace: mysql-ndb
+    replica: 3
+    storage_path: "/mnt/mysql-ndb-storage"
+  replica:
+    namespace: mysql-replica
+    replica: 3
+    storage_path: "/mnt/mysql-replica-storage"
+    primary:
+      lb_ip_addr: "192.168.1.245"
+    secondary:
+      lb_ip_addr: "192.168.1.246"
   install: true
   major_version: 10
   minor_version: 1
@@ -10,29 +22,28 @@ mariadb:
   clone_git: false
   nvme: false
   lb_ip_addr: "192.168.1.212"
-  storage_path: "/mnt/mariadb-storage"
-  replica: 3
+  storage_path: "/mnt/mysql-storage"
   db:
     name: "powerdns"
     user: "jomoon"
-    password: "Changeme1234"
-  root_password: "Changeme1234"
-  mariabackup_password: "Changeme1234"
+    password: "changeme"
+  root_password: "changeme"
+  mariabackup_password: "changeme"
   k8s:
     major_version: 1
     minor_version: 30
     patch_version: 0
     build_version:
-  hostname: "mariadb.jtest.pivotal.io"
+  hostname: "mysql.jtest.pivotal.io"
   service:
     metadata:
-      name: mariadb-loadbalancer
-      namespace: mariadb
+      name: mysql-loadbalancer
+      namespace: mysql
   ingress:
     metadata:
-      name: mariadb-ingress
+      name: mysql-ingress
       namespace: nginx-ingress
-    hostname: "mariadb.jtest.pivotal.io"
+    hostname: "mysql.jtest.pivotal.io"
   kernel_parameters:
     - "net.ipv4.neigh.default.gc_thresh1 = 0"       # For ARP Cache
   manager:
@@ -41,7 +52,7 @@ mariadb:
     install: true
 
 
-phpmyadmin:
+_phpmyadmin:
   install: true
   lb_ip_addr: "192.168.1.237"
   storage_path: "/mnt/phpmyadmin-storage"
@@ -49,9 +60,9 @@ phpmyadmin:
   db:
     name: "powerdns"
     user: "jomoon"
-    password: "Changeme1234"
-  root_password: "Changeme1234"
-  mariabackup_password: "Changeme1234"
+    password: "changeme"
+  root_password: "changeme"
+  mariabackup_password: "changeme"
   hostname: "phpmyadmin.jtest.pivotal.io"
   service:
     metadata:

@@ -3,8 +3,8 @@
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: mariadb-galera-pv-{{ hostvars[h]['ansible_hostname'] }}
-  namespace: mariadb-galera
+  name: mysql-ndb-pv-{{ hostvars[h]['ansible_hostname'] }}
+  namespace: mysql-ndb
 spec:
   capacity:
     storage: 15Gi
@@ -13,9 +13,9 @@ spec:
   - ReadWriteOnce
   # persistentVolumeReclaimPolicy: Delete
   persistentVolumeReclaimPolicy: Retain
-  storageClassName: mariadb-galera-storage
+  storageClassName: mysql-ndb-storage
   local:
-    path: {{ mariadb.galera.storage_path }}
+    path: {{ mysql.ndb.storage_path }}
   nodeAffinity:
     required:
       nodeSelectorTerms:

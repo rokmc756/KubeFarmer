@@ -10,11 +10,11 @@
 - debug: msg={{ install_helm }}
 
 
-- name: Add Bitnami Helm Repo
+- name: Add MySQL Helm Repo
   shell: |
-    /usr/local/bin/helm repo add bitnami https://charts.bitnami.com/bitnami
-  register: add_bitnami_helm_repo
-- debug: msg={{ add_bitnami_helm_repo }}
+    /usr/local/bin/helm repo add mysql-operator https://mysql.github.io/mysql-operator/
+  register: add_mysql_helm_repo
+- debug: msg={{ add_mysql_helm_repo }}
 
 
 - name: Add Jetstack Helm Repo
@@ -29,5 +29,4 @@
     /usr/local/bin/helm repo update
   register: update_helm_repo
 - debug: msg={{ update_helm_repo }}
-
 

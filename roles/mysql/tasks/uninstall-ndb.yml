@@ -1,30 +1,30 @@
 ---
-- name: Uninstall Patroni
+- name: Uninstall mysql
   shell: |
-    helm uninstall patroni --namespace {{ pgsql.patroni.namespace }}
-  register: uninstall_patroni
+    helm uninstall mysql-galera --namespace {{ mysql.galera.namespace }}
+  register: uninstall_galera
   ignore_errors: true
   args:
     chdir: "{{ base_path }}/"
   environment:
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-- debug: msg={{ uninstall_patroni }}
+- debug: msg={{ uninstall_galera }}
   when: print_debug == true
 
 
-- name: Validate if Patroni Containers are Deleted
+- name: Validate if mysql Galera Containers are Deleted
   shell: |
-    kubectl get pods -n {{ pgsql.patroni.namespace }} | grep patroni-postgresql- | awk '{print $3}' | uniq
-  register: delete_patroni_container
+    kubectl get pods -n {{ mysql.galera.namespace }} | grep mysql- | awk '{print $3}' | uniq
+  register: delete_galera_container
   ignore_errors: true
-  until: delete_patroni_container.stdout.find("") != -1
+  until: delete_galera_container.stdout.find("") != -1
   retries: 100
   delay: 10
   args:
     chdir: "{{ base_path }}/"
   environment:
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-- debug: msg={{ delete_patroni_container }}
+- debug: msg={{ delete_galera_container }}
   when: print_debug == true
 
 
@@ -34,9 +34,9 @@
   register: delete_pvc
   ignore_errors: true
   with_items:
-    - "patroni-storage-pvc.yaml"
-    - "patroni-storage-pv.yaml"
-    - "patroni-storage-class.yaml"
+    - "galera-storage-pvc.yaml"
+    - "galera-storage-pv.yaml"
+    - "galera-storage-class.yaml"
   args:
     chdir: "{{ base_path }}/"
   environment:
@@ -52,16 +52,16 @@
   register: delete_cluster_local_pvc_config_yaml
   ignore_errors: true
   with_items:
-    - "patroni-storage-class.yaml"
-    - "patroni-storage-pv.yaml"
-    - "patroni-storage-pvc.yaml"
+    - "galera-storage-class.yaml"
+    - "galera-storage-pv.yaml"
+    - "galera-storage-pvc.yaml"
 - debug: msg={{ delete_cluster_local_pvc_config_yaml }}
   when: print_debug == true
 
 
 - name: Delete Namespace for Persistent Volumes
   shell: |
-    kubectl delete namespace {{ pgsql.patroni.namespace }}
+    kubectl delete namespace {{ mysql.galera.namespace }}
   register: delete_namespace
   ignore_errors: true
   args:
@@ -74,7 +74,7 @@
 
 - name: Directory for Persistent Volumes
   file:
-    path: "{{ pgsql.patroni.storage_path }}"
+    path: "{{ mysql.galera.storage_path }}"
     state: absent
   register: delete_pv_dir
   ignore_errors: true
@@ -86,17 +86,17 @@
   when: print_debug == true
 
 
-- name: Validate if Patroni Containers are Running
+- name: Validate if mysql Galera Containers are Running
   shell: |
-    kubectl get pods -n {{ pgsql.patroni.namespace }} | grep patroni-postgresql- | awk '{print $3}' | uniq
-  register: check_patroni_container
-  until: check_patroni_container.stdout.find("") != -1
+    kubectl -n {{ mysql.galera.namespace }} get pod | grep mysql | awk '{print $3}' | cut -d : -f 1
+  register: check_galera_container
+  until: check_galera_container.stdout.find("") != -1
   retries: 100
   delay: 10
   args:
     chdir: "{{ base_path }}/"
   environment:
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-- debug: msg={{ check_patroni_container }}
+- debug: msg={{ check_galera_container }}
   when: print_debug == true
 

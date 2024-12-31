@@ -5,31 +5,33 @@ pgsql:
   pgpool:
     lb_ip_addr: "192.168.1.242"
   repmgr:
-    namespace: pgsql-repmgr
+    namespace: repmgr
     replica: 3
     storage_path: "/mnt/repmgr-storage"
     storage_class: "repmgr-storage"
     lb_ip_addr: "192.168.1.243"
     service:
       metadata:
-        name: pgsql-repmgr
-        namespace: pgsql-repmgr
+        name: repmgr
+        namespace: repmgr
   patroni:
-    namespace: pgsql-patroni
+    namespace: patroni
     replica: 3
     storage_class: "patroni-storage"
     storage_path: "/mnt/patroni-storage"
     lb_ip_addr: "192.168.1.245"
     primary:
       lb_ip_addr: "192.168.1.245"
+    read:
+      lb_ip_addr: "192.168.1.246"
     secondary:
       lb_ip_addr: "192.168.1.246"
     service:
       metadata:
-        name: pgsql-patroni
-        namespace: pgsql-patroni
+        name: patroni
+        namespace: patroni
   pgautofailover:
-    namespace: pgsql-pgautofailover
+    namespace: pgautofailover
     replica: 3
     storage_class: "pgautofailover-storage"
     storage_path: "/mnt/pgautofailover-storage"
@@ -40,8 +42,8 @@ pgsql:
       lb_ip_addr: "192.168.1.246"
     service:
       metadata:
-        name: pgsql-pgautofailover
-        namespace: pgsql-pgautofailover
+        name: pgautofailover
+        namespace: pgautofailover
   install: true
   major_version: 10
   minor_version: 1

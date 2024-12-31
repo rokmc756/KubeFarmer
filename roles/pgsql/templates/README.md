@@ -1,6 +1,4 @@
-
 # https://severalnines.com/blog/running-galera-cluster-kubernetes/
-
 # https://techdocs.broadcom.com/us/en/vmware-tanzu/reference-architectures/tanzu-solutions-workbooks/services/tnz-use-cases/solution-workbooks-mariadb-backup.html
 
 Volumes:
@@ -21,10 +19,6 @@ Volumes:
     Medium:
 
 
-
 https://github.com/bitnami/charts/blob/main/bitnami/mariadb-galera/values.yaml
-
-
 https://artifacthub.io/packages/helm/bitnami/mariadb-galera
-
 

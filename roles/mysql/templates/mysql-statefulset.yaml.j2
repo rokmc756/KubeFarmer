@@ -2,39 +2,39 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: mariadb
+  name: mysql
 spec:
-  serviceName: "mariadb"
+  serviceName: "mysql"
   replicas: 1
   selector:
     matchLabels:
-      app: mariadb
+      app: mysql
   template:
     metadata:
       labels:
-        app: mariadb  # Ensure this label matches the selector
+        app: mysql  # Ensure this label matches the selector
     spec:
       containers:
-        - name: mariadb
-          image: mariadb:latest
+        - name: mysql
+          image: mysql:latest
           ports:
             - containerPort: 3306
-              name: mariadb
+              name: mysql
           env:
             - name: MYSQL_ROOT_PASSWORD
               value: "Changeme34#$"
           volumeMounts:
-            - name: mariadb-storage
+            - name: mysql-storage
               mountPath: /var/lib/mysql
             - name: config-volume
               mountPath: /etc/mysql/conf.d
       volumes:
         - name: config-volume
           configMap:
-            name: mariadb-config
+            name: mysql-config
   volumeClaimTemplates:
     - metadata:
-        name: mariadb-storage
+        name: mysql-storage
       spec:
         accessModes: [ "ReadWriteOnce" ]
         resources:

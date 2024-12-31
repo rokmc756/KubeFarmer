@@ -3,7 +3,7 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: data-pgsql-repmgr-postgresql-ha-postgresql-{{ n }}
+  name: data-repmgr-postgresql-ha-postgresql-{{ n }}
   namespace: {{ pgsql.repmgr.namespace }}
 spec:
   storageClassName: {{ pgsql.repmgr.storage_class }}
