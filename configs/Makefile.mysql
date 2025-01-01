@@ -1,10 +1,82 @@
 mysql:
-	@if [ "${r}" = "install" ]; then\
-		ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-mysql.yml --tags='install';\
+	@if [ "${r}" = "prepare" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-mysql.yml -e '{"${s}": True}' --tags='prepare';\
+			else\
+				echo "No Actions for Configure MySQL Database";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-mysql.yml -e '{mysql_all: True}' --tags='prepare';\
+			else\
+				echo "No Actions for Configure MySQL Database";\
+			fi\
+		else\
+			echo "No Actions for Configure MySQL Database";\
+		fi;\
+	elif [ "${r}" = "install" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-mysql.yml -e '{"${s}": True}' --tags='install';\
+			else\
+				echo "No Actions for Installing MySQL Database";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-mysql.yml -e '{mysql_all: True}' --tags='install';\
+			else\
+				echo "No Actions for Installing MySQL Database";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "common" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-common.yml -e '{mysql_all: True}' --tags='install';\
+			else\
+				echo "No Actions for Installing Common Role for MySQL Database";\
+			fi\
+		else\
+			echo "No Actions for Installing MySQL Database";\
+		fi;\
 	elif [ "${r}" = "uninstall" ]; then\
-		ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-mysql.yml --tags='uninstall';\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-mysql.yml -e '{"${s}": True}' --tags='uninstall';\
+			else\
+				echo "No Actions for Uninstalling MySQL Database";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} steup-cbdb.yml -e '{mysql_all: True}' --tags='uninstall';\
+			else\
+				echo "No Actions for Uninstalling MySQL Database";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "common" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} steup-common.yml -e '{mysql_all: True}' --tags='uninstall';\
+			else\
+				echo "No Actions for Uninstalling Common Role for MySQL Database";\
+			fi\
+		else\
+			echo "No Actions for Uninstalling MySQL Database";\
+		fi;\
+	elif [ "${r}" = "upgrade" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-mysql.yml -e '{"${s}": True}' --tags='upgrade';\
+			else\
+				echo "No Actions for Uninstalling MySQL Database";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} steup-cbdb.yml -e '{mysql_all: True}' --tags='upgrade';\
+			else\
+				echo "No Actions for Uninstalling MySQL Database";\
+			fi\
+		else\
+			echo "No Actions for Uninstalling MySQL Database";\
+		fi;\
 	else\
-		echo "No Actions for MariaDB Role";\
+		echo "No Actions for MySQL Database Role";\
 		exit;\
 	fi
 

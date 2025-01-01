@@ -6,10 +6,20 @@ mysql:
     namespace: mysql-ndb
     replica: 3
     storage_path: "/mnt/mysql-ndb-storage"
+    storage_class: "mysql-ndb-storage"
+    mgmd:
+      replica: 2
+      lb_ip_addr: "192.168.1.244"
+    mysqld:
+      replica: 3
+      lb_ip_addr: "192.168.1.245"
+    ndbmtd:
+      replica: 3
   replica:
     namespace: mysql-replica
     replica: 3
     storage_path: "/mnt/mysql-replica-storage"
+    storage_class: "mysql-replica-storage"
     primary:
       lb_ip_addr: "192.168.1.245"
     secondary:

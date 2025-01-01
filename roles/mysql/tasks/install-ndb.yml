@@ -1,9 +1,7 @@
-
-# https://github.com/mysql/mysql-ndb-operator
-
+---
 - name: Create Directory for Persistent Volumes
   file:
-    path: "{{ mysql.galera.storage_path }}"
+    path: "{{ mysql.ndb.storage_path }}"
     state: directory
     owner: root
     group: root
@@ -17,9 +15,36 @@
   when: print_debug == true
 
 
+- name: Deploy MySQL NDB Operator
+  shell:
+    helm install ndb-operator ndb-operator-repo/ndb-operator --namespace=ndb-operator --create-namespace
+  register: deploy_ndb_operator
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ deploy_ndb_operator }}
+  when: print_debug == true
+
+
+- name: Validate if MySQL NDB Containers are Running Normally
+  shell: |
+    kubectl -n ndb-operator get pods | sed 1d | grep ndb-operator- | awk '{print $3}' | grep Running | wc -l
+  register: check_ndb_container
+  until: check_ndb_container.stdout|int == 2
+  retries: 60
+  delay: 10
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ check_ndb_container }}
+  when: print_debug == true
+
+
 - name: Create Namespace for Persistent Volumes
   shell: |
-    kubectl create namespace {{ mysql.galera.namespace }}
+    kubectl create namespace {{ mysql.ndb.namespace }}
   register: create_namespace
   args:
     chdir: "{{ base_path }}/"
@@ -35,9 +60,9 @@
     dest: "{{ base_path }}/{{ item }}"
   register: copy_cluster_local_pvc_config_yaml
   with_items:
-    - "galera-storage-class.yaml"
-    - "galera-storage-pv.yaml"
-    - "galera-storage-pvc.yaml"
+    - "ndb-storage-class.yaml"
+    - "ndb-storage-pv.yaml"
+    - "ndb-storage-pvc.yaml"
 - debug: msg={{ copy_cluster_local_pvc_config_yaml }}
 
 
@@ -46,9 +71,9 @@
     kubectl create -f {{ item }}
   register: create_pvc
   with_items:
-    - "galera-storage-class.yaml"
-    - "galera-storage-pv.yaml"
-    - "galera-storage-pvc.yaml"
+    - "ndb-storage-class.yaml"
+    - "ndb-storage-pv.yaml"
+    - "ndb-storage-pvc.yaml"
   args:
     chdir: "{{ base_path }}/"
   environment:
@@ -57,39 +82,187 @@
   when: print_debug == true
 
 
-- name: Copy mysql Loadbalancer Config Yaml
-  template:
-    src: "{{ item }}.j2"
-    dest: "{{ base_path }}/{{ item }}"
-  register: copy_galera_config_yaml
+- name: Check if the MySQL NDB Cluster Operator Source Code is Already Downloaded
+  stat: path={{ base_path }}/mysql-ndb-operator
+  register: mysql_ndb_operator_dir_existed
+- debug: msg={{ mysql_ndb_operator_dir_existed }}
+
+
+- name: Clone MySQL NDB Ooerator Source Code
+  shell: |
+    git -C "{{ base_path }}" clone --single-branch --branch release-9.1.0-1.6.0 https://github.com/mysql/mysql-ndb-operator
+  register: git_clone_rook
+  ignore_errors: true
+  when: mysql.clone_git == true and mysql_ndb_operator_dir_existed.stat.exists != True
+- debug: msg={{ git_clone_rook }}
+  when: print_debug == true and mysql.clone_git == true and mysql_ndb_operator_dir_existed.stat.exists != True
+
+
+- name: Change MySQL NDB Operator Source Code
+  lineinfile:
+    dest: "{{ base_path }}/mysql-ndb-operator/docs/examples/example-ndb.yaml"
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    state: "{{ item.state }}"
+  register: enable_rook_discovery_daemon
   with_items:
-    - "mysql-galera-values.yaml"
-- debug: msg={{ copy_galera_config_yaml }}
-
-
-- name: Deploy mysql Galera Cluster
-  shell:
-    helm install mysql-galera bitnami/mysql-galera --namespace {{ mysql.galera.namespace }} -f {{ base_path }}/mysql-values.yaml
-  register: deploy_galera
-  args:
-    chdir: "{{ base_path }}/"
-  environment:
-    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-- debug: msg={{ deploy_galera }}
+    - { fn: 'example-ndb.yaml',  regexp: '^  name: example-ndb',                              line: '  name: mysql-ndb',                                 state: present }
+    - { fn: 'example-ndb.yaml',  regexp: '^    redundancyLevel:*',                            line: '  redundancyLevel: 3   # MySQL Cluster Replica',    state: present }
+    - { fn: 'example-ndb.yaml',  regexp: '^    nodeCount: 2       # Number of Data Nodes',    line: '    nodeCount: 3       # Number of Data Nodes',     state: present }
+    - { fn: 'example-ndb.yaml',  regexp: '^    nodeCount: 2       # Number of MySQL Servers', line: '    nodeCount: 3       # Number of MySQL Servers',  state: present }
+- debug: msg={{ enable_rook_discovery_daemon }}
   when: print_debug == true
 
 
-- name: Validate if mysql Galera Containers are Running Normally
+- name: Validate if MySQL NDB Containers are Running Normally
   shell: |
-    kubectl -n mysql-galera get pods | sed 1d | awk '{print $3}' | grep Running | wc -l
-  register: check_galera_container
-  until: mysql.replica.replica|int == check_galera_container.stdout|int
+    kubectl -n mysql-ndb apply -f docs/examples/example-ndb.yaml
+  register: check_ndb_container
+  retries: 60
+  delay: 10
+  args:
+    chdir: "{{ base_path }}/mysql-ndb-operator"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ check_ndb_container }}
+  when: print_debug == true
+
+
+- name: Validate if MySQL NDB Managment Containers are Running Normally
+  shell: |
+    kubectl -n mysql-ndb get pods | sed 1d | grep mysql-ndb-mgmd- | awk '{print $3}' | grep Running | wc -l
+  register: check_ndb_mgmd_container
+  until: check_ndb_mgmd_container.stdout|int == mysql.ndb.mgmd.replica|int
   retries: 60
   delay: 10
   args:
     chdir: "{{ base_path }}/"
   environment:
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-- debug: msg={{ check_galera_container }}
+- debug: msg={{ check_ndb_mgmd_container }}
   when: print_debug == true
+
+
+- name: Validate if MySQL NDB Metadata Containers are Running Normally
+  shell: |
+    kubectl -n mysql-ndb get pods | sed 1d | grep mysql-ndb-ndbmtd- | awk '{print $3}' | grep Running | wc -l
+  register: check_ndb_metadata_container
+  until: check_ndb_metadata_container.stdout|int == mysql.ndb.ndbmtd.replica|int
+  retries: 60
+  delay: 10
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ check_ndb_metadata_container }}
+  when: print_debug == true
+
+
+- name: Validate if MySQL NDB MySQL Containers are Running Normally
+  shell: |
+    kubectl -n mysql-ndb get pods | sed 1d | grep mysql-ndb-mysqld- | awk '{print $3}' | grep Running | wc -l
+  register: check_ndb_mysqld_container
+  until: check_ndb_mysqld_container.stdout|int == mysql.ndb.mysqld.replica|int
+  retries: 60
+  delay: 10
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ check_ndb_mysqld_container }}
+  when: print_debug == true
+
+# https://github.com/mysql/mysql-ndb-operator/blob/main/docs/connect-from-inside-k8s-demo.md
+# https://dbguide.tistory.com/entry/Mysql-MySQL-NDB-Cluster
+
+
+# kubectl get ndb mysql-ndb -o jsonpath={.status.generatedRootPasswordSecretName}
+# mysql-ndb-mysqld-root-password
+
+# To extract and decode the password from the Secret :
+# base64 -d <<< \
+#  $(kubectl get secret example-ndb-mysqld-root-password \
+#     -o jsonpath={.data.password})
+
+
+# Connect NDB
+# kubectl exec -it mysql-ndb-mysqld-0 -- bash
+# Defaulted container "mysqld-container" out of: mysqld-container, ndb-pod-init-container (init), mysqld-init-container (init)
+# bash-5.1# ndb_mgm -c mysql-ndb-mgmd.default.svc.cluster.local
+# -- NDB Cluster -- Management Client --
+
+
+#ndb_mgm> ndb_mgm -c mysql-ndb-mgmd
+#Connected to management server at mysql-ndb-mgmd.default.svc.cluster.local port 1186 (using cleartext)
+#Invalid command: ndb_mgm -c mysql-ndb-mgmd
+#Type HELP for help.
+#
+#ndb_mgm> show
+#Cluster Configuration
+#---------------------
+#[ndbd(NDB)]     3 node(s)
+#id=3    @10.142.52.9  (mysql-9.1.0 ndb-9.1.0, Nodegroup: 0, *)
+#id=4    @10.142.136.138  (mysql-9.1.0 ndb-9.1.0, Nodegroup: 0)
+#id=5    @10.142.16.73  (mysql-9.1.0 ndb-9.1.0, Nodegroup: 0)
+#
+#[ndb_mgmd(MGM)] 2 node(s)
+#id=1    @10.142.83.206  (mysql-9.1.0 ndb-9.1.0)
+#id=2    @10.142.136.137  (mysql-9.1.0 ndb-9.1.0)
+#
+#[mysqld(API)]   8 node(s)
+#id=147 (not connected, accepting connect from any host)
+#id=148  @10.142.243.200  (mysql-9.1.0 ndb-9.1.0)
+#id=149  @10.142.52.10  (mysql-9.1.0 ndb-9.1.0)
+#id=150  @10.142.83.208  (mysql-9.1.0 ndb-9.1.0)
+#id=151 (not connected, accepting connect from mysql-ndb-mysqld-3.mysql-ndb-mysqld.default.svc.cluster.local)
+#id=152 (not connected, accepting connect from mysql-ndb-mysqld-4.mysql-ndb-mysqld.default.svc.cluster.local)
+#id=153 (not connected, accepting connect from any host)
+#id=154 (not connected, accepting connect from any host)
+#
+#
+## kubectl get pods -l mysql.oracle.com/v1=mysql-ndb
+#NAME                 READY   STATUS    RESTARTS   AGE
+#mysql-ndb-mgmd-0     1/1     Running   0          5m54s
+#mysql-ndb-mgmd-1     1/1     Running   0          5m16s
+#mysql-ndb-mysqld-0   1/1     Running   0          3m55s
+#mysql-ndb-mysqld-1   1/1     Running   0          3m55s
+#mysql-ndb-ndbmtd-0   1/1     Running   0          4m39s
+#mysql-ndb-ndbmtd-1   1/1     Running   0          4m39s
+#[root@rk9-node01 ~]#
+#[root@rk9-node01 ~]# kubectl get pods -n mysql-ndb
+#NAME                 READY   STATUS    RESTARTS   AGE
+#mysql-ndb-mgmd-0     1/1     Running   0          29m
+#mysql-ndb-mgmd-1     1/1     Running   0          28m
+#mysql-ndb-mysqld-0   1/1     Running   0          27m
+#mysql-ndb-mysqld-1   1/1     Running   0          27m
+#mysql-ndb-mysqld-2   1/1     Running   0          27m
+#mysql-ndb-ndbmtd-0   1/1     Running   0          28m
+#mysql-ndb-ndbmtd-1   1/1     Running   0          28m
+#mysql-ndb-ndbmtd-2   1/1     Running   0          28m
+#
+#
+## kubectl get services -l mysql.oracle.com/v1=mysql-ndb
+#NAME               TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)    AGE
+#mysql-ndb-mgmd     ClusterIP   10.106.138.55    <none>        1186/TCP   5m11s
+#mysql-ndb-mysqld   ClusterIP   10.111.201.214   <none>        3306/TCP   3m12s
+#mysql-ndb-ndbmtd   ClusterIP   None             <none>        1186/TCP   3m56s
+#
+#
+## kubectl wait --for=condition=UpToDate ndb mysql-ndb --timeout=10m
+#ndbcluster.mysql.oracle.com/mysql-ndb condition met
+#
+## kubectl get ndb mysql-ndb
+#
+#
+#Delete a MySQL Cluster
+#To stop and remove the MySQL Cluster running inside the K8s Cluster, delete the NdbCluster resource object.
+#
+#kubectl delete -f docs/examples/example-ndb.yaml
+#(or)
+#
+#kubectl delete ndb example-ndb
+#
+## Connection from Outside
+## https://github.com/mysql/mysql-ndb-operator/blob/main/docs/connect-from-outside-k8s-demo.md
+
 

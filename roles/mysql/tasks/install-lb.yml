@@ -5,7 +5,7 @@
     dest: "{{ base_path }}/{{ item }}"
   register: copy_lb_config_yaml
   with_items:
-    - "galera-loadbalancer.yaml"
+    - "ndb-loadbalancer.yaml"
     - "replica-loadbalancer.yaml"
     - "phpmyadmin-loadbalancer.yaml"
 - debug: msg={{ copy_lb_config_yaml }}
@@ -23,15 +23,19 @@
   when: phpmyadmin is defined and phpmyadmin == true
 
 
-- name: Apply Load Balancer for MySQL Replication
+# kubectl patch svc mysql-ndb-mgmd   -n {{ mysql.ndb.namespace }} -p '{"spec": {"type": "LoadBalancer", "loadBalancerIP": "{{ mysql.ndb.mgmd.lb_ip_addr }}"}}'
+# kubectl patch svc mysql-ndb-mysqld -n {{ mysql.ndb.namespace }} -p '{"spec": {"type": "LoadBalancer", "loadBalancerIP": "{{ mysql.ndb.mysqld.lb_ip_addr }}"}}'
+- name: Apply Load Balancer for MySQL NDB Cluster
   shell: |
-    kubectl patch svc mysql-replica-primary -n {{ mysql.replica.namespace }} -p '{"spec": {"type": "LoadBalancer", "loadBalancerIP": "{{ mysql.replica.primary.lb_ip_addr }}"}}'
-    kubectl patch svc mysql-replica-secondary -n {{ mysql.replica.namespace }} -p '{"spec": {"type": "LoadBalancer", "loadBalancerIP": "{{ mysql.replica.secondary.lb_ip_addr }}"}}'
-  register: apply_replica_lb
+    kubectl patch ndb mysql-ndb --type='merge' -p '{"spec":{"managementNode":{"enableLoadBalancer":true},"mysqlNode":{"enableLoadBalancer":true}}}'
+  register: apply_ndb_lb
   ignore_errors: yes
   args:
     chdir: "{{ base_path }}"
-  when: replica is defined and replica == true
-- debug: msg={{ apply_replica_lb }}
-  when: replica is defined and replica == true
+  when: ndb is defined and ndb == true
+- debug: msg={{ apply_ndb_lb }}
+  when: ndb is defined and ndb == true
+
+
+# kubectl patch ndb mysql-ndb --type='merge' -p '{"spec":{"managementNode":{"enableLoadBalancer":true},"mysqlNode":{"enableLoadBalancer":true}}}'
 

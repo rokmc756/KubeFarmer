@@ -16,15 +16,16 @@
 - name: Delete Load Balancer for MySQL NDB Cluster
   shell: |
     kubectl patch svc {{ item.svc }} -n {{ item.ns }} -p '{"spec": {"type": "ClusterIP"}}'
-  register: delete_galera_lb
+  register: delete_ndb_lb
   ignore_errors: yes
   args:
     chdir: "{{ base_path }}"
   with_items:
-    - { ns: "mysql-galera", svc: "mysql-galera" }
-  when: galera is defined and galera == true
-- debug: msg={{ delete_galera_lb }}
-  when: print_debug == true and ( galera is defined and galera == true )
+    - { ns: "mysql-ndb", svc: "mysql-ndb-mysqld" }
+    - { ns: "mysql-ndb", svc: "mysql-ndb-mgmd" }
+  when: ndb is defined and ndb == true
+- debug: msg={{ delete_ndb_lb }}
+  when: print_debug == true and ( ndb is defined and ndb == true )
 
 
 - name: Delete Load Balancer for MySQL Replication

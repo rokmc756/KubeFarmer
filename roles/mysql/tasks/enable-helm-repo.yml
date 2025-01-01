@@ -17,6 +17,13 @@
 - debug: msg={{ add_mysql_helm_repo }}
 
 
+- name: Add MySQL NDB Helm Repo
+  shell: |
+    /usr/local/bin/helm repo add ndb-operator-repo https://mysql.github.io/mysql-ndb-operator/
+  register: add_mysql_ndb_helm_repo
+- debug: msg={{ add_mysql_ndb_helm_repo }}
+
+
 - name: Add Jetstack Helm Repo
   shell: |
     /usr/local/bin/helm repo add jetstack https://charts.jetstack.io

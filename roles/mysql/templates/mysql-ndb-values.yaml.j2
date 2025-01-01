@@ -30,7 +30,7 @@ diagnosticMode:
 
 image:
   registry: docker.io
-  repository: bitnami/mysql-galera
+  repository: bitnami/mysql-ndb
   tag: 11.4.4-debian-12-r3
   digest: ""
   pullPolicy: IfNotPresent
@@ -129,8 +129,8 @@ db:
   forcePassword: false
 
 
-galera:
-  name: galera
+ndb:
+  name: ndb
   bootstrap:
     forceBootstrap: false
     bootstrapFromNode: 0
@@ -234,14 +234,14 @@ mysqlConfiguration: |-
   log_queries_not_using_indexes=1
   slow_query_log=1
 
-  [galera]
+  [ndb]
   wsrep_on=ON
-  wsrep_provider=/opt/bitnami/mysql/lib/libgalera_smm.so
+  wsrep_provider=/opt/bitnami/mysql/lib/libndb_smm.so
   wsrep_sst_method=mariabackup
   wsrep_slave_threads=4
   wsrep_cluster_address=gcomm://
-  wsrep_cluster_name=galera
-  # wsrep_cluster_name=mysql-galera
+  wsrep_cluster_name=ndb
+  # wsrep_cluster_name=mysql-ndb
   wsrep_sst_auth="root:"
   innodb_flush_log_at_trx_commit=2
   wsrep_mode=REPLICATE_MYISAM
@@ -283,14 +283,14 @@ lifecycleHooks: {}
 
 containerPorts:
   mysql: 3306
-  galera: 4567
+  ndb: 4567
   ist: 4568
   sst: 4444
 
 
 persistence:
   enabled: true
-  # existingClaim: "data-mysql-galera-0"
+  # existingClaim: "data-mysql-ndb-0"
   existingClaim: ""
   subPath: ""
   mountPath: /bitnami/mysql
@@ -407,7 +407,7 @@ metrics:
       release: prometheus
     rules: {}
 
-# https://artifacthub.io/packages/helm/bitnami/mysql-galera
-# https://www.dbi-services.com/blog/setting-up-mysql-galera-cluster/
+# https://artifacthub.io/packages/helm/bitnami/mysql-ndb
+# https://www.dbi-services.com/blog/setting-up-mysql-ndb-cluster/
 # https://qiita.com/rururu_kenken/items/9dfede810460d6c12d56
 

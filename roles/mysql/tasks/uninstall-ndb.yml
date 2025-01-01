@@ -1,42 +1,106 @@
 ---
-- name: Uninstall mysql
+- name: Validate if MySQL NDB Containers are Deleted Normally
   shell: |
-    helm uninstall mysql-galera --namespace {{ mysql.galera.namespace }}
-  register: uninstall_galera
+    kubectl -n mysql-ndb delete -f docs/examples/example-ndb.yaml
+  register: check_ndb_container
   ignore_errors: true
+  retries: 60
+  delay: 10
   args:
-    chdir: "{{ base_path }}/"
+    chdir: "{{ base_path }}/mysql-ndb-operator"
   environment:
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-- debug: msg={{ uninstall_galera }}
+- debug: msg={{ check_ndb_container }}
   when: print_debug == true
 
 
-- name: Validate if mysql Galera Containers are Deleted
+- name: Validate if MySQL NDB MySQL Containers are Running Normally
   shell: |
-    kubectl get pods -n {{ mysql.galera.namespace }} | grep mysql- | awk '{print $3}' | uniq
-  register: delete_galera_container
+    kubectl -n mysql-ndb get pods | sed 1d | grep mysql-ndb-mysqld- | awk '{print $3}' | grep Running | wc -l
+  register: check_ndb_mysqld_container
   ignore_errors: true
-  until: delete_galera_container.stdout.find("") != -1
-  retries: 100
+  until: check_ndb_mysqld_container.stdout|int == 0
+  retries: 60
   delay: 10
   args:
     chdir: "{{ base_path }}/"
   environment:
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-- debug: msg={{ delete_galera_container }}
+- debug: msg={{ check_ndb_mysqld_container }}
   when: print_debug == true
 
 
-- name: Delete Persistent Volumes, Claim and Storage Class
+- name: Validate if MySQL NDB Metadata Containers are Deleted
+  shell: |
+    kubectl -n mysql-ndb get pods | sed 1d | grep mysql-ndb-ndbmtd- | awk '{print $3}' | grep Running | wc -l
+  register: check_ndb_metadata_container
+  ignore_errors: true
+  until: check_ndb_metadata_container.stdout|int == 0
+  retries: 60
+  delay: 10
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ check_ndb_metadata_container }}
+  when: print_debug == true
+
+
+- name: Validate if MySQL NDB Managment Containers are Deleted Normally
+  shell: |
+    kubectl -n mysql-ndb get pods | sed 1d | grep mysql-ndb-mgmd- | awk '{print $3}' | grep Running | wc -l
+  register: check_ndb_mgmd_container
+  ignore_errors: true
+  until: check_ndb_mgmd_container.stdout|int == 0
+  retries: 60
+  delay: 10
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ check_ndb_mgmd_container }}
+  when: print_debug == true
+
+
+- name: Check if the MySQL NDB Cluster Operator Source Code is Already Downloaded
+  stat: path={{ base_path }}/mysql-ndb-operator
+  register: mysql_ndb_operator_dir_existed
+  ignore_errors: true
+- debug: msg={{ mysql_ndb_operator_dir_existed }}
+
+
+- name: Remove MySQL NDB Ooerator Source Code
+  shell: |
+    rm -rf /root/mysql-ndb-operator
+  register: remove_mysql_ndb_operator_clone
+  ignore_errors: true
+  when: mysql.clone_git == true and mysql_ndb_operator_dir_existed.stat.exists != True
+- debug: msg={{ remove_mysql_ndb_operator_clone }}
+  when: print_debug == true and mysql.clone_git == true and mysql_ndb_operator_dir_existed.stat.exists != True
+
+
+- name: Copy Cluster Local PVC Config Yaml
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ base_path }}/{{ item }}"
+  register: copy_cluster_local_pvc_config_yaml
+  ignore_errors: true
+  with_items:
+    - "ndb-storage-class.yaml"
+    - "ndb-storage-pv.yaml"
+    - "ndb-storage-pvc.yaml"
+- debug: msg={{ copy_cluster_local_pvc_config_yaml }}
+
+
+- name: Cluster Settings for a Production Cluster Running in a Dynamic Cloud Environment including VMware
   shell: |
     kubectl delete -f {{ item }}
   register: delete_pvc
   ignore_errors: true
   with_items:
-    - "galera-storage-pvc.yaml"
-    - "galera-storage-pv.yaml"
-    - "galera-storage-class.yaml"
+    - "ndb-storage-pvc.yaml"
+    - "ndb-storage-pv.yaml"
+    - "ndb-storage-class.yaml"
   args:
     chdir: "{{ base_path }}/"
   environment:
@@ -45,23 +109,38 @@
   when: print_debug == true
 
 
-- name: Delete Cluster Local PVC Config Yaml
-  file:
-    path: "{{ base_path }}/{{ item }}"
-    state: absent
-  register: delete_cluster_local_pvc_config_yaml
+- name: Destroy MySQL NDB Operator
+  shell:
+    helm uninstall ndb-operator -n ndb-operator
+  register: destroy_ndb_operator
   ignore_errors: true
-  with_items:
-    - "galera-storage-class.yaml"
-    - "galera-storage-pv.yaml"
-    - "galera-storage-pvc.yaml"
-- debug: msg={{ delete_cluster_local_pvc_config_yaml }}
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ destroy_ndb_operator }}
+  when: print_debug == true
+
+
+- name: Validate if MySQL NDB Containers are Deleted Normally
+  shell: |
+    kubectl -n ndb-operator get pods | sed 1d | grep ndb-operator- | awk '{print $3}' | grep Running | wc -l
+  register: check_ndb_container
+  ignore_errors: true
+  until: check_ndb_container.stdout|int == 0
+  retries: 60
+  delay: 10
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ check_ndb_container }}
   when: print_debug == true
 
 
 - name: Delete Namespace for Persistent Volumes
   shell: |
-    kubectl delete namespace {{ mysql.galera.namespace }}
+    kubectl delete namespace {{ mysql.ndb.namespace }}
   register: delete_namespace
   ignore_errors: true
   args:
@@ -72,9 +151,9 @@
   when: print_debug == true
 
 
-- name: Directory for Persistent Volumes
+- name: Remove Directory for Persistent Volumes
   file:
-    path: "{{ mysql.galera.storage_path }}"
+    path: "{{ mysql.ndb.storage_path }}"
     state: absent
   register: delete_pv_dir
   ignore_errors: true
@@ -84,19 +163,3 @@
     - "{{ groups['all'] }}"
 - debug: msg={{ delete_pv_dir }}
   when: print_debug == true
-
-
-- name: Validate if mysql Galera Containers are Running
-  shell: |
-    kubectl -n {{ mysql.galera.namespace }} get pod | grep mysql | awk '{print $3}' | cut -d : -f 1
-  register: check_galera_container
-  until: check_galera_container.stdout.find("") != -1
-  retries: 100
-  delay: 10
-  args:
-    chdir: "{{ base_path }}/"
-  environment:
-    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-- debug: msg={{ check_galera_container }}
-  when: print_debug == true
-
