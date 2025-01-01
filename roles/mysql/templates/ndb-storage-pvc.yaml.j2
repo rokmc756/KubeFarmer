@@ -4,9 +4,9 @@ kind: NdbCluster
 metadata:
   name: mysql-ndb
 spec:
-  redundancyLevel: 3
+  redundancyLevel: {{ mysql.ndb.redundancy_level }}
   dataNode:
-    nodeCount: 3
+    nodeCount: {{ mysql.ndb.ndbmtd.replica }}
     pvcSpec:
       storageClassName: mysql-ndb-storage
       accessModes:
@@ -15,4 +15,4 @@ spec:
         requests:
          storage: 10Gi
   mysqlNode:
-    nodeCount: 3
+    nodeCount: {{ mysql.ndb.mysqld.replica }}

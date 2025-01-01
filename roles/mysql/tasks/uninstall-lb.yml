@@ -43,3 +43,14 @@
   when: print_debug == true and ( replica is defined and replica == true )
 
 
+- name: Delete Load Balancer for MySQL InnoDB Cluster
+  shell: |
+    kubectl patch svc mysql-innodb -n mysql-innodb -p '{"spec": {"type": "ClusterIP"}}'
+  register: delete_innodb_lb
+  ignore_errors: yes
+  args:
+    chdir: "{{ base_path }}"
+  when: innodb is defined and innodb == true
+- debug: msg={{ delete_ndb_lb }}
+  when: innodb is defined and innodb == true
+

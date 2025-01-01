@@ -8,6 +8,7 @@
   args:
     chdir: /root
 - debug: msg={{ install_helm }}
+  when: print_debug == true
 
 
 - name: Add MySQL Helm Repo
@@ -15,13 +16,25 @@
     /usr/local/bin/helm repo add mysql-operator https://mysql.github.io/mysql-operator/
   register: add_mysql_helm_repo
 - debug: msg={{ add_mysql_helm_repo }}
+  when: print_debug == true
 
 
 - name: Add MySQL NDB Helm Repo
   shell: |
     /usr/local/bin/helm repo add ndb-operator-repo https://mysql.github.io/mysql-ndb-operator/
   register: add_mysql_ndb_helm_repo
+  when: ndb is defined and ndb == true
 - debug: msg={{ add_mysql_ndb_helm_repo }}
+  when: print_debug == true and ( ndb is defined and ndb == true )
+
+
+- name: Add MySQL Workbench Helm Repo
+  shell: |
+    /usr/local/bin/helm repo add truecharts https://charts.truecharts.org/
+  register: add_mysql_workbench_helm_repo
+  when: workbench is defined and workbench == true
+- debug: msg={{ add_mysql_workbench_helm_repo }}
+  when: print_debug == true and ( workbench is defined and workbench == true )
 
 
 - name: Add Jetstack Helm Repo
@@ -29,6 +42,7 @@
     /usr/local/bin/helm repo add jetstack https://charts.jetstack.io
   register: add_jetstack_helm_repo
 - debug: msg={{ add_jetstack_helm_repo }}
+  when: print_debug == true
 
 
 - name: Update Helm Repo
@@ -36,4 +50,5 @@
     /usr/local/bin/helm repo update
   register: update_helm_repo
 - debug: msg={{ update_helm_repo }}
+  when: print_debug == true
 

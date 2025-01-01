@@ -1,0 +1,15 @@
+{% for n in range(0,mysql.innodb.replica|int) %}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: datadir-mysql-innodb-{{ n }}
+  namespace: {{ mysql.innodb.namespace }}
+spec:
+  storageClassName: {{ mysql.innodb.storage_class }}
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+{% endfor %}

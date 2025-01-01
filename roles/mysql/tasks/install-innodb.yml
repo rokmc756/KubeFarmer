@@ -1,0 +1,143 @@
+---
+- name: Create Directory for Persistent Volumes
+  file:
+    path: "{{ mysql.innodb.storage_path }}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0777
+  register: create_pv_dir
+  delegate_to: "{{ item }}"
+  delegate_facts: True
+  with_items:
+    - "{{ groups['all'] }}"
+- debug: msg={{ create_pv_dir }}
+  when: print_debug == true
+
+
+- name: Create Namespace for Persistent Volumes
+  shell: |
+    kubectl create namespace {{ item }}
+  register: create_namespace
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+  with_items:
+    - mysql-innodb
+    - mysql-operator
+- debug: msg={{ create_namespace }}
+  when: print_debug == true
+
+
+- name: Copy Cluster Local PVC Config Yaml
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ base_path }}/{{ item }}"
+  register: copy_cluster_local_pvc_config_yaml
+  with_items:
+    - "innodb-storage-class.yaml"
+    - "innodb-storage-pv.yaml"
+    - "innodb-storage-pvc.yaml"
+- debug: msg={{ copy_cluster_local_pvc_config_yaml }}
+
+
+- name: Cluster Settings for a Production Cluster Running in a Dynamic Cloud Environment including VMware
+  shell: |
+    kubectl create -f {{ item }}
+  register: create_pvc
+  with_items:
+    - "innodb-storage-class.yaml"
+    - "innodb-storage-pv.yaml"
+    - "innodb-storage-pvc.yaml"
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ create_pvc }}
+  when: print_debug == true
+
+
+- name: Deploy MySQL InnoDB Operator
+  shell:
+    helm install mysql-operator mysql-operator/mysql-operator --namespace mysql-operator --create-namespace
+  register: deploy_innodb_operator
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ deploy_innodb_operator }}
+  when: print_debug == true
+
+
+- name: Validate if MySQL InnoDB Operator Containers are Running Normally
+  shell: |
+    kubectl -n mysql-operator get pods | sed 1d | grep mysql-operator- | awk '{print $3}' | grep Running | wc -l
+  register: check_innodb_operator_container
+  until: check_innodb_operator_container.stdout|int == 1
+  retries: 60
+  delay: 10
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ check_innodb_operator_container }}
+  when: print_debug == true
+
+
+- name: Copy MySQL InnoDB Helm Config Values
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ base_path }}/{{ item }}"
+  register: copy_mysql_innodb_helm_config_yaml
+  with_items:
+    - "mysql-innodb-values.yaml"
+- debug: msg={{ copy_mysql_innodb_helm_config_yaml }}
+
+
+# --set credentials.root.password='changeme' \
+# --set tls.useSelfSigned=true --namespace mysql-innodb \
+- name: Deploy MySQL InnoDB Cluster
+  shell:
+    helm install mysql-innodb mysql-operator/mysql-innodbcluster --namespace mysql-innodb \
+    --create-namespace -f {{ base_path }}/mysql-innodb-values.yaml
+  register: deploy_mysql_innodb_cluster
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ deploy_mysql_innodb_cluster }}
+  when: print_debug == true
+
+
+- name: Validate if MySQL InnoDB Containers are Running Normally
+  shell: |
+    kubectl -n mysql-innodb get pods | sed 1d | grep mysql-innodb- | awk '{print $3}' | grep Running | wc -l
+  register: check_mysql_innodb_container
+  until: check_mysql_innodb_container.stdout|int == mysql.innodb.replica|int
+  retries: 60
+  delay: 10
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ check_mysql_innodb_container }}
+  when: print_debug == true
+
+
+- name: Check the MySQL InnoDB Cluster Resource Is Created
+  shell: |
+    kubectl get innodbclusters.mysql.oracle.com -n mysql-innodb | sed 1d | awk '{print $2}' | grep ONLINE | wc -l
+  register: check_mysql_innodb_cr_created
+  until: check_mysql_innodb_cr_created.stdout|int == 1
+  retries: 40
+  delay: 30
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ check_mysql_innodb_cr_created }}
+  when: print_debug == true
+
+# https://github.com/datacharmer/test_db
+# https://velog.io/@kubernetes/MySQL-Operator-for-Kubernetes

@@ -62,23 +62,6 @@
   when: print_debug == true
 
 
-- name: Check if the MySQL NDB Cluster Operator Source Code is Already Downloaded
-  stat: path={{ base_path }}/mysql-ndb-operator
-  register: mysql_ndb_operator_dir_existed
-  ignore_errors: true
-- debug: msg={{ mysql_ndb_operator_dir_existed }}
-
-
-- name: Remove MySQL NDB Ooerator Source Code
-  shell: |
-    rm -rf /root/mysql-ndb-operator
-  register: remove_mysql_ndb_operator_clone
-  ignore_errors: true
-  when: mysql.clone_git == true and mysql_ndb_operator_dir_existed.stat.exists != True
-- debug: msg={{ remove_mysql_ndb_operator_clone }}
-  when: print_debug == true and mysql.clone_git == true and mysql_ndb_operator_dir_existed.stat.exists != True
-
-
 - name: Copy Cluster Local PVC Config Yaml
   template:
     src: "{{ item }}.j2"
@@ -151,6 +134,16 @@
   when: print_debug == true
 
 
+- name: Remove MySQL NDB Ooerator Source Code
+  file:
+    path: "{{ base_path }}/mysql-ndb-operator"
+    state: absent
+  register: remove_mysql_ndb_operator_clone
+  ignore_errors: true
+- debug: msg={{ remove_mysql_ndb_operator_clone }}
+  when: print_debug == true
+
+
 - name: Remove Directory for Persistent Volumes
   file:
     path: "{{ mysql.ndb.storage_path }}"
@@ -163,3 +156,4 @@
     - "{{ groups['all'] }}"
 - debug: msg={{ delete_pv_dir }}
   when: print_debug == true
+

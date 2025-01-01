@@ -1,0 +1,38 @@
+image:
+  pullPolicy: IfNotPresent
+  pullSecrets:
+    enabled: false
+    secretName:
+
+
+credentials:
+  root:
+    user: root
+    password: "changeme"
+    host: "%"
+
+tls:
+  useSelfSigned: true
+#  caSecretName:
+#  serverCertAndPKsecretName:
+#  routerCertAndPKsecretName: # our use router.certAndPKsecretName
+
+serverInstances: {{ mysql.innodb.replica }}
+routerInstances: {{ mysql.innodb.routes }} # or use router.instances
+
+# routerInstances: 2 # or use router.instances
+
+# baseServerId: 1000
+
+#router:
+#  instances: 1
+#  certAndPKsecretName:
+#  podSpec:
+#  podAnnotations:
+#  podLabels:
+
+# If you would like to debug the Helm output with `helm template`, you need
+# to turn disableLookups on as during `helm template` Helm won't contact the kube API
+# and all lookups will thus fail
+disableLookups: false
+

@@ -4,12 +4,15 @@ base_path: /root
 dashboard_port: "10443"
 
 cont_pv_dirs:
+  - "mysql-ndb-storage"
+  - "mysql-innodb-storage"
+  - "mariadb-galera-storage"
+  - "mariadb-replica-storage"
   - "repmgr-storage"
   - "patroni-storage"
   - "pgautofailover-storage"
   - "grafana-storage"
   - "powerdns-storage"
-  - "mariadb-storage"
   - "awx-storage"
   - "katib-storage"
   - "authservice-storage"

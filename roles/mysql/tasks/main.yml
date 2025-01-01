@@ -29,10 +29,10 @@
   when: ( ndb is defined and ndb == true ) and inventory_hostname in groups['master']
 
 
-- name: Deploy MySQL Replication Cluster
-  import_tasks: install-replica.yml
+- name: Deploy MySQL InnoDB Cluster
+  import_tasks: install-innodb.yml
   tags: install
-  when: ( replica is defined and replica == true ) and inventory_hostname in groups['master']
+  when: ( innodb is defined and innodb == true ) and inventory_hostname in groups['master']
 
 
 - name: Deploy phpMyAdmin
@@ -59,10 +59,10 @@
   when: ( phpmyadmin is defined and phpmyadmin == true ) and inventory_hostname in groups['master']
 
 
-- name: Destroy MySQL Replication Cluster
-  import_tasks: uninstall-replica.yml
+- name: Destroy MySQL InnoDB Cluster
+  import_tasks: uninstall-innodb.yml
   tags: uninstall
-  when: ( replica is defined and replica == true ) and inventory_hostname in groups['master']
+  when: ( innodb is defined and innodb == true ) and inventory_hostname in groups['master']
 
 
 - name: Destroy MySQL NDB Cluster

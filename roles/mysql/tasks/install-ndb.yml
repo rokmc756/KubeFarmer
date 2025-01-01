@@ -18,6 +18,9 @@
 - name: Deploy MySQL NDB Operator
   shell:
     helm install ndb-operator ndb-operator-repo/ndb-operator --namespace=ndb-operator --create-namespace
+    # --set credentials.root.user='root' \
+    # --set credentials.root.password='changeme' \
+    # --set credentials.root.host='%' \
   register: deploy_ndb_operator
   args:
     chdir: "{{ base_path }}/"
@@ -106,10 +109,10 @@
     state: "{{ item.state }}"
   register: enable_rook_discovery_daemon
   with_items:
-    - { fn: 'example-ndb.yaml',  regexp: '^  name: example-ndb',                              line: '  name: mysql-ndb',                                 state: present }
-    - { fn: 'example-ndb.yaml',  regexp: '^    redundancyLevel:*',                            line: '  redundancyLevel: 3   # MySQL Cluster Replica',    state: present }
-    - { fn: 'example-ndb.yaml',  regexp: '^    nodeCount: 2       # Number of Data Nodes',    line: '    nodeCount: 3       # Number of Data Nodes',     state: present }
-    - { fn: 'example-ndb.yaml',  regexp: '^    nodeCount: 2       # Number of MySQL Servers', line: '    nodeCount: 3       # Number of MySQL Servers',  state: present }
+    - { fn: 'example-ndb.yaml',  regexp: '^  name: example-ndb',                              line: '  name: mysql-ndb',                                                               state: present }
+    - { fn: 'example-ndb.yaml',  regexp: '^  redundancyLevel: 2',                             line: '  redundancyLevel: {{ mysql.ndb.redundancy_level }}   # MySQL Cluster Replica',   state: present }
+    - { fn: 'example-ndb.yaml',  regexp: '^    nodeCount: 2       # Number of Data Nodes',    line: '    nodeCount: {{ mysql.ndb.ndbmtd.replica }}       # Number of Data Nodes',      state: present }
+    - { fn: 'example-ndb.yaml',  regexp: '^    nodeCount: 2       # Number of MySQL Servers', line: '    nodeCount: {{ mysql.ndb.mysqld.replica }}       # Number of MySQL Servers',   state: present }
 - debug: msg={{ enable_rook_discovery_daemon }}
   when: print_debug == true
 
@@ -171,6 +174,7 @@
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ check_ndb_mysqld_container }}
   when: print_debug == true
+
 
 # https://github.com/mysql/mysql-ndb-operator/blob/main/docs/connect-from-inside-k8s-demo.md
 # https://dbguide.tistory.com/entry/Mysql-MySQL-NDB-Cluster
@@ -264,5 +268,4 @@
 #
 ## Connection from Outside
 ## https://github.com/mysql/mysql-ndb-operator/blob/main/docs/connect-from-outside-k8s-demo.md
-
 

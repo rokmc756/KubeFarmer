@@ -6,7 +6,7 @@
   register: copy_lb_config_yaml
   with_items:
     - "ndb-loadbalancer.yaml"
-    - "replica-loadbalancer.yaml"
+    - "innodb-loadbalancer.yaml"
     - "phpmyadmin-loadbalancer.yaml"
 - debug: msg={{ copy_lb_config_yaml }}
 
@@ -23,11 +23,11 @@
   when: phpmyadmin is defined and phpmyadmin == true
 
 
-# kubectl patch svc mysql-ndb-mgmd   -n {{ mysql.ndb.namespace }} -p '{"spec": {"type": "LoadBalancer", "loadBalancerIP": "{{ mysql.ndb.mgmd.lb_ip_addr }}"}}'
-# kubectl patch svc mysql-ndb-mysqld -n {{ mysql.ndb.namespace }} -p '{"spec": {"type": "LoadBalancer", "loadBalancerIP": "{{ mysql.ndb.mysqld.lb_ip_addr }}"}}'
+# kubectl patch ndb mysql-ndb --type='merge' -p '{"spec":{"managementNode":{"enableLoadBalancer":true},"mysqlNode":{"enableLoadBalancer":true}}}'
 - name: Apply Load Balancer for MySQL NDB Cluster
   shell: |
-    kubectl patch ndb mysql-ndb --type='merge' -p '{"spec":{"managementNode":{"enableLoadBalancer":true},"mysqlNode":{"enableLoadBalancer":true}}}'
+    kubectl patch svc mysql-ndb-mgmd   -n {{ mysql.ndb.namespace }} -p '{"spec": {"type": "LoadBalancer", "loadBalancerIP": "{{ mysql.ndb.mgmd.lb_ip_addr }}"}}'
+    kubectl patch svc mysql-ndb-mysqld -n {{ mysql.ndb.namespace }} -p '{"spec": {"type": "LoadBalancer", "loadBalancerIP": "{{ mysql.ndb.mysqld.lb_ip_addr }}"}}'
   register: apply_ndb_lb
   ignore_errors: yes
   args:
@@ -37,5 +37,13 @@
   when: ndb is defined and ndb == true
 
 
-# kubectl patch ndb mysql-ndb --type='merge' -p '{"spec":{"managementNode":{"enableLoadBalancer":true},"mysqlNode":{"enableLoadBalancer":true}}}'
-
+- name: Apply Load Balancer for MySQL InnoDB Cluster
+  shell: |
+    kubectl patch svc mysql-innodb -n mysql-innodb -p '{"spec": {"type": "LoadBalancer", "loadBalancerIP": "{{ mysql.innodb.lb_ip_addr }}"}}'
+  register: apply_ndb_lb
+  ignore_errors: yes
+  args:
+    chdir: "{{ base_path }}"
+  when: innodb is defined and innodb == true
+- debug: msg={{ apply_ndb_lb }}
+  when: innodb is defined and innodb == true

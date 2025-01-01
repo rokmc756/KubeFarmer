@@ -4,22 +4,24 @@ base_path: /root
 mysql:
   ndb:
     namespace: mysql-ndb
-    replica: 3
+    redundancy_level: 4
     storage_path: "/mnt/mysql-ndb-storage"
     storage_class: "mysql-ndb-storage"
     mgmd:
       replica: 2
       lb_ip_addr: "192.168.1.244"
     mysqld:
-      replica: 3
+      replica: 4
       lb_ip_addr: "192.168.1.245"
     ndbmtd:
-      replica: 3
-  replica:
-    namespace: mysql-replica
-    replica: 3
-    storage_path: "/mnt/mysql-replica-storage"
-    storage_class: "mysql-replica-storage"
+      replica: 4
+  innodb:
+    namespace: mysql-innodb
+    replica: 4
+    routes: 2
+    storage_path: "/mnt/mysql-innodb-storage"
+    storage_class: "mysql-innodb-storage"
+    lb_ip_addr: "192.168.1.244"
     primary:
       lb_ip_addr: "192.168.1.245"
     secondary:
@@ -29,7 +31,7 @@ mysql:
   minor_version: 1
   patch_version: 0
   build_version:
-  clone_git: false
+  clone_git: true
   nvme: false
   lb_ip_addr: "192.168.1.212"
   storage_path: "/mnt/mysql-storage"
