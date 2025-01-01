@@ -1,4 +1,42 @@
 # https://github.com/opendcim/helm-chart
 # https://github.com/opendcim/openDCIM
 # https://cyuu.tistory.com/160
+# https://wiki.opendcim.org/wiki/index.php/Kubernetes
+# https://medium.com/cloudnloud/a-beginners-guide-to-helm-charts-step-by-step-installation-and-configuration-f07a619620ba
+
+
+
+# https://www.datree.io/resources/kubernetes-troubleshooting-fixing-createcontainerconfig-error
+
+
+# https://kubernetes.io/docs/tasks/configmap-secret/managing-secret-using-kubectl/
+
+
+
+# SQLSTATE[HY000] [2002] No such file or directory
+# https://stackoverflow.com/questions/29695450/pdoexception-sqlstatehy000-2002-no-such-file-or-directory
+# https://stackoverflow.com/questions/20723803/pdoexception-sqlstatehy000-2002-no-such-file-or-directory
+
+
+
+# How to install OpenDCIM 
+#
+# git clone https://github.com/opendcim/helm-chart
+#
+# cd helm-chart/charts/opendcim/v23.01/templates/
+#
+# grep -r "Cron" .
+#
+# vi poll-pdu-stats.yaml     # change vbeta1 - v1
+#
+# vi poll-temp-sensors.yaml   # change vbeta1 - v1
+#
+# helm package .
+#
+# helm install opendcim opendcim-0.1.0.tgz --namespace=opendcim --create-namespace
+#
+# kubectl patch svc opendcim -n opendcim -p '{"spec": {"type": "LoadBalancer", "loadBalancerIP": "192.168.1.249"}}'
+
+# wget http://192.168.1.249
+#
 

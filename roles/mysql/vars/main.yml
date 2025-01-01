@@ -17,8 +17,8 @@ mysql:
       replica: 4
   innodb:
     namespace: mysql-innodb
-    replica: 4
-    routes: 2
+    replica: 3
+    routes: 1
     storage_path: "/mnt/mysql-innodb-storage"
     storage_class: "mysql-innodb-storage"
     lb_ip_addr: "192.168.1.244"
