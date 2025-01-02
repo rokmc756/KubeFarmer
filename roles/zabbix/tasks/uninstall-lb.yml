@@ -1,0 +1,14 @@
+---
+- name: Delete Zabbix Load Balancer
+  shell: |
+    kubectl patch svc {{ item.svc }} -n {{ _zabbix.namespace }} -p '{"spec": {"type": "ClusterIP"}}'
+  register: delete_zabbix_lb
+  ignore_errors: yes
+  args:
+    chdir: "{{ base_path }}"
+  with_items:
+    - { svc: "zabbix-chrome",     lb_ip_addr: "192.168.1.234" }
+    - { svc: "zabbix-postgresql", lb_ip_addr: "192.168.1.235" }
+    - { svc: "zabbix-zabbix-web", lb_ip_addr: "192.168.1.237" }
+- debug: msg={{ delete_zabbix_lb }}
+

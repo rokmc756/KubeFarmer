@@ -1,0 +1,97 @@
+---
+- name: Create Directory for Persistent Volumes
+  file:
+    path: "{{ _zabbix.storage_path }}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0777
+  register: create_pv_dir
+  delegate_to: "{{ item }}"
+  delegate_facts: True
+  with_items:
+    - "{{ groups['all'] }}"
+- debug: msg={{ create_pv_dir }}
+  when: print_debug == true
+
+
+- name: Create Namespace for Persistent Volumes
+  shell: |
+    kubectl create namespace {{ _zabbix.namespace }}
+  register: create_namespace
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ create_namespace }}
+  when: print_debug == true
+
+
+- name: Copy Cluster Local PVC Config Yaml
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ base_path }}/{{ item }}"
+  register: copy_cluster_local_pvc_config_yaml
+  with_items:
+    - "zabbix-storage-class.yaml"
+    - "zabbix-storage-pv.yaml"
+    - "zabbix-storage-pvc.yaml"
+- debug: msg={{ copy_cluster_local_pvc_config_yaml }}
+
+
+- name: Cluster Settings for a Production Cluster Running in a Dynamic Cloud Environment including VMware
+  shell: |
+    kubectl create -f {{ item }}
+  register: create_pvc
+  with_items:
+    - "zabbix-storage-class.yaml"
+    - "zabbix-storage-pv.yaml"
+    - "zabbix-storage-pvc.yaml"
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ create_pvc }}
+  when: print_debug == true
+
+
+- name: Copy Zabbix Loadbalancer Config Yaml
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ base_path }}/{{ item }}"
+  register: copy_zabbix_lb_config_yaml
+  with_items:
+    - "zabbix-values.yaml"
+- debug: msg={{ copy_zabbix_lb_config_yaml }}
+
+
+- name: Deploy Zabbix
+  shell:
+    helm install zabbix zabbix-community/zabbix -n {{ _zabbix.namespace }} -f zabbix-values.yaml
+  register: deploy_zabbix
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ deploy_zabbix }}
+  when: print_debug == true
+
+
+- name: Validate if Zabbix Containers are Running Normally
+  shell: |
+    kubectl get pods -n {{ _zabbix.namespace }} | grep zabbix- | awk '{print $3}' | grep -E 'Pending|Init|ContainerCreating' | wc -l
+  register: check_zabbix_container
+  until: check_zabbix_container.stdout|int == 0
+  retries: 60
+  delay: 10
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ check_zabbix_container }}
+  when: print_debug == true
+
+
+# https://github.com/zabbix-community/helm-zabbix/blob/main/charts/zabbix/README.md
+# https://blog.zabbix.com/monitoring-kubernetes-with-zabbix/25055/
+

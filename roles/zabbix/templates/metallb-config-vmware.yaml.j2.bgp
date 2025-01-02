@@ -1,0 +1,55 @@
+#---
+#apiVersion: metallb.io/v1beta1
+#kind: IPAddressPool
+#metadata:
+#  name: bgp-pool
+#  namespace: metallb-system
+#  labels:
+#    ipaddresspool: demo
+#spec:
+#  addresses:
+#  - 192.168.1.0/24
+#  autoAssign: true
+#  avoidBuggyIPs: false
+#---
+#apiVersion: metallb.io/v1beta1
+#kind: BGPAdvertisement
+#metadata:
+#  name: local
+#  namespace: metallb-system
+#spec:
+#  ipAddressPools:
+#  - bgp-pool
+#  aggregationLength: 32
+#---
+#apiVersion: metallb.io/v1beta2
+#kind: BGPPeer
+#metadata:
+#  name: test
+#  namespace: metallb-system
+#spec:
+#  myASN: 7776
+#  peerASN: 7675
+#  peerAddress: 172.16.1.1
+#  routerID: 172.16.1.11
+# https://docs.daocloud.io/en/network/modules/metallb/l2-bgp/#usage_1
+
+
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: {{ metallb.vmware.kind.ipaddrpool.metadata.name }}
+  namespace: {{ metallb.vmware.kind.ipaddrpool.metadata.namespace }}
+spec:
+  addresses:
+  - {{ metallb.vmware.kind.ipaddrpool.spec.ips_range }}
+---
+apiVersion: metallb.io/v1beta1
+kind: BGPAdvertisement
+metadata:
+  name: external
+  namespace: {{ metallb.vmware.kind.l2advertise.metadata.namespace }}
+spec:
+  ipAddressPools:
+  - {{ metallb.vmware.kind.ipaddrpool.metadata.name }}
+  aggregationLength: 24

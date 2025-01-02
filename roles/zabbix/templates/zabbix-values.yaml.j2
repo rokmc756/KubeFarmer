@@ -1,0 +1,452 @@
+global:
+  imagePullSecrets: []
+  commonLabels: {}
+
+
+zabbixImageTag: ubuntu-7.0.6
+
+
+postgresAccess:
+  useUnifiedSecret: true
+  unifiedSecretName: zabbixdb-pguser-zabbix
+  unifiedSecretAutoCreate: true
+  unifiedSecretHostKey: host
+  unifiedSecretPortKey: port
+  unifiedSecretUserKey: user
+  unifiedSecretPasswordKey: password
+  unifiedSecretDBKey: dbname
+  unifiedSecretSchemaKey: ""
+  host: "zabbix-postgresql"
+  port: "5432"
+  user: "zabbix"
+  password: "changeme"
+  database: "zabbix"
+  schema: ""
+
+
+zabbixServer:
+  enabled: true
+  zabbixServerHA:
+    enabled: true
+    role:
+      annotations: {}
+    roleBinding:
+      annotations: {}
+    serviceAccount:
+      annotations: {}
+    dbCreateUpgradeJob:
+      image:
+        repository: registry.inqbeo.de/zabbix-dev/zabbix-server-create-upgrade-db
+        tag: ""
+        pullPolicy: IfNotPresent
+        pullSecrets: []
+      extraInitContainers: []
+      extraContainers: []
+      extraPodSpecs: {}
+      extraVolumeMounts: []
+      extraVolumes: []
+      resources: {}
+      securityContext: {}
+    haLabelsSidecar:
+      image:
+        repository: registry.inqbeo.de/zabbix-dev/zabbix-server-ha-label-manager
+        tag: latest
+        pullPolicy: IfNotPresent
+        pullSecrets: []
+      labelName: zabbix.com/server-ha-role
+      resources: {}
+      securityContext: {}
+      extraVolumeMounts: []
+  replicaCount: 1
+  podAntiAffinity: true
+  hostPort: false
+  hostIP: 0.0.0.0
+  resources: {}
+  image:
+    repository: zabbix/zabbix-server-pgsql
+    tag: null
+    pullPolicy: IfNotPresent
+    pullSecrets: []
+  haNodesAutoClean:
+    enabled: true
+    image:
+      repository: postgres
+      tag: 16
+      pullPolicy: IfNotPresent
+      pullSecrets: []
+    schedule: "0 1 * * *"
+    concurrencyPolicy: "Replace"
+    deleteOlderThanSeconds: 3600
+    resources: {}
+    extraEnv: []
+    extraVolumeMounts: []
+    extraContainers: []
+    extraInitContainers: []
+    extraVolumes: []
+    extraPodSpecs: {}
+    securityContext: {}
+    cronjobLabels: {}
+  service:
+    type: ClusterIP
+    clusterIP:
+    externalIPs: []
+    loadBalancerIP: ""
+    loadBalancerSourceRanges: []
+    loadBalancerClass: ""
+    sessionAffinity: None
+    port: 10051
+    nodePort: 31051
+    annotations: {}
+  extraEnv: []
+  deploymentAnnotations: {}
+  deploymentLabels: {}
+  containerAnnotations: {}
+  containerLabels: {}
+  extraVolumeMounts: []
+  extraContainers: []
+  extraInitContainers: []
+  extraVolumes: []
+  extraPodSpecs: {}
+  securityContext: {}
+  livenessProbe: {}
+  readinessProbe: {}
+  startupProbe: {}
+
+
+postgresql:
+  enabled: true
+  image:
+    repository: postgres
+    tag: 16
+    pullPolicy: IfNotPresent
+    pullSecrets: []
+  resources: {}
+  persistence:
+    enabled: true
+    existingClaimName: false
+    storageSize: 5Gi
+    #storageClass: my-storage-class
+  service:
+    type: ClusterIP
+    clusterIP:
+    port: 5432
+    annotations: {}
+  extraRuntimeParameters:
+    max_connections: 100
+  extraEnv: []
+  statefulSetAnnotations: {}
+  statefulSetLabels: {}
+  containerAnnotations: {}
+  containerLabels: {}
+  extraVolumeMounts: []
+  extraContainers: []
+  extraInitContainers: []
+  extraVolumes: []
+  extraPodSpecs: {}
+  securityContext: {}
+  livenessProbe: {}
+  readinessProbe: {}
+  startupProbe: {}
+
+
+zabbixProxy:
+  enabled: true
+  replicaCount: 1
+  resources: {}
+  image:
+    repository: zabbix/zabbix-proxy-sqlite3
+    tag: null
+    pullPolicy: IfNotPresent
+    pullSecrets: []
+  ZBX_PROXYMODE: 0
+  ZBX_HOSTNAME: zabbix-proxy # This variable is unique, case sensitive hostname.
+  ZBX_SERVER_HOST: zabbix-zabbix-server
+  ZBX_SERVER_PORT: 10051
+  ZBX_DEBUGLEVEL: 4
+  ZBX_TIMEOUT: 4
+  ZBX_JAVAGATEWAY_ENABLE: false
+  ZBX_VMWARECACHESIZE: 128M
+  service:
+    type: ClusterIP
+    clusterIP:
+    externalIPs: []
+    loadBalancerIP: ""
+    loadBalancerSourceRanges: []
+    loadBalancerClass: ""
+    sessionAffinity: None
+    port: 10051
+    nodePort: 31053
+    annotations: {}
+  extraEnv: []
+  statefulSetAnnotations: {}
+  statefulSetLabels: {}
+  containerAnnotations: {}
+  containerLabels: {}
+  extraVolumeMounts: []
+  extraContainers: []
+  extraInitContainers: []
+  extraVolumes: []
+  extraPodSpecs: {}
+  securityContext: {}
+  extraVolumeClaimTemplate: []
+  livenessProbe: {}
+  readinessProbe: {}
+  startupProbe: {}
+
+
+zabbixAgent:
+  enabled: true
+  runAsSidecar: true
+  runAsDaemonSet: false
+  resources: {}
+  image:
+    repository: zabbix/zabbix-agent2
+    tag: null
+    pullPolicy: IfNotPresent
+    pullSecrets: []
+  ZBX_SERVER_HOST: 0.0.0.0/0
+  ZBX_SERVER_PORT: 10051
+  ZBX_PASSIVE_ALLOW: true
+  #ZBX_PASSIVESERVERS: ''
+  # -- This variable is boolean (true or false) and enables or disables feature of active checks
+  ZBX_ACTIVE_ALLOW: false
+  # -- The variable is comma separated list of allowed Zabbix Server or proxy hosts for connections to Zabbix Agent container. You may specify port.
+  #ZBX_ACTIVESERVERS: ''
+  # -- The variable is list of comma separated loadable Zabbix modules. It works with volume /var/lib/zabbix/modules.
+  #ZBX_LOADMODULE: dummy1.so,dummy2.so
+  # -- The variable is used to specify debug level, from 0 to 5
+  ZBX_DEBUGLEVEL: 3
+  # -- The variable is used to specify timeout for processing checks. By default, value is 4.
+  ZBX_TIMEOUT: 4
+  service:
+    type: ClusterIP
+    clusterIP:
+    externalIPs: []
+    loadBalancerIP: ""
+    loadBalancerSourceRanges: []
+    loadBalancerClass: ""
+    sessionAffinity: None
+    port: 10050
+    nodePort: 31050
+    annotations: {}
+  hostRootFsMount: true
+  extraEnv: []
+  extraVolumeMounts: []
+  daemonSetAnnotations: {}
+  daemonSetLabels: {}
+  deploymentLabels: {}
+  containerAnnotations: {}
+  containerLabels: {}
+  extraContainers: []
+  extraInitContainers: []
+  extraVolumes: []
+  extraPodSpecs: {}
+  securityContext: {}
+  livenessProbe:
+    tcpSocket:
+      port: zabbix-agent
+    timeoutSeconds: 3
+    failureThreshold: 3
+    periodSeconds: 10
+    successThreshold: 1
+  readinessProbe: {}
+  startupProbe:
+    tcpSocket:
+      port: zabbix-agent
+    initialDelaySeconds: 15
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 5
+    successThreshold: 1
+
+
+zabbixWeb:
+  enabled: true
+  replicaCount: 1
+  podAntiAffinity: true
+  resources: {}
+  image:
+    repository: zabbix/zabbix-web-nginx-pgsql
+    tag: null
+    pullPolicy: IfNotPresent
+    pullSecrets: []
+  service:
+    type: ClusterIP
+    clusterIP:
+    externalIPs: []
+    loadBalancerIP: ""
+    loadBalancerSourceRanges: []
+    loadBalancerClass: ""
+    sessionAffinity: None # -- Port of service in Kubernetes cluster
+    port: 80
+    nodePort: 31080
+    annotations: {}
+  extraEnv: []
+  deploymentAnnotations: {}
+  deploymentLabels: {}
+  containerAnnotations: {}
+  containerLabels: {}
+  extraVolumeMounts: []
+  extraContainers: []
+  extraInitContainers: []
+  extraVolumes: []
+  extraPodSpecs: {}
+  securityContext: {}
+  livenessProbe:
+    httpGet:
+      path: /
+      port: zabbix-web
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 6
+    successThreshold: 1
+  readinessProbe:
+    httpGet:
+      path: /
+      port: zabbix-web
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 6
+    successThreshold: 1
+  startupProbe: {}
+
+
+zabbixWebService:
+  enabled: true
+  replicaCount: 1
+  podAntiAffinity: true
+  resources: {}
+  image:
+    repository: zabbix/zabbix-web-service
+    tag: null
+    pullPolicy: IfNotPresent
+    pullSecrets: []
+  service:
+    type: ClusterIP
+    clusterIP:
+    port: 10053
+    annotations: {}
+  extraEnv: []
+  deploymentAnnotations: {}
+  deploymentLabels: {}
+  containerAnnotations: {}
+  containerLabels: {}
+  extraVolumeMounts: []
+  extraContainers: []
+  extraInitContainers: []
+  extraVolumes: []
+  extraPodSpecs: {}
+  securityContext: {}
+  livenessProbe: {}
+  readinessProbe: {}
+  startupProbe: {}
+
+
+zabbixJavaGateway:
+  enabled: true
+  replicaCount: 1
+  resources: {}
+  image:
+    repository: zabbix/zabbix-java-gateway
+    tag: null
+    pullPolicy: IfNotPresent
+    pullSecrets: []
+  ZBX_START_POLLERS: 5
+  # ZBX_PROPERTIES_FILE:
+  # -- The variable is used to specify debug level, from 0 to 5
+  ZBX_DEBUGLEVEL: 3
+  ZBX_TIMEOUT: 3
+  # -- Additional arguments for Zabbix Java Gateway. Useful to enable additional libraries and features.
+  # ZABBIX_OPTIONS:
+  # Java Gateway Service Name
+  ZBX_JAVAGATEWAY: zabbix-java-gateway
+  service:
+    type: ClusterIP
+    clusterIP:
+    externalIPs: []
+    loadBalancerIP: ""
+    loadBalancerSourceRanges: []
+    loadBalancerClass: ""
+    sessionAffinity: None
+    port: 10052
+    nodePort: 31052
+    annotations: {}
+  extraEnv: []
+  extraVolumeMounts: []
+  deploymentAnnotations: {}
+  deploymentLabels: {}
+  containerAnnotations: {}
+  containerLabels: {}
+  extraContainers: []
+  extraInitContainers: []
+  extraVolumes: []
+  extraPodSpecs: {}
+  securityContext: {}
+  livenessProbe:
+    tcpSocket:
+      port: zabbix-java-gw
+    timeoutSeconds: 3
+    failureThreshold: 3
+    periodSeconds: 10
+    successThreshold: 1
+  readinessProbe: {}
+  startupProbe:
+    tcpSocket:
+      port: zabbix-java-gw
+    initialDelaySeconds: 15
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 5
+    successThreshold: 1
+
+
+zabbixBrowserMonitoring:
+  enabled: true
+  pollers: 1
+  webdriver:
+    enabled: true
+    name: chrome
+    image:
+      repository: selenium/standalone-chrome
+      tag: 127.0-chromedriver-127.0-grid-4.23.0-20240727
+      pullPolicy: IfNotPresent
+      pullSecrets: []
+    port: 4444
+  customWebDriverURL: ""
+
+
+ingress:
+  enabled: false
+  annotations: {}
+  hosts:
+  - host: chart-example.local
+    paths:
+    - path: /
+      pathType: ImplementationSpecific
+  tls: []
+  pathType: Prefix
+
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+securityContext: {}
+
+
+serviceAccount:
+  create: true
+  name: ""
+  annotations: {}
+  labels: {}
+  automountServiceAccountToken: true
+
+
+rbac:
+  create: true
+  additionalRulesForClusterRole: []
+
+
+extraManifests: []
+

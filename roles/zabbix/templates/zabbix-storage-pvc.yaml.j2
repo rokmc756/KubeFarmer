@@ -1,0 +1,26 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: zabbix-zabbix-helm-chrt-proxy
+  namespace: {{ _zabbix.namespace }}
+spec:
+  storageClassName: {{ _zabbix.storage_class }}
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgresql-data-zabbix-postgresql-0
+  namespace: {{ _zabbix.namespace }}
+spec:
+  storageClassName: {{ _zabbix.storage_class }}
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
