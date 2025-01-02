@@ -1,15 +1,16 @@
 - name: Create Directory for Persistent Volumes
   file:
-    path: "{{ item }}"
+    path: "{{ _mongodb.storage_path }}-{{ item }}"
     state: directory
     owner: root
     group: root
     mode: 0777
   register: create_pv_dir
-  with_items:
-    - "{{ mongodb.storage_path }}"
+  with_sequence: start=0 end={{ total_pvs|int }}
 - debug: msg={{ create_pv_dir }}
   when: print_debug == true
+  # with_sequence: start=0 end={{ ( _mongodb.sharded_shard|int * _mongodb.shardsvr|int ) + _mongodb.configsvr|int }}
+  # with_sequence: start=0 end={{ _mongodb.sharded_shard|int*_mongodb.shardsvr|int + _mongodb.configsvr|int - 1 }}
 
 
 - name: Apply Kernel Parameters for mongodb
@@ -19,7 +20,7 @@
     state: present
   register: apply_kernel_parameters
   with_items:
-    - "{{ mongodb.kernel_parameters }}"
+    - "{{ _mongodb.kernel_parameters }}"
   notify:
     - Reload Sysctl
 - debug: msg={{ apply_kernel_parameters }}

@@ -1,4 +1,5 @@
-- name: Uninstall mongodb
+---
+- name: Uninstall MongoDB
   shell: |
     /usr/local/bin/helm uninstall mongodb -n mongodb
   register: uninstall_mongodb
@@ -7,15 +8,36 @@
   when: print_debug == true
 
 
-- name: Validate if mongodb Containers are deleted
+- name: Validate if Mongos Containers are Deleted Normally
   shell: |
-    kubectl get pods -n mongodb | grep mongodb-controller | awk '{print $3}' | uniq
-  register: delete_mongodb_container
-  ignore_errors: true
-  until: delete_mongodb_container.stdout.find("") != -1
+    kubectl get pods -n mongodb | grep mongodb-shared-mongos- | awk '{print $3}' | grep -E 'Running|Terminating' | wc -l
+  register: check_mongos_container
+  until: check_mongos_container.stdout|int == 0
   retries: 100
   delay: 10
-- debug: msg={{ delete_mongodb_container }}
+- debug: msg={{ check_mongos_container }}
+  when: print_debug == true
+
+
+- name: Validate if MongoDB Config Server Containers are Deleted Normally
+  shell: |
+    kubectl get pods -n mongodb | grep mongodb-shared-configsvr- | awk '{print $3}' | grep -E 'Running|Terminating' | wc -l
+  register: check_mongodb_configsvr_container
+  until: check_mongodb_configsvr_container.stdout|int == 0
+  retries: 100
+  delay: 10
+- debug: msg={{ check_mongodb_configsvr_container }}
+  when: print_debug == true
+
+
+- name: Validate if MongoDB Sharded Shard Containers are Deleted Normally
+  shell: |
+    kubectl get pods -n mongodb | grep mongodb-shared-shard | awk '{print $3}' | grep -E 'Running|Terminating' | wc -l
+  register: check_mongodb_sharded_container
+  until: check_mongodb_sharded_container.stdout|int == 0
+  retries: 100
+  delay: 10
+- debug: msg={{ check_mongodb_sharded_container }}
   when: print_debug == true
 
 
@@ -24,6 +46,7 @@
     src: "{{ item }}.j2"
     dest: "{{ base_path }}/{{ item }}"
   register: copy_cluster_local_pvc_config_yaml
+  ignore_errors: true
   with_items:
     - "local-storage-class.yaml"
     - "local-storage-pv.yaml"
@@ -70,29 +93,4 @@
     - istio-system
 - debug: msg={{ delete_namespace }}
   when: print_debug == true
-
-
-- name: Directory for Persistent Volumes
-  file:
-    path: "{{ mongodb.storage_path }}"
-    state: absent
-  register: delete_pv_dir
-  ignore_errors: true
-  delegate_to: "{{ item }}"
-  delegate_facts: True
-  with_items:
-    - "{{ groups['all'] }}"
-- debug: msg={{ delete_pv_dir }}
-  when: print_debug == true
-
-
-#- name: Validate if mongodb Containers are Running
-#  shell: |
-#    kubectl -n mongodb get pod | grep mongodb | awk '{print $3}' | cut -d : -f 1
-#  register: check_mongodb_container
-#  until: check_mongodb_container.stdout.find("Running") != -1
-#  retries: 100
-#  delay: 10
-#- debug: msg={{ check_mongodb_container }}
-#  when: print_debug == true
 

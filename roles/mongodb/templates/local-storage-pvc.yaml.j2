@@ -1,39 +1,32 @@
+{% for n in range(0, _mongodb.configsvr|int) %}
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: datadir-mongodb-mongodb-sharded-configsvr-0
-  namespace: {{ mongodb.namespace }}
+  name: datadir-mongodb-mongodb-sharded-configsvr-{{ n }}
+  namespace: {{ _mongodb.namespace }}
 spec:
-  storageClassName: {{ mongodb.namespace}}-storage
+  storageClassName: {{ _mongodb.storage_class }}
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
       storage: 10Gi
+{% endfor %}
+{% for j in range(0, _mongodb.shardsvr|int) %}
+{% for z in range(0, _mongodb.sharded_shard|int) %}
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: datadir-mongodb-mongodb-sharded-shard0-data-0
-  namespace: {{ mongodb.namespace }}
+  name: datadir-mongodb-mongodb-sharded-shard{{ j }}-data-{{ z }}
+  namespace: {{ _mongodb.namespace }}
 spec:
-  storageClassName: {{ mongodb.namespace}}-storage
+  storageClassName: {{ _mongodb.storage_class}}
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
       storage: 10Gi
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: datadir-mongodb-mongodb-sharded-shard1-data-0
-  namespace: {{ mongodb.namespace }}
-spec:
-  storageClassName: {{ mongodb.namespace}}-storage
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 10Gi
+{% endfor %}
+{% endfor %}

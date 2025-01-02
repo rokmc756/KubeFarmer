@@ -1,41 +1,26 @@
 # https://staging.artifacthub.io/packages/helm/appscode/mongo-express
-#
-#- name: Search Mongo Express
-#  shell: |
-#    /usr/local/bin/helm search repo mongo-express/mongo-express --version=v2024.6.4
-#  register: search_mongo_express
-#  args:
-#    chdir: "{{ base_path }}/"
-#- debug: msg={{ search_mongo_express }}
-#  when: print_debug == true
-
 
 - name: Create Namespace for Mongo Express
   shell: |
-    kubectl create namespace {{ item }}
-  register: create_mongo_express_namespace
-  with_items:
-    - "{{ mongo_express.namespace }}"
-    - "keda"
-    - "ace"
-- debug: msg={{ create_mongo_express_namespace }}
+    kubectl create namespace {{ _mongo_express.namespace }}
+  register: create_mongo_express_ns
+- debug: msg={{ create_mongo_express_ns }}
   when: print_debug == true
 
 
-#- name: Copy Mongo Express Config Yaml
-#  template:
-#    src: "{{ item }}.j2"
-#    dest: "{{ base_path }}/mongo-express/{{ item }}"
-#  register: copy_mongo_express_config_yaml
-#  with_items:
-#    - "mongo-express-values.yaml"
-#- debug: msg={{ copy_mongo_express_config_yaml }}
+- name: Copy Mongo Express Config Yaml
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ base_path }}/{{ item }}"
+  register: copy_mongo_express_config_yaml
+  with_items:
+    - "mongo-express-values.yaml"
+- debug: msg={{ copy_mongo_express_config_yaml }}
 
 
-# /usr/local/bin/helm upgrade -i mongo-express mongo-express/mongo-express -n mongo-express --create-namespace --version=v2024.6.4
-- name: Install Mongo Express by Helm Upgrade
+- name: Install Mongo Express
   shell: |
-    /usr/local/bin/helm install mongo-express cowboysysop/mongo-express --version 2.6.5 -n mongo-express --create-namespace
+    /usr/local/bin/helm install mongo-express cowboysysop/mongo-express -n {{ _mongo_express.namespace }} -f {{ base_path }}/mongo-express-values.yaml
   register: install_mongo_express
   args:
     chdir: "{{ base_path }}/"
@@ -43,31 +28,13 @@
   when: print_debug == true
 
 
-- name: Validate if Mongo Express is still Creating
-  shell: |
-    kubectl get pods -n mongo-express
-  register: validate_mongo_express_container
-  args:
-    chdir: "{{ base_path }}/"
-- debug: msg={{ validate_mongo_express_container }}
-  when: print_debug == true
-
-
 - name: Validate if Mongo Express Container is Running
   shell: |
-    kubectl get pods -n mongo-express |  grep mongo-express | awk '{print $3}' | uniq
+    kubectl get pods -n {{ _mongo_express.namespace }} | grep mongo-express | awk '{print $3}' | uniq
   register: check_mongo_express_container
   until: check_mongo_express_container.stdout.find("Running") != -1
   retries: 100
   delay: 10
 - debug: msg={{ check_mongo_express_container }}
-  when: print_debug == true
-
-
-- name: Check LoadBalancer IP Addresses for MongoDB and Mongo Express
-  shell: |
-    kubectl get all -A | grep LoadBalancer
-  register: check_lb_ipaddr
-- debug: msg={{ check_lb_ipaddr }}
   when: print_debug == true
 

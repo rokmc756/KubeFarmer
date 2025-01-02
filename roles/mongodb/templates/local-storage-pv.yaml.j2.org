@@ -1,10 +1,9 @@
 {% for h in groups["workers"] %}
-{% for n in range(0, total_pvs|int) %}
 ---
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: mongodb-pv-{{ hostvars[h]['ansible_hostname'] }}-{{ n }}
+  name: mongodb-pv-{{ hostvars[h]['ansible_hostname'] }}
   namespace: {{ _mongodb.namespace }}
 spec:
   capacity:
@@ -16,7 +15,7 @@ spec:
   persistentVolumeReclaimPolicy: Retain
   storageClassName: {{ _mongodb.storage_class }}
   local:
-    path: {{ _mongodb.storage_path }}-{{ n }}
+    path: {{ _mongodb.storage_path }}
   nodeAffinity:
     required:
       nodeSelectorTerms:
@@ -25,5 +24,4 @@ spec:
           operator: In
           values:
           - {{ hostvars[h]['ansible_hostname'] }}
-{% endfor %}
 {% endfor %}

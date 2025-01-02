@@ -1,36 +1,28 @@
-- name: Copy MongoDB Loadbalancer Config Yaml
-  template:
-    src: mongodb-loadbalancer.yaml.j2
-    dest: "{{ base_path }}/mongodb-loadbalancer.yaml"
-  register: copy_mongodb_lb_config_yaml
-- debug: msg={{ copy_mongodb_lb_config_yaml }}
-
-
-- name: Create MongoDB Load Balancer
+---
+- name: Apply MongoDB Load Balancer
   shell: |
-    kubectl apply -f mongodb-loadbalancer.yaml
-  register: create_mongodb_lb
+    kubectl patch svc {{ item.svc }} -n {{ _mongodb.namespace }} -p '{"spec": {"type": "LoadBalancer", "loadBalancerIP": "{{ item.lb_ip_addr }}"}}'
+  register: apply_mongodb_lb
+  ignore_errors: yes
   args:
-    chdir: "{{ base_path }}/"
-- debug: msg={{ create_mongodb_lb }}
+    chdir: "{{ base_path }}"
+  with_items:
+    - { svc: "mongodb-mongodb-sharded", lb_ip_addr: "{{ _mongodb.lb.ip_addr }}" }
+  when: db is defined and db == true
+- debug: msg={{ apply_mongodb_lb }}
+  when: print_debug == true and ( db is defined and db == true )
 
 
-- name: Validate if MongoDB Container is Running
+- name: Apply Mongo Express Load Balancer
   shell: |
-    kubectl -n mongodb get pod | grep mongodb | awk '{print $3}' | cut -d : -f 1
-  register: check_mongodb_container
-  until: check_mongodb_container.stdout.find("Running") != -1
-  retries: 100
-  delay: 10
-- debug: msg={{ check_mongodb_container }}
-  when: print_debug == true
-
-
-- name: Print IP Addresses for LoadBalancer
-  shell: |
-    kubectl get all -A | grep LoadBalancer
-  register: print_lb_ipaddr
+    kubectl patch svc {{ item.svc }} -n {{ _mongo_express.namespace }} -p '{"spec": {"type": "LoadBalancer", "loadBalancerIP": "{{ item.lb_ip_addr }}"}}'
+  register: apply_mongo_express_lb
+  ignore_errors: yes
   args:
-    chdir: "{{ base_path }}/"
-- debug: msg={{ print_lb_ipaddr }}
+    chdir: "{{ base_path }}"
+  with_items:
+    - { svc: "mongo-express", lb_ip_addr: "{{ _mongo_express.lb.ip_addr }}" }
+  when: express is defined and express == true
+- debug: msg={{ apply_mongo_express_lb }}
+  when: print_debug == true and ( express is defined and express == true )
 

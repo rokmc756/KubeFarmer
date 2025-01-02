@@ -7,7 +7,7 @@ metadata:
 spec:
   commonName: istio-ingressgateway.istio-system.svc
   ipAddresses:
-    - {{ mongodb.lb_ip_addr }}
+    - {{ _mongodb.lb.ip_addr }}
   isCA: true
   issuerRef:
     kind: ClusterIssuer

@@ -13,44 +13,38 @@
 - debug: msg={{ install_helm }}
 
 
-- name: Add Metallb Helm Repo
-  shell: |
-    /usr/local/bin/helm repo add metallb https://metallb.github.io/metallb
-  register: add_metallb_helm_repo
-- debug: msg={{ add_metallb_helm_repo }}
-
-
-- name: Add NGINX Helm Repo
-  shell: |
-    /usr/local/bin/helm repo add nginx-stable https://helm.nginx.com/stable
-  register: add_nginx_helm_repo
-- debug: msg={{ add_nginx_helm_repo }}
-
-
 - name: Add MongoDB Helm Repo
   shell: |
     /usr/local/bin/helm repo add bitnami https://charts.bitnami.com/bitnami
   register: add_mongodb_helm_repo
+  when: db is defined and db == true
 - debug: msg={{ add_mongodb_helm_repo }}
+  when: print_debug == true and ( db is defined and db == true )
 
 
 - name: Add Mongo Express Helm Repo
   shell: |
-    /usr/local/bin/helm repo add {{ mongo_express.repo_name }} {{ mongo_express.download_link }}
+    /usr/local/bin/helm repo add {{ _mongo_express.repo_name }} {{ _mongo_express.download_link }}
   register: add_mongo_express_helm_repo
+  when: express is defined and express == true
 - debug: msg={{ add_mongo_express_helm_repo }}
+  when: print_debug == true and ( express is defined and express == true )
 
 
 - name: Add Jetstack Helm Repo
   shell: |
     /usr/local/bin/helm repo add jetstack https://charts.jetstack.io
   register: add_jetstack_helm_repo
+  when: db is defined and db == true
 - debug: msg={{ add_jetstack_helm_repo }}
+  when: print_debug == true and ( db is defined and db == true )
 
 
 - name: Update Helm Repo
   shell: |
     /usr/local/bin/helm repo update
   register: update_helm_repo
+  when: db is defined and db == true
 - debug: msg={{ update_helm_repo }}
+  when: print_debug == true and ( db is defined and db == true )
 

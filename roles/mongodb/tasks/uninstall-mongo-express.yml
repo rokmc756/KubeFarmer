@@ -1,6 +1,7 @@
+---
 - name: Uninstall Mongo Express
   shell: |
-    /usr/local/bin/helm uninstall mongo-express -n mongo-express
+    /usr/local/bin/helm uninstall mongo-express -n {{ _mongo_express.namespace }}
   register: uninstall_mongo_express
   ignore_errors: true
   args:
@@ -9,38 +10,35 @@
   when: print_debug == true
 
 
-#- name: Delete MongoDB UI Config Yaml and Directory
-#  file:
-#    path: "{{ base_path }}/{{ item }}"
-#    state: absent
-#  register: delete_mongo_express_config
-#  ignore_errors: true
-#  with_items:
-#    - "mongo-express/mongo-express-values.yaml"
-#    - "mongo-express"
-#  when: mongo_express_dir.stat.exists == true
-#- debug: msg={{ delete_mongo_express_config }}
-#  when: print_debug == true and mongo_express_dir.stat.exists == true
+- name: Validate if Mongo Express Container is Running
+  shell: |
+    kubectl get pods -n {{ _mongo_express.namespace }} | grep mongo-express | awk '{print $3}' | wc -l
+  register: check_mongo_express_container
+  ignore_errors: true
+  until: check_mongo_express_container.stdout|int == 0
+  retries: 100
+  delay: 10
+- debug: msg={{ check_mongo_express_container }}
+  when: print_debug == true
+
+
+- name: Delete Mongo Express Config Yaml and Directory
+  file:
+    path: "{{ base_path }}/{{ item }}"
+    state: absent
+  register: delete_mongo_express_config
+  ignore_errors: true
+  with_items:
+    - "mongo-express-values.yaml"
+- debug: msg={{ delete_mongo_express_config }}
+  when: print_debug == true
 
 
 - name: Delete Namespace for Mongo Express
   shell: |
-    kubectl delete namespace {{ item }}
+    kubectl delete namespace {{ _mongo_express.namespace }}
   register: delete_mongo_express_namespace
   ignore_errors: true
-  with_items:
-    - mongo-express
 - debug: msg={{ delete_mongo_express_namespace }}
   when: print_debug == true
-
-
-#- name: Delete Mongo Express Tarball
-#  file:
-#    path: "{{ base_path }}/mongo-express-0.7.6.tgz"
-#    state: absent
-#  register: delete_mongo_express_tarball
-#  ignore_errors: true
-#  when: mongo_express_dir.stat.exists == true
-#- debug: msg={{ delete_mongo_express_tarball }}
-#  when: print_debug == true and mongo_express_dir.stat.exists == true
 

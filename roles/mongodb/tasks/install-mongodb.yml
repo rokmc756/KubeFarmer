@@ -1,19 +1,4 @@
-- name: Create Directory for Persistent Volumes
-  file:
-    path: "{{ mongodb.storage_path }}"
-    state: directory
-    owner: root
-    group: root
-    mode: 0777
-  register: create_pv_dir
-  delegate_to: "{{ item }}"
-  delegate_facts: True
-  with_items:
-    - "{{ groups['all'] }}"
-- debug: msg={{ create_pv_dir }}
-  when: print_debug == true
-
-
+---
 - name: Create Namespace for Persistent Volumes
   shell: |
     kubectl create namespace {{ item }}
@@ -71,13 +56,36 @@
   when: print_debug == true
 
 
-- name: Validate if MongoDB Containers are Running
+- name: Validate if Mongos Containers are Running Normally
   shell: |
-    kubectl get pods -n mongodb |  grep mongodb- | awk '{print $3}' | uniq
-  register: check_mongodb_controller_container
-  until: check_mongodb_controller_container.stdout.find("Running") != -1
+    kubectl get pods -n mongodb | grep mongodb-sharded-mongos- | awk '{print $3}' | grep Running | wc -l
+  register: check_mongos_container
+  until: check_mongos_container.stdout|int == _mongodb.mongos|int
   retries: 100
   delay: 10
-- debug: msg={{ check_mongodb_controller_container }}
+- debug: msg={{ check_mongos_container }}
+  when: print_debug == true
+
+
+- name: Validate if MongoDB Config Server Containers are Running Normally
+  shell: |
+    kubectl get pods -n mongodb | grep mongodb-sharded-configsvr- | awk '{print $3}' | grep Running | wc -l
+  register: check_mongodb_configsvr_container
+  until: check_mongodb_configsvr_container.stdout|int == _mongodb.configsvr|int
+  retries: 100
+  delay: 10
+- debug: msg={{ check_mongodb_configsvr_container }}
+  when: print_debug == true
+
+
+
+- name: Validate if MongoDB Sharded Shard Containers are Running Normally
+  shell: |
+    kubectl get pods -n mongodb | grep mongodb-sharded-shard | awk '{print $3}' | grep Running | wc -l
+  register: check_mongodb_sharded_container
+  until: check_mongodb_sharded_container.stdout|int == ( _mongodb.sharded_shard|int * _mongodb.shardsvr|int )
+  retries: 100
+  delay: 10
+- debug: msg={{ check_mongodb_sharded_container }}
   when: print_debug == true
 

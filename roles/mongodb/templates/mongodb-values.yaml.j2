@@ -1,31 +1,433 @@
-mage:
+---
+global:
+  imageRegistry: ""
+  imagePullSecrets: []
+  defaultStorageClass: ""
+  storageClass: ""
+  security:
+    allowInsecureImages: false
+  compatibility:
+    openshift:
+      adaptSecurityContext: auto
+
+
+kubeVersion: ""
+nameOverride: ""
+fullnameOverride: ""
+namespaceOverride: ""
+commonLabels: {}
+commonAnnotations: {}
+clusterDomain: cluster.local
+extraDeploy: []
+diagnosticMode:
+  enabled: false
+  command:
+    - sleep
+  args:
+    - infinity
+
+
+image:
   registry: docker.io
-  repository: bitnami/mongodb
-  tag: 4.4.4-debian-10-r41
+  repository: bitnami/mongodb-sharded
+  tag: 8.0.4-debian-12-r0
+  digest: ""
   pullPolicy: IfNotPresent
+  pullSecrets: []
+  debug: false
 
-architecture: standalone
 
-useStatefulSet: true
-
-## MongoDB(R) Authentication parameters
 auth:
   enabled: true
+  rootUser: root
   rootPassword: "changeme"
-  username: admin
-  password: changeme
-  database: sample
+  replicaSetKey: ""
+  existingSecret: ""
+  usePasswordFile: false
 
-##
-persistence:
-  enabled: true
-  storageClass: "mongodb-storage"
-  accessModes:
-    - ReadWriteOnce
-  size: 2Gi
 
-#  type: NodePort
+shards: {{ _mongodb.sharded_shard }}
+
+common:
+  mongodbEnableNumactl: false
+  useHostnames: true
+  mongodbEnableIPv6: false
+  mongodbDirectoryPerDB: false
+  mongodbSystemLogVerbosity: 0
+  mongodbDisableSystemLog: false
+  mongodbInitRetryAttempts: 24
+  mongodbInitRetryDelay: 5
+  initScriptsCM: ""
+  initScriptsSecret: ""
+  extraEnvVars: []
+  extraEnvVarsCM: ""
+  extraEnvVarsSecret: ""
+  sidecars: []
+  initContainers: []
+  podAnnotations: {}
+  podLabels: {}
+  extraVolumes: []
+  extraVolumeMounts: []
+  containerPorts:
+    mongodb: 27017
+  serviceAccount:
+    create: true
+    name: ""
+    annotations: {}
+    automountServiceAccountToken: false
+
+
+volumePermissions:
+  enabled: false
+  image:
+    registry: docker.io
+    repository: bitnami/os-shell
+    tag: 12-debian-12-r33
+    digest: ""
+    pullPolicy: IfNotPresent
+    pullSecrets: []
+  resourcesPreset: "nano"
+  resources: {}
+
+
 service:
+  name: ""
+  annotations: {}
   type: ClusterIP
-  port: 27017
-  portName: mongodb
+  externalTrafficPolicy: Cluster
+  ports:
+    mongodb: 27017
+  clusterIP: ""
+  nodePorts:
+    mongodb: ""
+  externalIPs: []
+  loadBalancerIP: ""
+  loadBalancerSourceRanges: []
+  extraPorts: []
+  sessionAffinity: None
+  sessionAffinityConfig: {}
+  headless:
+    annotations: {}
+
+
+networkPolicy:
+  enabled: true
+  allowExternal: true
+  allowExternalEgress: true
+  extraIngress: []
+  extraEgress: []
+  ingressNSMatchLabels: {}
+  ingressNSPodMatchLabels: {}
+
+
+configsvr:
+  replicaCount: {{ _mongodb.configsvr }}
+  resourcesPreset: "small"
+  resources: {}
+  automountServiceAccountToken: false
+  hostAliases: []
+  mongodbExtraFlags: []
+  topologySpreadConstraints: []
+  priorityClassName: ""
+  podAffinityPreset: ""
+  podAntiAffinityPreset: soft
+  nodeAffinityPreset:
+    type: ""
+    key: ""
+    values: []
+  affinity: {}
+  nodeSelector: {}
+  tolerations: []
+  podManagementPolicy: OrderedReady
+  updateStrategy:
+    type: RollingUpdate
+  config: ""
+  configCM: ""
+  extraEnvVars: []
+  extraEnvVarsCM: ""
+  extraEnvVarsSecret: ""
+  sidecars: []
+  initContainers: []
+  podAnnotations: {}
+  podLabels: {}
+  extraVolumes: []
+  extraVolumeMounts: []
+  schedulerName: ""
+  pdb:
+    create: true
+    minAvailable: 0
+    maxUnavailable: 1
+  persistence:
+    enabled: true
+    mountPath: /bitnami/mongodb
+    subPath: ""
+    storageClass: ""
+    accessModes:
+      - ReadWriteOnce
+    size: 8Gi
+    annotations: {}
+  persistentVolumeClaimRetentionPolicy:
+    enabled: false
+    whenScaled: Retain
+    whenDeleted: Retain
+  serviceAccount:
+    create: true
+    name: ""
+    annotations: {}
+    automountServiceAccountToken: false
+  external:
+    host: ""
+    rootPassword: ""
+    replicasetName: ""
+    replicasetKey: ""
+  podSecurityContext:
+    enabled: true
+    fsGroupChangePolicy: Always
+    sysctls: []
+    supplementalGroups: []
+    fsGroup: 1001
+  containerSecurityContext:
+    enabled: true
+    seLinuxOptions: {}
+    runAsUser: 1001
+    runAsGroup: 1001
+    runAsNonRoot: true
+    privileged: false
+    readOnlyRootFilesystem: true
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop: ["ALL"]
+    seccompProfile:
+      type: "RuntimeDefault"
+  command:
+    - /bin/bash
+    - /entrypoint/replicaset-entrypoint.sh
+  args: []
+  terminationGracePeriodSeconds: ""
+  lifecycleHooks: {}
+
+
+mongos:
+  replicaCount: {{ _mongodb.mongos }}
+  resourcesPreset: "small"
+  resources: {}
+  automountServiceAccountToken: false
+  hostAliases: []
+  mongodbExtraFlags: []
+  topologySpreadConstraints: []
+  priorityClassName: ""
+  podAffinityPreset: ""
+  podAntiAffinityPreset: soft
+  nodeAffinityPreset:
+    type: ""
+    key: ""
+    values: []
+  affinity: {}
+  nodeSelector: {}
+  tolerations: []
+  podManagementPolicy: OrderedReady
+  updateStrategy:
+    type: RollingUpdate
+  config: ""
+  configCM: ""
+  extraEnvVars: []
+  extraEnvVarsCM: ""
+  extraEnvVarsSecret: ""
+  sidecars: []
+  initContainers: []
+  podAnnotations: {}
+  podLabels: {}
+  extraVolumes: []
+  extraVolumeMounts: []
+  schedulerName: ""
+  useStatefulSet: false
+  servicePerReplica:
+    enabled: false
+    annotations: {}
+    type: ClusterIP
+    externalTrafficPolicy: Cluster
+    port: 27017
+    clusterIPs: []
+    nodePorts: []
+    externalIPs: []
+    loadBalancerIPs: []
+    loadBalancerSourceRanges: []
+    extraPorts: []
+    sessionAffinity: None
+    sessionAffinityConfig: {}
+  pdb:
+    create: true
+    minAvailable: 0
+    maxUnavailable: 1
+  serviceAccount:
+    create: true
+    name: ""
+    annotations: {}
+    automountServiceAccountToken: false
+  podSecurityContext:
+    enabled: true
+    fsGroupChangePolicy: Always
+    sysctls: []
+    supplementalGroups: []
+    fsGroup: 1001
+  containerSecurityContext:
+    enabled: true
+    seLinuxOptions: {}
+    runAsUser: 1001
+    runAsGroup: 1001
+    runAsNonRoot: true
+    privileged: false
+    readOnlyRootFilesystem: true
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop: ["ALL"]
+    seccompProfile:
+      type: "RuntimeDefault"
+  command: []
+  args: []
+  terminationGracePeriodSeconds: ""
+  lifecycleHooks: {}
+
+
+shardsvr:
+  dataNode:
+    replicaCount: {{ _mongodb.shardsvr }}
+    resourcesPreset: "medium"
+    resources: {}
+    mongodbExtraFlags: []
+    topologySpreadConstraints: []
+    priorityClassName: ""
+    podAffinityPreset: ""
+    podAntiAffinityPreset: soft
+    nodeAffinityPreset:
+      type: ""
+      key: ""
+      values: []
+    affinity: {}
+    nodeSelector: {}
+    tolerations: []
+    podManagementPolicy: OrderedReady
+    updateStrategy:
+      type: RollingUpdate
+    automountServiceAccountToken: false
+    hostAliases: []
+    config: ""
+    configCM: ""
+    extraEnvVars: []
+    extraEnvVarsCM: ""
+    extraEnvVarsSecret: ""
+    sidecars: []
+    initContainers: []
+    podAnnotations: {}
+    podLabels: {}
+    extraVolumes: []
+    extraVolumeMounts: []
+    schedulerName: ""
+    pdb:
+      create: true
+      minAvailable: 0
+      maxUnavailable: 1
+    serviceAccount:
+      create: true
+      name: ""
+      annotations: {}
+      automountServiceAccountToken: false
+    podSecurityContext:
+      enabled: true
+      fsGroupChangePolicy: Always
+      sysctls: []
+      supplementalGroups: []
+      fsGroup: 1001
+    containerSecurityContext:
+      enabled: true
+      seLinuxOptions: {}
+      runAsUser: 1001
+      runAsGroup: 1001
+      runAsNonRoot: true
+      privileged: false
+      readOnlyRootFilesystem: true
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop: ["ALL"]
+      seccompProfile:
+        type: "RuntimeDefault"
+    command:
+      - /bin/bash
+      - /entrypoint/replicaset-entrypoint.sh
+    args: []
+    terminationGracePeriodSeconds: ""
+    lifecycleHooks: {}
+  persistence:
+    enabled: true
+    mountPath: /bitnami/mongodb
+    subPath: ""
+    storageClass: ""
+    accessModes:
+      - ReadWriteOnce
+    size: 8Gi
+    annotations: {}
+  persistentVolumeClaimRetentionPolicy:
+    enabled: false
+    whenScaled: Retain
+    whenDeleted: Retain
+  arbiter:
+    replicaCount: 0
+    automountServiceAccountToken: false
+    hostAliases: []
+    resourcesPreset: "small"
+    resources: {}
+    mongodbExtraFlags: []
+    topologySpreadConstraints: []
+    priorityClassName: ""
+    podAffinityPreset: ""
+    podAntiAffinityPreset: soft
+    nodeAffinityPreset:
+      type: ""
+      key: ""
+      values: []
+    affinity: {}
+    nodeSelector: {}
+    tolerations: []
+    podManagementPolicy: OrderedReady
+    updateStrategy:
+      type: RollingUpdate
+    config: ""
+    configCM: ""
+    extraEnvVars: []
+    extraEnvVarsCM: ""
+    extraEnvVarsSecret: ""
+    sidecars: []
+    initContainers: []
+    podAnnotations: {}
+    podLabels: {}
+    extraVolumes: []
+    extraVolumeMounts: []
+    schedulerName: ""
+    serviceAccount:
+      create: true
+      name: ""
+      annotations: {}
+      automountServiceAccountToken: false
+    podSecurityContext:
+      enabled: true
+      fsGroupChangePolicy: Always
+      sysctls: []
+      supplementalGroups: []
+      fsGroup: 1001
+    containerSecurityContext:
+      enabled: true
+      seLinuxOptions: {}
+      runAsUser: 1001
+      runAsGroup: 1001
+      runAsNonRoot: true
+      privileged: false
+      readOnlyRootFilesystem: true
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop: ["ALL"]
+      seccompProfile:
+        type: "RuntimeDefault"
+    command: []
+    args: []
+    terminationGracePeriodSeconds: ""
+    lifecycleHooks: {}
