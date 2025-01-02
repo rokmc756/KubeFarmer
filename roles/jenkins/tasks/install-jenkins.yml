@@ -1,6 +1,6 @@
 - name: Create Directory for Persistent Volumes
   file:
-    path: "{{ jenkins.storage_path }}"
+    path: "{{ _jenkins.storage_path }}"
     state: directory
     owner: root
     group: root
@@ -53,7 +53,7 @@
 
 - name: Deploy Jenkins
   shell: |
-    /usr/local/bin/helm install jenkins jenkins/jenkins -n jenkins --set persistence.existingClaim=jenkins --create-namespace --set adminPassword={{ jenkins.admin_password }}
+    /usr/local/bin/helm install jenkins jenkins/jenkins -n jenkins --set persistence.existingClaim=jenkins --create-namespace --set adminPassword={{ _jenkins.admin_password }}
   register: deploy_jenkins
 - debug: msg={{ deploy_jenkins }}
   when: print_debug == true

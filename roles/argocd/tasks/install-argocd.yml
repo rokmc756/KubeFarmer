@@ -1,0 +1,94 @@
+---
+- name: Create Directory for Persistent Volumes
+  file:
+    path: "{{ _argocd.storage_path }}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0777
+  register: create_pv_dir
+  delegate_to: "{{ item }}"
+  delegate_facts: True
+  with_items:
+    - "{{ groups['all'] }}"
+- debug: msg={{ create_pv_dir }}
+  when: print_debug == true
+
+
+- name: Create Namespace for Persistent Volumes
+  shell: |
+    kubectl create namespace {{ _argocd.namespace }}
+  register: create_namespace
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ create_namespace }}
+  when: print_debug == true
+
+
+- name: Copy Cluster Local PVC Config Yaml
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ base_path }}/{{ item }}"
+  register: copy_cluster_local_pvc_config_yaml
+  with_items:
+    - "argocd-storage-class.yaml"
+    - "argocd-storage-pv.yaml"
+    - "argocd-storage-pvc.yaml"
+- debug: msg={{ copy_cluster_local_pvc_config_yaml }}
+
+
+- name: Cluster Settings for a Production Cluster Running in a Dynamic Cloud Environment including VMware
+  shell: |
+    kubectl create -f {{ item }}
+  register: create_pvc
+  with_items:
+    - "argocd-storage-class.yaml"
+    - "argocd-storage-pv.yaml"
+    - "argocd-storage-pvc.yaml"
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ create_pvc }}
+  when: print_debug == true
+
+
+- name: Copy ArgoCD Loadbalancer Config Yaml
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ base_path }}/{{ item }}"
+  register: copy_argocd_lb_config_yaml
+  with_items:
+    - "argocd-values.yaml"
+- debug: msg={{ copy_argocd_lb_config_yaml }}
+
+
+- name: Deploy ArgoCD
+  shell:
+    helm install argocd argo/argo-cd -n {{ _argocd.namespace }}
+  register: deploy_argocd
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ deploy_argocd }}
+  when: print_debug == true
+  #  helm install argocd argo/argo-cd -n {{ _argocd.namespace }} -f argocd-values.yaml
+
+
+- name: Validate if ArgoCD Containers are Running Normally
+  shell: |
+    kubectl get pods -n {{ _argocd.namespace }} | grep argocd- | awk '{print $3}' | grep -E 'Pending|Init|ContainerCreating' | wc -l
+  register: check_argocd_container
+  until: check_argocd_container.stdout|int == 0
+  retries: 60
+  delay: 10
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ check_argocd_container }}
+  when: print_debug == true
+

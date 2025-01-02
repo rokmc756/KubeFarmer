@@ -1,0 +1,82 @@
+argocd:
+	@if [ "${r}" = "prepare" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-argocd.yml -e '{"${s}": True}' --tags='prepare';\
+			else\
+				echo "No Actions for Configure ArgoCD";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-argocd.yml -e '{argocd_all: True}' --tags='prepare';\
+			else\
+				echo "No Actions for Configure ArgoCd";\
+			fi\
+		else\
+			echo "No Actions for Configure argocd";\
+		fi;\
+	elif [ "${r}" = "install" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-argocd.yml -e '{"${s}": True}' --tags='install';\
+			else\
+				echo "No Actions for Installing ArgoCD";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-argocd.yml -e '{argocd_all: True}' --tags='install';\
+			else\
+				echo "No Actions for Installing ArgoCD";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "common" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-common.yml -e '{argocd_all: True}' --tags='install';\
+			else\
+				echo "No Actions for Installing Common Role for ArgoCD";\
+			fi\
+		else\
+			echo "No Actions for Installing argocd";\
+		fi;\
+	elif [ "${r}" = "uninstall" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-argocd.yml -e '{"${s}": True}' --tags='uninstall';\
+			else\
+				echo "No Actions for Uninstalling ArgoCD";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} steup-cbdb.yml -e '{argocd_all: True}' --tags='uninstall';\
+			else\
+				echo "No Actions for Uninstalling ArgoCD";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "common" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} steup-common.yml -e '{argocd_all: True}' --tags='uninstall';\
+			else\
+				echo "No Actions for Uninstalling Common Role for ArgoCD";\
+			fi\
+		else\
+			echo "No Actions for Uninstalling argocd";\
+		fi;\
+	elif [ "${r}" = "upgrade" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-argocd.yml -e '{"${s}": True}' --tags='upgrade';\
+			else\
+				echo "No Actions for Uninstalling ArgoCD";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} steup-cbdb.yml -e '{argocd_all: True}' --tags='upgrade';\
+			else\
+				echo "No Actions for Uninstalling ArgoCD";\
+			fi\
+		else\
+			echo "No Actions for Uninstalling ArgoCD";\
+		fi;\
+	else\
+		echo "No Actions for ArgoCD Role";\
+		exit;\
+	fi
+

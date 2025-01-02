@@ -31,7 +31,7 @@
     state: present
   register: apply_kernel_parameters
   with_items:
-    - "{{ jenkins.kernel_parameters }}"
+    - "{{ _jenkins.kernel_parameters }}"
   notify:
     - Reload Sysctl
 - debug: msg={{ apply_kernel_parameters }}

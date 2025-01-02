@@ -8,7 +8,7 @@
 - debug: msg={{ remove_nginx_helm_repo }}
 
 
-- name: Remove jenkins Helm Repo
+- name: Remove Jenkins Helm Repo
   shell: |
     /usr/local/bin/helm repo remove jenkins
   register: remove_jenkins_helm_repo
@@ -22,14 +22,6 @@
   register: remove_jetstack_helm_repo
   ignore_errors: yes
 - debug: msg={{ remove_jetstack_helm_repo }}
-
-
-- name: Remove Metallb Helm Repo
-  shell: |
-    /usr/local/bin/helm repo remove metallb
-  register: remove_metallb_helm_repo
-  ignore_errors: yes
-- debug: msg={{ remove_metallb_helm_repo }}
 
 
 - name: Delete Helm Install Script

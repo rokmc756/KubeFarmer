@@ -1,0 +1,53 @@
+jenkins:
+	@if [ "${r}" = "install" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-jenkins.yml -e '{"${s}": True}' --tags='install';\
+			else\
+				echo "No Actions for Installing Jenkins";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-jenkins.yml -e '{jenkins_all: True}' --tags='install';\
+			else\
+				echo "No Actions for Installing Jenkins";\
+			fi\
+		else\
+			echo "No Actions for Installing Jenkins";\
+		fi;\
+	elif [ "${r}" = "uninstall" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-jenkins.yml -e '{"${s}": True}' --tags='uninstall';\
+			else\
+				echo "No Actions for Uninstalling Jenkins";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} steup-cbdb.yml -e '{jenkins_all: True}' --tags='uninstall';\
+			else\
+				echo "No Actions for Uninstalling Jenkins";\
+			fi\
+		else\
+			echo "No Actions for Uninstalling Jenkins";\
+		fi;\
+	elif [ "${r}" = "upgrade" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-jenkins.yml -e '{"${s}": True}' --tags='upgrade';\
+			else\
+				echo "No Actions for Uninstalling Jenkins";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} steup-cbdb.yml -e '{jenkins_all: True}' --tags='upgrade';\
+			else\
+				echo "No Actions for Uninstalling Jenkins";\
+			fi\
+		else\
+			echo "No Actions for Uninstalling Jenkins";\
+		fi;\
+	else\
+		echo "No Actions for Jenkins Role";\
+		exit;\
+	fi

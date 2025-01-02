@@ -1,0 +1,103 @@
+---
+- name: Uninstall ArgoCD Admin
+  shell: |
+    helm uninstall argocd -n {{ _argocd.namespace }}
+  register: uninstall_argocd_admin
+  ignore_errors: true
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ uninstall_argocd_admin }}
+  when: print_debug == true
+
+
+- name: Validate if ArgoCD Containers are Deleted
+  shell: |
+    kubectl -n argocd get pod | grep argocd- | awk '{print $3}' | grep -E 'Running|Terminating' | wc -l
+  register: delete_argocd_container
+  ignore_errors: true
+  until: delete_argocd_container.stdout|int == 0
+  retries: 100
+  delay: 10
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ delete_argocd_container }}
+  when: print_debug == true
+
+
+- name: Delete Persistent Volumes, Claim and Storage Class
+  shell: |
+    kubectl delete -f {{ item }}
+  register: delete_pvc
+  ignore_errors: true
+  with_items:
+    - "argocd-storage-pvc.yaml"
+    - "argocd-storage-pv.yaml"
+    - "argocd-storage-class.yaml"
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ delete_pvc }}
+  when: print_debug == true
+
+
+- name: Delete Cluster Local PVC Config Yaml
+  file:
+    path: "{{ base_path }}/{{ item }}"
+    state: absent
+  register: delete_cluster_local_pvc_config_yaml
+  ignore_errors: true
+  with_items:
+    - "argocd-storage-class.yaml"
+    - "argocd-storage-pv.yaml"
+    - "argocd-storage-pvc.yaml"
+- debug: msg={{ delete_cluster_local_pvc_config_yaml }}
+  when: print_debug == true
+
+
+- name: Validate if ArgoCD Containers are Running
+  shell: |
+    kubectl -n argocd get pod | grep argocd- | awk '{print $3}' | grep -E 'Running|Terminating' | wc -l
+  register: check_argocd_container
+  ignore_errors: true
+  until: check_argocd_container.stdout|int == 0
+  retries: 100
+  delay: 10
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ check_argocd_container }}
+  when: print_debug == true
+
+
+- name: Delete Namespace for Persistent Volumes
+  shell: |
+    kubectl delete namespace {{ _argocd.namespace }}
+  register: delete_namespace
+  ignore_errors: true
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ delete_namespace }}
+  when: print_debug == true
+
+
+- name: Directory for Persistent Volumes
+  file:
+    path: "{{ _argocd.storage_path }}"
+    state: absent
+  register: delete_pv_dir
+  ignore_errors: true
+  delegate_to: "{{ item }}"
+  delegate_facts: True
+  with_items:
+    - "{{ groups['all'] }}"
+- debug: msg={{ delete_pv_dir }}
+  when: print_debug == true
+

@@ -1,0 +1,26 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: argocd-argocd-helm-chrt-proxy
+  namespace: {{ _argocd.namespace }}
+spec:
+  storageClassName: {{ _argocd.storage_class }}
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgresql-data-argocd-postgresql-0
+  namespace: {{ _argocd.namespace }}
+spec:
+  storageClassName: {{ _argocd.storage_class }}
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi

@@ -2,8 +2,8 @@
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
-  name: {{ jenkins.namespace }}-storage
-  namespace: {{ jenkins.namespace }}
+  name: {{ _jenkins.namespace }}-storage
+  namespace: {{ _jenkins.namespace }}
 provisioner: kubernetes.io/no-provisioner
 volumeBindingMode: WaitForFirstConsumer
 ---

@@ -11,21 +11,7 @@
 - debug: msg={{ install_helm }}
 
 
-- name: Add Metallb Helm Repo
-  shell: |
-    /usr/local/bin/helm repo add metallb https://metallb.github.io/metallb
-  register: add_metallb_helm_repo
-- debug: msg={{ add_metallb_helm_repo }}
-
-
-- name: Add NGINX Helm Repo
-  shell: |
-    /usr/local/bin/helm repo add nginx-stable https://helm.nginx.com/stable
-  register: add_nginx_helm_repo
-- debug: msg={{ add_nginx_helm_repo }}
-
-
-- name: Add jenkins Helm Repo
+- name: Add Jenkins Helm Repo
   shell: |
     /usr/local/bin/helm repo add jenkins https://charts.jenkins.io
   register: add_jenkins_helm_repo

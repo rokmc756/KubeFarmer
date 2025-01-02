@@ -35,7 +35,8 @@ shutdown:
 # mariadb   :  make mariadb r=install ( or uninstall ) s=galera ( replica or phpmyadmin )
 # powerdns  :  make powernds r=install ( or uninstall )
 # grafana   :  make grafana r=install ( or unintll )
-# pgsql     :  make pgsql
+# pgsql     :  make pgsql r=install s=repmgr or replica ( or uninstall )
+# argocd    :  make argocd
 
 
 # https://stackoverflow.com/questions/4219255/how-do-you-get-the-list-of-targets-in-a-makefile

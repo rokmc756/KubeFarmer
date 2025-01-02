@@ -1,35 +1,29 @@
-- name: Copy Jenkins Loadbalancer Config Yaml
+---
+- name: Copy ArgoCD LoadBalancer Config Yaml
   template:
-    src: "{{ item }}.j2"
-    dest: "{{ base_path }}/{{ item }}"
-  register: copy_jenkins_lb_config_yaml
+    src: argocd-loadbalancer.yaml.j2
+    dest: "{{ base_path }}/argocd-loadbalancer.yaml"
+  register: copy_argocd_lb_config_yaml
+- debug: msg={{ copy_argocd_lb_config_yaml }}
+
+
+- name: Apply ArgoCD Load Balancer
+  shell: |
+    kubectl patch svc {{ item.svc }} -n {{ _argocd.namespace }} -p '{"spec": {"type": "LoadBalancer", "loadBalancerIP": "{{ item.lb_ip_addr }}"}}'
+  register: apply_argocd_lb
+  ignore_errors: yes
+  args:
+    chdir: "{{ base_path }}"
   with_items:
-    - "jenkins-values.yaml"
-- debug: msg={{ copy_jenkins_lb_config_yaml }}
+    - { svc: "argocd-server", lb_ip_addr: "192.168.1.234" }
+- debug: msg={{ apply_argocd_lb }}
 
 
-- name: Deploy Jenkins
+- name: Get the Admin Password
   shell: |
-    /usr/local/bin/helm upgrade --install -f {{ base_path }}/jenkins-values.yaml -n jenkins --set persistence.existingClaim=jenkins jenkins jenkins/jenkins
-  register: deploy_jenkins
-- debug: msg={{ deploy_jenkins }}
-  when: print_debug == true
+    kubectl -n {{ _argocd.namespace }} get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 --decode ; echo
+  register: get_admin_password
+  args:
+    chdir: "{{ base_path }}"
+- debug: msg={{ get_admin_password }}
 
-
-- name: Validate if Jenkins Containers are Running
-  shell: |
-    kubectl -n jenkins get pod | grep jenkins | awk '{print $3}' | cut -d : -f 1
-  register: check_jenkins_container
-  until: check_jenkins_container.stdout.find("Running") != -1
-  retries: 100
-  delay: 10
-- debug: msg={{ check_jenkins_container }}
-  when: print_debug == true
-
-
-- name: Print Jenkins Admin Password
-  shell: |
-    printf $(kubectl get secret --namespace jenkins jenkins -o jsonpath="{.data.jenkins-admin-password}" | base64 --decode);echo
-  register: print_jenkins_admin_password
-- debug: msg={{ print_jenkins_admin_password }}
-  when: print_debug == true

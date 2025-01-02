@@ -3,18 +3,19 @@
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: jenkins-pv-{{ hostvars[h]['ansible_hostname'] }}
-  namespace: {{ jenkins.namespace }}
+  name: argocd-pv-{{ hostvars[h]['ansible_hostname'] }}
+  namespace: {{ _argocd.namespace }}
 spec:
   capacity:
-    storage: 10Gi
-  volumeMode: Filesystem
+    storage: 15Gi
+  # volumeMode: Filesystem
   accessModes:
   - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Delete
-  storageClassName: {{ jenkins.namespace }}-storage
+  # persistentVolumeReclaimPolicy: Delete
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: {{ _argocd.storage_class }}
   local:
-    path: /mnt/jenkins-storage
+    path: {{ _argocd.storage_path }}
   nodeAffinity:
     required:
       nodeSelectorTerms:
@@ -24,3 +25,4 @@ spec:
           values:
           - {{ hostvars[h]['ansible_hostname'] }}
 {% endfor %}
+

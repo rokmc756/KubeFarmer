@@ -1,0 +1,23 @@
+---
+- name: Get Network Interface Names from Prefix of IP Addresses Provided for Kubernetes Nodes
+  set_fact:
+    netdev0: "{{ ansible_interfaces | map('regex_replace', '^', 'ansible_') | map('extract', vars) | selectattr('ipv4', 'defined') | selectattr('ipv4.address', 'match', k8s.net.ipaddr0 ) | map(attribute='device') | first }}"
+    netdev1: "{{ ansible_interfaces | map('regex_replace', '^', 'ansible_') | map('extract', vars) | selectattr('ipv4', 'defined') | selectattr('ipv4.address', 'match', k8s.net.ipaddr1 ) | map(attribute='device') | first }}"
+    netdev2: "{{ ansible_interfaces | map('regex_replace', '^', 'ansible_') | map('extract', vars) | selectattr('ipv4', 'defined') | selectattr('ipv4.address', 'match', k8s.net.ipaddr2 ) | map(attribute='device') | first }}"
+
+
+- name: Get IP Address From Provided Network Device Names
+  set_fact:
+    ipaddr0: "{{ hostvars[inventory_hostname]['ansible_'~netdev0].ipv4.address }}"
+    ipaddr1: "{{ hostvars[inventory_hostname]['ansible_'~netdev1].ipv4.address }}"
+    ipaddr2: "{{ hostvars[inventory_hostname]['ansible_'~netdev2].ipv4.address }}"
+
+
+- name: Set Default Network Device and Address
+  set_fact:
+    _netdev: "{{ 'ansible_'~ netdev1 }}"
+    _ipaddr: "{{ ipaddr1 }}"
+  delegate_to: "{{ item }}"
+  delegate_facts: true
+  with_items: "{{ groups['all'] }}"
+
