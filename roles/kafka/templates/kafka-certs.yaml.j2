@@ -7,7 +7,7 @@ metadata:
 spec:
   commonName: istio-ingressgateway.istio-system.svc
   ipAddresses:
-    - {{ kafka.lb_ip_addr }}
+    - {{ _kafka.lb.ip_addr }}
   isCA: true
   issuerRef:
     kind: ClusterIssuer

@@ -1,4 +1,6 @@
+---
 replicaCount: 1
+
 
 image:
   registry: docker.io
@@ -7,9 +9,11 @@ image:
   # Overrides the image tag whose default is the chart appVersion.
   tag: ""
 
+
 imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
+
 
 serviceAccount:
   # Specifies whether a service account should be created
@@ -20,13 +24,14 @@ serviceAccount:
   # If not set and create is true, a name is generated using the fullname template
   name: ""
 
+
 # bootstrapServers: kafka-0.kafka-headless.kafka.svc.cluster.local:9092
 existingConfigMap: ""
 yamlApplicationConfig:
   kafka:
     clusters:
       - name: local
-        bootstrapServers: kafka-controller-0.kafka-controller-headless.kafka.svc.cluster.local:9092,kafka-controller-1.kafka-controller-headless.kafka.svc.cluster.local:9092,kafka-controller-2.kafka-controller-headless.kafka.svc.cluster.local:9092
+        bootstrapServers: kafka-controller-0.kafka-controller-headless.kafka.svc.cluster.local:9092,kafka-controller-1.kafka-controller-headless.kafka.svc.cluster.local:9092,kafka-controller-2.kafka-controller-headless.kafka.svc.cluster.local:9092,kafka-controller-4.kafka-controller-headless.kafka.svc.cluster.local:9092
 
   # kafka:
   #   clusters:
@@ -41,14 +46,21 @@ yamlApplicationConfig:
   #   health:
   #     ldap:
   #       enabled: false
+
+
 yamlApplicationConfigConfigMap:
   {}
   # keyName: config.yml
   # name: configMapName
+
+
 existingSecret: ""
+
+
 envs:
   secret: {}
   config: {}
+
 
 networkPolicy:
   enabled: false
@@ -71,21 +83,28 @@ networkPolicy:
     ##             label: example
     customRules: []
 
+
 podAnnotations: {}
+
+
 podLabels: {}
+
 
 ## Annotations to be added to kafka-ui Deployment
 ##
 annotations: {}
+
 
 ## Set field schema as HTTPS for readines and liveness probe
 ##
 probes:
   useHttpsScheme: false
 
+
 podSecurityContext:
   {}
   # fsGroup: 2000
+
 
 securityContext:
   {}
@@ -95,6 +114,7 @@ securityContext:
   # readOnlyRootFilesystem: true
   # runAsNonRoot: true
   # runAsUser: 1000
+
 
 # type: ClusterIP
 service:
@@ -106,38 +126,32 @@ service:
   # if you want to force a specific nodePort. Must be use with service.type=NodePort
   # nodePort:
 
+
 # Ingress configuration
 ingress:
   # Enable ingress resource
   enabled: false
-
   # Annotations for the Ingress
   annotations: {}
-
   # ingressClassName for the Ingress
   ingressClassName: ""
-
   # The path for the Ingress
   path: "/"
-
   # The path type for the Ingress
   pathType: "Prefix"  
-
   # The hostname for the Ingress
   host: ""
-
   # configs for Ingress TLS
   tls:
     # Enable TLS termination for the Ingress
     enabled: false
     # the name of a pre-created Secret containing a TLS private key and certificate
     secretName: ""
-
   # HTTP paths to add to the Ingress before the default path
   precedingPaths: []
-
   # Http paths to add to the Ingress after the default path
   succeedingPaths: []
+
 
 #  {}
 resources:
@@ -147,13 +161,13 @@ resources:
    requests:
      cpu: 200m
      memory: 256Mi
-
   # limits:
   #   cpu: 200m
   #   memory: 512Mi
   # requests:
   #   cpu: 200m
   #   memory: 256Mi
+
 
 autoscaling:
   enabled: false
@@ -162,16 +176,12 @@ autoscaling:
   targetCPUUtilizationPercentage: 80
   # targetMemoryUtilizationPercentage: 80
 
+
 nodeSelector: {}
-
 tolerations: []
-
 affinity: {}
-
 env: {}
-
 initContainers: {}
-
 volumeMounts: {}
-
 volumes: {}
+

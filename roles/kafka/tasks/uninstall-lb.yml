@@ -3,6 +3,7 @@
     src: kafdrop.yaml.j2
     dest: "{{ base_path }}/kafdrop.yaml"
   register: copy_kafka_lb_config_yaml
+  ignore_errors: true
 - debug: msg={{ copy_kafka_lb_config_yaml }}
 
 
@@ -10,6 +11,7 @@
   shell: |
     kubectl delete -f kafdrop.yaml
   register: delete_kafka_lb
+  ignore_errors: true
   args:
     chdir: "{{ base_path }}/"
 - debug: msg={{ delete_kafka_lb }}
@@ -17,9 +19,10 @@
 
 - name: Validate if Kafdrop Container is Running
   shell: |
-    kubectl -n kafka get pod | grep kafdrop | awk '{print $3}' | cut -d : -f 1
+    kubectl -n kafka get pod | grep kafdrop | awk '{print $3}' | grep -E 'Terminating|Running' | wc -l
   register: check_kafdrop_container
-  until: check_kafdrop_container.stdout.find("") != -1
+  ignore_errors: true
+  until: check_kafdrop_container.stdout|int == 0
   retries: 100
   delay: 10
 - debug: msg={{ check_kafdrop_container }}

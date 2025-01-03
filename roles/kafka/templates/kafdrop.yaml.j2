@@ -41,4 +41,5 @@ spec:
   selector:
     app: kafka
   type: LoadBalancer
+  loadBalancerIP: "{{ _kafka.lb.ip_addr }}"
 

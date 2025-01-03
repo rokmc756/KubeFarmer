@@ -1,3 +1,4 @@
+---
 - name: Uninstall Kafka UI
   shell: |
     /usr/local/bin/helm uninstall kafka-ui -n kafka-ui

@@ -1,39 +1,30 @@
+{% for n in range(0, _kafka.controller.replica|int) %}
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: data-kafka-controller-0
-  namespace: {{ kafka.namespace }}
+  name: data-kafka-controller-{{ n }}
+  namespace: {{ _kafka.namespace }}
 spec:
-  storageClassName: {{ kafka.namespace}}-storage
+  storageClassName: {{ _kafka.storage_class }}
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
       storage: 10Gi
+{% endfor %}
+{% for n in range(0, _kafka.broker.replica|int) %}
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: data-kafka-controller-1
-  namespace: {{ kafka.namespace }}
+  name: data-kafka-broker-{{ n }}
+  namespace: {{ _kafka.namespace }}
 spec:
-  storageClassName: {{ kafka.namespace}}-storage
+  storageClassName: {{ _kafka.storage_class }}
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
       storage: 10Gi
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: data-kafka-controller-2
-  namespace: {{ kafka.namespace }}
-spec:
-  storageClassName: {{ kafka.namespace}}-storage
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 10Gi
+{% endfor %}

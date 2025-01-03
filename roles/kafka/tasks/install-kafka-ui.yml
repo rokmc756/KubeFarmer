@@ -8,7 +8,7 @@
   when: print_debug == true
 
 
-- name: Pull kafka UI Tarball
+- name: Pull Kafka UI Tarball
   shell: |
     /usr/local/bin/helm pull kafka-ui/kafka-ui
   register: pull_kafka_ui_tarball
@@ -21,7 +21,7 @@
 
 - name: Unarchive kafka UI Tarball
   unarchive:
-    src: "{{ base_path }}/kafka-ui-{{ kafka_ui.major_version }}.{{ kafka_ui.minor_version }}.{{ kafka_ui.patch_version }}.tgz"
+    src: "{{ base_path }}/kafka-ui-{{ _kafka_ui.major_version }}.{{ _kafka_ui.minor_version }}.{{ _kafka_ui.patch_version }}.tgz"
     dest: "{{ base_path }}/"
     mode: 0755
     owner: root
@@ -38,25 +38,9 @@
     kubectl create namespace {{ item }}
   register: create_kafka_ui_namespace
   with_items:
-    - "{{ kafka_ui.namespace }}"
+    - "{{ _kafka_ui.namespace }}"
 - debug: msg={{ create_kafka_ui_namespace }}
   when: print_debug == true
-
-
-#- name: Replace lines for NFS Server IP Address and NFS Root
-#  lineinfile:
-#    dest: "{{ base_path }}/nfs-subdir-external-provisioner/deploy/deployment.yaml"
-#    regexp: "{{ item.regexp }}"
-#    line: "{{ item.line }}"
-#    state: "{{ item.state }}"
-#  register: replace_nfs_server_lines
-#  with_items:
-#    - { regexp: '^              value: 10.3.243.101', line: '              value: 192.168.1.90', state: present }
-#    - { regexp: '^              value: /ifs/kubernetes', line: '              value: /nfs-root', state: present }
-#    - { regexp: '^            server: 10.3.243.101', line: '            server: 192.168.1.90', state: present }
-#    - { regexp: '^            path: /ifs/kubernetes', line: '            path: /nfs-root', state: present }
-#- debug: msg={{ replace_nfs_server_lines  }}
-#  when: print_debug == true
 
 
 - name: Copy kafka UI Config Yaml
@@ -69,27 +53,7 @@
 - debug: msg={{ copy_kafka_ui_config_yaml }}
 
 
-# vi kafka-ui/values.yaml
-#yamlApplicationConfig:
-#  kafka:
-#    clusters:
-#      - name: local
-#        bootstrapServers: kafka-0.kafka-headless.kafka.svc.cluster.local:9092
-#
-#service:
-#  type: LoadBalancer
-#  port: 80
-#
-#resources:
-#   limits:
-#     cpu: 1000m
-#     memory: 1024Mi
-#   requests:
-#     cpu: 200m
-#     memory: 256Mi
-
-
-- name: Install kafka UI by Helm Upgrade
+- name: Install Kafka UI
   shell: |
     /usr/local/bin/helm upgrade --install -f kafka-ui/kafka-ui-values.yaml -n kafka-ui kafka-ui kafka-ui/
   register: install_kafka_ui
@@ -111,9 +75,9 @@
 
 - name: Validate if kafka UI Container is Running
   shell: |
-    kubectl get pods -n kafka-ui |  grep kafka-ui | awk '{print $3}' | uniq
+    kubectl get pods -n kafka-ui |  grep kafka-ui | awk '{print $3}' | grep Running | wc -l
   register: check_kafka_ui_container
-  until: check_kafka_ui_container.stdout.find("Running") != -1
+  until: check_kafka_ui_container.stdout|int == 1
   retries: 100
   delay: 10
 - debug: msg={{ check_kafka_ui_container }}

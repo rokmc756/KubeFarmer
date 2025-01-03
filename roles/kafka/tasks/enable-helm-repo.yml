@@ -1,5 +1,4 @@
-# https://oopflow.medium.com/setup-install-rancher-onto-existing-kubernetes-cluster-for-high-availability-7351f0284592
-
+---
 - name: Download and Install Helm
   shell: |
     curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
@@ -13,30 +12,16 @@
 - debug: msg={{ install_helm }}
 
 
-- name: Add Metallb Helm Repo
-  shell: |
-    /usr/local/bin/helm repo add metallb https://metallb.github.io/metallb
-  register: add_metallb_helm_repo
-- debug: msg={{ add_metallb_helm_repo }}
-
-
-- name: Add NGINX Helm Repo
-  shell: |
-    /usr/local/bin/helm repo add nginx-stable https://helm.nginx.com/stable
-  register: add_nginx_helm_repo
-- debug: msg={{ add_nginx_helm_repo }}
-
-
-- name: Add kafka Helm Repo
+- name: Add Kafka Helm Repo
   shell: |
     /usr/local/bin/helm repo add bitnami https://charts.bitnami.com/bitnami
   register: add_kafka_helm_repo
 - debug: msg={{ add_kafka_helm_repo }}
 
 
-- name: Add kafka UI Helm Repo
+- name: Add Kafka UI Helm Repo
   shell: |
-    /usr/local/bin/helm repo add {{ kafka_ui.repo_name }} {{ kafka_ui.download_link }}
+    /usr/local/bin/helm repo add {{ _kafka_ui.repo_name }} {{ _kafka_ui.download_link }}
   register: add_kafka_ui_helm_repo
 - debug: msg={{ add_kafka_ui_helm_repo }}
 

@@ -1,4 +1,5 @@
-- name: Uninstall kafka
+---
+- name: Uninstall Kafka
   shell: |
     /usr/local/bin/helm uninstall kafka -n kafka
   register: uninstall_kafka
@@ -7,15 +8,27 @@
   when: print_debug == true
 
 
-- name: Validate if kafka Containers are deleted
+- name: Validate if Kafka Controller Containers are Deleted
   shell: |
-    kubectl get pods -n kafka | grep kafka-controller | awk '{print $3}' | uniq
-  register: delete_kafka_container
+    kubectl get pods -n kafka | grep kafka-controller | awk '{print $3}' | grep -E 'Terminating|Running' | wc -l
+  register: delete_kafka_controller_container
   ignore_errors: true
-  until: delete_kafka_container.stdout.find("") != -1
+  until: delete_kafka_controller_container.stdout|int == 0
   retries: 100
   delay: 10
-- debug: msg={{ delete_kafka_container }}
+- debug: msg={{ delete_kafka_controller_container }}
+  when: print_debug == true
+
+
+- name: Validate if Kafka Broker Containers are Deleted
+  shell: |
+    kubectl get pods -n kafka | grep kafka-broker | awk '{print $3}' | grep -E 'Terminating|Running' | wc -l
+  register: delete_kafka_broker_container
+  ignore_errors: true
+  until: delete_kafka_broker_container.stdout|int == 0
+  retries: 100
+  delay: 10
+- debug: msg={{ delete_kafka_broker_container }}
   when: print_debug == true
 
 
@@ -56,43 +69,16 @@
     - "local-storage-class.yaml"
     - "local-storage-pv.yaml"
     - "local-storage-pvc.yaml"
+    - "kafka-values.yaml"
 - debug: msg={{ delete_cluster_local_pvc_config_yaml }}
   when: print_debug == true
 
 
 - name: Delete Namespace for Persistent Volumes
   shell: |
-    kubectl delete namespace {{ item }}
+    kubectl delete namespace {{ _kafka.namespace }}
   register: delete_namespace
   ignore_errors: true
-  with_items:
-    - kafka
-    - istio-system
 - debug: msg={{ delete_namespace }}
   when: print_debug == true
-
-
-- name: Directory for Persistent Volumes
-  file:
-    path: "{{ kafka.storage_path }}"
-    state: absent
-  register: delete_pv_dir
-  ignore_errors: true
-  delegate_to: "{{ item }}"
-  delegate_facts: True
-  with_items:
-    - "{{ groups['all'] }}"
-- debug: msg={{ delete_pv_dir }}
-  when: print_debug == true
-
-
-#- name: Validate if kafka Containers are Running
-#  shell: |
-#    kubectl -n kafka get pod | grep kafka | awk '{print $3}' | cut -d : -f 1
-#  register: check_kafka_container
-#  until: check_kafka_container.stdout.find("Running") != -1
-#  retries: 100
-#  delay: 10
-#- debug: msg={{ check_kafka_container }}
-#  when: print_debug == true
 
