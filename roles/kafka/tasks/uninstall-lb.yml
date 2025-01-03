@@ -1,30 +1,51 @@
-- name: Copy Kafka Loadbalancer Config Yaml
-  template:
-    src: kafdrop.yaml.j2
-    dest: "{{ base_path }}/kafdrop.yaml"
-  register: copy_kafka_lb_config_yaml
-  ignore_errors: true
-- debug: msg={{ copy_kafka_lb_config_yaml }}
-
-
+---
 - name: Delete Kafka Load Balancer
   shell: |
-    kubectl delete -f kafdrop.yaml
+    kubectl patch svc {{ item.svc }} -n {{ _kafka.namespace }} -p '{"spec": {"type": "ClusterIP"}}'
   register: delete_kafka_lb
   ignore_errors: true
   args:
-    chdir: "{{ base_path }}/"
+    chdir: "{{ base_path }}"
+  with_items:
+    - { svc: "kafka", lb_ip_addr: "{{ _kafka.lb.ip_addr }}" }
+  when: ( kafka is defined and kafka == true ) or ( kafka_all is defined and kafka_all == true )
 - debug: msg={{ delete_kafka_lb }}
-
-
-- name: Validate if Kafdrop Container is Running
-  shell: |
-    kubectl -n kafka get pod | grep kafdrop | awk '{print $3}' | grep -E 'Terminating|Running' | wc -l
-  register: check_kafdrop_container
   ignore_errors: true
-  until: check_kafdrop_container.stdout|int == 0
-  retries: 100
-  delay: 10
-- debug: msg={{ check_kafdrop_container }}
-  when: print_debug == true
+  when:
+    - print_debug == true
+    - ( kafka is defined and kafka == true ) or ( kafka_all is defined and kafka_all == true )
+
+
+- name: Delete Kafka UI Load Balancer
+  shell: |
+    kubectl patch svc {{ item.svc }} -n {{ _kafka_ui.namespace }} -p '{"spec": {"type": "ClusterIP"}}'
+  register: delete_kafka_ui_lb
+  ignore_errors: true
+  args:
+    chdir: "{{ base_path }}"
+  with_items:
+    - { svc: "kafka-ui", lb_ip_addr: "{{ _kafka_ui.lb.ip_addr }}" }
+  when: ( ui is defined and ui == true ) or ( kafka_all is defined and kafka_all == true )
+- debug: msg={{ delete_kafka_ui_lb }}
+  ignore_errors: true
+  when:
+    - print_debug == true
+    - ( ui is defined and ui == true ) or ( kafka_all is defined and kafka_all == true )
+
+
+- name: Delete KafDrop Load Balancer
+  shell: |
+    kubectl patch svc {{ item.svc }} -n {{ _kafdrop.namespace }} -p '{"spec": {"type": "ClusterIP"}}'
+  register: delete_kafdrop_lb
+  ignore_errors: true
+  args:
+    chdir: "{{ base_path }}"
+  with_items:
+    - { svc: "kafdrop", lb_ip_addr: "{{ _kafdrop.lb.ip_addr }}" }
+  when: ( kafdrop is defined and kafdrop == true ) or ( kafka_all is defined and kafka_all == true )
+- debug: msg={{ delete_kafdrop_lb }}
+  ignore_errors: true
+  when:
+    - print_debug == true
+    - ( kafdrop is defined and kafdrop == true ) or ( kafka_all is defined and kafka_all == true )
 

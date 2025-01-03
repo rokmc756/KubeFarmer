@@ -25,7 +25,7 @@ _kafka:
   storage_class: "kafka-storage"
   k8s:
     major_version: 1
-    minor_version: 28
+    minor_version: 29
     patch_version: 0
     build_version:
   hostname: "kafka.jtest.pivotal.io"
@@ -44,33 +44,19 @@ _kafka:
     - "fs.inotify.max_user_watches=755360"
   lb:
     install: true
-    ip_addr: "192.168.1.219"
+    ip_addr: "192.168.1.221"
   controller:
     replica: 4
   broker:
     replica: 4
   zookeeper:
     enabled: false
-    replica: 4
+    replica: 3
   kraft:
     enabled: false
 
 
 total_kafka_containers: "{{ _kafka.controller.replica|int + _kafka.broker.replica|int }}"
-
-
-  # registry:
-  #   replicas: 4
-  # portal:
-  #   replicas: 4
-  # core:
-  #   replicas: 4
-  # jobservice:
-  #   replicas: 4
-  # trivy:
-  #   replicas: 4
-  # notary:
-  # replicas: 4
 
 
 _kafka_ui:
@@ -82,6 +68,18 @@ _kafka_ui:
   namespace: kafka-ui
   repo_name: kafka-ui
   download_link: "https://provectus.github.io/kafka-ui-charts"
+  lb:
+    install: true
+    ip_addr: "192.168.1.222"
+
+
+_kafdrop:
+  install: true
+  namespace: kafka
+  replica: 1
+  lb:
+    install: true
+    ip_addr: "192.168.1.223"
 
 
 _helm:

@@ -9,33 +9,44 @@
     chdir: "{{ base_path }}/"
   environment:
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+  when: ( kafka is defined and kafka == true ) or ( kafka_all is defined and kafka_all == true )
 - debug: msg={{ install_helm }}
+  when: print_debug == true and (( kafka is defined and kafka == true ) or ( kafka_all is defined and kafka_all == true ))
 
 
 - name: Add Kafka Helm Repo
   shell: |
     /usr/local/bin/helm repo add bitnami https://charts.bitnami.com/bitnami
   register: add_kafka_helm_repo
+  when: ( kafka is defined and kafka == true ) or ( kafka_all is defined and kafka_all == true )
 - debug: msg={{ add_kafka_helm_repo }}
+  when: print_debug == true and (( kafka is defined and kafka == true ) or ( kafka_all is defined and kafka_all == true ))
 
 
 - name: Add Kafka UI Helm Repo
   shell: |
-    /usr/local/bin/helm repo add {{ _kafka_ui.repo_name }} {{ _kafka_ui.download_link }}
+    /usr/local/bin/helm repo add kafka-ui https://provectus.github.io/kafka-ui-charts
   register: add_kafka_ui_helm_repo
+  when: ( ui is defined and ui == true ) or ( kafka_all is defined and kafka_all == true )
 - debug: msg={{ add_kafka_ui_helm_repo }}
+  when: print_debug == true and (( ui is defined and ui == true ) or ( kafka_all is defined and kafka_all == true ))
+  #  /usr/local/bin/helm repo add {{ _kafka_ui.repo_name }} {{ _kafka_ui.download_link }}
 
 
 - name: Add Jetstack Helm Repo
   shell: |
     /usr/local/bin/helm repo add jetstack https://charts.jetstack.io
   register: add_jetstack_helm_repo
+  when: ( kafka is defined and kafka == true ) or ( kafka_all is defined and kafka_all == true )
 - debug: msg={{ add_jetstack_helm_repo }}
+  when: print_debug == true and (( kafka is defined and kafka == true ) or ( kafka_all is defined and kafka_all == true ))
 
 
 - name: Update Helm Repo
   shell: |
     /usr/local/bin/helm repo update
   register: update_helm_repo
+  when: ( kafka is defined and kafka == true ) or ( kafka_all is defined and kafka_all == true )
 - debug: msg={{ update_helm_repo }}
+  when: print_debug == true and (( kafka is defined and kafka == true ) or ( kafka_all is defined and kafka_all == true ))
 

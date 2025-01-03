@@ -15,7 +15,7 @@ Ubuntu 22.x
 MacOS or Windows Linux Subsysetm or Many kind of Linux Distributions should have ansible as ansible host.\
 Supported OS for ansible target host should be prepared with package repository configured such as yum, dnf and apt as well as zypper\
 
-## Prepare ansible host to run gpfarmer
+## Prepare ansible host to run KubeFarmer
 * MacOS
 ```
 $ xcode-select --install

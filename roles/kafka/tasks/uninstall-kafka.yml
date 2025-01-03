@@ -54,7 +54,7 @@
     - "local-storage-pv.yaml"
     - "local-storage-class.yaml"
   args:
-    chdir: "{{ base_path }}/"
+    chdir: "{{ base_path }}"
 - debug: msg={{ delete_pvc }}
   when: print_debug == true
 
@@ -72,6 +72,16 @@
     - "kafka-values.yaml"
 - debug: msg={{ delete_cluster_local_pvc_config_yaml }}
   when: print_debug == true
+
+
+- name: Delete Kafka Helm Config
+  file:
+    path: "{{ base_path }}/{{ item }}"
+    state: absent
+  register: delete_kafka_helm_config
+  with_items:
+    - "kafka-values.yaml"
+- debug: msg={{ delete_kafka_helm_config }}
 
 
 - name: Delete Namespace for Persistent Volumes

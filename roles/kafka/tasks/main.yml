@@ -14,7 +14,7 @@
 - name: Apply Kernel Parameters for Kafka
   import_tasks: apply-kafka-kernel-parameters.yml
   tags: install
-  when: kafka is defined and kafka == true
+  when: ( kafka is defined and kafka == true ) or ( kafka_all is defined and kafka_all == true )
 
 
 - name: Enable Helm Repository
@@ -32,7 +32,25 @@
 - name: Deploy Kafka
   import_tasks: install-kafka.yml
   tags: install
-  when: ( kafka is defined and kafka == true ) and inventory_hostname in groups['master']
+  when:
+    - inventory_hostname in groups['master']
+    - ( kafka is defined and kafka == true ) or ( kafka_all is defined and kafka_all == true )
+
+
+- name: Deploy Kafka UI
+  import_tasks: install-kafka-ui.yml
+  tags: install
+  when:
+    - inventory_hostname in groups['master']
+    - ( ui is defined and ui == true ) or ( kafka_all is defined and kafka_all == true )
+
+
+- name: Deploy Kafdrop
+  import_tasks: install-kafdrop.yml
+  tags: install
+  when:
+    - inventory_hostname in groups['master']
+    - ( kafdrop is defined and kafdrop == true ) or ( kafka_all is defined and kafka_all == true )
 
 
 - name: Install Load Balancer
@@ -41,28 +59,34 @@
   when: _kafka.lb.install == true and inventory_hostname in groups['master']
 
 
-- name: Deploy Kafka UI
-  import_tasks: install-kafka-ui.yml
-  tags: install
-  when: _kafka_ui.install == true and inventory_hostname in groups['master']
-
-
-- name: Destroy Kafka UI
-  import_tasks: uninstall-kafka-ui.yml
-  tags: uninstall
-  when: _kafka_ui.install == true and inventory_hostname in groups['master']
-
-
 - name: Uninstall Load Balancer
   import_tasks: uninstall-lb.yml
   tags: uninstall
   when: _kafka.lb.install == true and inventory_hostname in groups['master']
 
 
+- name: Destroy Kafdrop
+  import_tasks: uninstall-kafdrop.yml
+  tags: uninstall
+  when:
+    - inventory_hostname in groups['master']
+    - ( kafdrop is defined and kafdrop == true ) or ( kafka_all is defined and kafka_all == true )
+
+
+- name: Destroy Kafka UI
+  import_tasks: uninstall-kafka-ui.yml
+  tags: uninstall
+  when:
+    - inventory_hostname in groups['master']
+    - ( ui is defined and ui == true ) or ( kafka_all is defined and kafka_all == true )
+
+
 - name: Destroy Kafka
   import_tasks: uninstall-kafka.yml
   tags: uninstall
-  when: ( kafka is defined and kafka == true ) and inventory_hostname in groups['master']
+  when:
+    - inventory_hostname in groups['master']
+    - ( kafka is defined and kafka == true ) or ( kafka_all is defined and kafka_all == true )
 
 
 - name: Disable Helm Repository
@@ -74,5 +98,5 @@
 - name: Remove Kernel Parameters for Kafka
   import_tasks: remove-kafka-kernel-parameters.yml
   tags: uninstall
-  when: kafka is defined and kafka == true
+  when: ( kafka is defined and kafka == true ) or ( kafka_all is defined and kafka_all == true )
 

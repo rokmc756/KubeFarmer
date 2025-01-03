@@ -1,28 +1,56 @@
-- name: Copy kafka Loadbalancer Config Yaml
-  template:
-    src: kafdrop.yaml.j2
-    dest: "{{ base_path }}/kafdrop.yaml"
-  register: copy_kafka_lb_config_yaml
-- debug: msg={{ copy_kafka_lb_config_yaml }}
-
-
-- name: Create kafka Load Balancer
+---
+- name: Apply Kafka Load Balancer
   shell: |
-    kubectl apply -f kafdrop.yaml
-  register: create_kafka_lb
+    kubectl patch svc {{ item.svc }} -n {{ _kafka.namespace }} -p '{"spec": {"type": "LoadBalancer", "loadBalancerIP": "{{ item.lb_ip_addr }}"}}'
+  register: apply_kafka_lb
+  ignore_errors: yes
   args:
-    chdir: "{{ base_path }}/"
-- debug: msg={{ create_kafka_lb }}
+    chdir: "{{ base_path }}"
+  with_items:
+    - { svc: "kafka", lb_ip_addr: "{{ _kafka.lb.ip_addr }}" }
+  when: ( kafka is defined and kafka == true ) or ( kafka_all is defined and kafka_all == true )
+- debug: msg={{ apply_kafka_lb }}
+  when:
+    - print_debug == true
+    - ( kafka is defined and kafka == true ) or ( kafka_all is defined and kafka_all == true )
 
 
-# kubectl patch svc kafka-portal -n kafka -p '{"spec": {"type": "LoadBalancer"}}'
-- name: Validate if Kafdrop Container is Running
+- name: Apply Kafka UI Load Balancer
   shell: |
-    kubectl -n kafka get pod | grep kafdrop | awk '{print $3}' | cut -d : -f 1
-  register: check_kafdrop_container
-  until: check_kafdrop_container.stdout.find("Running") != -1
-  retries: 100
-  delay: 10
-- debug: msg={{ check_kafdrop_container }}
+    kubectl patch svc {{ item.svc }} -n {{ _kafka_ui.namespace }} -p '{"spec": {"type": "LoadBalancer", "loadBalancerIP": "{{ item.lb_ip_addr }}"}}'
+  register: apply_kafka_ui_lb
+  ignore_errors: yes
+  args:
+    chdir: "{{ base_path }}"
+  with_items:
+    - { svc: "kafka-ui", lb_ip_addr: "{{ _kafka_ui.lb.ip_addr }}" }
+  when: ( ui is defined and ui == true ) or ( kafka_all is defined and kafka_all == true )
+- debug: msg={{ apply_kafka_ui_lb }}
+  when:
+    - print_debug == true
+    - ( ui is defined and ui == true ) or ( kafka_all is defined and kafka_all == true )
+
+
+- name: Apply KafDrop Load Balancer
+  shell: |
+    kubectl patch svc {{ item.svc }} -n {{ _kafdrop.namespace }} -p '{"spec": {"type": "LoadBalancer", "loadBalancerIP": "{{ item.lb_ip_addr }}"}}'
+  register: apply_kafdrop_lb
+  ignore_errors: yes
+  args:
+    chdir: "{{ base_path }}"
+  with_items:
+    - { svc: "kafdrop", lb_ip_addr: "{{ _kafdrop.lb.ip_addr }}" }
+  when: ( kafdrop is defined and kafdrop == true ) or ( kafka_all is defined and kafka_all == true )
+- debug: msg={{ apply_kafdrop_lb }}
+  when:
+    - print_debug == true
+    - ( kafdrop is defined and kafdrop == true ) or ( kafka_all is defined and kafka_all == true )
+
+
+- name: Check LoadBalancer IP addresses for kafka and kafka UI
+  shell: |
+    kubectl get all -A | grep LoadBalancer
+  register: check_lb_ipaddr
+- debug: msg={{ check_lb_ipaddr }}
   when: print_debug == true
 

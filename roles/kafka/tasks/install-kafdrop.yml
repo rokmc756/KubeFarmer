@@ -1,0 +1,28 @@
+---
+- name: Copy Kafdrop Config Yaml
+  template:
+    src: kafdrop.yaml.j2
+    dest: "{{ base_path }}/kafdrop.yaml"
+  register: copy_kafdrop_config_yaml
+- debug: msg={{ copy_kafdrop_config_yaml }}
+
+
+- name: Create KafDrop
+  shell: |
+    kubectl apply -f kafdrop.yaml
+  register: create_kafdrop
+  args:
+    chdir: "{{ base_path }}/"
+- debug: msg={{ create_kafdrop }}
+
+
+- name: Validate if Kafdrop Container is Running
+  shell: |
+    kubectl -n {{ _kafka.namespace }} get pod | grep kafdrop | awk '{print $3}' | grep Running | wc -l
+  register: check_kafdrop_container
+  until: check_kafdrop_container.stdout|int == _kafdrop.replica|int
+  retries: 100
+  delay: 10
+- debug: msg={{ check_kafdrop_container }}
+  when: print_debug == true
+

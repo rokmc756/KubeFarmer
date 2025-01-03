@@ -36,108 +36,10 @@
   when: print_debug == true
 
 
-
-# /usr/local/bin/helm install kafka kafka/kafka -n kafka
 # --set persistence.existingClaim={data-kafka-redis-0,data-kafka-trivy-0,database-data-kafka-database-0,kafka-jobservice,kafka-registry} \
-# --create-namespace
-# /usr/local/bin/helm install kafka kafka/kafka -f {{ base_path }}/kafka-values.yaml --create-namespace -n kafka
 # --set externalAccess.controller.service.type=NodePort \
 # --set externalAccess.autoDiscovery.enabled=true \
 # --set externalAccess.controller.service.domain=ingress-ip \
-
-
-#- name: Deploy Kafka
-#  shell: |
-#    /usr/local/bin/helm install kafka bitnami/kafka -n kafka \
-#    --set controller.replicaCount=3 \
-#    --set externalAccess.enabled=true \
-#    --set externalAccess.controller.service.type=ClusterIP \
-#    --set externalAccess.controller.service.domain=kafka.jtest.pivotal.io \
-#    --set externalAccess.controller.service.ports.external=9094 \
-#    --set serviceAccount.create=true \
-#    --set rbac.create=true \
-#    --set listeners.client.protocol=PLAINTEXT \
-#    --set listeners.controller.protocol=PLAINTEXT \
-#    --set controller.automountServiceAccountToken=true \
-#    --set broker.automountServiceAccountToken=true \
-#    --set topic.autoCreate=true \
-#    --version {{ _kafka.major_version }}.{{ _kafka.minor_version }}.{{ _kafka.patch_version }}
-#  register: deploy_kafka
-#- debug: msg={{ deploy_kafka }}
-#  when: print_debug == true
-
-
-#- name: Replace lines for Kafka Helm Config
-#  lineinfile:
-#    dest: "{{ base_path }}/kafka-values.yaml"
-#    regexp: "{{ item.regexp }}"
-#    line: "{{ item.line }}"
-#    state: "{{ item.state }}"
-#  register: replace_kafka_values_lines
-#  with_items:
-#    - { regexp: '^architecture: standalone',        line: 'architecture: replication',                              state: present }
-#    - { regexp: '^  numSynchronousReplicas:*',      line: '  numSynchronousReplicas: {{ pgsql.patroni.replica }}',  state: present }
-#    - { regexp: '^  replicaCount:*',                line: '  replicaCount: {{ pgsql.patroni.replica }}',            state: present }
-#    - { regexp: '^    password:*',                  line: '    password: "changeme"',             state: present }
-#    - { regexp: '^    postgresPassword:*',          line: '    postgresPassword: "changeme"',     state: present }
-#    - { regexp: '^    replicationPassword:*',       line: '    replicationPassword: "changeme"',  state: present }
-#    - { regexp: '^      postgresPassword:*',        line: '      postgresPassword: "changeme"',   state: present }
-#    - { regexp: '^      password:*',                line: '      password: "changeme"',           state: present }
-#    - { regexp: '^      username:*',                line: '      username: "jomoon"',             state: present }
-#    - { regexp: '^      database:*',                line: '      database: "patroni_testdb"',     state: present }
-#    - { regexp: '^  postgresPassword:*',            line: '  postgresPassword: "changeme"',       state: present }
-#    - { regexp: '^  password:*',                    line: '  password: "changeme"',               state: present }
-#    - { regexp: '^  username:*',                    line: '  username: "jomoon"',                 state: present }
-#    - { regexp: '^  database:*',                    line: '  database: "patroni_testdb"',         state: present }
-#- debug: msg={{ replace_kafka_values_lines  }}
-#  when: print_debug == true
-
-
-#- name: Generate Kafka Helm Config
-#  shell:
-#    helm inspect values bitnami/kafka > {{ base_path }}/kafka-values.yaml
-#  register: gen_kafka_helm_config
-#  args:
-#    chdir: "{{ base_path }}/"
-#  environment:
-#    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-#- debug: msg={{ gen_kafka_helm_config }}
-#  when: print_debug == true
-
-
-#- name: Replace lines for Kafka Helm Config
-#  replace:
-#    dest: "{{ base_path }}/kafka-values.yaml"
-#    regexp: "{{ item.regexp }}"
-#    replace: "{{ item.replace }}"
-#  register: replace_kafka_values_lines
-#  with_items:
-#    - { regexp: '^  controller:\n  replicaCount:*',  replace: '  controller:\n replicaCount: {{ _kafka.controller.replica }}', state: present }
-#    - { regexp: '^  broker:\n  replicaCount:*',      replace: '  broker:\n replicaCount: {{ _kafka.broker.replica }}',         state: present }
-#- debug: msg={{ replace_kafka_values_lines  }}
-#  when: print_debug == true
-#  - { regexp: '^  zookeeper:\n    enabled: false', replace: '  zookeeper:\n    enabled: true', state: present }
-
-
-# 'zookeeper:\n  enabled: true'
-# {{ _kafka.zookeeper.enabled }}
-
-# 'kraft:\n  enabled: true'
-# {{ _kafka.kraft.enabled }}
-
-# 'provisioning:\n  enabled: false'
-# {{ _kafka.provisioning.enabled }}
-
-# 'externalAccess:\n  enabled: true'
-# {{ _kafka.extaccess.enabled }}
-
-# 'broker:\n  replicaCount: 4'
-# {{ _kafka.broker.replica }}
-#  replicaCount: {{ _kafka.broker.replica }}
-
-# 'controller:\n replicaCount: 4'
-#  replicaCount: {{ _kafka.controller.replica }}
-
 
 
 - name: Copy Kafka Helm Config
@@ -150,14 +52,16 @@
 - debug: msg={{ copy_kafka_helm_config }}
 
 
-
 - name: Deploy Kafka
   shell: |
-    /usr/local/bin/helm install kafka bitnami/kafka -n kafka -f {{ base_path }}/kafka-values.yaml
+    /usr/local/bin/helm install kafka bitnami/kafka -n kafka  -f {{ base_path }}/kafka-values.yaml
   register: deploy_kafka
 - debug: msg={{ deploy_kafka }}
   when: print_debug == true
-  #  --version {{ _kafka.major_version }}.{{ _kafka.minor_version }}.{{ _kafka.patch_version }}
+# --version {{ _kafka.major_version }}.{{ _kafka.minor_version }}.{{ _kafka.patch_version }}
+# 'zookeeper:\n  enabled: true'
+# 'kraft:\n  enabled: true'
+# 'provisioning:\n  enabled: false'
 
 
 - name: Validate if Kafka Controller Containers are Running

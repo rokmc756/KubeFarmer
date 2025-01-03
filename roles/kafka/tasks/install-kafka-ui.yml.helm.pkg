@@ -1,0 +1,56 @@
+---
+- name: Uninstall Kafka UI
+  shell: |
+    /usr/local/bin/helm uninstall kafka-ui -n kafka-ui
+  register: uninstall_kafka_ui
+  ignore_errors: true
+  args:
+    chdir: "{{ base_path }}/"
+- debug: msg={{ uninstall_kafka_ui }}
+  when: print_debug == true
+
+
+- name: Check if Kafka UI Directory exists
+  stat: path={{ base_path }}/kafka-ui
+  register: kafka_ui_dir
+  ignore_errors: true
+- debug: msg={{ kafka_ui_dir }}
+  when: print_debug == true
+
+
+- name: Delete Kafka UI Config Yaml and Directory
+  file:
+    path: "{{ base_path }}/{{ item }}"
+    state: absent
+  register: delete_kafka_ui_config
+  ignore_errors: true
+  with_items:
+    - "kafka-ui/kafka-ui-values.yaml"
+    - "kafka-ui"
+    - "kafka-ui-values.yaml"
+  when: kafka_ui_dir.stat.exists == true
+- debug: msg={{ delete_kafka_ui_config }}
+  when: print_debug == true and kafka_ui_dir.stat.exists == true
+
+
+- name: Delete Namespace for Kafka UI
+  shell: |
+    kubectl delete namespace {{ item }}
+  register: delete_kafka_ui_namespace
+  ignore_errors: true
+  with_items:
+    - kafka-ui
+- debug: msg={{ delete_kafka_ui_namespace }}
+  when: print_debug == true
+
+
+- name: Delete Kafka UI Tarball
+  file:
+    path: "{{ base_path }}/kafka-ui-0.7.6.tgz"
+    state: absent
+  register: delete_kafka_ui_tarball
+  ignore_errors: true
+  when: kafka_ui_dir.stat.exists == true
+- debug: msg={{ delete_kafka_ui_tarball }}
+  when: print_debug == true and kafka_ui_dir.stat.exists == true
+

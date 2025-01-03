@@ -3,11 +3,11 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: kafdrop
-  namespace: kafka
+  namespace: {{ _kafka.namespace }}
   labels:
     app: kafdrop
 spec:
-  replicas: 1
+  replicas: {{ _kafdrop.replica }}
   selector:
     matchLabels:
       app: kafka
@@ -29,7 +29,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: kafdrop
-  namespace: kafka
+  namespace: {{ _kafka.namespace }}
   labels:
     name: kafdrop
 spec:
@@ -40,6 +40,7 @@ spec:
     protocol: TCP
   selector:
     app: kafka
-  type: LoadBalancer
-  loadBalancerIP: "{{ _kafka.lb.ip_addr }}"
+  type: ClusterIP
+  # LoadBalancer
+  # loadBalancerIP: "{{ _kafka.lb.ip_addr }}"
 
