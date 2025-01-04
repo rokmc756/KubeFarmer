@@ -1,7 +1,8 @@
+---
 expose:
   type: loadBalancer
   loadBalancer:
-    IP: {{ harbor.lb_ip_addr }}
+    IP: {{ _harbor.lb.ip_addr }}
   tls:
     enabled: true
     certSource: secret
@@ -12,54 +13,67 @@ expose:
       notarySecretName: "harbor-cert"
   ingress:
     hosts:
-      core: {{ harbor.hostname }}
-      notary: {{ harbor.hostname }}
+      core: {{ _harbor.hostname }}
+      notary: {{ _harbor.hostname }}
 
-externalURL: https://{{ harbor.hostname }}
+
+externalURL: https://{{ _harbor.hostname }}
+
 
 existingSecretAdminPasswordKey: "changeme"
 harborAdminPassword: "changeme"
 
+
 persistence:
-  enabled: false
+  enabled: true
   resourcePolicy: "keep"
   persistentVolumeClaim:
     registry:
-      storageClass: "harbor-storage"
-      accessMode: ReadWriteMany
+      storageClass: "{{ _harbor.storage_class }}"
+      existingClaim: "harbor-registry"
+      accessMode: ReadWriteOnce
       size: 10Gi
     jobservice:
       jobLog:
-        storageClass: "harbor-storage"
-        accessMode: ReadWriteMany
+        storageClass: "{{ _harbor.storage_class }}"
+        existingClaim: "harbor-jobservice"
+        accessMode: ReadWriteOnce
         size: 10Gi
     redis:
-      storageClass: "harbor-storage"
-      accessMode: ReadWriteMany
+      storageClass: "{{ _harbor.storage_class }}"
+      existingClaim: "data-harbor-redis-0"
+      accessMode: ReadWriteOnce
       size: 10Gi
     trivy:
-      storageClass: "harbor-storage"
+      storageClass: "{{ _harbor.storage_class }}"
+      existingClaim: "data-harbor-trivy-0"
       accessMode: ReadWriteMany
+      size: 10Gi
+    database:
+      storageClass: "{{ _harbor.storage_class }}"
+      existingClaim: "database-data-harbor-database-0"
+      accessMode: ReadWriteOnce
       size: 10Gi
   imageChartStorage:
     disableredirect: false
     type: filesystem
     filesystem:
-      rootdirectory: {{ harbor.storage_path }}
+      rootdirectory: "{{ _harbor.storage_path }}"
+
 
 registry:
-  replicas: 2
+  replicas: "{{ _harbor.registry.replica }}"
 portal:
-  replicas: 2
+  replicas: "{{ _harbor.portal.replica }}"
 core:
-  replicas: 2
+  replicas: "{{ _harbor.core.replica }}"
 jobservice:
-  replicas: 2
+  replicas: "{{ _harbor.jobservice.replica }}"
 trivy:
   enabled: true
-  replicas: 2
+  replicas: "{{ _harbor.trivy.replica }}"
 notary:
-  enabled: false
+  enabled: true
 cache:
   enabled: true
   expireHours: 24

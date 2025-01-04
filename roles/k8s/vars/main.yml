@@ -197,7 +197,7 @@ workers_ports:
 
 
 
-metallb:
+_metallb:
   install: true
   major_version: 0
   minor_version: 13
@@ -206,13 +206,13 @@ metallb:
     kind:
       ipaddrpool:
         metadata:
-          name: first-pool
+          name: kubefarm-ip-pool
           namespace: metallb-system
         spec:
           ips_range: 192.168.1.210-200.168.1.250
       l2advertise:
         metadata:
-          name: example
+          name: kubefarm-l2advt
           namespace: metallb-system
   baremetal:
     kind:
@@ -228,8 +228,8 @@ metallb:
               ips_range: 192.168.1.210-192.168.1.250
 
 
-ingress:
-  install: true
+_ingress:
+  install: false
   major_version: 3
   minor_version: 0
   patch_version: 2
@@ -239,7 +239,7 @@ ingress:
   hostname: "kubeflow.jtest.pivotal.io"
 
 
-helm:
+_helm:
   enable_repo: true
   major_version: 3
   minor_version:

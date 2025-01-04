@@ -1,28 +1,10 @@
 # https://medium.com/@ithesadson/how-to-deploy-a-harbor-with-helm-k8s-minikube-25f89af83610
 # https://www.viktorious.nl/2023/01/12/deploy-harbor-registry-with-signed-certificates-using-cert-manager-lets-encrypt-and-aws-route-53/
 
-- name: Create Directory for Persistent Volumes
-  file:
-    path: "{{ harbor.storage_path }}"
-    state: directory
-    owner: root
-    group: root
-    mode: 0777
-  register: create_pv_dir
-  delegate_to: "{{ item }}"
-  delegate_facts: True
-  with_items:
-    - "{{ groups['all'] }}"
-- debug: msg={{ create_pv_dir }}
-  when: print_debug == true
-
-
 - name: Create Namespace for Persistent Volumes
   shell: |
-    kubectl create namespace {{ item }}
+    kubectl create namespace {{ _harbor.namespace }}
   register: create_namespace
-  with_items:
-    - harbor
   args:
     chdir: "{{ base_path }}/"
   environment:
@@ -59,25 +41,14 @@
   when: print_debug == true
 
 
-- name: Copy Harbor Loadbalancer Config Yaml
+- name: Copy Harbor Helm Config
   template:
     src: "{{ item }}.j2"
     dest: "{{ base_path }}/{{ item }}"
-  register: copy_harbor_lb_config_yaml
+  register: copy_harbor_helm_config
   with_items:
     - "harbor-values.yaml"
-- debug: msg={{ copy_harbor_lb_config_yaml }}
-
-
-# helm install ingress bitnami/contour --create-namespace -n contour --wait
-#
-# You can use the following command to check if the pods are running:
-# kubectl get pods -n contour -w
-# With the following command you can check if and where your ingress is available:
-#
-# kubectl get svc ingress-contour-envoy --namespace contour -wC
-# And:
-# kubectl describe svc ingress-contour-envoy --namespace contour | grep Ingress | awk '{print $3}'
+- debug: msg={{ copy_harbor_helm_config }}
 
 
 - name: Generate Harbor TLS Cert Files
@@ -86,7 +57,8 @@
 
 - name: Create a TLS secret with the contents of tls.key and tls.crt in the harbor namespace
   shell: |
-    kubectl create secret tls harbor-cert --key {{ ssl.dir }}/{{ harbor.hostname }}.key --cert {{ ssl.dir }}/{{ harbor.hostname }}.crt -n harbor
+    kubectl create secret tls harbor-cert --key {{ _ssl.dir }}/{{ _harbor.hostname }}.key \
+    --cert {{ _ssl.dir }}/{{ _harbor.hostname }}.crt -n {{ _harbor.namespace }}
   register: create_tls_secret
   args:
     chdir: "{{ base_path }}/"
@@ -98,7 +70,7 @@
 
 - name: Deploy Harbor
   shell: |
-    helm install harbor -f {{ base_path }}/harbor-values.yaml harbor/harbor -n harbor
+    helm install harbor -f {{ base_path }}/harbor-values.yaml harbor/harbor -n {{ _harbor.namespace }}
   register: deploy_harbor
   args:
     chdir: "{{ base_path }}/"
@@ -138,26 +110,21 @@
   when: print_debug == true
 
 
-
-# ** Please be patient while the chart is being deployed **
-#1. Get the Harbor URL:
-#  NOTE: It may take a few minutes for the LoadBalancer IP to be available.
-#        Watch the status with: 'kubectl get svc --namespace harbor -w harbor'
-#    export SERVICE_IP=$(kubectl get svc --namespace harbor harbor --template "{{ range (index .status.loadBalancer.ingress 0) }}{{ . }}{{ end }}")
-#    echo "Harbor URL: http://$SERVICE_IP/"
-#
-#2. Login with the following credentials to see your Harbor application
-#  echo Username: "admin"
-#  echo Password: $(kubectl get secret --namespace harbor harbor-core-envvars -o jsonpath="{.data.HARBOR_ADMIN_PASSWORD}" | base64 -d)
-#
-#WARNING: There are "resources" sections in the chart not set. Using "resourcesPreset" is not recommended for production. For production installations, please set the following values according to your workload needs:
-#  - core.resources
-#  - exporter.resources
-#  - jobservice.resources
-#  - nginx.resources
-#  - portal.resources
-#  - registry.controller.resources
-#  - registry.server.resources
-#  - trivy.resources
-#+info https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+- name: Validate if Harbor Containers are Running
+  shell: |
+    kubectl get pods -n {{ _harbor.namespace }} | grep {{ item.svc }} | awk '{print $3}' | grep Running | wc -l
+  register: check_harbor_containers
+  until: check_harbor_containers.stdout|int == item.replica|int
+  retries: 100
+  delay: 10
+  with_items:
+    - { svc: "harbor-core-",       replica: "{{ _harbor.core.replica }}" }
+    - { svc: "harbor-database-",   replica: "{{ _harbor.database.replica }}" }
+    - { svc: "harbor-jobservice-", replica: "{{ _harbor.jobservice.replica }}" }
+    - { svc: "harbor-portal-",     replica: "{{ _harbor.portal.replica }}" }
+    - { svc: "harbor-redis-",      replica: "{{ _harbor.redis.replica }}" }
+    - { svc: "harbor-registry-",   replica: "{{ _harbor.registry.replica }}" }
+    - { svc: "harbor-trivy-",      replica: "{{ _harbor.trivy.replica }}" }
+- debug: msg={{ check_harbor_containers }}
+  when: print_debug == true
 

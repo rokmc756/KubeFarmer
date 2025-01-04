@@ -2,15 +2,18 @@
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
-  name: {{ harbor.namespace }}-storage
-  namespace: {{ harbor.namespace }}
+  name: {{ _harbor.storage_class }}
+  namespace: {{ _harbor.namespace }}
 provisioner: kubernetes.io/no-provisioner
 volumeBindingMode: WaitForFirstConsumer
----
-apiVersion: storage.k8s.io/v1
-kind: StorageClass
-metadata:
-  name: authservice-storage
-  namespace: istio-system
-provisioner: kubernetes.io/no-provisioner
-volumeBindingMode: WaitForFirstConsumer
+
+#---
+#apiVersion: storage.k8s.io/v1
+#kind: StorageClass
+#metadata:
+#  name: authservice-storage
+#  namespace: istio-system
+#provisioner: kubernetes.io/no-provisioner
+#volumeBindingMode: WaitForFirstConsumer
+#
+

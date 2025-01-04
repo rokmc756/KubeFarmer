@@ -2,7 +2,8 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ harbor.service.metadata.name }}
-  namespace: {{ harbor.service.metadata.namespace }}
+  name: {{ _harbor.service.metadata.name }}
+  namespace: {{ _harbor.namespace }}
 spec:
-  loadBalancerIP: {{ harbor.lb_ip_addr }}
+  loadBalancerIP: {{ _harbor.lb.ip_addr }}
+

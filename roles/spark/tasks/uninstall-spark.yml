@@ -1,7 +1,7 @@
 ---
 - name: Uninstall Apache Spark
   shell: |
-    helm uninstall spark -n spark
+    /usr/local/bin/helm uninstall spark -n spark
   register: uninstall_spark
   ignore_errors: true
   args:

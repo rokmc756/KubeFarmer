@@ -1,14 +1,15 @@
 base_path: /root
 
 
-kustomize:
+_kustomize:
+  install: true
   download_url: "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"
   major_version: 5
   minor_version: 4
   patch_version: 2
 
 
-harbor:
+_harbor:
   install: true
   major_version: 1
   minor_version: 8
@@ -21,8 +22,8 @@ harbor:
   clone_git: true
   nvme: true
   namespace: harbor
-  lb_ip_addr: 192.168.1.218
   storage_path: "/mnt/harbor-storage"
+  storage_class: "harbor-storage"
   k8s:
     major_version: 1
     minor_version: 28
@@ -38,21 +39,50 @@ harbor:
     metadata:
       name: harbor-ingress
       namespace: harbor
-    hostname: "harbor.jtest.suse.com"
+    hostname: "harbor1.jtest.pivotal.io"
   kernel_parameters:
     - "net.ipv4.neigh.default.gc_thresh1 = 0"   # For ARP Cache
     - "fs.inotify.max_user_instances=2280"
     - "fs.inotify.max_user_watches=755360"
+  lb:
+    install: true
+    ip_addr: "192.168.1.218"
+  registry:
+    replica: 1      # It looks Only 1 PVC Supported
+    ip_addr: ""
+  portal:
+    replica: 4
+    ip_addr: ""
+  core:
+    replica: 4
+    ip_addr: ""
+  jobservice:
+    replica: 1      # It looks Only 1 PVC Supported
+    ip_addr: ""
+  trivy:
+    enabled: true
+    replica: 4
+    ip_addr: ""
+  notary:
+    enabled: true
+    ip_addr: ""
+  cache:
+    enabled: true
+    ip_addr: ""
+  database:
+    type: internal
+    replica: 1       # For PVC  Need to check multiple database is supported
+    ip_addr: ""
+  redis:
+    type: internal
+    replica: 1       # For PVC  Need to check multiple database is supported
+    ip_addr: ""
 
 
-cert_manager:
-  install: false
-  major_version: 1
-  minor_version: 7
-  patch_version: 1
+total_harbor_containers: "{{ _harbor.registry.replica|int + _harbor.portal.replica|int + _harbor.core.replica|int + _harbor.jobservice.replica|int  + _harbor.trivy.replica|int }}"
 
 
-helm:
+_helm:
   enable_repo: true
   major_version: 3
   minor_version:
@@ -60,23 +90,25 @@ helm:
   build_version:
 
 
-nginx:
-  major_version:
-  minor_version:
-  patch_version:
+_nginx:
+  ingress:
+    install: true
+    name: nginx-ingress
+    class_name: harbor-ingress-class
+    namespace: "nginx-ingress"
+    major_version:
+    minor_version:
+    patch_version:
+    hostname: harbor1
+    domain: jtest.pivotal.io
+    ip_addr: "192.168.1.218"
   k8s_ingress:
     major_version: 3
     minor_version: 0
     patch_version: 2
-  ingress:
-    name: nginx-ingress
-    major_version:
-    minor_version:
-    patch_version:
-    build_version:
 
 
-ssl:
+_ssl:
   dir: "{{ base_path }}/harbor-certs"
   days: 3660
   country: "KR"

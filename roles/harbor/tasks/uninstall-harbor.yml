@@ -1,6 +1,7 @@
+---
 - name: Uninstall Harbor
   shell: |
-    helm uninstall harbor -n harbor
+    helm uninstall harbor -n {{ _harbor.namespace }}
   register: uninstall_harbor
   ignore_errors: true
   args:
@@ -8,12 +9,13 @@
   environment:
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ uninstall_harbor }}
+  ignore_errors: true
   when: print_debug == true
 
 
 - name: Validate if Harbor Containers are deleted
   shell: |
-    kubectl get pods -n harbor | grep harbor- | awk '{print $3}' | uniq
+    kubectl get pods -n {{ _harbor.namespace }} | grep harbor- | awk '{print $3}' | uniq
   register: delete_harbor_container
   ignore_errors: true
   until: delete_harbor_container.stdout.find("") != -1
@@ -24,6 +26,7 @@
   environment:
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ delete_harbor_container }}
+  ignore_errors: true
   when: print_debug == true
 
 
@@ -44,6 +47,7 @@
   environment:
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ delete_pvc }}
+  ignore_errors: true
   when: print_debug == true
 
 
@@ -54,46 +58,33 @@
   register: delete_cluster_local_pvc_config_yaml
   ignore_errors: true
   with_items:
-    - "local-storage-class.yaml"
-    - "local-storage-pv.yaml"
     - "local-storage-pvc.yaml"
+    - "local-storage-pv.yaml"
+    - "local-storage-class.yaml"
 - debug: msg={{ delete_cluster_local_pvc_config_yaml }}
+  ignore_errors: true
   when: print_debug == true
 
 
 - name: Delete Namespace for Persistent Volumes
   shell: |
-    kubectl delete namespace {{ item }}
+    kubectl delete namespace {{ _harbor.namespace }}
   register: delete_namespace
   ignore_errors: true
-  with_items:
-    - harbor
   args:
     chdir: "{{ base_path }}/"
   environment:
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ delete_namespace }}
-  when: print_debug == true
-
-
-- name:  Directory for Persistent Volumes
-  file:
-    path: "{{ harbor.storage_path }}"
-    state: absent
-  register: delete_pv_dir
   ignore_errors: true
-  delegate_to: "{{ item }}"
-  delegate_facts: True
-  with_items:
-    - "{{ groups['all'] }}"
-- debug: msg={{ delete_pv_dir }}
   when: print_debug == true
 
 
 - name: Validate if Harbor Containers are Running
   shell: |
-    kubectl -n harbor get pod | grep harbor | awk '{print $3}' | cut -d : -f 1
+    kubectl -n {{ _harbor.namespace }} get pod | grep harbor | awk '{print $3}' | cut -d : -f 1
   register: check_harbor_container
+  ignore_errors: true
   until: check_harbor_container.stdout.find("") != -1
   retries: 100
   delay: 10
@@ -102,5 +93,6 @@
   environment:
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ check_harbor_container }}
+  ignore_errors: true
   when: print_debug == true
 

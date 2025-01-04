@@ -1,8 +1,66 @@
 harbor:
-	@if [ "${r}" = "install" ]; then\
-		ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-harbor.yml --tags='install';\
+	@if [ "${r}" = "prepare" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-harbor.yml -e '{"${s}": True}' --tags='prepare';\
+			else\
+				echo "No Actions for Configure Harbor";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-harbor.yml -e '{harbor_all: True}' --tags='prepare';\
+			else\
+				echo "No Actions for Configure Harbor";\
+			fi\
+		else\
+			echo "No Actions for Configure Harbor";\
+		fi;\
+	elif [ "${r}" = "install" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-harbor.yml -e '{"${s}": True}' --tags='install';\
+			else\
+				echo "No Actions for Installing Harbor";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-harbor.yml -e '{harbor_all: True}' --tags='install';\
+			else\
+				echo "No Actions for Installing Harbor";\
+			fi\
+		else\
+			echo "No Actions for Installing Harbor";\
+		fi;\
 	elif [ "${r}" = "uninstall" ]; then\
-		ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-harbor.yml --tags='uninstall';\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-harbor.yml -e '{"${s}": True}' --tags='uninstall';\
+			else\
+				echo "No Actions for Uninstalling Harbor";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-harbor.yml -e '{harbor_all: True}' --tags='uninstall';\
+			else\
+				echo "No Actions for Uninstalling Harbor";\
+			fi\
+		fi;\
+	elif [ "${r}" = "upgrade" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-harbor.yml -e '{"${s}": True}' --tags='upgrade';\
+			else\
+				echo "No Actions for Uninstalling Harbor";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-harbor.yml -e '{harbor_all: True}' --tags='upgrade';\
+			else\
+				echo "No Actions for Uninstalling Harbor";\
+			fi\
+		else\
+			echo "No Actions for Uninstalling Harbor";\
+		fi;\
 	else\
 		echo "No Actions for Harbor Role";\
 		exit;\

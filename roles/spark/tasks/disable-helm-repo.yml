@@ -1,15 +1,15 @@
 # https://oopflow.medium.com/setup-install-rancher-onto-existing-kubernetes-cluster-for-high-availability-7351f0284592
 
-#- name: Remove NGINX Helm Repo
-#  shell: |
-#    helm repo remove nginx-stable
-#  register: remove_nginx_helm_repo
-#  ignore_errors: yes
-#  args:
-#    chdir: "{{ base_path }}/"
-#  environment:
-#    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-#- debug: msg={{ remove_nginx_helm_repo }}
+- name: Remove NGINX Helm Repo
+  shell: |
+     helm repo remove ingress-nginx
+  register: remove_nginx_helm_repo
+  ignore_errors: yes
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ remove_nginx_helm_repo }}
 
 
 - name: Remove Bitnami Helm Repo
@@ -34,16 +34,4 @@
   environment:
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ remove_jetstack_helm_repo }}
-
-
-- name: Delete Helm Install Script
-  file:
-    path: "{{ item }}"
-    state: absent
-  register: delete_helm_install_script
-  ignore_errors: yes
-  with_items:
-    - "{{ base_path }}/get_helm.sh"
-    - "/usr/local/bin/helm"
-- debug: msg={{ delete_helm_install_script }}
 

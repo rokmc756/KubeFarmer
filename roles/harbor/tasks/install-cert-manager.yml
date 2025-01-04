@@ -15,7 +15,7 @@
 - name: Intall Cert Manager by Helm
   shell: |
     /usr/local/bin/helm install cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace --set installCRDs=true \
-    --version v{{ cert_manager.major_version }}.{{ cert_manager.minor_version }}.{{ cert_manager.patch_version }}
+    --version v{{ _cert_manager.major_version }}.{{ _cert_manager.minor_version }}.{{ _cert_manager.patch_version }}
   register: install_cert_manager
   ignore_errors: yes
   args:

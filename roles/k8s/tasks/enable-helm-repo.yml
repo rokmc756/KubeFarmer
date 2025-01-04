@@ -25,13 +25,6 @@
 - debug: msg={{ add_rook_helm_repo }}
 
 
-- name: Add Rook Helm Repo
-  shell: |
-    /usr/local/bin/helm repo add rook-release https://charts.rook.io/release
-  register: add_rook_helm_repo
-- debug: msg={{ add_rook_helm_repo }}
-
-
 - name: Add MLFlow Helm Repo
   shell: |
     /usr/local/bin/helm repo add community-charts https://community-charts.github.io/helm-charts
@@ -41,9 +34,10 @@
 
 - name: Add NGINX Helm Repo
   shell: |
-    /usr/local/bin/helm repo add nginx-stable https://helm.nginx.com/stable
+    /usr/local/bin/helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
   register: add_nginx_helm_repo
 - debug: msg={{ add_nginx_helm_repo }}
+  #  /usr/local/bin/helm repo add nginx-stable https://helm.nginx.com/stable
 
 
 - name: Add Jetstack Helm Repo

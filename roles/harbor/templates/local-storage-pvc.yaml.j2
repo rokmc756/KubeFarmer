@@ -1,104 +1,123 @@
+{% for n in range(0, _harbor.redis.replica|int) %}
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: data-harbor-redis-0
-  namespace: {{ harbor.namespace }}
+  name: data-harbor-redis-{{ n }}
+  namespace: {{ _harbor.namespace }}
 spec:
-  storageClassName: {{ harbor.namespace}}-storage
+  storageClassName: {{ _harbor.storage_class }}
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
       storage: 10Gi
+{% endfor %}
+{% for n in range(0, _harbor.trivy.replica|int) %}
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: data-harbor-trivy-0
-  namespace: {{ harbor.namespace }}
+  name: data-harbor-trivy-{{ n }}
+  namespace: {{ _harbor.namespace }}
 spec:
-  storageClassName: {{ harbor.namespace}}-storage
+  storageClassName: {{ _harbor.storage_class }}
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
       storage: 10Gi
+{% endfor %}
+{% for n in range(0, _harbor.database.replica|int) %}
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: database-data-harbor-database-0
-  namespace: {{ harbor.namespace }}
+  name: database-data-harbor-database-{{ n }}
+  namespace: {{ _harbor.namespace }}
 spec:
-  storageClassName: {{ harbor.namespace}}-storage
+  storageClassName: {{ _harbor.storage_class }}
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
       storage: 10Gi
+{% endfor %}
+
+
 #---
 #apiVersion: v1
 #kind: PersistentVolumeClaim
 #metadata:
 #  name: harbor
-#  namespace: {{ harbor.namespace }}
+#  namespace: {{ _harbor.namespace }}
 #spec:
-#  storageClassName: {{ harbor.namespace}}-storage
+#  storageClassName: {{ _harbor.storage_class }}
 #  accessModes:
 #    - ReadWriteOnce
 #  resources:
 #    requests:
 #      storage: 10Gi
+
+
+{% for n in range(0, _harbor.jobservice.replica|int) %}
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: harbor-jobservice
-  namespace: {{ harbor.namespace }}
+  namespace: {{ _harbor.namespace }}
 spec:
-  storageClassName: {{ harbor.namespace}}-storage
+  storageClassName: {{ _harbor.storage_class }}
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
       storage: 10Gi
+{% endfor %}
+{% for n in range(0, _harbor.registry.replica|int) %}
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: harbor-registry
-  namespace: {{ harbor.namespace }}
+  namespace: {{ _harbor.namespace }}
 spec:
-  storageClassName: {{ harbor.namespace}}-storage
+  storageClassName: {{ _harbor.storage_class }}
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
       storage: 10Gi
+{% endfor %}
+{% for n in range(0, _harbor.database.replica|int) %}
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: data-harbor-postgresql-0
-  namespace: {{ harbor.namespace }}
+  name: data-harbor-postgresql-{{ 0 }}
+  namespace: {{ _harbor.namespace }}
 spec:
-  storageClassName: {{ harbor.namespace}}-storage
+  storageClassName: {{ _harbor.storage_class }}
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
       storage: 10Gi
+{% endfor %}
+{% for n in range(0, _harbor.redis.replica|int) %}
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: redis-data-harbor-redis-master-0
-  namespace: {{ harbor.namespace }}
+  name: redis-data-harbor-redis-master-{{ n }}
+  namespace: {{ _harbor.namespace }}
 spec:
-  storageClassName: {{ harbor.namespace}}-storage
+  storageClassName: {{ _harbor.storage_class }}
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
       storage: 10Gi
+{% endfor %}
+

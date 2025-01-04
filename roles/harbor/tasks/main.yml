@@ -9,52 +9,46 @@
   tags:
     - install
     - uninstall
-  when: inventory_hostname in groups['master']
 
 
 - name: Apply Kernel Parameters for Harbor
   import_tasks: apply-harbor-kernel-parameters.yml
   tags: install
+  when: ( harbor is defined and harbor == true ) or ( harbor_all is defined and harbor_all == true )
 
 
 - name: Enable Helm Repository
   import_tasks: enable-helm-repo.yml
   tags: install
-  when: helm.enable_repo == true and inventory_hostname in groups['master']
-
-
-- name: Install Cert Manager
-  import_tasks: install-cert-manager.yml
-  tags: install
-  when: cert_manager.install == true and inventory_hostname in groups['master']
+  when: _helm.enable_repo == true and inventory_hostname in groups['master']
 
 
 - name: Install Kustomize
   import_tasks: install-kustomize.yml
   tags: install
-  when: harbor.install == true and inventory_hostname in groups['master']
+  when: _kustomize.install == true and inventory_hostname in groups['master']
 
 
 - name: Deploy Harbor
   import_tasks: install-harbor.yml
   tags: install
-  when: harbor.install == true and inventory_hostname in groups['master']
+  when: (( harbor is defined and harbor == true ) or ( harbor_all is defined and harbor_all == true )) and inventory_hostname in groups['master']
 
 
 - name: Destroy Harbor
   import_tasks: uninstall-harbor.yml
   tags: uninstall
-  when: harbor.install == true and inventory_hostname in groups['master']
-
-
-- name: Uninstall Cert Manager
-  import_tasks: uninstall-cert-manager.yml
-  tags: uninstall
-  when: cert_manager.install == true and inventory_hostname in groups['master']
+  when: (( harbor is defined and harbor == true ) or ( harbor_all is defined and harbor_all == true )) and inventory_hostname in groups['master']
 
 
 - name: Disable Helm Repository
   import_tasks: disable-helm-repo.yml
   tags: uninstall
-  when: helm.enable_repo == true and inventory_hostname in groups['master']
+  when: _helm.enable_repo == true and inventory_hostname in groups['master']
+
+
+- name: Remove Kernel Parameters for Harbor
+  import_tasks: remove-harbor-kernel-parameters.yml
+  tags: uninstall
+  when: ( harbor is defined and harbor == true ) or ( harbor_all is defined and harbor_all == true )
 
