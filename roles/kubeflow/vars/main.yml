@@ -112,6 +112,24 @@ nginx:
     build_version:
 
 
+_nginx:
+  ingress:
+    install: true
+    name: nginx-ingress
+    class_name: spark-ingress-class
+    namespace: "nginx-ingress"
+    major_version:
+    minor_version:
+    patch_version:
+    hostname: spark
+    domain: jtest.pivotal.io
+    ip_addr: "192.168.1.249"
+  k8s_ingress:
+    major_version: 3
+    minor_version: 0
+    patch_version: 2
+
+
 cont_pv_dirs:
   - "katib-storage"
   - "authservice-storage"
