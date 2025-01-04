@@ -1,81 +1,70 @@
-#expose:
-#  ingress:
-#    hosts:
-#      # Adjust the domain to suit you
-#      core: hadoop.jtest.suse.com
-#
-## Adjust the externalURL https://{domain}
-#externalURL: https://hadoop.jtest.suse.com
-#hadoopAdminPassword: "{{ hadoop.admin_password }}"
-#
-#controller:
-#  serviceType: LoadBalancer
-#
-#
-#  https://github.com/gohadoop/hadoop-helm/blob/main/values.yaml
-#
----
-hadoopAdminPassword: "Changeme123"
+image:
+  repository: farberg/apache-hadoop
+  tag: 3.3.2
+  pullPolicy: IfNotPresent
 
-expose:
-  type: ingress
-  tls:
+
+hadoopVersion: 3.3.2
+logLevel: INFO
+
+
+antiAffinity: "soft"
+
+
+hdfs:
+  nameNode:
+    pdbMinAvailable: 1
+    resources:
+      requests:
+        memory: "256Mi"
+        cpu: "10m"
+      limits:
+        memory: "2048Mi"
+        cpu: "1000m"
+  dataNode:
+    externalHostname: hadoop.jtest.pivotal.io
+    externalDataPortRangeStart: 50500
+    externalHTTPPortRangeStart: 51000
+    replicas: {{ _hadoop.hdfs.dn.replica }}
+    pdbMinAvailable: 1
+    resources:
+      requests:
+        memory: "256Mi"
+        cpu: "10m"
+      limits:
+        memory: "2048Mi"
+        cpu: "1000m"
+  webhdfs:
     enabled: true
-    certSource: secret
-    secret:
-      secretName: "hadoop-cat-tls"
-  ingress:
-    hosts:
-      core: hadoop.jtest.suse.com
-    className: "nginx"
 
-externalURL: https://hadoop.jtest.suse.com
+
+yarn:
+  resourceManager:
+    pdbMinAvailable: 1
+    resources:
+      requests:
+        memory: "256Mi"
+        cpu: "10m"
+      limits:
+        memory: "2048Mi"
+        cpu: "2000m"
+  nodeManager:
+    pdbMinAvailable: 1
+    replicas: {{ _hadoop.yarn.nm.replica }}
+    parallelCreate: true
+    resources:
+      requests:
+        memory: "2048Mi"
+        cpu: "1000m"
+      limits:
+        memory: "2048Mi"
+        cpu: "1000m"
+
 
 persistence:
-  enabled: false
-  resourcePolicy: "keep"
-  persistentVolumeClaim:
-    registry:
-      storageClass: "hadoop-storage"
-      accessMode: ReadWriteMany
-      size: 10Gi
-    jobservice:
-      jobLog:
-        storageClass: "hadoop-storage"
-        accessMode: ReadWriteMany
-        size: 10Gi
-    redis:
-      storageClass: "hadoop-storage"
-      accessMode: ReadWriteMany
-      size: 10Gi
-    trivy:
-      storageClass: "hadoop-storage"
-      accessMode: ReadWriteMany
-      size: 10Gi
-  imageChartStorage:
-    disableredirect: false
-    type: filesystem
-    filesystem:
-      rootdirectory: {{ hadoop.storage_path }}
+  nameNode:
+    enabled: true
+  dataNode:
+    enabled: true
 
-registry:
-  replicas: 2
-portal:
-  replicas: 2
-core:
-  replicas: 2
-jobservice:
-  replicas: 2
-trivy:
-  enabled: true
-  replicas: 2
-notary:
-  enabled: false
-cache:
-  enabled: true
-  expireHours: 24
-database:
-  type: internal
-redis:
-  type: internal
 

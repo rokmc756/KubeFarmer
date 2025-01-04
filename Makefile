@@ -37,7 +37,7 @@ shutdown:
 # grafana   :  make grafana r=install ( or unintll )
 # pgsql     :  make pgsql r=install s=repmgr or replica ( or uninstall )
 # argocd    :  make argocd
-
+# kafka     :  make kafka r=install ( or uninstall ) s=kafka ( or ui or kafdrop or all )
 
 # https://stackoverflow.com/questions/4219255/how-do-you-get-the-list-of-targets-in-a-makefile
 #no_targets__:

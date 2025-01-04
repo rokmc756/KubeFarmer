@@ -1,0 +1,78 @@
+---
+- name: Check OS ( Spark )
+  fail: msg="Not a Red Hat or SUSE based System!"
+  when: ansible_os_family != 'RedHat' or  ansible_os_family != 'CentOS' or  ansible_os_family != 'Rocky'
+
+
+- name: Set facts for Apache Spark
+  import_tasks: set-spark-facts.yml
+  tags:
+    - install
+    - uninstall
+
+
+- name: Apply Kernel Parameters for Apache Spark
+  import_tasks: apply-spark-kernel-parameters.yml
+  tags: install
+  when: ( spark is defined and spark == true ) or ( spark_all is defined and spark_all == true )
+
+
+- name: Enable Helm Repository
+  import_tasks: enable-helm-repo.yml
+  tags: install
+  when: _helm.enable_repo == true and inventory_hostname in groups['master']
+
+
+#- name: Install Cert Manager
+#  import_tasks: install-cert-manager.yml
+#  tags: install
+#  when: cert_manager.install == true and inventory_hostname in groups['master']
+
+
+- name: Install Kustomize
+  import_tasks: install-kustomize.yml
+  tags: install
+  when: _kustomize.install == true and inventory_hostname in groups['master']
+
+
+- name: Deploy Apache Spark
+  import_tasks: install-spark.yml
+  tags: install
+  when: ( spark is defined and spark == true ) and inventory_hostname in groups['master']
+
+
+- name: Install Load Balancer
+  import_tasks: install-lb.yml
+  tags: install
+  when: ( spark is defined and spark == true ) and inventory_hostname in groups['master']
+
+
+- name: Uninstall Load Balancer
+  import_tasks: uninstall-lb.yml
+  tags: uninstall
+  when: ( spark is defined and spark == true ) and inventory_hostname in groups['master']
+
+
+- name: Destroy Apache Spark
+  import_tasks: uninstall-spark.yml
+  tags: uninstall
+  when: ( spark is defined and spark == true ) and inventory_hostname in groups['master']
+
+
+#- name: Uninstall Cert Manager
+#  import_tasks: uninstall-cert-manager.yml
+#  tags: uninstall
+#  when: cert_manager.install == true and inventory_hostname in groups['master']
+
+
+- name: Disable Helm Repository
+  import_tasks: disable-helm-repo.yml
+  tags: uninstall
+  when: _helm.enable_repo == true and inventory_hostname in groups['master']
+
+
+- name: Remove Kernel Parameters for Spark
+  import_tasks: remove-spark-kernel-parameters.yml
+  tags: uninstall
+  when: ( spark is defined and spark == true ) or ( spark_all is defined and spark_all == true )
+

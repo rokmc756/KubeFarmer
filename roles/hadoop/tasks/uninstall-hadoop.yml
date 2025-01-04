@@ -1,21 +1,27 @@
-- name: Uninstall hadoop
+---
+- name: Uninstall Hadoop
   shell: |
-    /usr/local/bin/helm uninstall hadoop -n hadoop
+    /usr/local/bin/helm uninstall hadoop -n {{ _hadoop.namespace }}
   register: uninstall_hadoop
   ignore_errors: true
 - debug: msg={{ uninstall_hadoop }}
+  ignore_errors: true
   when: print_debug == true
 
 
-- name: Validate if hadoop Containers are deleted
+- name: Validate if Hadoop Controller Containers are Deleted
   shell: |
-    kubectl get pods -n hadoop
-  register: delete_hadoop_container
-  ignore_errors: true
-  until: delete_hadoop_container.stdout.find("") != -1
+    kubectl get pods -n {{ _hadoop.namespace }} | grep {{ item.svc }} | awk '{print $3}' | grep -E "Running|Terminating" | wc -l
+  register: check_hadoop_containers
+  until: check_hadoop_containers.stdout|int == 0
   retries: 100
   delay: 10
-- debug: msg={{ delete_hadoop_container }}
+  with_items:
+    - { svc: "hadoop-hdfs-nn", replica: "{{ _hadoop.hdfs.nn.replica }}" }
+    - { svc: "hadoop-hdfs-dn", replica: "{{ _hadoop.hdfs.dn.replica }}" }
+    - { svc: "hadoop-yarn-rm", replica: "{{ _hadoop.yarn.rm.replica }}" }
+    - { svc: "hadoop-yarn-nm", replica: "{{ _hadoop.yarn.nm.replica }}" }
+- debug: msg={{ check_hadoop_containers }}
   when: print_debug == true
 
 
@@ -24,11 +30,14 @@
     src: "{{ item }}.j2"
     dest: "{{ base_path }}/{{ item }}"
   register: copy_cluster_local_pvc_config_yaml
+  ignore_errors: true
   with_items:
     - "local-storage-class.yaml"
     - "local-storage-pv.yaml"
     - "local-storage-pvc.yaml"
 - debug: msg={{ copy_cluster_local_pvc_config_yaml }}
+  ignore_errors: true
+  when: print_debug == true
 
 
 - name: Delete Persistent Volumes, Claim and Storage Class
@@ -43,6 +52,7 @@
   args:
     chdir: "{{ base_path }}/"
 - debug: msg={{ delete_pvc }}
+  ignore_errors: true
   when: print_debug == true
 
 
@@ -57,42 +67,29 @@
     - "local-storage-pv.yaml"
     - "local-storage-pvc.yaml"
 - debug: msg={{ delete_cluster_local_pvc_config_yaml }}
+  ignore_errors: true
   when: print_debug == true
 
 
 - name: Delete Namespace for Persistent Volumes
   shell: |
-    kubectl delete namespace {{ item }}
+    kubectl delete namespace {{ _hadoop.namespace }}
   register: delete_namespace
   ignore_errors: true
-  with_items:
-    - hadoop
-    - istio-system
+  #with_items:
+  #  - hadoop
+  #  - istio-system
 - debug: msg={{ delete_namespace }}
-  when: print_debug == true
-
-
-- name: Directory for Persistent Volumes
-  file:
-    path: "{{ hadoop.storage_path }}"
-    state: absent
-  register: delete_pv_dir
   ignore_errors: true
-  delegate_to: "{{ item }}"
-  delegate_facts: True
-  with_items:
-    - "{{ groups['all'] }}"
-- debug: msg={{ delete_pv_dir }}
   when: print_debug == true
 
 
-#- name: Validate if hadoop Containers are Running
-#  shell: |
-#    kubectl -n hadoop get pod | grep hadoop | awk '{print $3}' | cut -d : -f 1
-#  register: check_hadoop_container
-#  until: check_hadoop_container.stdout.find("Running") != -1
-#  retries: 100
-#  delay: 10
-#- debug: msg={{ check_hadoop_container }}
-#  when: print_debug == true
+- name: Delete Hadoop Helm Config
+  file:
+    path: "{{ base_path }}/{{ item }}"
+    state: absent
+  register: delete_hadoop_helm_config
+  with_items:
+    - "hadoop-values.yaml"
+- debug: msg={{ delete_hadoop_helm_config }}
 

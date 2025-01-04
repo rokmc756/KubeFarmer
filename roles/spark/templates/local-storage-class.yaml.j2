@@ -2,8 +2,8 @@
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
-  name: {{ _hadoop.storage_class }}
-  namespace: {{ _hadoop.namespace }}
+  name: {{ _spark.storage_class }}
+  namespace: {{ _spark.namespace }}
 provisioner: kubernetes.io/no-provisioner
 volumeBindingMode: WaitForFirstConsumer
 
@@ -15,5 +15,6 @@ volumeBindingMode: WaitForFirstConsumer
 #  namespace: istio-system
 #provisioner: kubernetes.io/no-provisioner
 #volumeBindingMode: WaitForFirstConsumer
+#
 
 

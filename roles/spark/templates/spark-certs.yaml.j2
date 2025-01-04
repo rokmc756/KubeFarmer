@@ -7,9 +7,10 @@ metadata:
 spec:
   commonName: istio-ingressgateway.istio-system.svc
   ipAddresses:
-    - {{ spark.lb_ip_addr }}
+    - {{ _spark.lb.ip_addr }}
   isCA: true
   issuerRef:
     kind: ClusterIssuer
     name: spark-self-signing-issuer
   secretName: istio-ingressgateway-certs
+

@@ -1,3 +1,4 @@
+---
 - name: Uninstall Apache Spark
   shell: |
     helm uninstall spark -n spark
@@ -27,17 +28,7 @@
   when: print_debug == true
 
 
-- name: Uninstall Contour
-  shell: |
-    helm uninstall ingress -n contour
-  register: uninstall_contour
-  ignore_errors: true
-  args:
-    chdir: "{{ base_path }}/"
-  environment:
-    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-- debug: msg={{ uninstall_contour }}
-  when: print_debug == true
+# helm uninstall ingress -n contour
 
 
 - name: Delete Persistent Volumes, Claim and Storage Class
@@ -73,12 +64,12 @@
 
 - name: Delete Namespace for Persistent Volumes
   shell: |
-    kubectl delete namespace {{ item }}
+    kubectl delete namespace {{ _spark.namespace }}
   register: delete_namespace
   ignore_errors: true
-  with_items:
-    - spark
-    - contour
+  #with_items:
+  #  - spark
+  #  - contour
   args:
     chdir: "{{ base_path }}/"
   environment:
@@ -87,31 +78,16 @@
   when: print_debug == true
 
 
-- name: Directory for Persistent Volumes
-  file:
-    path: "{{ spark.storage_path }}"
-    state: absent
-  register: delete_pv_dir
-  ignore_errors: true
-  delegate_to: "{{ item }}"
-  delegate_facts: True
-  with_items:
-    - "{{ groups['all'] }}"
-- debug: msg={{ delete_pv_dir }}
-  when: print_debug == true
-
-
-- name: Validate if spark Containers are Running
+- name: Validate if Spark Controller Containers are Deleted
   shell: |
-    kubectl -n spark get pod | grep spark | awk '{print $3}' | cut -d : -f 1
-  register: check_spark_container
-  until: check_spark_container.stdout.find("") != -1
+    kubectl get pods -n {{ _spark.namespace }} | grep {{ item.svc }} | awk '{print $3}' | grep -E 'Running|Terminating' | wc -l
+  register: check_spark_containers
+  until: check_spark_containers.stdout|int == 0
   retries: 100
   delay: 10
-  args:
-    chdir: "{{ base_path }}/"
-  environment:
-    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-- debug: msg={{ check_spark_container }}
+  with_items:
+    - { svc: "spark-master-", replica: "{{ _spark.master.replica }}" }
+    - { svc: "spark-worker-", replica: "{{ _spark.worker.replica }}" }
+- debug: msg={{ check_spark_containers }}
   when: print_debug == true
 

@@ -2,7 +2,7 @@ expose:
   type: ingress
   ingress:
     hosts:
-      core: spark.jtest.dataiku.com
+      core: spark.jtest.pivotal.io
     annotations:
       ingress.kubernetes.io/ssl-redirect: "true"
       ingress.kubernetes.io/proxy-body-size: "0"
@@ -18,7 +18,7 @@ expose:
     secret:
       secretName: "tls-spark"
   loadBalancer:
-    IP: "192.168.1.249"
+    IP: "{{ _spark.lb.ip_addr }}"
     # name: spark
     # ports:
     #  httpPort: 80
@@ -28,10 +28,10 @@ expose:
 
 
 ## The external URL for Spark core service.
-externalURL: "https://spark.jtest.dataiku.com"
+externalURL: "https://spark.jtest.pivotal.io"
 adminPassword: "changeme"
 service:
-  loadBalancerIP: 192.168.1.249
+  loadBalancerIP: "{{ _spark.lb.ip_addr }}"
 
 
 persistence:
@@ -39,27 +39,28 @@ persistence:
   resourcePolicy: "keep"
   persistentVolumeClaim:
     registry:
-      storageClass: "spark-storage"
+      storageClass: "{{ _spark.storage_class }}"
       accessMode: ReadWriteMany
       size: 10Gi
     jobservice:
       jobLog:
-        storageClass: "spark-storage"
+        storageClass: "{{ _spark.storage_class }}"
         accessMode: ReadWriteMany
         size: 10Gi
     redis:
-      storageClass: "spark-storage"
+      storageClass: "{{ _spark.storage_class }}"
       accessMode: ReadWriteMany
       size: 10Gi
     trivy:
-      storageClass: "spark-storage"
+      storageClass: "{{ _spark.storage_class }}"
       accessMode: ReadWriteMany
       size: 10Gi
   imageChartStorage:
     disableredirect: false
     type: filesystem
     filesystem:
-      rootdirectory: {{ spark.storage_path }}
+      rootdirectory: {{ _spark.storage_path }}
+
 
 core:
   enabled: true
@@ -87,6 +88,7 @@ cache:
   expireHours: 24
 database:
   type: internal
+
 
 #redis:
 #  auth:

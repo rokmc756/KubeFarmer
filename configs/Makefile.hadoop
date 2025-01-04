@@ -1,0 +1,68 @@
+hadoop:
+	@if [ "${r}" = "prepare" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-hadoop.yml -e '{"${s}": True}' --tags='prepare';\
+			else\
+				echo "No Actions for Configure Hadoop";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-hadoop.yml -e '{hadoop_all: True}' --tags='prepare';\
+			else\
+				echo "No Actions for Configure Hadoop";\
+			fi\
+		else\
+			echo "No Actions for Configure Hadoop";\
+		fi;\
+	elif [ "${r}" = "install" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-hadoop.yml -e '{"${s}": True}' --tags='install';\
+			else\
+				echo "No Actions for Installing Hadoop";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-hadoop.yml -e '{hadoop_all: True}' --tags='install';\
+			else\
+				echo "No Actions for Installing Hadoop";\
+			fi\
+		else\
+			echo "No Actions for Installing Hadoop";\
+		fi;\
+	elif [ "${r}" = "uninstall" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-hadoop.yml -e '{"${s}": True}' --tags='uninstall';\
+			else\
+				echo "No Actions for Uninstalling Hadoop";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-hadoop.yml -e '{hadoop_all: True}' --tags='uninstall';\
+			else\
+				echo "No Actions for Uninstalling Hadoop";\
+			fi\
+		fi;\
+	elif [ "${r}" = "upgrade" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-hadoop.yml -e '{"${s}": True}' --tags='upgrade';\
+			else\
+				echo "No Actions for Uninstalling Hadoop";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-hadoop.yml -e '{hadoop_all: True}' --tags='upgrade';\
+			else\
+				echo "No Actions for Uninstalling Hadoop";\
+			fi\
+		else\
+			echo "No Actions for Uninstalling Hadoop";\
+		fi;\
+	else\
+		echo "No Actions for Hadoop Role";\
+		exit;\
+	fi
+

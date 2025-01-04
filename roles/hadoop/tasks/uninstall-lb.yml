@@ -1,27 +1,36 @@
+---
 - name: Copy Hadoop Loadbalancer Config Yaml
   template:
     src: hadoop-loadbalancer.yaml.j2
     dest: "{{ base_path }}/hadoop-loadbalancer.yaml"
   register: copy_hadoop_lb_config_yaml
+  ignore_errors: true
 - debug: msg={{ copy_hadoop_lb_config_yaml }}
 
 
 - name: Delete Hadoop Load Balancer
   shell: |
-    kubectl delete -f hadoop-loadbalancer.yaml
-  register: delete_hadoop_lb
+    kubectl patch svc {{ item.svc }} -n {{ _hadoop.namespace }} -p '{"spec": {"type": "ClusterIP"}}'
+  register: delete_delete_lb
+  ignore_errors: true
   args:
-    chdir: "{{ base_path }}/"
-- debug: msg={{ delete_hadoop_lb }}
-
-
-- name: Validate if Hadoop Container is Running
-  shell: |
-    kubectl -n hadoop get pod | grep hadoop | awk '{print $3}' | cut -d : -f 1
-  register: check_hadoop_container
-  until: check_hadoop_container.stdout.find("") != -1
-  retries: 100
-  delay: 10
-- debug: msg={{ check_hadoop_container }}
+    chdir: "{{ base_path }}"
+  with_items:
+    - { svc: "hadoop-hadoop-yarn-ui", lb_ip_addr: "{{ _hadoop.yarn.ui.lb_ip_addr }}" }
+- debug: msg={{ delete_delete_lb }}
+  ignore_errors: true
   when: print_debug == true
+  #  - { svc: "hadoop-hadoop-yarn-nm", lb_ip_addr: "{{ _hadoop.yarn.nm.lb_ip_addr }}" }
+  #  - { svc: "hadoop-hadoop-yarn-rm", lb_ip_addr: "{{ _hadoop.yarn.rm.lb_ip_addr }}" }
+  #  - { svc: "hadoop-hadoop-hdfs-dn", lb_ip_addr: "{{ _hadoop.hdfs.dn.lb_ip_addr }}" }
+  #  - { svc: "hadoop-hadoop-hdfs-nn", lb_ip_addr: "{{ _hadoop.hdfs.nn.lb_ip_addr }}" }
+
+
+- name: Print IP Addresses for LoadBalancer
+  shell: |
+    kubectl get all -A | grep LoadBalancer
+  register: print_lb_ipaddr
+  args:
+    chdir: "{{ base_path }}"
+- debug: msg={{ print_lb_ipaddr }}
 

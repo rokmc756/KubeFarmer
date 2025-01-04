@@ -1,27 +1,11 @@
 # https://psawesome.tistory.com/123
-- name: Create Directory for Persistent Volumes
-  file:
-    path: "{{ spark.storage_path }}"
-    state: directory
-    owner: root
-    group: root
-    mode: 0777
-  register: create_pv_dir
-  delegate_to: "{{ item }}"
-  delegate_facts: True
-  with_items:
-    - "{{ groups['all'] }}"
-- debug: msg={{ create_pv_dir }}
-  when: print_debug == true
-
-
 - name: Create Namespace for Persistent Volumes
   shell: |
-    kubectl create namespace {{ item }}
+    kubectl create namespace {{ _spark.namespace }}
   register: create_namespace
-  with_items:
-    - contour
-    - spark
+  #with_items:
+  #  - contour
+  #  - spark
   args:
     chdir: "{{ base_path }}/"
   environment:
@@ -68,21 +52,10 @@
 - debug: msg={{ copy_spark_lb_config_yaml }}
 
 
-- name: Deploy Contour
-  shell: |
-    helm install ingress bitnami/contour --create-namespace -n contour --wait
-  register: deploy_contour
-  args:
-    chdir: "{{ base_path }}/"
-  environment:
-    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-- debug: msg={{ deploy_contour }}
-  when: print_debug == true
-
-
+# helm install ingress bitnami/contour --create-namespace -n contour --wait
 - name: Deploy Apache Spark
   shell: |
-    helm install spark bitnami/spark --set service.type=LoadBalancer -n spark
+    helm install spark bitnami/spark -n spark -f {{ base_path }}/spark-values.yaml
   register: deploy_spark
   args:
     chdir: "{{ base_path }}/"
@@ -105,3 +78,21 @@
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ check_spark_container }}
   when: print_debug == true
+
+
+- name: Validate if Spark Controller Containers are Running
+  shell: |
+    kubectl get pods -n {{ _spark.namespace }} | grep {{ item.svc }} | awk '{print $3}' | grep Running | wc -l
+  register: check_spark_containers
+  until: check_spark_containers.stdout|int == item.replica|int
+  retries: 100
+  delay: 10
+  with_items:
+    - { svc: "spark-master-", replica: "{{ _spark.master.replica }}" }
+    - { svc: "spark-worker-", replica: "{{ _spark.worker.replica }}" }
+- debug: msg={{ check_spark_containers }}
+  when: print_debug == true
+
+
+# https://medium.com/@kayvan.sol2/spark-on-kubernetes-d566158186c6
+# https://velog.io/@newnew_daddy/spark06

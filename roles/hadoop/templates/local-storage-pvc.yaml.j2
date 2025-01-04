@@ -1,26 +1,31 @@
+{% for n in range(0, _hadoop.hdfs.nn.replica|int) %}
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: dfs-hadoop-hadoop-hdfs-nn-0
-  namespace: {{ hadoop.namespace }}
+  name: dfs-hadoop-hadoop-hdfs-nn-{{ n }}
+  namespace: {{ _hadoop.namespace }}
 spec:
-  storageClassName: {{ hadoop.namespace}}-storage
+  storageClassName: {{ _hadoop.storage_class }}
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
       storage: 10Gi
+{% endfor %}
+{% for j in range(0, _hadoop.hdfs.dn.replica|int) %}
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: dfs-hadoop-hadoop-hdfs-dn-0
-  namespace: {{ hadoop.namespace }}
+  name: dfs-hadoop-hadoop-hdfs-dn-{{ j }}
+  namespace: {{ _hadoop.namespace }}
 spec:
-  storageClassName: {{ hadoop.namespace}}-storage
+  storageClassName: {{ _hadoop.storage_class }}
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
       storage: 10Gi
+{% endfor %}
+

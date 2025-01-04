@@ -1,0 +1,32 @@
+---
+- name: Copy Spark Loadbalancer Config Yaml
+  template:
+    src: spark-loadbalancer.yaml.j2
+    dest: "{{ base_path }}/spark-loadbalancer.yaml"
+  register: copy_spark_lb_config_yaml
+  ignore_errors: true
+- debug: msg={{ copy_spark_lb_config_yaml }}
+
+
+- name: Delete Spark Load Balancer
+  shell: |
+    kubectl patch svc {{ item.svc }} -n {{ _spark.namespace }} -p '{"spec": {"type": "ClusterIP"}}'
+  register: delete_spark_lb
+  ignore_errors: true
+  args:
+    chdir: "{{ base_path }}"
+  with_items:
+    - { svc: "spark-master-svc", lb_ip_addr: "{{ _spark.master.lb.ip_addr }}" }
+- debug: msg={{ delete_spark_lb }}
+  ignore_errors: true
+  when: print_debug == true
+
+
+- name: Print IP Addresses for LoadBalancer
+  shell: |
+    kubectl get all -A | grep LoadBalancer
+  register: print_lb_ipaddr
+  args:
+    chdir: "{{ base_path }}"
+- debug: msg={{ print_lb_ipaddr }}
+
