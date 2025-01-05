@@ -34,7 +34,7 @@
   when: print_debug == true
 
 
-- name: Copy Minio Helm Config
+- name: Copy MinIO Helm Config
   template:
     src: "{{ item }}.j2"
     dest: "{{ base_path }}/{{ item }}"
@@ -44,7 +44,7 @@
 - debug: msg={{ copy_minio_helm_config }}
 
 
-- name: Deploy Minio
+- name: Deploy MinIO
   shell: |
     /usr/local/bin/helm install minio bitnami/minio -n {{ _minio.namespace }} -f {{ base_path }}/minio-values.yaml
   register: deploy_minio
@@ -52,7 +52,7 @@
   when: print_debug == true
 
 
-- name: Validate if Minio Controller Containers are Running
+- name: Validate if MinIO Controller Containers are Running
   shell: |
     kubectl get pods -n {{ _minio.namespace }} | grep {{ item.svc }} | awk '{print $3}' | grep Running | wc -l
   register: check_minio_containers

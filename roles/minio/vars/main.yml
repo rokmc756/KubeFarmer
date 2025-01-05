@@ -46,10 +46,10 @@ _minio:
   lb:
     install: true
     ip_addr: 192.168.1.219
-  replica: 4
+  replica: 8
 
 
-total_minio_containers: 4
+total_minio_containers: "{{ _minio.replica|int }}"
 
 
 _helm:

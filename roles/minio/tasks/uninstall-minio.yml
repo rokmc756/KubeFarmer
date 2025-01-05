@@ -1,5 +1,5 @@
 ---
-- name: Uninstall Minio
+- name: Uninstall MinIO
   shell: |
     /usr/local/bin/helm uninstall minio -n {{ _minio.namespace }}
   register: uninstall_minio
@@ -9,7 +9,7 @@
   when: print_debug == true
 
 
-- name: Validate if minio Controller Containers are Deleted
+- name: Validate if MinIO Controller Containers are Deleted
   shell: |
     kubectl get pods -n {{ _minio.namespace }} | grep {{ item.svc }} | awk '{print $3}' | grep -E "Running|Terminating" | wc -l
   register: check_minio_containers
@@ -78,7 +78,7 @@
   when: print_debug == true
 
 
-- name: Delete minio Helm Config
+- name: Delete MinIO Helm Config
   file:
     path: "{{ base_path }}/{{ item }}"
     state: absent

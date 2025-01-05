@@ -1,4 +1,4 @@
-
+---
 - name: Download and Install Kustomize
   shell: |
     curl -fsSL -o {{ base_path }}/install_kustomize.sh {{ _kustomize.download_url }}

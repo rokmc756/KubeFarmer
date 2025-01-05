@@ -7,7 +7,7 @@
 - debug: msg={{ copy_minio_lb_config_yaml }}
 
 
-- name: Apply Minio Load Balancer
+- name: Apply MinIO Load Balancer
   shell: |
     kubectl patch svc {{ item.svc }} -n {{ _minio.namespace }} -p '{"spec": {"type": "LoadBalancer", "loadBalancerIP": "{{ item.lb_ip_addr }}"}}'
   register: apply_minio_lb

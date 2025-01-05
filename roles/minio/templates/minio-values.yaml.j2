@@ -35,7 +35,7 @@ statefulset:
   updateStrategy:
     type: RollingUpdate
   podManagementPolicy: Parallel
-  replicaCount: 4
+  replicaCount: {{ _minio.replica|int }}
   zones: 1
   drivesPerNode: 1
 
