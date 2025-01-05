@@ -1,8 +1,23 @@
-- name: Delete Jenkins Loadbalancer Config Yaml
-  file:
-    path: "{{ base_path }}/{{ item }}"
-    state: absent
-  register: delete_jenkins_lb_config_yaml
+---
+- name: Copy Jenkins Loadbalancer Config Yaml
+  template:
+    src: jenkins-loadbalancer.yaml.j2
+    dest: "{{ base_path }}/jenkins-loadbalancer.yaml"
+  register: copy_jenkins_lb_config_yaml
+  ignore_errors: true
+- debug: msg={{ copy_jenkins_lb_config_yaml }}
+
+
+- name: Delete Jenkins Load Balancer
+  shell: |
+    kubectl patch svc {{ item.svc }} -n {{ _jenkins.namespace }} -p '{"spec": {"type": "ClusterIP"}}'
+  register: delete_jenkins_lb
+  ignore_errors: true
+  args:
+    chdir: "{{ base_path }}"
   with_items:
-    - "jenkins-values.yaml"
-- debug: msg={{ delete_jenkins_lb_config_yaml }}
+    - { svc: "jenkins", lb_ip_addr: "{{ _jenkins.lb.ip_addr }}" }
+- debug: msg={{ delete_jenkins_lb }}
+  ignore_errors: true
+  when: print_debug == true
+

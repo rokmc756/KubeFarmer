@@ -1,18 +1,23 @@
+#- name: Delete AWX Load Balancer
+#  shell: |
+#    kubectl delete -f "{{ base_path }}"/awx-loadbalancer.yaml
+#  register: delete_awx_lb
+#  ignore_errors: yes
+#- debug: msg={{ delete_awx_lb }}
+
+
 - name: Delete AWX Load Balancer
   shell: |
-    kubectl delete -f "{{ base_path }}"/awx-loadbalancer.yaml
+    kubectl patch svc {{ item.svc }} -n {{ _awx.namespace }} -p '{"spec": {"type": "ClusterIP"}}'
   register: delete_awx_lb
-  ignore_errors: yes
+  ignore_errors: true
+  args:
+    chdir: "{{ base_path }}"
+  with_items:
+    - { svc: "awx-service", lb_ip_addr: "{{ _awx.lb.ip_addr }}" }
 - debug: msg={{ delete_awx_lb }}
-
-
-- name: Check AWX Pods
-  shell: kubectl get all -n {{ awx.namespace }}
-  register: check_awx_pods
-  ignore_errors: yes
-  until: check_awx_pods.stdout.find("Terminating") == -1
-  retries: 20
-- debug: msg={{ check_awx_pods }}
+  ignore_errors: true
+  when: print_debug == true
 
 
 - name: Delete AWX Loadbalancer Config Yaml

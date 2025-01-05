@@ -1,3 +1,4 @@
+---
 - name: Delete AWX
   shell: |
     kubectl delete -f ansible-awx.yaml
@@ -57,16 +58,11 @@
   when: print_debug == true
 
 
-- name: Delete Directory for Persistent Volumes
-  file:
-    path: /mnt/awx-storage
-    state: absent
-  register: delete_pv_dir
-  ignore_errors: yes
-  delegate_to: "{{ item }}"
-  delegate_facts: True
-  with_items:
-    - "{{ groups['all'] }}"
-- debug: msg={{ delete_pv_dir }}
+- name: Delete Namespace for Persistent Volumes
+  shell: |
+    kubectl delete namespace {{ _awx.namespace }}
+  register: delete_namespace
+  ignore_errors: true
+- debug: msg={{ delete_namespace }}
   when: print_debug == true
 

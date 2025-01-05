@@ -6,32 +6,23 @@
 - debug: msg={{ copy_awx_lb_config_yaml }}
 
 
-- name: Create AWX Load Balancer
-  shell: |
-    kubectl apply -f awx-loadbalancer.yaml
-  register: create_awx_lb
-  args:
-    chdir: "{{ base_path }}/"
-- debug: msg={{ create_awx_lb }}
+#- name: Create AWX Load Balancer
+#  shell: |
+#    kubectl apply -f awx-loadbalancer.yaml
+#  register: create_awx_lb
+#  args:
+#    chdir: "{{ base_path }}/"
+#- debug: msg={{ create_awx_lb }}
 
 
-- name: Check AWX Pods
-  shell: kubectl get all -n {{ awx.namespace }}
-  register: check_awx_pods
-  until: check_awx_pods.stdout.find("pending") == -1
-  retries: 30
-- debug: msg={{ check_awx_pods }}
-
-
-#- pause:
-#    seconds: 15
-
-
-- name: Check if the status of ContainerCreating is still existing
-  shell: kubectl get pods -n {{ awx.namespace }}
-  register: check_container_creating
-  until: check_container_creating.stdout.find("ContainerCreating") == -1
-  retries: 30
-  delay: 10
-- debug: msg={{ check_container_creating }}
+#- name: Apply AWX Load Balancer
+#  shell: |
+#    kubectl patch svc {{ item.svc }} -n {{ _awx.namespace }} -p '{"spec": {"type": "LoadBalancer", "loadBalancerIP": "{{ item.lb_ip_addr }}"}}'
+#  register: apply_awx_lb
+#  args:
+#    chdir: "{{ base_path }}"
+#  with_items:
+#    - { svc: "awx-service", lb_ip_addr: "{{ _awx.lb.ip_addr }}" }
+#- debug: msg={{ apply_awx_lb }}
+#  when: print_debug == true
 

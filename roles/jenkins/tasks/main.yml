@@ -4,63 +4,62 @@
   when: ansible_os_family != 'RedHat' or  ansible_os_family != 'CentOS' or  ansible_os_family != 'Rocky' or ansible_os_family != 'openSUSE Leap'
 
 
-- name: Set facts for jenkins
+- name: Set facts for Jenkins
   import_tasks: set-jenkins-facts.yml
   tags:
     - install
     - uninstall
-  when: inventory_hostname in groups['master']
 
 
 - name: Apply Kernel Parameters for Jenkins
   import_tasks: apply-jenkins-kernel-parameters.yml
   tags: install
+  when: ( jenkins is defined and jenkins == true ) or ( jenkins_all is defined and jenkins_all == true )
 
 
 - name: Enable Helm Repository
   import_tasks: enable-helm-repo.yml
   tags: install
-  when: helm.enable_repo == true and inventory_hostname in groups['master']
+  when: (( jenkins is defined and jenkins == true ) or ( jenkins_all is defined and jenkins_all == true )) and inventory_hostname in groups['master']
 
 
 - name: Install Kustomize
   import_tasks: install-kustomize.yml
   tags: install
-  when: _jenkins.install == true and inventory_hostname in groups['master']
+  when: _kustomize.install == true and inventory_hostname in groups['master']
 
 
 - name: Deploy Jenkins
   import_tasks: install-jenkins.yml
   tags: install
-  when: ( jenkins is defined and jenkins == true ) and inventory_hostname in groups['master']
+  when: (( jenkins is defined and jenkins == true ) or ( jenkins_all is defined and jenkins_all == true )) and inventory_hostname in groups['master']
 
 
 - name: Install Load Balancer
   import_tasks: install-lb.yml
   tags: install
-  when: _jenkins.lb.install == true and inventory_hostname in groups['master']
+  when: (( lb is defined and lb == true ) or ( jenkins_all is defined and jenkins_all == true )) and inventory_hostname in groups['master']
 
 
 - name: Uninstall Load Balancer
   import_tasks: uninstall-lb.yml
   tags: uninstall
-  when: _jenkins.lb.install == true and inventory_hostname in groups['master']
+  when: (( lb is defined and lb == true ) or ( jenkins_all is defined and jenkins_all == true )) and inventory_hostname in groups['master']
 
 
 - name: Destroy Jenkins
   import_tasks: uninstall-jenkins.yml
   tags: uninstall
-  when: ( jenkins is defined and jenkins == true ) and inventory_hostname in groups['master']
-
-
-- name: Destroy NFS Provider
-  import_tasks: uninstall-nfs-provider.yml
-  tags: uninstall
-  when: nfs_provider.install == true and inventory_hostname in groups['master']
+  when: (( jenkins is defined and jenkins == true ) or ( jenkins_all is defined and jenkins_all == true )) and inventory_hostname in groups['master']
 
 
 - name: Disable Helm Repository
   import_tasks: disable-helm-repo.yml
   tags: uninstall
-  when: helm.enable_repo == true and inventory_hostname in groups['master']
+  when: (( jenkins is defined and jenkins == true ) or ( jenkins_all is defined and jenkins_all == true )) and inventory_hostname in groups['master']
 
+
+- name: Remove Kernel Parameters
+  import_tasks: remove-jenkins-kernel-parameters.yml
+  tags: uninstall
+  when: ( jenkins is defined and jenkins == true ) or ( jenkins_all is defined and jenkins_all == true )

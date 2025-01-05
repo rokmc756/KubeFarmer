@@ -1,7 +1,8 @@
 base_path: /root
 
 
-kustomize:
+_kustomize:
+  install: true
   download_url: "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"
   major_version: 5
   minor_version: 4
@@ -15,9 +16,8 @@ _jenkins:
   patch_version: 0
   build_version:
   admin_user: "admin"
-  admin_password: "Changeme123"
+  admin_password: "changeme"
   admin_email: "rokmc756@gmail.com"
-  enable_discovery_daemon: false
   clone_git: true
   nvme: true
   namespace: jenkins
@@ -28,7 +28,7 @@ _jenkins:
     minor_version: 28
     patch_version: 0
     build_version:
-  hostname: "jenkins.jtest.suse.com"
+  hostname: "jenkins.jtest.pivotal.io"
   service:
     metadata:
       name: jenkins-loadbalancer
@@ -37,7 +37,7 @@ _jenkins:
     metadata:
       name: jenkins-ingress
       namespace: cattle-system
-    hostname: "jenkins.jtest.suse.com"
+    hostname: "jenkins.jtest.pivotal.io"
   kernel_parameters:
     - "net.ipv4.neigh.default.gc_thresh1 = 0"   # For ARP Cache
     - "fs.inotify.max_user_instances=2280"
@@ -47,7 +47,10 @@ _jenkins:
     ip_addr: 192.168.1.219
 
 
-helm:
+total_jenkins_containers: 4
+
+
+_helm:
   enable_repo: true
   major_version: 3
   minor_version:
@@ -55,10 +58,20 @@ helm:
   build_version:
 
 
-nfs_provider:
-  install: false
-  major_version:
-  minor_version:
-  patch_version:
-  server_ip_addr: "192.168.1.90"
+_nginx:
+  ingress:
+    install: true
+    name: nginx-ingress
+    class_name: jenkins-ingress-class
+    namespace: "nginx-ingress"
+    major_version:
+    minor_version:
+    patch_version:
+    hostname: jenkins
+    domain: jtest.pivotal.io
+    ip_addr: "192.168.1.219"
+  k8s_ingress:
+    major_version: 3
+    minor_version: 0
+    patch_version: 2
 

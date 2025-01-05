@@ -1,18 +1,22 @@
 ---
-- name: Restart minio service
-  systemd: name={{ minio.service }} state=restarted daemon_reload=yes
-  listen: restart minio
+- name: Restart System
+  shell: ( /bin/sleep 5 ; /sbin/shutdown -r now "Ansible updates triggered" ) &
+  async: 30
+  poll: 0
+  ignore_errors: true
 
-- name: Wait until minio started
-  wait_for:
-    host: "{{ ansible_default_ipv4.address | default('localhost') }}"
-    port: "{{ minio.port }}"
-    delay: 10
-  listen: restart minio
 
-- name: Restart nginx
-  service: name=nginx state=restarted
+- name: Waiting for Server to Come Back after Reboot
+  local_action: wait_for host={{ hostvars[inventory_hostname].ansible_ssh_host }} port=22 state=started delay=10 timeout=300 connect_timeout=300 search_regex=OpenSSH
+  become: no
 
-- name: Systemd daemon-reload
-  systemd: daemon_reload=yes
+
+- name: Reload Sysctl
+  shell: sysctl -p /etc/sysctl.d/sysctl-k8s.conf
+
+
+- name: Reload SSHd
+  service:
+    name: sshd
+    state: reloaded
 

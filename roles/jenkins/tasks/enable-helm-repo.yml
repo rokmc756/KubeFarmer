@@ -1,5 +1,4 @@
-# https://oopflow.medium.com/setup-install-rancher-onto-existing-kubernetes-cluster-for-high-availability-7351f0284592
-
+---
 - name: Download and Install Helm
   shell: |
     curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
@@ -11,18 +10,15 @@
 - debug: msg={{ install_helm }}
 
 
-- name: Add Jenkins Helm Repo
+- name: Add Helm Repositories
   shell: |
-    /usr/local/bin/helm repo add jenkins https://charts.jenkins.io
-  register: add_jenkins_helm_repo
-- debug: msg={{ add_jenkins_helm_repo }}
-
-
-- name: Add Jetstack Helm Repo
-  shell: |
-    /usr/local/bin/helm repo add jetstack https://charts.jetstack.io
-  register: add_jetstack_helm_repo
-- debug: msg={{ add_jetstack_helm_repo }}
+    /usr/local/bin/helm repo add {{ item.name }} {{ item.link }}
+  register: add_helm_repos
+  with_items:
+    - { name: 'jetstack',      link: 'https://charts.jetstack.io' }
+    - { name: 'nginx-stable',  link: 'https://helm.nginx.com/stable' }
+    - { name: 'jenkins',       link: 'https://charts.jenkins.io' }
+- debug: msg={{ add_helm_repos }}
 
 
 - name: Update Helm Repo

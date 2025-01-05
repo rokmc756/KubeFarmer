@@ -1,30 +1,18 @@
-# https://github.com/jenkins/pipelines/issues/6121
-
+---
 - name: Create Directory for Persistent Volumes
   file:
-    path: "{{ item }}"
+    path: "{{ _jenkins.storage_path }}-{{ item }}"
     state: directory
     owner: root
     group: root
     mode: 0777
   register: create_pv_dir
-  with_items:
-    - "/mnt/katib-storage"
-    - "/mnt/authservice-storage"
+  with_sequence: start=0 end={{ total_jenkins_containers|int }}
 - debug: msg={{ create_pv_dir }}
   when: print_debug == true
 
 
-- name: Delete GPFS Backends Package
-  package:
-    name: gvfs-backends
-    state: absent
-  register: delete_gvfs_backends_pkg
-- debug: msg={{ delete_gvfs_backends_pkg }}
-  when: print_debug == true
-
-
-- name: Apply Kernel Parameters for Metallb and ML Pipeline
+- name: Apply Kernel Parameters
   lineinfile:
     dest: /etc/sysctl.d/sysctl-k8s.conf
     line: "{{ item }}"
