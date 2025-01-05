@@ -13,33 +13,15 @@
 - debug: msg={{ install_helm }}
 
 
-- name: Add Metallb Helm Repo
+- name: Add Helm Repositories
   shell: |
-    /usr/local/bin/helm repo add metallb https://metallb.github.io/metallb
-  register: add_metallb_helm_repo
-- debug: msg={{ add_metallb_helm_repo }}
-
-
-- name: Add NGINX Helm Repo
-  shell: |
-    /usr/local/bin/helm repo add nginx-stable https://helm.nginx.com/stable
-  register: add_nginx_helm_repo
-- debug: msg={{ add_nginx_helm_repo }}
-
-
-# /usr/local/bin/helm repo add bitnami https://charts.bitnami.com/bitnami
-- name: Add Geode Helm Repo
-  shell: |
-    /usr/local/bin/helm repo add google-geode https://sbawaska.github.io/geode-helm-chart
-  register: add_geode_helm_repo
-- debug: msg={{ add_geode_helm_repo }}
-
-
-- name: Add Jetstack Helm Repo
-  shell: |
-    /usr/local/bin/helm repo add jetstack https://charts.jetstack.io
-  register: add_jetstack_helm_repo
-- debug: msg={{ add_jetstack_helm_repo }}
+    /usr/local/bin/helm repo add {{ item.name }} {{ item.link }}
+  register: add_helm_repos
+  with_items:
+    - { name: 'jetstack',      link: 'https://charts.jetstack.io' }
+    - { name: 'nginx-stable',  link: 'https://helm.nginx.com/stable' }
+    - { name: 'google-geode',  link: 'https://sbawaska.github.io/geode-helm-chart' }
+- debug: msg={{ add_helm_repos }}
 
 
 - name: Update Helm Repo

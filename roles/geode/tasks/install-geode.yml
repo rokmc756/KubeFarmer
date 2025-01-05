@@ -1,26 +1,8 @@
-- name: Create Directory for Persistent Volumes
-  file:
-    path: "{{ geode.storage_path }}"
-    state: directory
-    owner: root
-    group: root
-    mode: 0777
-  register: create_pv_dir
-  delegate_to: "{{ item }}"
-  delegate_facts: True
-  with_items:
-    - "{{ groups['all'] }}"
-- debug: msg={{ create_pv_dir }}
-  when: print_debug == true
-
-
+---
 - name: Create Namespace for Persistent Volumes
   shell: |
-    kubectl create namespace {{ item }}
+    kubectl create namespace {{ _geode.namespace }}
   register: create_namespace
-  with_items:
-    - geode
-    - istio-system
 - debug: msg={{ create_namespace }}
   when: print_debug == true
 
@@ -51,35 +33,41 @@
   when: print_debug == true
 
 
-# Install Chart with specific cluster size
-# By default, this Chart will create a geode cluster with one locator and 3 servers. If you want to change the cluster size during installation, you can use --set config.num_locators={value} to specify number of locators and --set config.num_servers={value} to specify the number of servers.
-#
-# For example: To start 5 servers
+- name: Copy Geode Helm Config
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ base_path }}/{{ item }}"
+  register: copy_geode_helm_config
+  with_items:
+    - "geode-values.yaml"
+- debug: msg={{ copy_geode_helm_config }}
 
-# helm install --set config.num_servers=5 incubator/geode
-# Install Chart with specific resource size
-# By default, this Chart creates a locator with 50m JVM heap and a server with 100m JVM heap. If you want to give more memory to your locator, you can use --set memory.max_locators={value} and for the servers --set memory.max_servers={value}.
 
-# For example: To start servers with 20G memory
-# helm install --set memory.max_servers=20g incubator/geode
-#
-
-# /usr/local/bin/helm install geode bitnami/geode -n geode --create-namespace
 - name: Deploy Geode
   shell: |
-    /usr/local/bin/helm install geode google-geode/geode -n geode --create-namespace
+    /usr/local/bin/helm install geode google-geode/geode -n {{ _geode.namespace }} -f {{ base_path }}/geode-values.yaml
   register: deploy_geode
 - debug: msg={{ deploy_geode }}
   when: print_debug == true
 
 
-- name: Validate if geode Controller Containers are Running
+- name: Validate if Geode Containers are Running
   shell: |
-    kubectl get pods -n geode |  grep geode- | awk '{print $3}' | sort | uniq
-  register: check_geode_controller_container
-  until: check_geode_controller_container.stdout.find("Running") != -1
+    kubectl get pods -n {{ _geode.namespace }} | grep -E '{{ item.svc }}' | awk '{print $3}' | grep Running | wc -l
+  register: check_geode_containers
+  until: check_geode_containers.stdout|int == item.replica|int
   retries: 100
   delay: 10
-- debug: msg={{ check_geode_controller_container }}
+  with_items:
+    - { svc: "^geode-[0-9]", replica: "{{ _geode.locators.replica }}" }
+    - { svc: "^geode-server-[0-9]",  replica: "{{ _geode.servers.replica }}" }
+- debug: msg={{ check_geode_containers }}
   when: print_debug == true
+
+
+# To monitor Geode cluster run these commands
+# $ export POD_NAME=$(kubectl get pods --namespace geode -l \"app=geode,release=geode\" -o jsonpath=\"{.items[0].metadata.name}\")"
+# $ kubectl port-forward $POD_NAME 7070:7070",
+#
+# Then visit http://127.0.0.1:7070/pulse (login/password: admin/admin)
 

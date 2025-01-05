@@ -1,26 +1,30 @@
+{% for n in range(0, _geode.servers.replica|int) %}
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: data-geode-server-0
-  namespace: {{ geode.namespace }}
+  name: data-geode-server-{{ n }}
+  namespace: {{ _geode.namespace }}
 spec:
-  storageClassName: {{ geode.namespace}}-storage
+  storageClassName: {{ _geode.storage_class }}
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
       storage: 10Gi
+{% endfor %}
+{% for n in range(0, _geode.locators.replica|int) %}
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: data-geode-locator-0
-  namespace: {{ geode.namespace }}
+  name: data-geode-locator-{{ n }}
+  namespace: {{ _geode.namespace }}
 spec:
-  storageClassName: {{ geode.namespace}}-storage
+  storageClassName: {{ _geode.storage_class }}
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
       storage: 10Gi
+{% endfor %}

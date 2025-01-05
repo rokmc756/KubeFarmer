@@ -1,27 +1,32 @@
+---
 - name: Copy Geode Loadbalancer Config Yaml
   template:
     src: geode-loadbalancer.yaml.j2
     dest: "{{ base_path }}/geode-loadbalancer.yaml"
   register: copy_geode_lb_config_yaml
+  ignore_errors: true
 - debug: msg={{ copy_geode_lb_config_yaml }}
 
 
 - name: Delete Geode Load Balancer
   shell: |
-    kubectl delete -f geode-loadbalancer.yaml
+    kubectl patch svc {{ item.svc }} -n {{ _geode.namespace }} -p '{"spec": {"type": "ClusterIP"}}'
   register: delete_geode_lb
+  ignore_errors: true
   args:
-    chdir: "{{ base_path }}/"
+    chdir: "{{ base_path }}"
+  with_items:
+    - { svc: "geode", lb_ip_addr: "{{ _geode.lb.ip_addr }}" }
 - debug: msg={{ delete_geode_lb }}
-
-
-- name: Validate if Geode Container is Running
-  shell: |
-    kubectl -n geode get pod | grep geode | awk '{print $3}' | cut -d : -f 1
-  register: check_geode_container
-  until: check_geode_container.stdout.find("") != -1
-  retries: 100
-  delay: 10
-- debug: msg={{ check_geode_container }}
+  ignore_errors: true
   when: print_debug == true
 
+
+- name: Print IP Addresses for LoadBalancer
+  shell: |
+    kubectl get all -A | grep LoadBalancer
+  register: print_lb_ipaddr
+  ignore_errors: true
+  args:
+    chdir: "{{ base_path }}/"
+- debug: msg={{ print_lb_ipaddr }}

@@ -1,3 +1,4 @@
+---
 - name: Copy Geode Loadbalancer Config Yaml
   template:
     src: geode-loadbalancer.yaml.j2
@@ -6,23 +7,15 @@
 - debug: msg={{ copy_geode_lb_config_yaml }}
 
 
-- name: Create Geoed Load Balancer
+- name: Apply Geode Load Balancer
   shell: |
-    kubectl apply -f geode-loadbalancer.yaml
-  register: create_geode_lb
+    kubectl patch svc {{ item.svc }} -n {{ _geode.namespace }} -p '{"spec": {"type": "LoadBalancer", "loadBalancerIP": "{{ item.lb_ip_addr }}"}}'
+  register: apply_geode_lb
   args:
-    chdir: "{{ base_path }}/"
-- debug: msg={{ create_geode_lb }}
-
-
-- name: Validate if Geode Container is Running
-  shell: |
-    kubectl -n geode get pod | grep geode | awk '{print $3}' | cut -d : -f 1
-  register: check_geode_container
-  until: check_geode_container.stdout.find("Running") != -1
-  retries: 100
-  delay: 10
-- debug: msg={{ check_geode_container }}
+    chdir: "{{ base_path }}"
+  with_items:
+    - { svc: "geode", lb_ip_addr: "{{ _geode.lb.ip_addr }}" }
+- debug: msg={{ apply_geode_lb }}
   when: print_debug == true
 
 
