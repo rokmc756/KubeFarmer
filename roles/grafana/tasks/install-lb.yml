@@ -7,19 +7,15 @@
 - debug: msg={{ copy_grafana_lb_config_yaml }}
 
 
-# kubectl patch svc grafana-{{ item.proto }} -n grafana -p '{"spec": {"type": "LoadBalancer", "loadBalancerIP": "{{ item.ip_addr }}"}}'
-# kubectl apply -f grafana-loadbalancer.yaml
 - name: Apply grafana Load Balancer
   shell: |
-    kubectl patch svc grafana -n grafana -p '{"spec": {"type": "LoadBalancer", "loadBalancerIP": "192.168.1.227"}}'
+    kubectl patch svc {{ item.svc }} -n {{ _grafana.namespace }} -p '{"spec": {"type": "LoadBalancer", "loadBalancerIP": "{{ item.ip_addr }}"}}'
   register: apply_grafana_lb
   ignore_errors: yes
   args:
     chdir: "{{ base_path }}"
   with_items:
-    - { proto: "udp", ip_addr: "192.168.1.222" }
-    - { proto: "tcp", ip_addr: "192.168.1.221" }
+    - { svc: "grafana", ip_addr: "{{ _grafana.lb.ip_addr }}" }
 - debug: msg={{ apply_grafana_lb }}
-
 # kubectl get secret --namespace grafana grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
 

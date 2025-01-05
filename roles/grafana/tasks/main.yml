@@ -1,61 +1,61 @@
 ---
-- name: Check OS ( MariaDB }
+- name: Check OS ( Grafana )
   fail: msg="Not a Red Hat based system!"
   when: ansible_os_family != 'RedHat' or ansible_os_family != 'CentOS' or ansible_os_family != 'Rocky'
 
 
-- name: Set Facts for MariaDB
-  import_tasks: set-mariadb-facts.yml
+- name: Set Facts for Grafana
+  import_tasks: set-grafana-facts.yml
   tags:
     - install
     - uninstall
     - reinit
 
 
+- name: Apply Kernel Parameters for Grafana
+  import_tasks: apply-grafana-kernel-parameters.yml
+  tags: install
+  when: ( grafana is defined and grafana == true ) or ( grafana_all is defined and grafana_all == true )
+
+
 - name: Enable Helm Repository
   import_tasks: enable-helm-repo.yml
   tags: install
-  when: helm.enable_repo == true and inventory_hostname in groups['master']
+  when: (( grafana is defined and grafana == true ) or ( grafana_all is defined and grafana_all == true )) and inventory_hostname in groups['master']
 
 
 - name: Deploy Grafana
   import_tasks: install-grafana.yml
   tags: install
-  when: grafana.install == true and inventory_hostname in groups['master']
-
-
-- name: Install Cert Manager
-  import_tasks: install-cert-manager.yml
-  tags: install
-  when: cert_manager.install == true and inventory_hostname in groups['master']
+  when: (( grafana is defined and grafana == true ) or ( grafana_all is defined and grafana_all == true )) and inventory_hostname in groups['master']
 
 
 - name: Install Load Balancer
   import_tasks: install-lb.yml
   tags: install
-  when: grafana.lb.install == true and inventory_hostname in groups['master']
+  when: (( lb is defined and lb == true ) or ( grafana_all is defined and grafana_all == true )) and inventory_hostname in groups['master']
 
 
 - name: Uninstall Load Balancer
   import_tasks: uninstall-lb.yml
   tags: uninstall
-  when: grafana.lb.install == true and inventory_hostname in groups['master']
-
-
-- name: Uninstall Cert Manager
-  import_tasks: uninstall-cert-manager.yml
-  tags: uninstall
-  when: cert_manager.install == true and inventory_hostname in groups['master']
+  when: (( lb is defined and lb == true ) or ( grafana_all is defined and grafana_all == true )) and inventory_hostname in groups['master']
 
 
 - name: Destroy Grafana
   import_tasks: uninstall-grafana.yml
   tags: uninstall
-  when: grafana.install == true and inventory_hostname in groups['master']
+  when: (( grafana is defined and grafana == true ) or ( grafana_all is defined and grafana_all == true )) and inventory_hostname in groups['master']
 
 
 - name: Disable Helm Repository
   import_tasks: disable-helm-repo.yml
   tags: uninstall
-  when: helm.enable_repo == true and inventory_hostname in groups['master']
+  when: (( grafana is defined and grafana == true ) or ( grafana_all is defined and grafana_all == true )) and inventory_hostname in groups['master']
+
+
+- name: Remove Kernel Parameters for Grafana
+  import_tasks: remove-grafana-kernel-parameters.yml
+  tags: uninstall
+  when: ( grafana is defined and grafana == true ) or ( grafana_all is defined and grafana_all == true )
 

@@ -9,7 +9,6 @@
   tags:
     - install
     - uninstall
-  # when: inventory_hostname in groups['master']
 
 
 - name: Apply Kernel Parameters for geode
@@ -22,18 +21,6 @@
   import_tasks: enable-helm-repo.yml
   tags: install
   when: _helm.enable_repo == true and inventory_hostname in groups['master']
-
-
-#- name: Install Metallb
-#  import_tasks: install-metallb.yml
-#  tags: install
-#  when: metallb.install == true and inventory_hostname in groups['master']
-
-
-#- name: Install Cert Manager
-#  import_tasks: install-cert-manager.yml
-#  tags: install
-#  when: cert_manager.install == true and inventory_hostname in groups['master']
 
 
 - name: Install Kustomize
@@ -76,18 +63,6 @@
   import_tasks: uninstall-geode.yml
   tags: uninstall
   when: (( geode is defined and geode == true ) or ( geode_all is defined and geode_all == true )) and inventory_hostname in groups['master']
-
-
-#- name: Uninstall Cert Manager
-#  import_tasks: uninstall-cert-manager.yml
-#  tags: uninstall
-#  when: cert_manager.install == true and inventory_hostname in groups['master']
-
-
-#- name: Uninstall Metallb
-#  import_tasks: uninstall-metallb.yml
-#  tags: uninstall
-#  when: metallb.install == true and inventory_hostname in groups['master']
 
 
 - name: Disable Helm Repository

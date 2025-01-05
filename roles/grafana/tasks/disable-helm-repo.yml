@@ -1,26 +1,23 @@
 ---
-- name: Remove Jetstack Helm Repo
+- name: Remove Helm Repositories
   shell: |
-    /usr/local/bin/helm repo remove jetstack
-  register: remove_jetstack_helm_repo
+    /usr/local/bin/helm repo remove {{ item }}
+  register: remove_helm_repos
   ignore_errors: yes
-- debug: msg={{ remove_jetstack_helm_repo }}
-
-
-
-- name: Remove Grafana Helm Repo
-  shell: |
-    /usr/local/bin/helm repo remove grafana
-  register: remove_grafana_helm_repo
-- debug: msg={{ remove_grafana_helm_repo }}
-
-
-- name: Delete Helm Install Script
-  file:
-    path: "{{ item }}"
-    state: absent
-  register: delete_helm
   with_items:
-    - "{{ base_path }}/get_helm.sh"
-    - "/usr/local/bin/helm"
-- debug: msg={{ delete_helm }}
+    - jetstack
+    - grafana
+- debug: msg={{ remove_helm_repos }}
+
+
+#- name: Delete Helm Install Script
+#  file:
+#    path: "{{ item }}"
+#    state: absent
+#  register: delete_helm_install_script
+#  ignore_errors: yes
+#  with_items:
+#    - "{{ base_path }}/get_helm.sh"
+#    - "/usr/local/bin/helm"
+#- debug: msg={{ delete_helm_install_script }}
+

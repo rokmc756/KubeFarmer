@@ -1,34 +1,25 @@
 ---
 - name: Download and Install Helm
   shell: |
-    curl -fsSL -o {{ base_path }}/get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
-    chmod 700 {{ base_path }}/get_helm.sh
-    export PATH=$PATH:/usr/local/bin ; {{ base_path }}/get_helm.sh
+    curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+    chmod 755 get_helm.sh
+    ./get_helm.sh
   register: install_helm
   args:
-    chdir: /root
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ install_helm }}
 
 
-- name: Add Grafana Helm Repo
+- name: Add Helm Repositories
   shell: |
-    /usr/local/bin/helm repo add grafana https://grafana.github.io/helm-charts
-  register: add_grafana_helm_repo
-- debug: msg={{ add_grafana_helm_repo }}
-
-
-- name: Add Grafana Admin Helm Repo
-  shell: |
-    /usr/local/bin/helm repo add k8s-at-home https://k8s-at-home.com/charts/
-  register: add_grafana_admin_helm_repo
-- debug: msg={{ add_grafana_admin_helm_repo }}
-
-
-- name: Add Jetstack Helm Repo
-  shell: |
-    /usr/local/bin/helm repo add jetstack https://charts.jetstack.io
-  register: add_jetstack_helm_repo
-- debug: msg={{ add_jetstack_helm_repo }}
+    /usr/local/bin/helm repo add {{ item.name }} {{ item.link }}
+  register: add_helm_repos
+  with_items:
+    - { name: 'jetstack',      link: 'https://charts.jetstack.io' }
+    - { name: 'grafana',       link: 'https://grafana.github.io/helm-charts' }
+- debug: msg={{ add_helm_repos }}
 
 
 - name: Update Helm Repo
@@ -36,5 +27,4 @@
     /usr/local/bin/helm repo update
   register: update_helm_repo
 - debug: msg={{ update_helm_repo }}
-
 

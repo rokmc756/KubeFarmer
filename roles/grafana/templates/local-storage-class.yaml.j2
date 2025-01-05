@@ -2,15 +2,8 @@
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
-  name: grafana-storage
-  namespace: grafana
+  name: {{ _grafana.storage_class }}
+  namespace: {{ _grafana.namespace }}
 provisioner: kubernetes.io/no-provisioner
 volumeBindingMode: WaitForFirstConsumer
----
-apiVersion: storage.k8s.io/v1
-kind: StorageClass
-metadata:
-  name: authservice-storage
-  namespace: istio-system
-provisioner: kubernetes.io/no-provisioner
-volumeBindingMode: WaitForFirstConsumer
+

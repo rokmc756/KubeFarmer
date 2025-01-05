@@ -1,15 +1,21 @@
 ---
-- name: Delete grafana Load Balancer
+- name: Copy grafana LoadBalancer Config Yaml
+  template:
+    src: grafana-loadbalancer.yaml.j2
+    dest: "{{ base_path }}/grafana-loadbalancer.yaml"
+  register: copy_grafana_lb_config_yaml
+  ignore_errors: yes
+- debug: msg={{ copy_grafana_lb_config_yaml }}
+
+
+- name: Delete Grafana Load Balancer
   shell: |
-    kubectl patch svc grafana-{{ item.proto }} -n grafana -p '{"spec": {"type": "ClusterIP"}}'
+    kubectl patch svc {{ item.svc }} -n {{ _grafana.namespace }} -p '{"spec": {"type": "ClusterIP"}}'
   register: delete_grafana_lb
   ignore_errors: yes
   args:
     chdir: "{{ base_path }}"
   with_items:
-    - { proto: "udp", ip_addr: "192.168.1.222" }
-    - { proto: "tcp", ip_addr: "192.168.1.221" }
+    - { svc: "grafana", ip_addr: "{{ _grafana.lb.ip_addr }}" }
 - debug: msg={{ delete_grafana_lb }}
-
-# kubectl delete -f grafana-loadbalancer.yaml
 

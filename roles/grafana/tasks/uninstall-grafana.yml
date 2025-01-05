@@ -1,36 +1,7 @@
 ---
-- name: Uninstall grafana Admin
+- name: Uninstall Grafana
   shell: |
-    helm uninstall grafana-admin --namespace grafana
-  register: uninstall_grafana_admin
-  ignore_errors: true
-  args:
-    chdir: "{{ base_path }}/"
-  environment:
-    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-- debug: msg={{ uninstall_grafana_admin }}
-  when: print_debug == true
-
-
-- name: Validate if grafana Containers are Deleted
-  shell: |
-    kubectl get pods -n grafana | sed 1d | grep grafana-admin- | awk '{print $3}' | uniq
-  register: delete_grafana_admin_container
-  ignore_errors: true
-  until: delete_grafana_admin_container.stdout.find("") != -1
-  retries: 100
-  delay: 10
-  args:
-    chdir: "{{ base_path }}/"
-  environment:
-    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-- debug: msg={{ delete_grafana_admin_container }}
-  when: print_debug == true
-
-
-- name: Uninstall grafana
-  shell: |
-    helm uninstall grafana --namespace grafana
+    helm uninstall grafana --namespace {{ _grafana.namespace }}
   register: uninstall_grafana
   ignore_errors: true
   args:
@@ -41,12 +12,12 @@
   when: print_debug == true
 
 
-- name: Validate if grafana Containers are Deleted
+- name: Validate if Grafana Containers are Deleted Completedly
   shell: |
-    kubectl get pods -n grafana | sed 1d | grep grafana- | awk '{print $3}' | uniq
+    kubectl get pods -n {{ _grafana.namespace }} | sed 1d | grep grafana- | awk '{print $3}' | grep -E 'Running|Terminating' | wc -l
   register: delete_grafana_container
   ignore_errors: true
-  until: delete_grafana_container.stdout.find("") != -1
+  until: delete_grafana_container.stdout|int == 0
   retries: 100
   delay: 10
   args:
@@ -63,7 +34,6 @@
   register: delete_pvc
   ignore_errors: true
   with_items:
-    - "pdns-storage-pvc.yaml"
     - "local-storage-pvc.yaml"
     - "local-storage-pv.yaml"
     - "local-storage-class.yaml"
@@ -75,62 +45,29 @@
   when: print_debug == true
 
 
-- name: Delete Cluster Local PVC Config Yaml
+- name: Delete Local PVC Config Yaml
   file:
     path: "{{ base_path }}/{{ item }}"
     state: absent
-  register: delete_cluster_local_pvc_config_yaml
+  register: delete_local_pvc_config_yaml
   ignore_errors: true
   with_items:
-    - "local-storage-class.yaml"
-    - "local-storage-pv.yaml"
     - "local-storage-pvc.yaml"
-    - "pdns-storage-pvc.yaml"
-- debug: msg={{ delete_cluster_local_pvc_config_yaml }}
+    - "local-storage-pv.yaml"
+    - "local-storage-class.yaml"
+- debug: msg={{ delete_local_pvc_config_yaml }}
   when: print_debug == true
 
 
 - name: Delete Namespace for Persistent Volumes
   shell: |
-    kubectl delete namespace {{ item }}
+    kubectl delete namespace {{ _grafana.namespace }}
   register: delete_namespace
   ignore_errors: true
-  with_items:
-    - grafana
   args:
     chdir: "{{ base_path }}/"
   environment:
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ delete_namespace }}
   when: print_debug == true
-
-
-- name: Directory for Persistent Volumes
-  file:
-    path: "{{ grafana.storage_path }}"
-    state: absent
-  register: delete_pv_dir
-  ignore_errors: true
-  delegate_to: "{{ item }}"
-  delegate_facts: True
-  with_items:
-    - "{{ groups['all'] }}"
-- debug: msg={{ delete_pv_dir }}
-  when: print_debug == true
-
-
-- name: Validate if grafana Containers are Running
-  shell: |
-    kubectl -n grafana get pod | grep grafana | awk '{print $3}' | cut -d : -f 1
-  register: check_grafana_container
-  until: check_grafana_container.stdout.find("") != -1
-  retries: 100
-  delay: 10
-  args:
-    chdir: "{{ base_path }}/"
-  environment:
-    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-- debug: msg={{ check_grafana_container }}
-  when: print_debug == true
-
 

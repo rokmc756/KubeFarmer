@@ -1,7 +1,8 @@
 ---
 base_path: /root
 
-grafana:
+
+_grafana:
   install: false
   major_version: 10
   minor_version: 1
@@ -9,8 +10,9 @@ grafana:
   build_version:
   clone_git: true
   nvme: true
-  lb_ip_addr: "192.168.1.213"
+  namespace: grafana
   storage_path: "/mnt/grafana-storage"
+  storage_class: "grafana-storage"
   replica: 3
   db:
     name: "grafana"
@@ -37,23 +39,20 @@ grafana:
     - "net.ipv4.neigh.default.gc_thresh1 = 0"       # For ARP Cache
   lb:
     install: false
+    ip_addr: "192.168.1.219"
   admin:
     replica: 1
 
 
-helm:
+total_grafana_containers: "{{ _grafana.replica|int + _grafana.admin.replica|int }}"
+
+
+_helm:
   enable_repo: true
   major_version: 3
   minor_version:
   patch_version:
   build_version:
-
-
-cert_manager:
-  install: false
-  major_version: 1
-  minor_version: 7
-  patch_version: 1
 
 
 _nginx:
@@ -72,6 +71,7 @@ _nginx:
     major_version: 3
     minor_version: 0
     patch_version: 2
+
 
 _ssl:
   dir: "{{ base_path }}/grafana-certs"
