@@ -1,0 +1,24 @@
+---
+- name: Remove Directory for Persistent Volumes
+  file:
+    path: "{{ _rabbitmq.storage_path }}-{{ item }}"
+    state: absent
+  register: remove_pv_dir
+  with_sequence: start=0 end={{ total_rabbitmq_containers|int }}
+- debug: msg={{ remove_pv_dir }}
+  when: print_debug == true
+
+
+- name: Remove Kernel Parameters for Spark
+  lineinfile:
+    dest: /etc/sysctl.d/sysctl-k8s.conf
+    regexp: "{{ item }}"
+    state: absent
+  register: delete_kernel_parameters
+  with_items:
+    - "{{ _rabbitmq.kernel_parameters }}"
+  notify:
+    - Reload Sysctl
+- debug: msg={{ delete_kernel_parameters }}
+  when: print_debug == true
+

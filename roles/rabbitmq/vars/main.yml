@@ -1,14 +1,15 @@
 base_path: /root
 
 
-kustomize:
+_kustomize:
+  install: true
   download_url: "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"
   major_version: 5
   minor_version: 4
   patch_version: 2
 
 
-rabbitmq:
+_rabbitmq:
   install: true
   major_version: 27
   minor_version: 1
@@ -21,14 +22,14 @@ rabbitmq:
   clone_git: true
   nvme: true
   namespace: rabbitmq
-  lb_ip_addr: 192.168.1.219
   storage_path: "/mnt/rabbitmq-storage"
+  storage_class: "rabbitmq-storage"
   k8s:
     major_version: 1
     minor_version: 28
     patch_version: 0
     build_version:
-  hostname: "rabbitmq.jtest.suse.com"
+  hostname: "rabbitmq.jtest.pivotal.io"
   service:
     metadata:
       name: rabbitmq-loadbalancer
@@ -42,9 +43,18 @@ rabbitmq:
     - "net.ipv4.neigh.default.gc_thresh1 = 0"   # For ARP Cache
     - "fs.inotify.max_user_instances=2280"
     - "fs.inotify.max_user_watches=755360"
+  lb:
+    ip_addr: 192.168.1.219
+  master:
+    replica: 4
+  worker:
+    replica: 4
 
 
-rabbitmq_ui:
+total_rabbitmq_containers: "{{ _rabbitmq.master.replica|int + _rabbitmq.worker.replica|int }}"
+
+
+_rabbitmq_ui:
   install: true
   major_version: 0
   minor_version: 7
@@ -55,38 +65,7 @@ rabbitmq_ui:
   download_link: "https://provectus.github.io/rabbitmq-ui-charts"
 
 
-metallb:
-  install: true
-  major_version: 0
-  minor_version: 13
-  patch_version: 11
-  vmware:
-    kind:
-      ipaddrpool:
-        metadata:
-          name: first-pool
-          namespace: metallb-system
-        spec:
-          ips_range: 192.168.1.210-200.168.1.250
-      l2advertise:
-        metadata:
-          name: example
-          namespace: metallb-system
-  baremetal:
-    kind:
-      configmap:
-        metadata:
-          name: config
-          namespace: metallb-system
-        data:
-          config:
-            ipaddr_pools:
-              name: default
-              protocol: layer2
-              ips_range: 192.168.1.210-192.168.1.250
-
-
-helm:
+_helm:
   enable_repo: true
   major_version: 3
   minor_version:
@@ -94,25 +73,20 @@ helm:
   build_version:
 
 
-nfs_provider:
-  install: false
-  major_version:
-  minor_version:
-  patch_version:
-
-
-nginx:
-  major_version:
-  minor_version:
-  patch_version:
+_nginx:
+  ingress:
+    install: true
+    name: nginx-ingress
+    class_name: spark-ingress-class
+    namespace: "nginx-ingress"
+    major_version:
+    minor_version:
+    patch_version:
+    hostname: rabbitmq
+    domain: jtest.pivotal.io
+    ip_addr: "192.168.1.219"
   k8s_ingress:
     major_version: 3
     minor_version: 0
     patch_version: 2
-  ingress:
-    name: nginx-ingress
-    major_version:
-    minor_version:
-    patch_version:
-    build_version:
 

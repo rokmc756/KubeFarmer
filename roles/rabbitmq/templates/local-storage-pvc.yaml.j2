@@ -3,11 +3,12 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: rabbitmq-pvc
-  namespace: {{ rabbitmq.namespace }}
+  namespace: {{ _rabbitmq.namespace }}
 spec:
-  storageClassName: {{ rabbitmq.namespace}}-storage
+  storageClassName: {{ _rabbitmq.storage_class }}
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
       storage: 10Gi
+

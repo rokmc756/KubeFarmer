@@ -1,18 +1,16 @@
 ---
-# Deploy and Destroy jenkins with Metallb
-#
-# for now fail if it's not a Red Hat and SuSE based system
+# Deploy and Destroy Jenkins with Metallb
 - name: Check OS ( Kubernetes )
   fail: msg="Not a Red Hat or SUSE based System!"
   when: ansible_os_family != 'RedHat' or  ansible_os_family != 'CentOS' or  ansible_os_family != 'Rocky' or ansible_os_family != 'openSUSE Leap'
 
 
-- name: Set facts for rabbitmq
+- name: Set Facts for Rabbitmq
   import_tasks: set-rabbitmq-facts.yml
   tags:
     - install
     - uninstall
-  when: inventory_hostname in groups['master']
+  # when: inventory_hostname in groups['master']
 
 
 - name: Apply Kernel Parameters for rabbitmq
@@ -23,19 +21,13 @@
 - name: Enable Helm Repository
   import_tasks: enable-helm-repo.yml
   tags: install
-  when: helm.enable_repo == true and inventory_hostname in groups['master']
+  when: _helm.enable_repo == true and inventory_hostname in groups['master']
 
 
-- name: Deploy NFS Provider
-  import_tasks: install-nfs-provider.yml
-  tags: install
-  when: nfs_provider.install == true and inventory_hostname in groups['master']
-
-
-- name: Install Metallb
-  import_tasks: install-metallb.yml
-  tags: install
-  when: metallb.install == true and inventory_hostname in groups['master']
+#- name: Install Metallb
+#  import_tasks: install-metallb.yml
+#  tags: install
+#  when: metallb.install == true and inventory_hostname in groups['master']
 
 
 #- name: Install Cert Manager
@@ -47,13 +39,13 @@
 - name: Install Kustomize
   import_tasks: install-kustomize.yml
   tags: install
-  when: rabbitmq.install == true and inventory_hostname in groups['master']
+  when: _kustomize.install == true and inventory_hostname in groups['master']
 
 
 - name: Deploy rabbitmq
   import_tasks: install-rabbitmq.yml
   tags: install
-  when: rabbitmq.install == true and inventory_hostname in groups['master']
+  when: (( rabbitmq is defined and rabbitmq == true ) or ( rabbitmq_all is defined and rabbitmq_all == true )) and inventory_hostname in groups['master']
 
 
 #- name: Install Load Balancer
@@ -68,10 +60,10 @@
 #  when: metallb.install == true and inventory_hostname in groups['master']
 
 
-- name: Destroy rabbitmq
+- name: Destroy Rabbitmq
   import_tasks: uninstall-rabbitmq.yml
   tags: uninstall
-  when: rabbitmq.install == true and inventory_hostname in groups['master']
+  when: (( rabbitmq is defined and rabbitmq == true ) or ( rabbitmq_all is defined and rabbitmq_all == true )) and inventory_hostname in groups['master']
 
 
 #- name: Uninstall Cert Manager
@@ -80,20 +72,21 @@
 #  when: cert_manager.install == true and inventory_hostname in groups['master']
 
 
-- name: Destroy NFS Provider
-  import_tasks: uninstall-nfs-provider.yml
-  tags: uninstall
-  when: nfs_provider.install == true and inventory_hostname in groups['master']
-
-
-- name: Uninstall Metallb
-  import_tasks: uninstall-metallb.yml
-  tags: uninstall
-  when: metallb.install == true and inventory_hostname in groups['master']
+#- name: Uninstall Metallb
+#  import_tasks: uninstall-metallb.yml
+#  tags: uninstall
+#  when: metallb.install == true and inventory_hostname in groups['master']
 
 
 - name: Disable Helm Repository
   import_tasks: disable-helm-repo.yml
   tags: uninstall
-  when: helm.enable_repo == true and inventory_hostname in groups['master']
+  when: _helm.enable_repo == true and inventory_hostname in groups['master']
+
+
+- name: Remove Kernel Parameters
+  import_tasks: remove-rabbitmq-kernel-parameters.yml
+  tags: uninstall
+  when: (( rabbitmq is defined and rabbitmq == true ) or ( rabbitmq_all is defined and rabbitmq_all == true )) and inventory_hostname in groups['master']
+
 

@@ -1,4 +1,4 @@
-- name: Copy rabbitmq Loadbalancer Config Yaml
+- name: Copy Rabbitmq Loadbalancer Config Yaml
   template:
     src: kafdrop.yaml.j2
     dest: "{{ base_path }}/kafdrop.yaml"
@@ -6,7 +6,7 @@
 - debug: msg={{ copy_rabbitmq_lb_config_yaml }}
 
 
-- name: Create rabbitmq Load Balancer
+- name: Create RabbitMQ Load Balancer
   shell: |
     kubectl apply -f kafdrop.yaml
   register: create_rabbitmq_lb

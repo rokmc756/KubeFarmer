@@ -97,7 +97,23 @@
   when: print_debug == true
 
 
-# https://github.com/poweradmin/poweradmin
+#- name: Generate Grafana TLS Cert Files
+#  import_tasks: gen-grafana-certs.yml
+
+
+#- name: Create a TLS Secret with the Contents of tls.key and tls.crt in the Grafana Namespace
+#  shell: |
+#    kubectl create secret tls grafana-cert --key {{ _ssl.dir }}/{{ _grafana.hostname }}.key \
+#    --cert {{ _ssl.dir }}/{{ _grafana.hostname }}.crt -n {{ _grafana.namespace }}
+#  register: create_tls_secret
+#  args:
+#    chdir: "{{ base_path }}/"
+#  environment:
+#    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+#- debug: msg={{ create_tls_secret }}
+#  when: print_debug == true
+
+
 # https://github.com/grafana-Admin/grafana-Admin
 - name: Deploy grafana Admin
   shell:

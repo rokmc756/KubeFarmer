@@ -1,0 +1,68 @@
+rabbitmq:
+	@if [ "${r}" = "prepare" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-rabbitmq.yml -e '{"${s}": True}' --tags='prepare';\
+			else\
+				echo "No Actions for Configure RabbitMQ";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-rabbitmq.yml -e '{rabbitmq_all: True}' --tags='prepare';\
+			else\
+				echo "No Actions for Configure RabbitMQ";\
+			fi\
+		else\
+			echo "No Actions for Configure RabbitMQ";\
+		fi;\
+	elif [ "${r}" = "install" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-rabbitmq.yml -e '{"${s}": True}' --tags='install';\
+			else\
+				echo "No Actions for Installing RabbitMQ";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-rabbitmq.yml -e '{rabbitmq_all: True}' --tags='install';\
+			else\
+				echo "No Actions for Installing RabbitMQ";\
+			fi\
+		else\
+			echo "No Actions for Installing RabbitMQ";\
+		fi;\
+	elif [ "${r}" = "uninstall" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-rabbitmq.yml -e '{"${s}": True}' --tags='uninstall';\
+			else\
+				echo "No Actions for Uninstalling RabbitMQ";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-rabbitmq.yml -e '{rabbitmq_all: True}' --tags='uninstall';\
+			else\
+				echo "No Actions for Uninstalling RabbitMQ";\
+			fi\
+		fi;\
+	elif [ "${r}" = "upgrade" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-rabbitmq.yml -e '{"${s}": True}' --tags='upgrade';\
+			else\
+				echo "No Actions for Uninstalling RabbitMQ";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-rabbitmq.yml -e '{rabbitmq_all: True}' --tags='upgrade';\
+			else\
+				echo "No Actions for Uninstalling RabbitMQ";\
+			fi\
+		else\
+			echo "No Actions for Uninstalling RabbitMQ";\
+		fi;\
+	else\
+		echo "No Actions for RabbitMQ Role";\
+		exit;\
+	fi
+

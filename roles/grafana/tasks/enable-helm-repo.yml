@@ -17,6 +17,13 @@
 - debug: msg={{ add_grafana_helm_repo }}
 
 
+- name: Add Grafana Admin Helm Repo
+  shell: |
+    /usr/local/bin/helm repo add k8s-at-home https://k8s-at-home.com/charts/
+  register: add_grafana_admin_helm_repo
+- debug: msg={{ add_grafana_admin_helm_repo }}
+
+
 - name: Add Jetstack Helm Repo
   shell: |
     /usr/local/bin/helm repo add jetstack https://charts.jetstack.io

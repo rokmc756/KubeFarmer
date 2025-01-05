@@ -1,0 +1,79 @@
+---
+- name: Copy NGINX Ingress Config
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ base_path }}/{{ item }}"
+  register: copy_nginx_ingress_config
+  ignore_errors: true
+  with_items:
+    - "rabbitmq-ingress-class.yaml"
+    - "create-rabbitmq-ingress.yaml"
+- debug: msg={{ copy_nginx_ingress_config }}
+
+
+- name: Delete NGINX Ingress for RabbitMQ
+  shell: |
+    kubectl delete -f {{ item }}
+  register: delete_nginx_ingress_for_rabbitmq
+  ignore_errors: true
+  with_items:
+    - "create-rabbitmq-ingress.yaml"
+    - "rabbitmq-ingress-class.yaml"
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ delete_nginx_ingress_for_rabbitmq }}
+  when: print_debug == true
+
+
+- name: Uninstall NGINX Ingress
+  shell: |
+    helm uninstall {{ _nginx.ingress.name }} -n {{ _nginx.ingress.namespace }}
+  register: uninstall_nginx_ingress
+  ignore_errors: true
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ uninstall_nginx_ingress }}
+
+
+- name: Validate if NGINX Ingress Controller Containers are Running
+  shell: |
+    kubectl get pod -n {{ _nginx.ingress.namespace }} | grep {{ item.svc }} | awk '{print $3}' | grep Running | wc -l
+  register: check_nginx_ingress_controller_container
+  ignore_errors: true
+  until: check_nginx_ingress_controller_container.stdout|int == 0
+  retries: 100
+  delay: 10
+  with_items:
+    - { svc: "ingress-nginx-controller-", replica: "{{ _rabbitmq.master.replica }}" }
+- debug: msg={{ check_nginx_ingress_controller_container }}
+  when: print_debug == true
+
+
+- name: Delete Namespace for NGINX Ingress
+  shell: |
+    kubectl delete namespace {{ _nginx.ingress.namespace }}
+  register: delete_namespace
+  ignore_errors: true
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ delete_namespace }}
+  when: print_debug == true
+
+
+- name: Delete NGINX Ingress Config
+  file:
+    path: "{{ base_path }}/{{ item }}"
+    state: absent
+  register: delete_nginx_ingress_config
+  ignore_errors: true
+  with_items:
+    - "rabbitmq-ingress-class.yaml"
+    - "create-rabbitmq-ingress.yaml"
+- debug: msg={{ delete_nginx_ingress_config }}
+

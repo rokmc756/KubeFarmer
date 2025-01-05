@@ -23,12 +23,6 @@
   when: helm.enable_repo == true and inventory_hostname in groups['master']
 
 
-#- name: Deploy NFS Provider
-#  import_tasks: install-nfs-provider.yml
-#  tags: install
-#  when: nfs_provider.install == true and inventory_hostname in groups['master']
-
-
 - name: Install Kustomize
   import_tasks: install-kustomize.yml
   tags: install
@@ -63,12 +57,6 @@
   import_tasks: uninstall-nfs-provider.yml
   tags: uninstall
   when: nfs_provider.install == true and inventory_hostname in groups['master']
-
-
-#- name: Uninstall Metallb
-#  import_tasks: uninstall-metallb.yml
-#  tags: uninstall
-#  when: metallb.install == true and inventory_hostname in groups['master']
 
 
 - name: Disable Helm Repository

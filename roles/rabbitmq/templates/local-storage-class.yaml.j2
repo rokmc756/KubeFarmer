@@ -2,15 +2,7 @@
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
-  name: {{ rabbitmq.namespace }}-storage
-  namespace: {{ rabbitmq.namespace }}
-provisioner: kubernetes.io/no-provisioner
-volumeBindingMode: WaitForFirstConsumer
----
-apiVersion: storage.k8s.io/v1
-kind: StorageClass
-metadata:
-  name: authservice-storage
-  namespace: istio-system
+  name: {{ _rabbitmq.storage_class }}
+  namespace: {{ _rabbitmq.namespace }}
 provisioner: kubernetes.io/no-provisioner
 volumeBindingMode: WaitForFirstConsumer
