@@ -1,0 +1,78 @@
+---
+- name: Add IP Address of Load Balancer
+  lineinfile:
+    path: "{{ base_path }}/rook/deploy/examples/dashboard-loadbalancer.yaml"
+    insertafter: "  type: LoadBalancer"
+    line: "  loadBalancerIP: {{ rook.lb_ip_addr }}"
+
+
+- name: Apply Rook Load Balancer
+  shell: |
+    kubectl apply -f dashboard-loadbalancer.yaml
+  register: apply_rook_lb
+  ignore_errors: yes
+  args:
+    chdir: "{{ base_path }}/rook/deploy/examples/"
+- debug: msg={{ apply_rook_lb }}
+
+
+- name: Copy Rancher Ingress Config Yaml
+  template:
+    src: rook-ingress.yaml.j2
+    dest: "{{ base_path }}/rook-ingress.yaml"
+  register: copy_rook_ingress_config_yaml
+- debug: msg={{ copy_rook_ingress_config_yaml }}
+
+
+- name: Create Rook Ingress
+  shell: |
+    kubectl create -f "{{ base_path }}"/rook-ingress.yaml
+  register: create_rook_ingress
+- debug: msg={{ create_rook_ingress }}
+
+
+#- name: Check Rook Pods
+#  shell: |
+#    kubectl get all -n cattle-system
+#  register: check_rook_pods
+#  until: check_rook_pods.stdout.find("pending") == -1
+#  retries: 30
+#- debug: msg={{ check_rook_pods }}
+#
+#
+#- pause:
+#    seconds: 15
+#
+
+
+#- name: Check if the status of ContainerCreating is Still Existing
+#  shell: |
+#    kubectl get all -A | grep cattle-
+#  register: check_container_creating
+#  until: check_container_creating.stdout.find("ContainerCreating") == -1
+#  retries: 30
+#  delay: 10
+#- debug: msg={{ check_container_creating }}
+#
+
+
+#- name: Check if the Mon is in Quorum
+#  shell: |
+#    kubectl -n rook-ceph logs -l app=rook-ceph-operator
+#  register: check_mon_quorum
+#  until: check_mon_quorum.stdout.find("removed from out timeout list") != -1
+#  retries: 200
+#  delay: 20
+#- debug: msg={{ check_mon_quorum }}
+
+
+#- name: Check Ceph Health
+#  shell: |
+#    kubectl -n rook-ceph exec -it deploy/rook-ceph-tools -- ceph status
+#  register: check_ceph_health
+#  until: check_ceph_health.stdout.find("HEALTH_OK") != -1
+#  retries: 10
+#  delay: 10
+#- debug: msg={{ check_ceph_health }}
+
+

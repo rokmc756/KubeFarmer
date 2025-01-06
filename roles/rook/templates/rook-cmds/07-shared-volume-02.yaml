@@ -1,0 +1,39 @@
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: pvc-a02dd277-cb26-4c1e-9434-478ebc321e22
+  annotations:
+    pv.kubernetes.io/provisioned-by: rook.cephfs.csi.ceph.com
+  finalizers:
+    - kubernetes.io/pv-protection
+spec:
+  capacity:
+    storage: 5Gi
+  csi:
+    driver: rook.cephfs.csi.ceph.com
+    volumeHandle: >-
+      0001-0011-rook-0000000000000001-8a528de0-e274-11ec-b069-0a580a800213
+    volumeAttributes:
+      clusterID: rook
+      fsName: rook-cephfilesystem
+      storage.kubernetes.io/csiProvisionerIdentity: 1654174264855-8081-rook.cephfs.csi.ceph.com
+      subvolumeName: csi-vol-8a528de0-e274-11ec-b069-0a580a800213
+      subvolumePath: >-
+        /volumes/csi/csi-vol-8a528de0-e274-11ec-b069-0a580a800213/da98fb83-fff3-485a-a0a9-57c227cb67ec
+    nodeStageSecretRef:
+      name: rook-csi-cephfs-node
+      namespace: rook-ceph
+    controllerExpandSecretRef:
+      name: rook-csi-cephfs-provisioner
+      namespace: rook-ceph
+  accessModes:
+    - ReadWriteMany
+  claimRef:
+    kind: PersistentVolumeClaim
+    namespace: rook-ceph
+    name: base-pvc
+    apiVersion: v1
+    resourceVersion: '49728'
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: rook-storage
+  volumeMode: Filesystem

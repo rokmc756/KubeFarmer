@@ -12,4 +12,3 @@
 # $ echo 'changeme' > /tmp/passwd.txt
 # $ ceph dashboard ac-user-create admin -i /tmp/passwd.txt administrator
 
-

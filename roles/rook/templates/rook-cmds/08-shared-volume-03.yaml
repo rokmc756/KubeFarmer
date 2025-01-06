@@ -1,0 +1,16 @@
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: second-pvc
+  namespace: rook-ceph
+  finalizers:
+    - kubernetes.io/pvc-protection
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 100Gi
+  volumeName: pvc-a02dd277-cb26-4c1e-9434-478ebc321e22-rook-ceph
+  storageClassName: rook-storage
+  volumeMode: Filesystem

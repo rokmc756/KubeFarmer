@@ -86,9 +86,9 @@
   ignore_errors: true
   with_items:
     - { regexp: '^  ROOK_ENABLE_DISCOVERY_DAEMON:*', line: '  ROOK_ENABLE_DISCOVERY_DAEMON: "false"', state: present }
-  when: rook.enable_discovery_daemon == true
+  when: _rook.enable_discovery_daemon == true
 - debug: msg={{ disable_rook_discovery_daemon }}
-  when: rook.enable_discovery_daemon == true and print_debug == true
+  when: _rook.enable_discovery_daemon == true and print_debug == true
 
 
 - name: Delete Rook Ceph Operator Container
@@ -133,44 +133,44 @@
   when: print_debug == true
 
 
-- name: Remove RBD Kernel Module
-  shell: |
-    rmmod rbd
-  register: remove_rbd_kernel_module
-  delegate_to: "{{ item }}"
-  delegate_facts: True
-  ignore_errors: true
-  with_items: "{{ groups['all'] }}"
-- debug: msg={{ remove_rbd_kernel_module }}
-  when: print_debug == true
-
-
-- name: Remove Rook Source Code and RBD Kernel Module Config
-  file:
-    path: "{{ item }}"
-    state: absent
-  register: remove_rook_source_n_rbd_kernel_module_config
-  with_items:
-    - "/etc/modules-load.d/rbd.conf"
-    - "{{ k8s.base_path }}/rook"
-- debug: msg={{ remove_rook_source_n_rbd_kernel_module_config }}
-
-
-# for j in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do dd if=/dev/zero of=/dev/$j bs=1M count=1000; done
-- name: Cleanup the Ceph Block Devices
-  shell: |
-    lsblk
-    for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do nvme format /dev/$nb --force ;done
-    for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do wipefs -a /dev/$nb ;done
-    for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do sgdisk --zap-all /dev/$nb ;done
-    for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do dd if=/dev/zero of=/dev/$nb bs=10M count=10 ;done
-  delegate_to: "{{ item }}"
-  delegate_facts: True
-  register: cleanup_ceph_block_devices
-  ignore_errors: true
-  with_items: "{{ groups['all'] }}"
-- debug: msg={{ cleanup_ceph_block_devices }}
-  when: print_debug == true
+#- name: Remove RBD Kernel Module
+#  shell: |
+#    rmmod rbd
+#  register: remove_rbd_kernel_module
+#  delegate_to: "{{ item }}"
+#  delegate_facts: True
+#  ignore_errors: true
+#  with_items: "{{ groups['all'] }}"
+#- debug: msg={{ remove_rbd_kernel_module }}
+#  when: print_debug == true
+#
+#
+#- name: Remove Rook Source Code and RBD Kernel Module Config
+#  file:
+#    path: "{{ item }}"
+#    state: absent
+#  register: remove_rook_source_n_rbd_kernel_module_config
+#  with_items:
+#    - "/etc/modules-load.d/rbd.conf"
+#    - "{{ k8s.base_path }}/rook"
+#- debug: msg={{ remove_rook_source_n_rbd_kernel_module_config }}
+#
+#
+## for j in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do dd if=/dev/zero of=/dev/$j bs=1M count=1000; done
+#- name: Cleanup the Ceph Block Devices
+#  shell: |
+#    lsblk
+#    for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do nvme format /dev/$nb --force ;done
+#    for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do wipefs -a /dev/$nb ;done
+#    for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do sgdisk --zap-all /dev/$nb ;done
+#    for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do dd if=/dev/zero of=/dev/$nb bs=10M count=10 ;done
+#  delegate_to: "{{ item }}"
+#  delegate_facts: True
+#  register: cleanup_ceph_block_devices
+#  ignore_errors: true
+#  with_items: "{{ groups['all'] }}"
+#- debug: msg={{ cleanup_ceph_block_devices }}
+#  when: print_debug == true
 
 # lsblk
 # for vg in $(`vgs | grep ceph | awk '{print $1}'`); do vgremove $vg -f ;done

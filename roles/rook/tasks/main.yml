@@ -1,8 +1,5 @@
 ---
-# Deploy Rook Ceph with Metallb and NGINX Ingress
-#
-# For now fail if it's not a Red Hat and SuSE based system
-- name: Check OS ( Kubernetes )
+- name: Check OS ( Rook )
   fail: msg="Not a Red Hat or SUSE based System!"
   when: ansible_os_family != 'RedHat' or  ansible_os_family != 'CentOS' or  ansible_os_family != 'Rocky' or ansible_os_family != 'openSUSE Leap'
 
@@ -14,80 +11,80 @@
     - uninstall
 
 
-#- name: Enable Helm Repository
-#  import_tasks: enable-helm-repo.yml
-#  tags: install
-#  when: helm.enable_repo == true and inventory_hostname in groups['master']
+- name: Apply Kernel Parameters
+  import_tasks: apply-rook-kernel-parameters.yml
+  tags: install
+  when: ( rook is defined and rook == true ) or ( rook_all is defined and rook_all == true )
+
+
+- name: Enable Helm Repository
+  import_tasks: enable-helm-repo.yml
+  tags: install
+  when: (( rook is defined and rook == true ) or ( rook_all is defined and rook_all == true )) and inventory_hostname in groups['master']
 
 
 - name: Deploy Rook Ceph
   import_tasks: install-rook.yml
   tags: install
-  when: rook.install == true and inventory_hostname in groups['master']
-
-
-#- name: Install Metallb
-#  import_tasks: install-metallb.yml
-#  tags: install
-#  when: metallb.install == true and inventory_hostname in groups['master']
-
-
-#- name: Install Ingress
-#  import_tasks: install-ingress.yml
-#  tags: install
-#  when: ingress.install == true and inventory_hostname in groups['master']
+  when: (( rook is defined and rook == true ) or ( rook_all is defined and rook_all == true )) and inventory_hostname in groups['master']
 
 
 - name: Install Cert Manager
   import_tasks: install-cert-manager.yml
   tags: install
-  when: cert_manager.install == true and inventory_hostname in groups['master']
+  when: _cm.install == true and inventory_hostname in groups['master']
+
+
+- name: Install Ingress
+  import_tasks: install-ingress.yml
+  tags: install
+  when: (( ingress is defined and ingress == true ) or ( rook_all is defined and rook_all == true )) and inventory_hostname in groups['master']
 
 
 - name: Install Load Balancer
   import_tasks: install-lb.yml
   tags: install
-  when: rook.install == true and inventory_hostname in groups['master']
+  when: (( lb is defined and lb == true ) or ( rook_all is defined and rook_all == true )) and inventory_hostname in groups['master']
 
 
-#- name: Check the Status of Rook Ceph and Print Connection Info
-#  import_tasks: check-rook-ceph-status.yml
-#  tags: install
-#  when: rook.install == true and inventory_hostname in groups['master']
+- name: Change Admin Password
+  import_tasks: change-admin-password.yml
+  tags: install
+  when: (( password is defined and password == true ) or ( rook_all is defined and rook_all == true )) and inventory_hostname in groups['master']
 
 
 - name: Uninstall Load Balancer
   import_tasks: uninstall-lb.yml
   tags: uninstall
-  when: rook.install == true and inventory_hostname in groups['master']
+  when: (( lb is defined and lb == true ) or ( rook_all is defined and rook_all == true )) and inventory_hostname in groups['master']
+
+
+- name: Uninstall Ingress
+  import_tasks: uninstall-ingress.yml
+  tags: uninstall
+  when: (( ingress is defined and ingress == true ) or ( rook_all is defined and rook_all == true )) and inventory_hostname in groups['master']
 
 
 - name: Uninstall Cert Manager
   import_tasks: uninstall-cert-manager.yml
   tags: uninstall
-  when: cert_manager.install == true and inventory_hostname in groups['master']
-
-
-#- name: Uninstall Ingress
-#  import_tasks: uninstall-ingress.yml
-#  tags: uninstall
-#  when: ingress.install == true and inventory_hostname in groups['master']
-
-
-#- name: Uninstall Metallb
-#  import_tasks: uninstall-metallb.yml
-#  tags: uninstall
-#  when: metallb.install == true and inventory_hostname in groups['master']
+  when: _cm.install == true and inventory_hostname in groups['master']
 
 
 - name: Destroy Rook Ceph
   import_tasks: uninstall-rook.yml
   tags: uninstall
-  when: rook.install == true and inventory_hostname in groups['master']
+  when: (( rook is defined and rook == true ) or ( rook_all is defined and rook_all == true )) and inventory_hostname in groups['master']
 
 
-#- name: Disable Helm Repository
-#  import_tasks: disable-helm-repo.yml
-#  tags: uninstall
-#  when: helm.enable_repo == true and inventory_hostname in groups['master']
+- name: Disable Helm Repository
+  import_tasks: disable-helm-repo.yml
+  tags: uninstall
+  when: (( rook is defined and rook == true ) or ( rook_all is defined and rook_all == true )) and inventory_hostname in groups['master']
+
+
+- name: Remove Kernel Parameters
+  import_tasks: remove-rook-kernel-parameters.yml
+  tags: uninstall
+  when: ( rook is defined and rook == true ) or ( rook_all is defined and rook_all == true )
 

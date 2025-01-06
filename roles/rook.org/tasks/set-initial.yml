@@ -1,0 +1,15 @@
+
+# ceph mgr module enable rook
+# ceph orch set backend rook
+# ceph orch status
+# Backend: rook
+# Available: True
+
+
+# kubectl -n rook-ceph logs pod/rook-ceph-mgr-a-5bb56697f5-nnvw2 --follow
+
+# kubectl -n rook-ceph exec -it deploy/rook-ceph-tools -- bash
+# $ echo 'changeme' > /tmp/passwd.txt
+# $ ceph dashboard ac-user-create admin -i /tmp/passwd.txt administrator
+
+

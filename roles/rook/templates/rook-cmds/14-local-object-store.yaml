@@ -1,0 +1,24 @@
+apiVersion: ceph.rook.io/v1
+kind: CephObjectStore
+metadata:
+  name: my-store
+  namespace: rook-ceph
+spec:
+  gateway:
+    port: 80
+    instances: 1
+  sharedPools:
+    poolPlacements:
+    - name: us
+      default: true
+      metadataPoolName: "us-data-pool"
+      dataPoolName: "us-meta-pool"
+      storageClasses:
+      - name: REDUCED_REDUNDANCY
+        dataPoolName: "us-reduced-pool"
+    - name: europe
+      metadataPoolName: "eu-meta-pool"
+      dataPoolName: "eu-data-pool"
+      storageClasses:
+      - name: REDUCED_REDUNDANCY
+        dataPoolName: "eu-reduced-pool"

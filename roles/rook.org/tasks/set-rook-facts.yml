@@ -1,0 +1,88 @@
+---
+- name: Get Network Interface Names from Prefix of IP Addresses Provided for Kubernetes Nodes
+  set_fact:
+    netdev0: "{{ ansible_interfaces | map('regex_replace', '^', 'ansible_') | map('extract', vars) | selectattr('ipv4', 'defined') | selectattr('ipv4.address', 'match', k8s.net.ipaddr0 ) | map(attribute='device') | first }}"
+    netdev1: "{{ ansible_interfaces | map('regex_replace', '^', 'ansible_') | map('extract', vars) | selectattr('ipv4', 'defined') | selectattr('ipv4.address', 'match', k8s.net.ipaddr1 ) | map(attribute='device') | first }}"
+    netdev2: "{{ ansible_interfaces | map('regex_replace', '^', 'ansible_') | map('extract', vars) | selectattr('ipv4', 'defined') | selectattr('ipv4.address', 'match', k8s.net.ipaddr2 ) | map(attribute='device') | first }}"
+
+
+- name: Get IP Address From Provided Network Device Names
+  set_fact:
+    ipaddr0: "{{ hostvars[inventory_hostname]['ansible_'~netdev0].ipv4.address }}"
+    ipaddr1: "{{ hostvars[inventory_hostname]['ansible_'~netdev1].ipv4.address }}"
+    ipaddr2: "{{ hostvars[inventory_hostname]['ansible_'~netdev2].ipv4.address }}"
+
+
+- name: Set Default Network Device and Address
+  set_fact:
+    _netdev: "{{ 'ansible_'~ netdev1 }}"
+    _ipaddr: "{{ ipaddr1 }}"
+  delegate_to: "{{ item }}"
+  delegate_facts: true
+  with_items: "{{ groups['all'] }}"
+
+
+- name: Get NVME Devices
+  shell: |
+    nvme list | sed 1,2d | awk '{print $1}' | cut -d "/" -f 3
+  register: nvme_device_list
+  when: rook.nvme == true
+- debug: msg={{ nvme_device_list.stdout_lines }}
+  when: print_debug == true
+
+
+- name: Get Number of NVME Devices
+  set_fact:
+    nvme_device_count: "{{ nvme_device_list.stdout_lines | length }}"
+- debug: msg={{ nvme_device_count }}
+  when: print_debug == true
+
+
+- name: Set Volume Facts with List
+  set_fact:
+    volume_mode: "{{ volume_modes | list }}"
+  vars:
+    volume_modes:
+      - "Filesystem"
+      - "Block"
+      - "Block"
+      - "Block"
+- debug: msg={{ volume_mode }}
+  when: print_debug == true
+
+
+- name: Set Facts after Merging Volume Mode with NVME Device Name
+  set_fact:
+    nvme_merge_info0: "{{ volume_mode | zip(nvme_device_list.stdout_lines) }}"
+- debug: msg={{ nvme_merge_info0 }}
+  when: print_debug == true
+
+
+- name: Set Each Facts with Dictionary to Combile Hostname and Devices Names
+  set_fact:
+    nvme_merge_info: "{{ dict([ inventory_hostname ] | zip( [ nvme_merge_info0 ] )) | dict2items( key_name='hostname', value_name='devinfo' ) }}"
+- debug: msg={{ nvme_merge_info }}
+  when: print_debug == true
+
+
+- name: Set a Facts Merging Dictionaries with NVME Info
+  set_fact:
+    all_nvme_info: "{{ groups['workers'] | map('extract', hostvars, ['nvme_merge_info']) | join(',') }}"
+- debug: msg={{ all_nvme_info }}
+  when: print_debug == true
+
+
+- name: Print NVME Devices Info
+  debug:
+    msg: >
+      [
+      {%- for arr1 in all_nvme_info -%}
+        {%- for arr2 in arr1 -%}
+          {%- for d in arr2.devinfo -%}
+            {{ d[0] }},{{ d[1] }}
+          {%- endfor -%}
+        {%- endfor -%}
+      {%- endfor -%}
+      ]
+  when: print_debug == true and inventory_hostname in groups['master']
+

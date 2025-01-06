@@ -1,0 +1,148 @@
+# kubectl -n rook-ceph exec -it $(kubectl -n rook-ceph get pod | grep rook-ceph-tools | awk '{print $1}') -- bash
+
+- name: Get iSCSI Rook Ceph Tools Container ID
+  shell: |
+    kubectl -n rook-ceph get pod | grep rook-ceph-tools | awk '{print $1}')
+  register: rook_tools_cont_id
+  when: inventory_hostname in groups['mon']
+- debug: msg={{ rook_tools_cont_id }}
+  when: print_debug == true and inventory_hostname in groups['master']
+
+
+- name: Set Command Line for Rook Ceph Tools Container
+  set_fact:
+    rook_tools_cmd: "kubectl -n rook-ceph exec -it {{ rook_tools_cont_id.stdout }}"
+  when: inventory_hostname in groups['master']
+
+
+- name: Increase Max PGs per OSD
+  shell:
+    cmd: |
+      cat <<EOF | {{ rook_tools_cmd }} -- bash
+      ceph config set mon mon_max_pg_per_osd 600
+      exit
+      EOF
+  args:
+    executable: /bin/bash
+  register: max_pgs_increased
+- debug: msg={{ max_pgs_increased }}
+  when: print_debug == true
+  # 300
+
+
+- name: Create Pool for Metadata and Data
+  shell:
+    cmd: |
+      cat <<EOF | {{ rook_tools_cmd }} -- bash
+      ceph osd pool create {{ item.name }}_data {{ item.pg_count }}
+      ceph osd pool create {{ item.name }}_metadata {{ item.pg_count }}
+      exit
+      EOF
+  register: pool_metadata_created
+  with_items: "{{ cephfs.pool }}"
+- debug: msg={{ pool_metadata_created }}
+  when: print_debug == true
+  # ceph osd pool create {{ item.name }} {{ item.pg_count }}
+
+
+- name: Create Ceph Filesystem
+  shell:
+    cmd: |
+      cat <<EOF | {{ rook_tools_cmd }} -- bash
+      ceph fs new {{ item.name }}-fs01 {{ item.name }}_metadata {{ item.name }}_data
+      exit
+      EOF
+  register: cephfs_created
+  with_items: "{{ cephfs.pool }}"
+- debug: msg={{ cephfs_created }}
+  when: print_debug == true
+
+
+#- name: Create Ceph Filesystem Sub Volumes
+#  shell: |
+#    ceph fs subvolume create {{ item.name }} {{ item.name }}-subvol01
+#  register: cephfs_subvol_created
+#  with_items: "{{ cephfs.fs }}"
+#- debug: msg={{ cephfs_subvol_created }}
+#  when: print_debug == true
+
+
+# Note that Ceph only increases the actual number of ranks in the Ceph File Systems if a spare MDS daemon is available to take the new rank.
+- name: Set the max_mds Parameter to the Desired Number of Active MDS Daemons
+  shell:
+    cmd: |
+      cat <<EOF | {{ rook_tools_cmd }} -- bash
+      ceph fs set {{ item.name }} max_mds 3
+      exit
+      EOF
+  register: active_mds_daemon_set
+  with_items: "{{ cephfs.fs }}"
+- debug: msg={{ active_mds_daemon_set }}
+  when: print_debug == true
+# ceph mds deactivate cephfs:1
+
+
+- name: Verify the Number of Active MDS Daemons
+  shell: |
+    cmd: |
+      cat <<EOF | {{ rook_tools_cmd }} -- bash
+      ceph fs status {{ item.name }}
+      exit
+      EOF
+  register: active_mds_daemons_verified
+  with_items: "{{ cephfs.fs }}"
+- debug: msg={{ active_mds_daemons_verified }}
+  when: print_debug == true
+
+
+- name: Authorize CephFS Client to Access New Ceph Filesystem
+  shell: |
+    cmd: |
+      cat <<EOF | {{ rook_tools_cmd }} -- bash
+      ceph fs authorize {{ item.name }} client.{{ item.name }} / rw root_squash / rw
+      exit
+      EOF
+  register: cephfs_client_authorized
+  with_items: "{{ cephfs.fs }}"
+- debug: msg={{ cephfs_client_authorized }}
+  when: print_debug == true
+# ceph fs authorize {{ item.name }} client.{{ item.name }} /temp rw
+# ceph fs authorize {{ item.name }} client.{{ item.name }} / r /temp rw
+
+
+- name: Print Authentication Key for Ceph Users
+  shell: |
+    cmd: |
+      cat <<EOF | {{ rook_tools_cmd }} -- bash
+      ceph auth get client.{{ item.name }}
+      exit
+      EOF
+  register: ceph_user_key_printed
+  with_items: "{{ cephfs.fs }}"
+- debug: msg={{ ceph_user_key_printed }}
+  when: print_debug == true
+
+
+- name: Copy Authentication Key into Ceph Client Nodes for Ceph Users
+  shell: |
+    cmd: |
+      cat <<EOF | {{ rook_tools_cmd }} -- bash
+      ceph auth get client.{{ item.name }} > /etc/ceph/ceph.client.{{ item.name }}.keyring
+      exit
+      EOF
+  register: ceph_user_auth_key_copied
+  with_items: "{{ cephfs.fs }}"
+- debug: msg={{ ceph_user_auth_key_copied }}
+  when: print_debug == true
+
+
+- name: Check Active Stat
+  shell: |
+    cmd: |
+      cat <<EOF | {{ rook_tools_cmd }} -- bash
+      ceph mds stat
+      exit
+      EOF
+  register: active_stats_checked
+- debug: msg={{ active_stats_checked }}
+  when: print_debug == true

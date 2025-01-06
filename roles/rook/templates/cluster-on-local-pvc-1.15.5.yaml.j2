@@ -12,7 +12,7 @@
 kind: StorageClass
 apiVersion: storage.k8s.io/v1
 metadata:
-  name: local-storage
+  name: {{ _rook.storage_class }}
 provisioner: kubernetes.io/no-provisioner
 volumeBindingMode: WaitForFirstConsumer
 {% for arr1 in all_nvme_info %}
@@ -24,7 +24,7 @@ apiVersion: v1
 metadata:
   name: {{ dinfo[1] }}-{{ arr2.hostname }}
 spec:
-  storageClassName: local-storage
+  storageClassName: {{ _rook.storage_class }}
   capacity:
     storage: 10Gi
   accessModes:
@@ -52,26 +52,15 @@ apiVersion: ceph.rook.io/v1
 kind: CephCluster
 metadata:
   name: rook-ceph
-  namespace: rook-ceph # namespace:cluster
+  namespace: {{ _rook.namespace }}
 spec:
-  # If there are multiple clusters, the directory must be unique for each cluster.
   dataDirHostPath: /var/lib/rook
   mon:
-    # Set the number of mons to be started. Generally recommended to be 3.
-    # For highest availability, an odd number of mons should be specified.
     count: 3
-    # The mons should be on unique nodes. For production, at least 3 nodes are recommended for this reason.
-    # Mons should only be allowed on the same node for test environments where data loss is acceptable.
     allowMultiplePerNode: false
-    # A volume claim template can be specified in which case new monitors (and
-    # monitors created during fail over) will construct a PVC based on the
-    # template for the monitor's primary storage. Changes to the template do not
-    # affect existing monitors. Log data is stored on the HostPath under
-    # dataDirHostPath. If no storage requirement is specified, a default storage
-    # size appropriate for monitor data will be used.
     volumeClaimTemplate:
       spec:
-        storageClassName: local-storage
+        storageClassName: {{ _rook.storage_class }}
         resources:
           requests:
             storage: 10Gi
@@ -93,37 +82,20 @@ spec:
     disable: false
   logCollector:
     enabled: true
-    periodicity: daily # one of: hourly, daily, weekly, monthly
-    maxLogSize: 500M # SUFFIX may be 'M' or 'G'. Must be at least 1M.
+    periodicity: daily               # one of: hourly, daily, weekly, monthly
+    maxLogSize: 500M                 # SUFFIX may be 'M' or 'G'. Must be at least 1M.
   storage:
     useAllDevices: false
     deviceFilter: "^nvme$"
-    allowDeviceClassUpdate: false # whether to allow changing the device class of an OSD after it is created
-    allowOsdCrushWeightUpdate: true # whether to allow resizing the OSD crush weight after osd pvc is increased
+    allowDeviceClassUpdate: false    # whether to allow changing the device class of an OSD after it is created
+    allowOsdCrushWeightUpdate: true  # whether to allow resizing the OSD crush weight after osd pvc is increased
     storageClassDeviceSets:
       - name: set1
-        # The number of OSDs to create from this device set
         count: 9
-        # IMPORTANT: If volumes specified by the storageClassName are not portable across nodes
-        # this needs to be set to false. For example, if using the local storage provisioner
-        # this should be false.
         portable: false
-        # portable: true
-        # Certain storage class in the Cloud are slow
-        # Rook can configure the OSD running on PVC to accommodate that by tuning some of the Ceph internal
-        # Currently, "gp2-csi" has been identified as such
         tuneDeviceClass: false
-        # tuneDeviceClass: true
-        # Certain storage class in the Cloud are fast
-        # Rook can configure the OSD running on PVC to accommodate that by tuning some of the Ceph internal
-        # Currently, "managed-premium" has been identified as such
         tuneFastDeviceClass: false
-        # whether to encrypt the deviceSet or not
         encrypted: false
-        # Since the OSDs could end up on any node, an effort needs to be made to spread the OSDs
-        # across nodes as much as possible. Unfortunately the pod anti-affinity breaks down
-        # as soon as you have more than one OSD per node. The topology spread constraints will
-        # give us an even spread on K8s 1.18 or newer.
         placement:
           topologySpreadConstraints:
             - maxSkew: 1
@@ -153,11 +125,8 @@ spec:
                   topologyKey: kubernetes.io/hostname
           topologySpreadConstraints:
             - maxSkew: 1
-              # IMPORTANT: If you don't have zone labels, change this to another key such as kubernetes.io/hostname
-              # topologyKey: topology.kubernetes.io/zone
               topologyKey: kubernetes.io/hostname
               whenUnsatisfiable: DoNotSchedule
-              # whenUnsatisfiable: ScheduleAnyway
               labelSelector:
                 matchExpressions:
                   - key: app
@@ -181,8 +150,7 @@ spec:
               resources:
                 requests:
                   storage: 10Gi
-              # IMPORTANT: Change the storage class depending on your environment
-              storageClassName: local-storage
+              storageClassName: {{ _rook.storage_class }}
               volumeMode: Block
               accessModes:
                 - ReadWriteOnce
@@ -217,13 +185,11 @@ spec:
     # when onlyApplyOSDPlacement is false, will merge both placement.All() and storageClassDeviceSets.Placement.
     onlyApplyOSDPlacement: false
   resources:
-  #  prepareosd:
-  #    requests:
-  #      cpu: "200m"
-  #      memory: "200Mi"
+    prepareosd:
+      requests:
+        cpu: "200m"
+        memory: "200Mi"
   priorityClassNames:
-    # If there are multiple nodes available in a failure domain (e.g. zones), the
-    # mons and osds can be portable and set the system-cluster-critical priority class.
     mon: system-node-critical
     osd: system-node-critical
     mgr: system-cluster-critical
@@ -274,3 +240,5 @@ spec:
 #   token: ROOK_TOKEN_CHANGE_ME
 
 # https://rook.io/docs/rook/latest-release/CRDs/Cluster/pvc-cluster/
+
+

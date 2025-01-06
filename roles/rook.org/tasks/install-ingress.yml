@@ -1,0 +1,157 @@
+# This works around a linux kernel network susbsystem issue with overly aggressive caching of ARP entries,
+# which was causing problems when we reused IP addresses
+#- name: Avode ARP over-caching
+#  lineinfile:
+#    dest: /etc/sysctl.d/sysctl-k8s.conf
+#    line: "{{ item }}"
+#    state: present
+#  with_items: "{{ rook.kernel_parameters }}"
+#  notify:
+#    - Reload Sysctl
+#
+#- name: Apply strictARP for VMWare or Cloud
+#  shell: |
+#    kubectl get configmap kube-proxy -n kube-system -o yaml | \
+#    sed -e "s/strictARP: false/strictARP: true/" | kubectl apply -f - -n kube-system
+#  register: apply_strict_arp
+#  ignore_errors: yes
+#- debug: msg={{ apply_strict_arp }}
+#
+#
+#- name: Check strictARP
+#  shell: |
+#    kubectl get configmap kube-proxy -n kube-system -o yaml | grep strictARP
+#  register: check_strict_arp
+#  ignore_errors: yes
+#- debug: msg={{ check_strict_arp }}
+#
+#
+#- name: Create Namespace for Metallb
+#  shell: |
+#    kubectl create namespace metallb-system
+#  register: create_metallb_namespace
+#  ignore_errors: yes
+#- debug: msg={{ create_metallb_namespace }}
+#
+#
+#- name: Apply the Metallb
+#  shell: |
+#    /usr/local/bin/helm install metallb metallb/metallb --namespace metallb-system
+#  register: apply_metallb_native_config
+#  ignore_errors: yes
+#- debug: msg={{ apply_metallb_native_config }}
+#
+#
+##- name: Apply the Metallb Native
+##  shell: |
+##    kubectl apply -f \
+##    https://raw.githubusercontent.com/metallb/metallb/v{{ metallb.major_version }}.{{ metallb.minor_version }}.{{ metallb.patch_version }}/config/manifests/metallb-native.yaml
+##  register: apply_metallb_native_config
+##- debug: msg={{ apply_metallb_native_config }}
+#
+#
+#- name: Create Secret for Metallb Namespace
+#  shell: |
+#    kubectl create secret generic -n metallb-system memberlist --from-literal=secretkey="$(openssl rand -base64 128)"
+#  register: create_metallb_secret
+#  ignore_errors: yes
+#- debug: msg={{ create_metallb_secret }}
+#
+#
+#- name: Copy Metallb Config Yaml for VMware
+#  template:
+#    src: metallb-config-vmware.yaml.j2
+#    dest: "{{ base_path }}/metallb-config-vmware.yaml"
+#  register: copy_metallb_vmware_yaml
+#  ignore_errors: yes
+#- debug: msg={{ copy_metallb_vmware_yaml }}
+#
+#
+#- name: Apply the Metallb Config for VMware
+#  shell: |
+#    kubectl create -f "{{ base_path }}"/metallb-config-vmware.yaml
+#  register: apply_metallb_config
+#  ignore_errors: yes
+#  until: apply_metallb_config is succeeded
+#  retries: 20
+#- debug: msg={{ apply_metallb_config }}
+
+
+- name: Check if the Kube Ingress is Already Downloaded
+  stat: path={{ base_path }}/kubernetes-ingress
+  register: kube_ingress_dir_existed
+- debug: msg={{ kube_ingress_dir_existed }}
+
+
+- name: Clone Kubernetest Ingress
+  shell: |
+    git -C "{{ base_path }}" clone https://github.com/nginxinc/kubernetes-ingress.git \
+    --branch v{{ ingress.k8s.major_version }}.{{ ingress.k8s.minor_version }}.{{ ingress.k8s.patch_version }}
+  register: clone_k8s_ingress
+  when: kube_ingress_dir_existed.stat.exists != True
+- debug: msg={{ clone_k8s_ingress }}
+
+
+- name: Apply NGINX Ingress CRDs
+  shell: |
+    kubectl create -f crds/ --namespace=nginx-ingress
+  register: apply_nginx_ingress_crds
+  ignore_errors: yes
+  args:
+    chdir: "{{ base_path }}/kubernetes-ingress/deployments/helm-chart"
+- debug: msg={{ apply_nginx_ingress_crds }}
+
+
+- name: Install NGINX Ingress
+  shell: |
+    /usr/local/bin/helm install nginx-ingress nginx-stable/nginx-ingress --namespace=nginx-ingress --create-namespace
+  register: install_nginx_ingress
+  ignore_errors: yes
+  args:
+    chdir: "{{ base_path }}/kubernetes-ingress/deployments/helm-chart"
+- debug: msg={{ install_nginx_ingress }}
+
+
+- name: Upgrade NGINX Ingress CRDs
+  shell: |
+    /usr/local/bin/helm upgrade nginx-ingress nginx-stable/nginx-ingress --namespace=nginx-ingress
+  register: upgrade_nginx_ingress_crds
+  ignore_errors: yes
+  args:
+    chdir: "{{ base_path }}/kubernetes-ingress/deployments/helm-chart"
+- debug: msg={{ upgrade_nginx_ingress_crds }}
+
+
+# Assign External IP Address from NGINX Ingress
+# kubectl get svc -n nginx-ingress
+#
+# NAME                                 TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)                      AGE
+# nginx-ingress-controller             NodePort    10.233.26.164   <none>        80:30080/TCP,443:30443/TCP   23h
+# nginx-ingress-controller-admission   ClusterIP   10.233.45.96    <none>        443/TCP                      23h
+#
+# kubectl edit svc -n nginx-ingress nginx-ingress-controller
+#...
+#  selector:
+#    app.kubernetes.io/component: controller
+#    app.kubernetes.io/instance: nginx-ingress
+#    app.kubernetes.io/name: nginx-ingress
+#  sessionAffinity: None
+#  type: LoadBalancer
+#   
+# or
+#
+# kubectl -n nginx-ingress patch service nginx-ingress-controller -p '{"spec":{"type":"LoadBalancer"}}'
+#
+# kubectl get svc -n nginx-ingress
+# NAME                                 TYPE           CLUSTER-IP      EXTERNAL-IP   PORT(S)                      AGE
+# nginx-ingress-controller             LoadBalancer   10.233.26.164   10.95.90.50   80:30080/TCP,443:30443/TCP   23h
+# nginx-ingress-controller-admission   ClusterIP      10.233.45.96    <none>        443/TC
+
+
+# [ Check Rook and NGINX Ingress ]
+# kubectl get events --all-namespaces  --sort-by='.metadata.creationTimestamp'
+# kubectl -n cattle-system describe pods
+# kubectl -n cattle-system get all
+# kubectl -n cattle-system get pods
+# kubectl -n cattle-system logs <pod-name>
+

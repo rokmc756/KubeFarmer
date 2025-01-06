@@ -2,8 +2,8 @@
 apiVersion: ceph.rook.io/v1
 kind: CephCluster
 metadata:
-  name: rook-ceph
-  namespace: rook-ceph
+  name: rook
+  namespace: {{ _rook.namespace }}
 spec:
   cephVersion:
     image: quay.io/ceph/ceph:v18.2.4
@@ -13,15 +13,10 @@ spec:
     allowMultiplePerNode: false
   dashboard:
     enabled: true
-  # cluster level storage configuration and selection
   storage:
     useAllNodes: true
     useAllDevices: true
-    # Only create OSDs on devices that match the regular expression filter, "sdb" in this example
     deviceFilter: sdb
-  # To control where various services will be scheduled by kubernetes, use the placement configuration sections below.
-  # The example under 'all' would have all services scheduled on kubernetes nodes labeled with 'role=rook-node' and
-  # the OSDs would specifically only be created on nodes labeled with 'role=rook-osd-node'.
   placement:
     all:
       nodeAffinity:
@@ -41,4 +36,6 @@ spec:
               operator: In
               values:
               - rook-osd-node
+
 # https://rook.io/docs/rook/latest-release/CRDs/Cluster/host-cluster/#node-and-device-filters
+

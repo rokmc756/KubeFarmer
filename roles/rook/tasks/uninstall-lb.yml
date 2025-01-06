@@ -6,4 +6,3 @@
   args:
     chdir: "{{ base_path }}/rook/deploy/examples/"
 - debug: msg={{ delete_rook_lb }}
-

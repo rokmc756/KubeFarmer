@@ -6,11 +6,8 @@
   ignore_errors: yes
   with_items:
     - cattle-ui-plugin-system
-    - cert-manager
 - debug: msg={{ force_delete_namespaces }}
-# cattle-ui-plugin-system
-# - metallb-system
-# - nginx-ingress
+# - cert-manager
 
 
 - name: Get the Remaining Namespaces still Terminating

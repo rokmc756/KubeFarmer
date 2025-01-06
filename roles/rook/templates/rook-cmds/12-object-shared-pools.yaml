@@ -1,0 +1,43 @@
+apiVersion: ceph.rook.io/v1
+kind: CephBlockPool
+metadata:
+  name: rgw-root
+  namespace: rook-ceph # namespace:cluster
+spec:
+  name: .rgw.root
+  failureDomain: host
+  replicated:
+    size: 3
+    requireSafeReplicaSize: false
+  parameters:
+    pg_num: "8"
+  application: rgw
+---
+apiVersion: ceph.rook.io/v1
+kind: CephBlockPool
+metadata:
+  name: rgw-meta-pool
+  namespace: rook-ceph # namespace:cluster
+spec:
+  failureDomain: host
+  replicated:
+    size: 3
+    requireSafeReplicaSize: false
+  parameters:
+    pg_num: "8"
+  application: rgw
+---
+apiVersion: ceph.rook.io/v1
+kind: CephBlockPool
+metadata:
+  name: rgw-data-pool
+  namespace: rook-ceph # namespace:cluster
+spec:
+  failureDomain: osd
+  erasureCoded:
+    # For production it is recommended to use more chunks, such as 4+2 or 8+4
+    dataChunks: 2
+    codingChunks: 1
+  parameters:
+    bulk: "true"
+  application: rgw

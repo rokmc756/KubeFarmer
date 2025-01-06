@@ -1,6 +1,7 @@
 base_path: /root
 
-rook:
+
+_rook:
   install: true
   major_version: 1
   minor_version: 15
@@ -11,9 +12,11 @@ rook:
   enable_discovery_daemon: false
   clone_git: true
   nvme: true
+  namespace: rook-ceph
   storage_path: "/mnt/rook-storage"
   storage_class: "rook-storage"
-  lb_ip_addr: "192.168.1.219"
+  lb:
+    ip_addr: "192.168.1.219"
   k8s:
     major_version: 1
     minor_version: 28
@@ -23,7 +26,7 @@ rook:
   service:
     metadata:
       name: rook-loadbalancer
-      namespace: rook-ceph
+      namespace: rook
   ingress:
     metadata:
       name: rook-ingress
@@ -49,103 +52,124 @@ rook:
     # https://overcast.blog/kernel-tuning-and-optimization-for-kubernetes-a-guide-a3bdc8f7d255
 
 
-metallb:
-  install: false
-  major_version: 0
-  minor_version: 14
-  patch_version: 8
-  vmware:
-    kind:
-      ipaddrpool:
-        metadata:
-          name: first-pool
-          namespace: metallb-system
-        spec:
-          ips_range: 192.168.1.210-192.168.1.250
-      l2advertise:
-        metadata:
-          name: example
-          namespace: metallb-system
-  baremetal:
-    kind:
-      configmap:
-        metadata:
-          name: config
-          namespace: metallb-system
-        data:
-          config:
-            ipaddr_pools:
-              name: default
-              protocol: layer2
-              ips_range: 192.168.1.210-192.168.1.250
+#metallb:
+#  install: false
+#  major_version: 0
+#  minor_version: 14
+#  patch_version: 8
+#  vmware:
+#    kind:
+#      ipaddrpool:
+#        metadata:
+#          name: first-pool
+#          namespace: metallb-system
+#        spec:
+#          ips_range: 192.168.1.210-192.168.1.250
+#      l2advertise:
+#        metadata:
+#          name: example
+#          namespace: metallb-system
+#  baremetal:
+#    kind:
+#      configmap:
+#        metadata:
+#          name: config
+#          namespace: metallb-system
+#        data:
+#          config:
+#            ipaddr_pools:
+#              name: default
+#              protocol: layer2
+#              ips_range: 192.168.1.210-192.168.1.250
 
 
-helm:
-  enable_repo: false
+_helm:
+  enable_repo: true
   major_version: 3
   minor_version:
   patch_version:
   build_version:
 
 
-cert_manager:
+_cm:
   install: false
+  namespace: cert-manager
   major_version: 1
   minor_version: 7
   patch_version: 1
 
 
-ingress:
-  install: false
-  major_version:
-  minor_version:
-  patch_version:
-  k8s:
-    name: k8s-ingress
-    major_version: 3
-    minor_version: 0
-    patch_version: 2
-  nginx:
+_nginx:
+  ingress:
+    install: true
     name: nginx-ingress
+    class_name: rook-ingress-class
+    namespace: "nginx-ingress"
     major_version:
     minor_version:
     patch_version:
-    build_version:
+    hostname: rook
+    domain: jtest.pivotal.io
+    ip_addr: "192.168.1.219"
+    replica: 1
+  k8s_ingress:
+    major_version: 3
+    minor_version: 0
+    patch_version: 2
 
 
-cephfs:
-  pool:
-    - { name: "default-p01", pg_count: 100 }
-    - { name: "cephfs-p01", pg_count: 100 }
-    - { name: "block-p01", pg_count: 100 }
-    - { name: "rgw-p01", pg_count: 100 }
-    - { name: "nfs-p01", pg_count: 100 }
-  fs:
-    - { pool: "cephfs-p01", name: "cephfs-p01-fs01", size: "1G", mount_dir: "/mnt/cephfs-p01-fs01" }
-    - { pool: "default-p01", name: "default-p01-fs01", size: "1G", mount_dir: "/mnt/default-p01-fs01" }
-    - { pool: "block-p01", name: "block-p01-fs01", size: "1G", mount_dir: "/mnt/block-p01-fs01" }
-    - { pool: "rgw-p01", name: "rgw-p01-fs01", size: "1G", mount_dir: "/mnt/rgw-p01-fs01" }
-    - { pool: "nfs-p01", name: "nfs-p01-fs01", size: "1G", mount_dir: "/mnt/nfs-p01-fs01" }
-  image:
-    default:
-      - { name: "default-img01", pool: "default-p01", size: "1G" }
-      - { name: "default-img02", pool: "default-p01", size: "1G" }
-      - { name: "default-img03", pool: "default-p01", size: "1G" }
-    cephfs:
-      - { name: "cephfs-img01", pool: "cephfs-p01", size: "1G" }
-      - { name: "cephfs-img02", pool: "cephfs-p01", size: "1G" }
-      - { name: "cephfs-img03", pool: "cephfs-p01", size: "1G" }
-    block:
-      - { name: "block-img01", pool: "block-p01", size: "1G" }
-      - { name: "block-img02", pool: "block-p01", size: "1G" }
-      - { name: "block-img03", pool: "block-p01", size: "1G" }
-    rgw:
-      - { name: "rgw-img01", pool: "rgw-p01", size: "1G" }
-      - { name: "rgw-img02", pool: "rgw-p01", size: "1G" }
-      - { name: "rgw-img03", pool: "rgw-p01", size: "1G" }
-    nfs:
-      - { name: "nfs-img01", pool: "nfs-p01", size: "1G" }
-      - { name: "nfs-img02", pool: "nfs-p01", size: "1G" }
-      - { name: "nfs-img03", pool: "nfs-p01", size: "1G" }
+#_ingress:
+#  install: false
+#  namespace: nginx-ingress
+#  major_version:
+#  minor_version:
+#  patch_version:
+#  k8s:
+#    name: k8s-ingress
+#    major_version: 3
+#    minor_version: 0
+#    patch_version: 2
+#  nginx:
+#    name: nginx-ingress
+#    major_version:
+#    minor_version:
+#    patch_version:
+#    build_version:
+
+
+#cephfs:
+#  pool:
+#    - { name: "default-p01", pg_count: 100 }
+#    - { name: "cephfs-p01", pg_count: 100 }
+#    - { name: "block-p01", pg_count: 100 }
+#    - { name: "rgw-p01", pg_count: 100 }
+#    - { name: "nfs-p01", pg_count: 100 }
+#  fs:
+#    - { pool: "cephfs-p01", name: "cephfs-p01-fs01", size: "1G", mount_dir: "/mnt/cephfs-p01-fs01" }
+#    - { pool: "default-p01", name: "default-p01-fs01", size: "1G", mount_dir: "/mnt/default-p01-fs01" }
+#    - { pool: "block-p01", name: "block-p01-fs01", size: "1G", mount_dir: "/mnt/block-p01-fs01" }
+#    - { pool: "rgw-p01", name: "rgw-p01-fs01", size: "1G", mount_dir: "/mnt/rgw-p01-fs01" }
+#    - { pool: "nfs-p01", name: "nfs-p01-fs01", size: "1G", mount_dir: "/mnt/nfs-p01-fs01" }
+#  image:
+#    default:
+#      - { name: "default-img01", pool: "default-p01", size: "1G" }
+#      - { name: "default-img02", pool: "default-p01", size: "1G" }
+#      - { name: "default-img03", pool: "default-p01", size: "1G" }
+#    cephfs:
+#      - { name: "cephfs-img01", pool: "cephfs-p01", size: "1G" }
+#      - { name: "cephfs-img02", pool: "cephfs-p01", size: "1G" }
+#      - { name: "cephfs-img03", pool: "cephfs-p01", size: "1G" }
+#    block:
+#      - { name: "block-img01", pool: "block-p01", size: "1G" }
+#      - { name: "block-img02", pool: "block-p01", size: "1G" }
+#      - { name: "block-img03", pool: "block-p01", size: "1G" }
+#    rgw:
+#      - { name: "rgw-img01", pool: "rgw-p01", size: "1G" }
+#      - { name: "rgw-img02", pool: "rgw-p01", size: "1G" }
+#      - { name: "rgw-img03", pool: "rgw-p01", size: "1G" }
+#    nfs:
+#      - { name: "nfs-img01", pool: "nfs-p01", size: "1G" }
+#      - { name: "nfs-img02", pool: "nfs-p01", size: "1G" }
+#      - { name: "nfs-img03", pool: "nfs-p01", size: "1G" }
 
 

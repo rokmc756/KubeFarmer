@@ -1,0 +1,20 @@
+---
+- name: Enable Rados Block Device Kernel Module
+  copy:
+    dest: /etc/modules-load.d/rbd.conf
+    content: |
+      rbd
+  register: enable_rbd_kernel_module
+  ignore_errors: true
+- debug: msg={{ enable_rbd_kernel_module }}
+  when: print_debug == true
+
+
+- name: Load RBD Kernel Module
+  shell: |
+    modprobe rbd
+  register: load_rbd_kernel_module
+  ignore_errors: true
+- debug: msg={{ load_rbd_kernel_module }}
+  when: print_debug == true
+

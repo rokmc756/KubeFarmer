@@ -1,0 +1,3 @@
+
+https://rook.io/docs/rook/latest/Troubleshooting/ceph-common-issues/#monitors-are-the-only-pods-running
+

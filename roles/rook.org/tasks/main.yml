@@ -1,0 +1,93 @@
+---
+# Deploy Rook Ceph with Metallb and NGINX Ingress
+#
+# For now fail if it's not a Red Hat and SuSE based system
+- name: Check OS ( Kubernetes )
+  fail: msg="Not a Red Hat or SUSE based System!"
+  when: ansible_os_family != 'RedHat' or  ansible_os_family != 'CentOS' or  ansible_os_family != 'Rocky' or ansible_os_family != 'openSUSE Leap'
+
+
+- name: Set Facts for Rook Ceph
+  import_tasks: set-rook-facts.yml
+  tags:
+    - install
+    - uninstall
+
+
+#- name: Enable Helm Repository
+#  import_tasks: enable-helm-repo.yml
+#  tags: install
+#  when: helm.enable_repo == true and inventory_hostname in groups['master']
+
+
+- name: Deploy Rook Ceph
+  import_tasks: install-rook.yml
+  tags: install
+  when: rook.install == true and inventory_hostname in groups['master']
+
+
+#- name: Install Metallb
+#  import_tasks: install-metallb.yml
+#  tags: install
+#  when: metallb.install == true and inventory_hostname in groups['master']
+
+
+#- name: Install Ingress
+#  import_tasks: install-ingress.yml
+#  tags: install
+#  when: ingress.install == true and inventory_hostname in groups['master']
+
+
+- name: Install Cert Manager
+  import_tasks: install-cert-manager.yml
+  tags: install
+  when: cert_manager.install == true and inventory_hostname in groups['master']
+
+
+- name: Install Load Balancer
+  import_tasks: install-lb.yml
+  tags: install
+  when: rook.install == true and inventory_hostname in groups['master']
+
+
+#- name: Check the Status of Rook Ceph and Print Connection Info
+#  import_tasks: check-rook-ceph-status.yml
+#  tags: install
+#  when: rook.install == true and inventory_hostname in groups['master']
+
+
+- name: Uninstall Load Balancer
+  import_tasks: uninstall-lb.yml
+  tags: uninstall
+  when: rook.install == true and inventory_hostname in groups['master']
+
+
+- name: Uninstall Cert Manager
+  import_tasks: uninstall-cert-manager.yml
+  tags: uninstall
+  when: cert_manager.install == true and inventory_hostname in groups['master']
+
+
+#- name: Uninstall Ingress
+#  import_tasks: uninstall-ingress.yml
+#  tags: uninstall
+#  when: ingress.install == true and inventory_hostname in groups['master']
+
+
+#- name: Uninstall Metallb
+#  import_tasks: uninstall-metallb.yml
+#  tags: uninstall
+#  when: metallb.install == true and inventory_hostname in groups['master']
+
+
+- name: Destroy Rook Ceph
+  import_tasks: uninstall-rook.yml
+  tags: uninstall
+  when: rook.install == true and inventory_hostname in groups['master']
+
+
+#- name: Disable Helm Repository
+#  import_tasks: disable-helm-repo.yml
+#  tags: uninstall
+#  when: helm.enable_repo == true and inventory_hostname in groups['master']
+

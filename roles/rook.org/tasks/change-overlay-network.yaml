@@ -1,0 +1,139 @@
+# https://tech.hostway.co.kr/2022/04/29/851/?print=print
+
+
+#[ Network ] K8S Overlay Network 변경 실습 ( IPIP –> VXLAN )
+#|
+#K8S Overlay Network 의 변경
+#IPIP –> VXLAN 변경 하기
+#주의) 다른 방식의 네트워크에서 생성된 서비스 POD가 있을 경우 프로덕션 레벨에서는 변경이 사실상 어렵다.
+#( pod 통신의 문제 발생에 대한 트러블슈팅이나 보장을 할 수가 없다 )
+#Calico IP-IP Network 제거 후 VXLAN 으로 재 설치
+#Node : Controller / Worker01 / Worker02
+#
+### Controller
+## Mode 확인 시 IPIPMODE 인 것을 확인할 수 있다
+#calicoctl get ippool -o wide
+#NAME                  CIDR             NAT    IPIPMODE   VXLANMODE   DISABLED   DISABLEBGPEXPORT   SELECTOR
+#default-ipv4-ippool   192.168.0.0/16   true   Always     Never       false      false
+# all()
+#
+## 설치 Manifest YAML 을 이용하여 삭제한다.
+#kubectl delete -f calico.yml
+#
+### Contoller / Worker 공통
+## 가비지 삭제 후 리부팅하면 tunl0 인터페이스가 사라진 것을 확인할 수 있다.
+#sudo rm -rf /var/run/calico/
+#sudo rm -rf /var/lib/calico/
+#sudo rm -rf /etc/cni/net.d/
+#sudo rm -rf /var/lib/cni/
+#sudo reboot
+#
+#
+### Controller
+## Manifest. calico.yaml 파일을 VXLAN 설치 타입으로 수정한다.
+#
+# livenessProbe:
+#            exec:
+#              command:
+#              - /bin/calico-node
+#              - -felix-live
+#             # - -bird-live        // VXLAN 은 bird(BGP) 를 사용하지 않으므로 주석 처리 필수
+#            periodSeconds: 10
+#            initialDelaySeconds: 10
+#            failureThreshold: 6
+#            timeoutSeconds: 10
+#          readinessProbe:
+#            exec:
+#              command:
+#              - /bin/calico-node
+#              - -felix-ready
+#             # - -bird-ready    // 주석 필수
+#
+#
+#            # Enable IPIP
+#            - name: CALICO_IPV4POOL_IPIP
+#              value: "Never"       // Always --> Never 로 변경한다
+#            # Enable or Disable VXLAN on the default IP pool.
+#            - name: CALICO_IPV4POOL_VXLAN
+#              value: "Always"         // Never --> Always 로 변경한다
+#
+#kind: ConfigMap
+#apiVersion: v1
+#metadata:
+#  name: calico-config
+#  namespace: kube-system
+#data:
+#  # Typha is disabled.
+#  typha_service_name: "none"
+#  # Configure the backend to use.
+#  calico_backend: "vxlan"        // "bird" --> "vxlan" 으로 변경한다.
+#
+#
+## 설치
+#kubectl apply -f calico.yaml
+#
+## Calico Node 체크. 모두 Ready 여야 한다. 조금 기다려보자.
+#kubectl get nodes -o wide -A
+#
+## Calico Pod 체크. kube-system PoD 에 에러가 있으면 안된다.
+#kubectl get pod -o wide -A
+#
+## Calico Type 체크. BIRD 는 꺼져야 정상
+#sudo calicoctl node status
+#Calico process is running.
+#The BGP backend process (BIRD) is not running.
+#
+## Network 체크 VXLANMODE 가 활성화되었다.
+#calicoctl get ippool -o wide
+#NAME                  CIDR             NAT    IPIPMODE   VXLANMODE   DISABLED   DISABLEBGPEXPORT   SELECTOR
+#default-ipv4-ippool   192.168.0.0/16   true   Never      Always      false      false
+# all()
+#
+## 각 노드들의 tunl0 인터페이스가 사라지고 vxlan 인터페이스가 생성되었다.
+## 노드의 vxlan 인터페이스 간 라우팅이 연결된 부분을 확인 가능하다.
+#
+#hostway@controller:~$ route -n
+#Kernel IP routing table
+#Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
+#0.0.0.0         10.10.10.1      0.0.0.0         UG    0      0        0 ens18
+#10.10.10.0      0.0.0.0         255.255.255.0   U     0      0        0 ens18  // External (SNAT)
+#172.17.0.0      0.0.0.0         255.255.0.0     U     0      0        0 docker0 // Container Runtime Bridge
+#192.168.5.0     192.168.5.0     255.255.255.192 UG    0      0        0 vxlan.calico  // Worker01의 인터페이스 정보
+#192.168.30.64   192.168.30.64   255.255.255.192 UG    0      0        0 vxlan.calico  // Worker02의 인터페이스 정보
+#192.168.49.0    0.0.0.0         255.255.255.192 U     0      0        0 *              // Controller 의 vxlan 대역
+#192.168.49.1    0.0.0.0         255.255.255.255 UH    0      0        0 cali09ae4a7064b   // Node(Worker01)가 도달할 GW
+#192.168.49.2    0.0.0.0         255.255.255.255 UH    0      0        0 cali1fdac863dc5  // Node(Worker02)가 도달할 GW
+#
+## Worker 의 정보를 알고 있다.
+#hostway@controller:~$ ip nei | grep vxlan
+#192.168.5.0 dev vxlan.calico lladdr 66:8c:33:86:44:ce PERMANENT
+#192.168.30.64 dev vxlan.calico lladdr 66:fb:72:20:22:a1 PERMANENT
+#
+## VXLAN Traffic Port 는 UDP 이다.
+#udp        0      0 0.0.0.0:4789            0.0.0.0:*
+#
+## PoD 생성 시 특이사항 없음
+#hostway@controller:~$ kubectl create deployment sampleos --image=gcr.io/google-samples/kubernetes-bootcamp:v1 --replicas=3
+#deployment.apps/sampleos created
+#hostway@controller:~$ kubectl get pod -o wide
+#NAME                        READY   STATUS    RESTARTS   AGE   IP              NODE       NOMINATED NODE   READINESS GATES
+#sampleos-646dc9654b-8xjw9   1/1     Running   0          45s   192.168.5.11    worker01   <none>           <none>
+#sampleos-646dc9654b-gxn75   1/1     Running   0          45s   192.168.5.10    worker01   <none>           <none>
+#sampleos-646dc9654b-snkxg   1/1     Running   0          45s   192.168.30.75   worker02   <none>           <none>
+#
+#
+## VXLAN 패킷 확인하기
+#// Controller
+#1) worker01 과 worker02 에 위치하는 POD 간 Ping 을 날려본다.
+#
+#hostway@controller:~$ kubectl exec -it sampleos-646dc9654b-8xjw9 -- ping 192.168.30.75
+#PING 192.168.30.75: 56 data bytes
+#64 bytes from 192.168.30.75: icmp_seq=0 ttl=115 time=92.124 ms
+#64 bytes from 192.168.30.75: icmp_seq=1 ttl=115 time=79.735 ms
+#64 bytes from 192.168.30.75: icmp_seq=2 ttl=115 time=79.233 ms
+#
+#
+#2) 실제 통신은 물리적 인터페이스에서 진행되므로 실제 인터페이스에서 tcpdump 를 추출한다.
+#sudo tcpdump -i ens18 -w vxlan.pcap
+#
+#3) Wireshark 로 확인한다. UDP 패킷을 확인할 수 있다.

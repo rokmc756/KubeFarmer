@@ -1,0 +1,14 @@
+apiVersion: ceph.rook.io/v1
+kind: CephObjectStore
+metadata:
+  name: store-a
+  namespace: rook-ceph # namespace:cluster
+spec:
+  sharedPools:
+    metadataPoolName: rgw-meta-pool
+    dataPoolName: rgw-data-pool
+    preserveRadosNamespaceDataOnDelete: true
+  gateway:
+    # sslCertificateRef:
+    port: 80
+    instances: 1

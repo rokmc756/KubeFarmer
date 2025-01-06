@@ -2,13 +2,13 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ rook.ingress.metadata.name }}
-  namespace: {{ rook.ingress.metadata.namespace }}
+  name: {{ _rook.ingress.metadata.name }}
+  namespace: {{ _rook.ingress.metadata.namespace }}
   annotations:
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
 spec:
   rules:
-    - host: {{ rook.ingress.hostname }}
+    - host: {{ _rook.ingress.hostname }}
       http:
         paths:
           - path: /
