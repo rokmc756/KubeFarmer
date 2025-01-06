@@ -134,3 +134,9 @@ kubectl -n rook-ceph get pod -l rgw=store-a
 kubectl create -f 14-local-object-store.yaml
 Error from server (AlreadyExists): error when creating "14-local-object-store.yaml": cephobjectstores.ceph.rook.io "my-store" already exists
 
+
+# https://rook.io/docs/rook/latest/Storage-Configuration/Object-Storage-RGW/object-storage/#create-each-object-store
+
+
+
+
