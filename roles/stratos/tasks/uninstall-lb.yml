@@ -1,27 +1,24 @@
+---
 - name: Copy Stratos Loadbalancer Config Yaml
   template:
     src: stratos-loadbalancer.yaml.j2
     dest: "{{ base_path }}/stratos-loadbalancer.yaml"
   register: copy_stratos_lb_config_yaml
+  ignore_errors: true
 - debug: msg={{ copy_stratos_lb_config_yaml }}
+# kubectl delete -f stratos-loadbalancer.yaml
 
 
 - name: Delete Stratos Load Balancer
   shell: |
-    kubectl delete -f stratos-loadbalancer.yaml
+    kubectl patch svc {{ item.svc }} -n {{ _stratos.namespace }} -p '{"spec": {"type": "ClusterIP"}}'
   register: delete_stratos_lb
+  ignore_errors: true
   args:
-    chdir: "{{ base_path }}/"
+    chdir: "{{ base_path }}"
+  with_items:
+    - { svc: "stratos-mariadb", lb_ip_addr: "{{ _stratos.db.ip_addr }}" }
+    - { svc: "stratos-ui-ext", lb_ip_addr: "{{ _stratos.console.ip_addr }}" }
 - debug: msg={{ delete_stratos_lb }}
-
-
-- name: Validate if Stratos Container is Running
-  shell: |
-    kubectl -n stratos get pod | grep stratos-db | awk '{print $3}' | cut -d : -f 1
-  register: check_stratos_container
-  until: check_stratos_container.stdout.find("") != -1
-  retries: 100
-  delay: 10
-- debug: msg={{ check_stratos_container }}
   when: print_debug == true
 

@@ -1,20 +1,21 @@
 {% for h in groups["workers"] %}
+{% for n in range(0, total_stratos_containers|int) %}
 ---
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: stratos-pv-{{ hostvars[h]['ansible_hostname'] }}
-  namespace: {{ stratos.namespace }}
+  name: stratos-pv-{{ hostvars[h]['ansible_hostname'] }}-{{ n }}
+  namespace: {{ _stratos.namespace }}
 spec:
   capacity:
-    storage: 70Gi
+    storage: 15Gi
   volumeMode: Filesystem
   accessModes:
   - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Delete
-  storageClassName: stratos-storage
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: {{ _stratos.storage_class }}
   local:
-    path: {{ stratos.storage_path }}
+    path: {{ _stratos.storage_path }}-{{ n }}
   nodeAffinity:
     required:
       nodeSelectorTerms:
@@ -24,3 +25,5 @@ spec:
           values:
           - {{ hostvars[h]['ansible_hostname'] }}
 {% endfor %}
+{% endfor %}
+

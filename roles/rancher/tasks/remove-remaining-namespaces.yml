@@ -28,7 +28,6 @@
 - debug: msg={{ delete_terminating_namespaces }}
 
 
-# 1
 #- name: Delete Service Accounts / ClusterRoleBindings for Cleanup Jobs
 #  shell: |
 #    kubectl delete serviceaccounts cleanup-service-account -n kube-system

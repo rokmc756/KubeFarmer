@@ -2,7 +2,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: stratos-console-ui-ext
-  namespace: {{ stratos.service.metadata.namespace }}
+  namespace: {{ _stratos.service.metadata.namespace }}
   annotations:
     nginx.ingress.kubernetes.io/proxy-protocol: "true"
 spec:
@@ -12,18 +12,18 @@ spec:
       port: 443
       targetPort: 443
   type: LoadBalancer
-  loadBalancerIP: {{ stratos.lb_ip_addr }}
+  loadBalancerIP: {{ _stratos.lb.ip_addr }}
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ stratos.ingress.metadata.name }}
-  namespace: {{ stratos.ingress.metadata.namespace }}
+  name: {{ _stratos.ingress.metadata.name }}
+  namespace: {{ _stratos.ingress.metadata.namespace }}
   annotations:
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
 spec:
   rules:
-    - host: {{ stratos.ingress.hostname }}
+    - host: {{ _stratos.ingress.hostname }}
       http:
         paths:
           - path: /

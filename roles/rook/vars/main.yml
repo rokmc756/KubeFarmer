@@ -11,6 +11,8 @@ rook:
   enable_discovery_daemon: false
   clone_git: true
   nvme: true
+  storage_path: "/mnt/rook-storage"
+  storage_class: "rook-storage"
   lb_ip_addr: "192.168.1.219"
   k8s:
     major_version: 1

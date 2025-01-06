@@ -1,5 +1,121 @@
 ---
+console:
+  cookieDomain:
+  backendLogLevel: info
+  ssoLogin: false
+  ssoOptions:
+  sessionStoreSecret:
+  service:
+    servicePort: 443
+    type: ClusterIP
+    externalName:
+    ingress:
+      enabled: false
+      host:
+      secretName:
+      tls:
+        crt:
+        key:
+    http:
+      enabled: false
+      servicePort: 80
+  templatesConfigMapName:
+  userInviteSubject: ~
+  techPreview: false
+  apiKeysEnabled: admin_only
+  ui:
+    listMaxSize:
+    listAllowLoadMaxed: false
+  localAdminPassword: ~
+  tlsSecretName:
+  autoRegisterCF: ~
+  kubeDashboardImage:
+  artifactHubEnabled: true
+  reportsVolumeSize: 1Gi
+  reportsVolumeDisabled: false
+  sslProtocols:
+  sslCiphers:
+  replicaCount: {{ _stratos.console.replica }}
+
+
+images:
+  console: stratos-console
+  proxy: stratos-jetstream
+  mariadb: stratos-mariadb
+  configInit: stratos-config-init
+  analyzers: stratos-analyzers
+
+
+# storageClass: default
 storageClass: persistent
+
+
 mariadb:
+  external: false
+  database: console
+  user: console
+  userPassword: changeme
+  rootPassword: changeme
+  host:
+  port:
+  tls:
+  type:
+  resources:
+    requests:
+      memory: 256Mi
+      cpu: 250m
   persistence:
-    storageClass: stratos-storage
+    enabled: true
+    accessMode: ReadWriteOnce
+    size: 1Gi
+    storageClass: {{ _stratos.storage_class }}
+  nodeSelector: {}
+
+
+configInit:
+  nodeSelector: {}
+
+
+uaa:
+  endpoint: ~
+  consoleClient:
+  consoleClientSecret:
+  consoleAdminIdentifier:
+  skipSSLValidation: false
+
+
+env:
+  DOMAIN:
+  UAA_HOST:
+  UAA_PORT: 2793
+  UAA_ZONE: scf
+  SMTP_AUTH: "false"
+  SMTP_FROM_ADDRESS: ~
+  SMTP_USER: ~
+  SMTP_PASSWORD: ~
+  SMTP_HOST: ~
+  SMTP_PORT: "25"
+
+
+kube:
+  auth: "rbac"
+  external_console_https_port: 8443
+  storage_class:
+    persistent:
+  organization: splatform
+  registry:
+    hostname: docker.io
+    username:
+    password:
+    email: default
+
+
+autoCleanup: false
+
+
+services:
+  loadbalanced: false
+
+
+useLb: false
+

@@ -1,26 +1,8 @@
-# https://stratos.app/docs/4.0.0/deploy/kubernetes/helm-installation/
-- name: Create Directory for Persistent Volumes
-  file:
-    path: "{{ stratos.storage_path }}"
-    state: directory
-    owner: root
-    group: root
-    mode: 0777
-  register: create_pv_dir
-  delegate_to: "{{ item }}"
-  delegate_facts: True
-  with_items:
-    - "{{ groups['all'] }}"
-- debug: msg={{ create_pv_dir }}
-  when: print_debug == true
-
-
+---
 - name: Create Namespace for Persistent Volumes
   shell: |
-    kubectl create namespace {{ item }}
+    kubectl create namespace {{ _stratos.namespace }}
   register: create_namespace
-  with_items:
-    - "{{ stratos.namespace }}"
 - debug: msg={{ create_namespace }}
   when: print_debug == true
 
@@ -54,7 +36,7 @@
 
 - name: Deploy Stratos
   shell: |
-    /usr/local/bin/helm install stratos-console stratos/console -n {{ stratos.namespace }} -f stratos-values.yaml
+    /usr/local/bin/helm install stratos stratos/console -n {{ _stratos.namespace }} -f {{ base_path }}/stratos-values.yaml
   register: deploy_stratos
   args:
     chdir: "{{ base_path }}"
@@ -62,14 +44,15 @@
   when: print_debug == true
 
 
-- name: Validate if Stratos Controller Containers are Running
+- name: Validate if Stratos Containers are Running
   shell: |
-    kubectl -n {{ stratos.namespace }} get pods | grep stratos-db | awk '{print $3}' | sort | uniq
-  register: check_stratos_controller_container
-  until: check_stratos_controller_container.stdout == "Running"
-  retries: 50
+    kubectl get pods -n {{ _stratos.namespace }} | grep -E '{{ item.svc }}' | awk '{print $3}' | grep {{ item.grep }} | wc -l
+  register: check_stratos_containers
+  until: check_stratos_containers.stdout|int == item.replica|int
+  retries: 100
   delay: 10
-- debug: msg={{ check_stratos_controller_container }}
+  with_items:
+    - { svc: "^stratos-", replica: "{{ _stratos.db.replica|int + _stratos.console.replica|int }}", grep: "Running" }
+- debug: msg={{ check_stratos_containers }}
   when: print_debug == true
-
 

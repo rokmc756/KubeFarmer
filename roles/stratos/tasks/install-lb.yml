@@ -4,25 +4,19 @@
     dest: "{{ base_path }}/stratos-loadbalancer.yaml"
   register: copy_stratos_lb_config_yaml
 - debug: msg={{ copy_stratos_lb_config_yaml }}
+#  kubectl apply -f stratos-loadbalancer.yaml
 
 
-- name: Create Stratos Load Balancer
+- name: Apply Stratos Load Balancer
   shell: |
-    kubectl apply -f stratos-loadbalancer.yaml
-  register: create_stratos_lb
+    kubectl patch svc {{ item.svc }} -n {{ _stratos.namespace }} -p '{"spec": {"type": "LoadBalancer", "loadBalancerIP": "{{ item.lb_ip_addr }}"}}'
+  register: apply_stratos_lb
   args:
-    chdir: "{{ base_path }}/"
-- debug: msg={{ create_stratos_lb }}
-
-
-- name: Validate if Stratos Container is Running
-  shell: |
-    kubectl -n {{ stratos.namespace }} get svc | grep stratos-console-ui-ext | awk '{print $4}'
-  register: check_stratos_container
-  until: check_stratos_container.stdout == "{{ stratos.lb_ip_addr }}"
-  retries: 100
-  delay: 10
-- debug: msg={{ check_stratos_container }}
+    chdir: "{{ base_path }}"
+  with_items:
+    - { svc: "stratos-mariadb", lb_ip_addr: "{{ _stratos.db.ip_addr }}" }
+    - { svc: "stratos-ui-ext", lb_ip_addr: "{{ _stratos.console.ip_addr }}" }
+- debug: msg={{ apply_stratos_lb }}
   when: print_debug == true
 
 

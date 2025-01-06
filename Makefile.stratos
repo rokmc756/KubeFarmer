@@ -1,0 +1,84 @@
+stratos:
+	@if [ "${r}" = "reinit" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-stratos.yml -e '{"${s}": True}' --tags='reinit';\
+			else\
+				echo "No actions to configure stratos";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-stratos.yml -e '{stratos_all: True}' --tags='reinit';\
+			else\
+				echo "No actions to configure stratos";\
+			fi\
+		else\
+			echo "No Actions to configure stratos";\
+		fi;\
+	elif [ "${r}" = "prepare" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-stratos.yml -e '{"${s}": True}' --tags='prepare';\
+			else\
+				echo "No actions to configure stratos";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-stratos.yml -e '{stratos_all: True}' --tags='prepare';\
+			else\
+				echo "No actions to configure stratos";\
+			fi\
+		else\
+			echo "No Actions to configure stratos";\
+		fi;\
+	elif [ "${r}" = "install" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-stratos.yml -e '{"${s}": True}' --tags='install';\
+			else\
+				echo "No actions to install stratos";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-stratos.yml -e '{stratos_all: True}' --tags='install';\
+			else\
+				echo "No actions to install stratos";\
+			fi\
+		else\
+			echo "No actions to install stratos";\
+		fi;\
+	elif [ "${r}" = "uninstall" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-stratos.yml -e '{"${s}": True}' --tags='uninstall';\
+			else\
+				echo "No actions to uninstall stratos";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-stratos.yml -e '{stratos_all: True}' --tags='uninstall';\
+			else\
+				echo "No actions to uninstall stratos";\
+			fi\
+		fi;\
+	elif [ "${r}" = "upgrade" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-stratos.yml -e '{"${s}": True}' --tags='upgrade';\
+			else\
+				echo "No actions to uninstall stratos";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-stratos.yml -e '{stratos_all: True}' --tags='upgrade';\
+			else\
+				echo "No actions to uninstall stratos";\
+			fi\
+		else\
+			echo "No actions to uninstall stratos";\
+		fi;\
+	else\
+		echo "No actions to stratos role";\
+		exit;\
+	fi
+
