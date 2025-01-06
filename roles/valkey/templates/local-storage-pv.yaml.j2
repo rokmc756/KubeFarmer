@@ -1,0 +1,29 @@
+{% for h in groups["workers"] %}
+{% for n in range(0, total_valkey_containers|int) %}
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: valkey-pv-{{ hostvars[h]['ansible_hostname'] }}-{{ n }}
+  namespace: {{ _valkey.namespace }}
+spec:
+  capacity:
+    storage: 15Gi
+  volumeMode: Filesystem
+  accessModes:
+  - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: {{ _valkey.storage_class }}
+  local:
+    path: {{ _valkey.storage_path }}-{{ n }}
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - {{ hostvars[h]['ansible_hostname'] }}
+{% endfor %}
+{% endfor %}
+

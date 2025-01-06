@@ -1,0 +1,84 @@
+rook:
+	@if [ "${r}" = "reinit" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-rook.yml -e '{"${s}": True}' --tags='reinit';\
+			else\
+				echo "No actions to configure rook";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-rook.yml -e '{rook_all: True}' --tags='reinit';\
+			else\
+				echo "No actions to configure rook";\
+			fi\
+		else\
+			echo "No Actions to configure rook";\
+		fi;\
+	elif [ "${r}" = "prepare" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-rook.yml -e '{"${s}": True}' --tags='prepare';\
+			else\
+				echo "No actions to configure rook";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-rook.yml -e '{rook_all: True}' --tags='prepare';\
+			else\
+				echo "No actions to configure rook";\
+			fi\
+		else\
+			echo "No Actions to configure rook";\
+		fi;\
+	elif [ "${r}" = "install" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-rook.yml -e '{"${s}": True}' --tags='install';\
+			else\
+				echo "No actions to install rook";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-rook.yml -e '{rook_all: True}' --tags='install';\
+			else\
+				echo "No actions to install rook";\
+			fi\
+		else\
+			echo "No actions to install rook";\
+		fi;\
+	elif [ "${r}" = "uninstall" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-rook.yml -e '{"${s}": True}' --tags='uninstall';\
+			else\
+				echo "No actions to uninstall rook";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-rook.yml -e '{rook_all: True}' --tags='uninstall';\
+			else\
+				echo "No actions to uninstall rook";\
+			fi\
+		fi;\
+	elif [ "${r}" = "upgrade" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-rook.yml -e '{"${s}": True}' --tags='upgrade';\
+			else\
+				echo "No actions to uninstall rook";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-rook.yml -e '{rook_all: True}' --tags='upgrade';\
+			else\
+				echo "No actions to uninstall rook";\
+			fi\
+		else\
+			echo "No actions to uninstall rook";\
+		fi;\
+	else\
+		echo "No actions to rook role";\
+		exit;\
+	fi
+

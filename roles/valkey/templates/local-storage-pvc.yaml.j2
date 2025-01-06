@@ -1,0 +1,16 @@
+{% for n in range(0, _valkey.replica|int) %}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: data-valkey-{{ n }}
+  namespace: {{ _valkey.namespace }}
+spec:
+  storageClassName: {{ _valkey.storage_class }}
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+{% endfor %}
+

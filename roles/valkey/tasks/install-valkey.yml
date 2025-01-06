@@ -1,0 +1,66 @@
+- name: Create Namespace for Persistent Volumes
+  shell: |
+    kubectl create namespace {{ _valkey.namespace }}
+  register: create_namespace
+  #with_items:
+  #  - valkey
+- debug: msg={{ create_namespace }}
+  when: print_debug == true
+
+
+- name: Copy Cluster Local PVC Config Yaml
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ base_path }}/{{ item }}"
+  register: copy_cluster_local_pvc_config_yaml
+  with_items:
+    - "local-storage-class.yaml"
+    - "local-storage-pv.yaml"
+    - "local-storage-pvc.yaml"
+- debug: msg={{ copy_cluster_local_pvc_config_yaml }}
+
+
+- name: Cluster Settings for a Production Cluster Running in a Dynamic Cloud Environment including VMware
+  shell: |
+    kubectl create -f {{ item }}
+  register: create_pvc
+  with_items:
+    - "local-storage-class.yaml"
+    - "local-storage-pv.yaml"
+    - "local-storage-pvc.yaml"
+  args:
+    chdir: "{{ base_path }}/"
+- debug: msg={{ create_pvc }}
+  when: print_debug == true
+
+
+- name: Copy valkey Helm Config
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ base_path }}/{{ item }}"
+  register: copy_valkey_helm_config
+  with_items:
+    - "valkey-values.yaml"
+- debug: msg={{ copy_valkey_helm_config }}
+
+
+- name: Deploy valkey
+  shell: |
+    /usr/local/bin/helm install valkey bitnami/valkey -n {{ _valkey.namespace }} -f {{ base_path }}/valkey-values.yaml
+  register: deploy_valkey
+- debug: msg={{ deploy_valkey }}
+  when: print_debug == true
+
+
+- name: Validate if valkey Controller Containers are Running
+  shell: |
+    kubectl get pods -n {{ _valkey.namespace }} | grep {{ item.svc }} | awk '{print $3}' | grep Running | wc -l
+  register: check_valkey_containers
+  until: check_valkey_containers.stdout|int == item.replica|int
+  retries: 100
+  delay: 10
+  with_items:
+    - { svc: "valkey-", replica: "{{ _valkey.replica }}" }
+- debug: msg={{ check_valkey_containers }}
+  when: print_debug == true
+
