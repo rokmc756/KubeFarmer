@@ -1,20 +1,19 @@
+---
 - name: Delete Rancher Load Balancer
   shell: |
-    kubectl delete -f "{{ base_path }}"/rancher-loadbalancer.yaml
+    kubectl patch svc {{ item.svc }} -n {{ item.ns }} -p '{"spec": {"type": "ClusterIP"}}'
   register: delete_rancher_lb
-  ignore_errors: yes
+  ignore_errors: true
+  args:
+    chdir: "{{ base_path }}"
+  with_items:
+    - { svc: "rancher", ns: "cattle-system", lb_ip_addr: "{{ _rancher.lb.ip_addr }}" }
 - debug: msg={{ delete_rancher_lb }}
+  ignore_errors: true
+  when: print_debug == true
 
 
-- name: Check Racher Pods
-  shell: kubectl get all -n cattle-system
-  register: check_rancher_pods
-  ignore_errors: yes
-  until: check_rancher_pods.stdout.find("Terminating") == -1
-  retries: 20
-- debug: msg={{ check_rancher_pods }}
-
-
+# kubectl delete -f "{{ base_path }}"/rancher-loadbalancer.yaml
 - name: Delete Rancher Loadbalancer Config Yaml
   file:
     path: "{{ item }}"
@@ -24,4 +23,14 @@
   with_items:
     - "{{ base_path }}/rancher-loadbalancer.yaml"
 - debug: msg={{ delete_rancher_lb_config_yaml }}
+
+
+- name: Flush IP Route Cache
+  shell: |
+    ip route flush cache
+  register: flush_ip_route_cache
+  delegate_to: "{{ item }}"
+  delegate_facts: True
+  with_items: "{{ groups['all'] }}"
+- debug: msg={{ flush_ip_route_cache }}
 

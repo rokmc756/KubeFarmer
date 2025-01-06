@@ -1,6 +1,6 @@
+---
 # https://stackoverflow.com/questions/52369247/namespace-stucked-as-terminating-how-i-removed-it
-# https://cert-manager.io/v1.6-docs/installation/helm/
-
+#
 # kubectl get Issuers,ClusterIssuers,Certificates,CertificateRequests,Orders,Challenges --all-namespaces | grep -v NAMESPACE | awk 'NF' | awk '{print $1","$2}'
 # cattle-system,issuer.cert-manager.io/rancher
 # cattle-system,certificate.cert-manager.io/tls-rancher-ingress
@@ -9,7 +9,7 @@
 
 - name: Unintall Cert Manager by Helm
   shell: |
-    /usr/local/bin/helm uninstall cert-manager --namespace cert-manager
+    /usr/local/bin/helm uninstall cert-manager --namespace {{ _cm.namespace }}
   register: uninstall_cert_manager
   ignore_errors: yes
 - debug: msg={{ uninstall_cert_manager }}
@@ -17,7 +17,7 @@
 
 - name: Delete Namespace for Cert Manager
   shell: |
-    kubectl delete namespace cert-manager --force --grace-period=0 &
+    kubectl delete namespace {{ _cm.namespace }} --force --grace-period=0 &
     sleep 10
   register: delete_cert_manager_namespace
   ignore_errors: yes
@@ -26,8 +26,8 @@
 
 - name: Delete Namespace for Cert Manager
   shell: |
-    kubectl get namespace "cert-manager" -o json   | tr -d "\n" | sed "s/\"finalizers\": \[[^]]\+\]/\"finalizers\": []/" | \
-    kubectl replace --raw /api/v1/namespaces/cert-manager/finalize -f -
+    kubectl get namespace "{{ _cm.namespace }}" -o json   | tr -d "\n" | sed "s/\"finalizers\": \[[^]]\+\]/\"finalizers\": []/" | \
+    kubectl replace --raw /api/v1/namespaces/{{ _cm.namespace }}/finalize -f -
   register: delete_cert_manager_namespace
   ignore_errors: yes
 - debug: msg={{ delete_cert_manager_namespace }}
@@ -36,7 +36,7 @@
 - name: Delete Cert Manager CRDs
   shell: |
     kubectl delete \
-    -f https://github.com/jetstack/cert-manager/releases/download/v{{ cert_manager.major_version }}.{{ cert_manager.minor_version }}.{{ cert_manager.patch_version }}/cert-manager.crds.yaml
+    -f https://github.com/jetstack/cert-manager/releases/download/v{{ _cm.major_version }}.{{ _cm.minor_version }}.{{ _cm.patch_version }}/cert-manager.crds.yaml
   register: delete_cert_manager_crds
   ignore_errors: yes
 - debug: msg={{ delete_cert_manager_crds }}

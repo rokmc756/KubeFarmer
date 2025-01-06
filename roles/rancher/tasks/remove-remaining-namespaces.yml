@@ -5,10 +5,12 @@
   register: force_delete_namespaces
   ignore_errors: yes
   with_items:
+    - cattle-ui-plugin-system
     - cert-manager
-    - metallb-system
-    - nginx-ingress
 - debug: msg={{ force_delete_namespaces }}
+# cattle-ui-plugin-system
+# - metallb-system
+# - nginx-ingress
 
 
 - name: Get the Remaining Namespaces still Terminating

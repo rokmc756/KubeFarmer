@@ -1,9 +1,0 @@
-# Local export path.
-MINIO_VOLUMES="{{ minio.volumes | join(' ') }}"
-# Use if you want to run Minio on a custom port.
-# Added by jmoon : --console-address has been added to fix static port since automatic port would be asssigned in case not using it.
-MINIO_OPTS="--address {{ minio.listen_address }}:{{ minio.port }} --console-address {{ minio.listen_address }}:{{ minio.static_port }}"
-MINIO_ACCESS_KEY={{ minio.access_key }}
-MINIO_SECRET_KEY={{ minio.secret_key }}
-MINIO_ROOT_USER={{ minio.root_user }}
-MINIO_ROOT_PASSWORD={{ minio.root_password }}

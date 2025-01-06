@@ -1,4 +1,4 @@
-
+---
 - name: Check if the Rancher Cleanup is Already Downloaded
   stat: path={{ base_path }}/rancher-cleanup
   register: rancher_cleanup_dir_existed
@@ -36,15 +36,12 @@
 - debug: msg={{ check_cleanup_container }}
 
 
-#- name: Watch Cleanup Logs
-#  shell: |
-#    kubectl -n kube-system logs -l job-name=cleanup-job -f
-#  register: watch_cleanup_logs
-#- debug: msg={{ watch_cleanup_logs }}
+# Watch Cleanup Logs
+# kubectl -n kube-system logs -l job-name=cleanup-job -f
 
 
 - name: Check if Rancher Namespaces are Still Active
-  shell: kubectl get namespaces | grep -E 'cattle|fleet'
+  shell: kubectl get namespaces | grep -v cattle-ui-plugin | grep -E 'cattle|fleet'
   register: check_active_namespaces
   ignore_errors: true
   until: check_active_namespaces.stdout.find("Active") == -1
@@ -54,7 +51,7 @@
 
 
 - name: Check if Rancher Namespaces are Still Terminating
-  shell: kubectl get namespaces | grep -E 'cattle|fleet'
+  shell: kubectl get namespaces | grep -v cattle-ui-plugin | grep -E 'cattle|fleet'
   register: check_terminating_namespaces
   ignore_errors: true
   until: check_terminating_namespaces.stdout.find("") != -1
@@ -74,32 +71,16 @@
 - debug: msg={{ check_cleanup_job_pod }}
 
 
-#- name: Delete Cleanup Rancher Pod and Service Accounts / ClusterRoleBindings
-#  shell: |
-#    kubectl delete $(kubectl get all -n kube-system | grep job.batch/cleanup-job | awk '{print $1}') -n kube-system
-#  register: delete_cleanup_rancher_pod
-#  ignore_errors: yes
-#  args:
-#    chdir: "{{ base_path }}/rancher-cleanup/deploy/"
-#- debug: msg={{ delete_cleanup_rancher_pod }}
+# Delete Cleanup Rancher Pod and Service Accounts / ClusterRoleBindings
+# kubectl delete $(kubectl get all -n kube-system | grep job.batch/cleanup-job | awk '{print $1}') -n kube-system
 
 
-#- name: Copy Rancher Cleanup Config Yaml
-#  template:
-#    src: rancher-cleanup.yaml.j2
-#    dest: "{{ base_path }}/rancher-cleanup.yaml"
-#  register: copy_rancher_cleanup_yaml
-#- debug: msg={{ copy_rancher_cleanup_yaml }}
+# Copy Rancher Cleanup Config Yaml
+# rancher-cleanup.yaml.j2
 
 
-#- name: Verify Cleanup Rancher
-#  shell: |
-#    kubectl create -f verify.yaml
-#  register: verify_cleanup_rancher
-#  ignore_errors: yes
-#  args:
-#    chdir: "{{ base_path }}/rancher-cleanup/deploy/"
-#- debug: msg={{ verify_cleanup_rancher }}
+# Verify Cleanup Rancher
+# kubectl create -f verify.yaml
 
 
 - name: Get the list of Remaining ServiceAccounts for Rancher NameSpace
@@ -139,10 +120,6 @@
 #- debug: msg={{ remove_rancher_cleanup_dir }}
 
 
-# [ Check Rancher and NGINX Ingress ]
+# Check Rancher and NGINX Ingress
 # kubectl get events --all-namespaces  --sort-by='.metadata.creationTimestamp'
-# kubectl -n cattle-system describe pods
-# kubectl -n cattle-system get all
-# kubectl -n cattle-system get pods
-# kubectl -n cattle-system logs <pod-name>
 
