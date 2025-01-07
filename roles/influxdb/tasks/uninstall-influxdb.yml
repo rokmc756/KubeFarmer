@@ -1,24 +1,24 @@
 ---
-- name: Uninstall MinIO
+- name: Uninstall InfluxDB
   shell: |
-    /usr/local/bin/helm uninstall minio -n {{ _minio.namespace }}
-  register: uninstall_minio
+    /usr/local/bin/helm uninstall influxdb -n {{ _influxdb.namespace }}
+  register: uninstall_influxdb
   ignore_errors: true
-- debug: msg={{ uninstall_minio }}
+- debug: msg={{ uninstall_influxdb }}
   ignore_errors: true
   when: print_debug == true
 
 
-- name: Validate if MinIO Controller Containers are Deleted
+- name: Validate if InfluxDB Containers are Deleted
   shell: |
-    kubectl get pods -n {{ _minio.namespace }} | grep {{ item.svc }} | awk '{print $3}' | grep -E "Running|Terminating" | wc -l
-  register: check_minio_containers
-  until: check_minio_containers.stdout|int == 0
+    kubectl get pods -n {{ _influxdb.namespace }} | grep {{ item.svc }} | awk '{print $3}' | grep -E "Running|Terminating" | wc -l
+  register: check_influxdb_containers
+  until: check_influxdb_containers.stdout|int == 0
   retries: 100
   delay: 10
   with_items:
-    - { svc: "minio-", replica: "{{ _minio.replica }}" }
-- debug: msg={{ check_minio_containers }}
+    - { svc: "influxdb-", replica: "{{ _influxdb.replica }}" }
+- debug: msg={{ check_influxdb_containers }}
   when: print_debug == true
 
 
@@ -70,7 +70,7 @@
 
 - name: Delete Namespace for Persistent Volumes
   shell: |
-    kubectl delete namespace {{ _minio.namespace }}
+    kubectl delete namespace {{ _influxdb.namespace }}
   register: delete_namespace
   ignore_errors: true
 - debug: msg={{ delete_namespace }}
@@ -78,12 +78,12 @@
   when: print_debug == true
 
 
-- name: Delete MinIO Helm Config
+- name: Delete InfluxDB Helm Config
   file:
     path: "{{ base_path }}/{{ item }}"
     state: absent
-  register: delete_minio_helm_config
+  register: delete_influxdb_helm_config
   with_items:
-    - "minio-values.yaml"
-- debug: msg={{ delete_minio_helm_config }}
+    - "influxdb-values.yaml"
+- debug: msg={{ delete_influxdb_helm_config }}
 

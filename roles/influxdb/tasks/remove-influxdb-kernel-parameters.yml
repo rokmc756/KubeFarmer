@@ -1,10 +1,10 @@
 ---
 - name: Remove Directory for Persistent Volumes
   file:
-    path: "{{ _minio.storage_path }}-{{ item }}"
+    path: "{{ _influxdb.storage_path }}-{{ item }}"
     state: absent
   register: remove_pv_dir
-  with_sequence: start=0 end={{ total_minio_containers|int }}
+  with_sequence: start=0 end={{ total_influxdb_containers|int }}
 - debug: msg={{ remove_pv_dir }}
   when: print_debug == true
 
@@ -16,7 +16,7 @@
     state: absent
   register: delete_kernel_parameters
   with_items:
-    - "{{ _minio.kernel_parameters }}"
+    - "{{ _influxdb.kernel_parameters }}"
   notify:
     - Reload Sysctl
 - debug: msg={{ delete_kernel_parameters }}

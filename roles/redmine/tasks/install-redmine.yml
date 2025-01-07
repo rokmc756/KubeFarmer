@@ -1,9 +1,9 @@
 - name: Create Namespace for Persistent Volumes
   shell: |
-    kubectl create namespace {{ _minio.namespace }}
+    kubectl create namespace {{ _redmine.namespace }}
   register: create_namespace
   #with_items:
-  #  - minio
+  #  - redmine
 - debug: msg={{ create_namespace }}
   when: print_debug == true
 
@@ -34,33 +34,33 @@
   when: print_debug == true
 
 
-- name: Copy MinIO Helm Config
+- name: Copy Redmine Helm Config
   template:
     src: "{{ item }}.j2"
     dest: "{{ base_path }}/{{ item }}"
-  register: copy_minio_helm_config
+  register: copy_redmine_helm_config
   with_items:
-    - "minio-values.yaml"
-- debug: msg={{ copy_minio_helm_config }}
+    - "redmine-values.yaml"
+- debug: msg={{ copy_redmine_helm_config }}
 
 
-- name: Deploy MinIO
+- name: Deploy Redmine
   shell: |
-    /usr/local/bin/helm install minio bitnami/minio -n {{ _minio.namespace }} -f {{ base_path }}/minio-values.yaml
-  register: deploy_minio
-- debug: msg={{ deploy_minio }}
+    /usr/local/bin/helm install redmine bitnami/redmine -n {{ _redmine.namespace }} -f {{ base_path }}/redmine-values.yaml
+  register: deploy_redmine
+- debug: msg={{ deploy_redmine }}
   when: print_debug == true
 
 
-- name: Validate if MinIO Controller Containers are Running
+- name: Validate if Redmine Containers are Running
   shell: |
-    kubectl get pods -n {{ _minio.namespace }} | grep {{ item.svc }} | awk '{print $3}' | grep Running | wc -l
-  register: check_minio_containers
-  until: check_minio_containers.stdout|int == item.replica|int
+    kubectl get pods -n {{ _redmine.namespace }} | grep {{ item.svc }} | awk '{print $3}' | grep Running | wc -l
+  register: check_redmine_containers
+  until: check_redmine_containers.stdout|int == item.replica|int
   retries: 100
   delay: 10
   with_items:
-    - { svc: "minio-", replica: "{{ _minio.replica }}" }
-- debug: msg={{ check_minio_containers }}
+    - { svc: "redmine-", replica: "{{ _redmine.replica }}" }
+- debug: msg={{ check_redmine_containers }}
   when: print_debug == true
 

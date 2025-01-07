@@ -9,7 +9,7 @@ _kustomize:
   patch_version: 2
 
 
-_minio:
+_influxdb:
   install: true
   major_version:
   minor_version:
@@ -21,24 +21,24 @@ _minio:
   enable_discovery_daemon: false
   clone_git: true
   nvme: true
-  namespace: minio
-  storage_path: "/mnt/minio-storage"
-  storage_class: "minio-storage"
+  namespace: influxdb
+  storage_path: "/mnt/influxdb-storage"
+  storage_class: "influxdb-storage"
   k8s:
     major_version: 1
     minor_version: 28
     patch_version: 0
     build_version:
-  hostname: "minio.jtest.pivotal.io"
+  hostname: "influxdb.jtest.pivotal.io"
   service:
     metadata:
-      name: minio-loadbalancer
-      namespace: minio
+      name: influxdb-loadbalancer
+      namespace: influxdb
   ingress:
     metadata:
-      name: minio-ingress
-      namespace: minio
-    hostname: "minio.jtest.pivotal.io"
+      name: influxdb-ingress
+      namespace: influxdb
+    hostname: "influxdb.jtest.pivotal.io"
   kernel_parameters:
     - "net.ipv4.neigh.default.gc_thresh1 = 0"   # For ARP Cache
     - "fs.inotify.max_user_instances=2280"
@@ -46,10 +46,16 @@ _minio:
   lb:
     install: true
     ip_addr: 192.168.1.219
-  replica: 8
+  replica: 1
+  collectd:
+    install: true
+    ip_addr: 192.168.1.220
+  metrics:
+    install: true
+    ip_addr: 192.168.1.221
 
 
-total_minio_containers: "{{ _minio.replica|int }}"
+total_influxdb_containers: "{{ _influxdb.replica|int }}"
 
 
 _helm:

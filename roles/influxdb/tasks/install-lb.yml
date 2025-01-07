@@ -1,21 +1,23 @@
 ---
-- name: Copy Minio Loadbalancer Config Yaml
+- name: Copy InfluxDB Loadbalancer Config Yaml
   template:
-    src: minio-loadbalancer.yaml.j2
-    dest: "{{ base_path }}/minio-loadbalancer.yaml"
-  register: copy_minio_lb_config_yaml
-- debug: msg={{ copy_minio_lb_config_yaml }}
+    src: influxdb-loadbalancer.yaml.j2
+    dest: "{{ base_path }}/influxdb-loadbalancer.yaml"
+  register: copy_influxdb_lb_config_yaml
+- debug: msg={{ copy_influxdb_lb_config_yaml }}
 
 
-- name: Apply MinIO Load Balancer
+- name: Apply InfluxDB Load Balancer
   shell: |
-    kubectl patch svc {{ item.svc }} -n {{ _minio.namespace }} -p '{"spec": {"type": "LoadBalancer", "loadBalancerIP": "{{ item.lb_ip_addr }}"}}'
-  register: apply_minio_lb
+    kubectl patch svc {{ item.svc }} -n {{ _influxdb.namespace }} -p '{"spec": {"type": "LoadBalancer", "loadBalancerIP": "{{ item.lb_ip_addr }}"}}'
+  register: apply_influxdb_lb
   args:
     chdir: "{{ base_path }}"
   with_items:
-    - { svc: "minio", lb_ip_addr: "{{ _minio.lb.ip_addr }}" }
-- debug: msg={{ apply_minio_lb }}
+    - { svc: "influxdb", lb_ip_addr: "{{ _influxdb.lb.ip_addr }}" }
+    - { svc: "influxdb-collectd", lb_ip_addr: "{{ _influxdb.collectd.ip_addr }}" }
+    - { svc: "influxdb-metrics", lb_ip_addr: "{{ _influxdb.metrics.ip_addr }}" }
+- debug: msg={{ apply_influxdb_lb }}
   when: print_debug == true
 
 

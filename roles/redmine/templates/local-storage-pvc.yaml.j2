@@ -1,16 +1,39 @@
-{% for n in range(0, _minio.replica|int) %}
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: data-minio-{{ n }}
-  namespace: {{ _minio.namespace }}
+  name: redmine
+  namespace: {{ _redmine.namespace }}
 spec:
-  storageClassName: {{ _minio.storage_class }}
+  storageClassName: {{ _redmine.storage_class }}
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
       storage: 10Gi
-{% endfor %}
-
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: data-redmine-mariadb-0
+  namespace: {{ _redmine.namespace }}
+spec:
+  storageClassName: {{ _redmine.storage_class }}
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: data-redmine-postgresql-0
+  namespace: {{ _redmine.namespace }}
+spec:
+  storageClassName: {{ _redmine.storage_class }}
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi

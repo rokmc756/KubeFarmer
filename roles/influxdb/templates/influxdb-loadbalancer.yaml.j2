@@ -2,8 +2,8 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: minio
-  namespace: {{ _minio.namespace }}
+  name: influxdb
+  namespace: {{ _influxdb.namespace }}
   annotations:
     nginx.ingress.kubernetes.io/proxy-protocol: "true"
 spec:
@@ -23,19 +23,19 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ _minio.ingress.metadata.name }}
-  namespace: {{ _minio.ingress.metadata.namespace }}
+  name: {{ _influxdb.ingress.metadata.name }}
+  namespace: {{ _influxdb.ingress.metadata.namespace }}
   annotations:
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
 spec:
   rules:
-    - host: {{ _minio.ingress.hostname }}
+    - host: {{ _influxdb.ingress.hostname }}
       http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: minio-minio-yarn-ui
+                name: influxdb-influxdb-yarn-ui
                 port:
                   name: http

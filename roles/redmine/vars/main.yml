@@ -9,7 +9,7 @@ _kustomize:
   patch_version: 2
 
 
-_minio:
+_redmine:
   install: true
   major_version:
   minor_version:
@@ -21,24 +21,24 @@ _minio:
   enable_discovery_daemon: false
   clone_git: true
   nvme: true
-  namespace: minio
-  storage_path: "/mnt/minio-storage"
-  storage_class: "minio-storage"
+  namespace: redmine
+  storage_path: "/mnt/redmine-storage"
+  storage_class: "redmine-storage"
   k8s:
     major_version: 1
     minor_version: 28
     patch_version: 0
     build_version:
-  hostname: "minio.jtest.pivotal.io"
+  hostname: "redmine.jtest.pivotal.io"
   service:
     metadata:
-      name: minio-loadbalancer
-      namespace: minio
+      name: redmine-loadbalancer
+      namespace: redmine
   ingress:
     metadata:
-      name: minio-ingress
-      namespace: minio
-    hostname: "minio.jtest.pivotal.io"
+      name: redmine-ingress
+      namespace: redmine
+    hostname: "redmine.jtest.pivotal.io"
   kernel_parameters:
     - "net.ipv4.neigh.default.gc_thresh1 = 0"   # For ARP Cache
     - "fs.inotify.max_user_instances=2280"
@@ -46,10 +46,14 @@ _minio:
   lb:
     install: true
     ip_addr: 192.168.1.219
-  replica: 8
+  replica: 4
+  mariadb:
+    ip_addr: "192.168.1.220"
+  postgresql:
+    ip_addr: "192.168.1.221"
 
 
-total_minio_containers: "{{ _minio.replica|int }}"
+total_redmine_containers: "{{ _redmine.replica|int }}"
 
 
 _helm:

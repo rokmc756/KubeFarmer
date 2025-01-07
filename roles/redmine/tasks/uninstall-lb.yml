@@ -1,23 +1,25 @@
 ---
-- name: Copy MinIO Loadbalancer Config Yaml
+- name: Copy Redmine Loadbalancer Config Yaml
   template:
-    src: minio-loadbalancer.yaml.j2
-    dest: "{{ base_path }}/minio-loadbalancer.yaml"
-  register: copy_minio_lb_config_yaml
+    src: redmine-loadbalancer.yaml.j2
+    dest: "{{ base_path }}/redmine-loadbalancer.yaml"
+  register: copy_redmine_lb_config_yaml
   ignore_errors: true
-- debug: msg={{ copy_minio_lb_config_yaml }}
+- debug: msg={{ copy_redmine_lb_config_yaml }}
 
 
-- name: Delete MinIO Load Balancer
+- name: Delete Redmine Load Balancer
   shell: |
-    kubectl patch svc {{ item.svc }} -n {{ _minio.namespace }} -p '{"spec": {"type": "ClusterIP"}}'
-  register: delete_minio_lb
+    kubectl patch svc {{ item.svc }} -n {{ _redmine.namespace }} -p '{"spec": {"type": "ClusterIP"}}'
+  register: delete_redmine_lb
   ignore_errors: true
   args:
     chdir: "{{ base_path }}"
   with_items:
-    - { svc: "minio", lb_ip_addr: "{{ _minio.lb.ip_addr }}" }
-- debug: msg={{ delete_minio_lb }}
+    - { svc: "redmine-postgresql", lb_ip_addr: "{{ _redmine.postgresql.ip_addr }}" }
+    - { svc: "redmine-mariadb", lb_ip_addr: "{{ _redmine.mariadb.ip_addr }}" }
+    - { svc: "redmine", lb_ip_addr: "{{ _redmine.lb.ip_addr }}" }
+- debug: msg={{ delete_redmine_lb }}
   ignore_errors: true
   when: print_debug == true
 

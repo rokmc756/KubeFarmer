@@ -1,0 +1,205 @@
+diagnosticMode:
+  enabled: false
+  command:
+    - sleep
+  args:
+    - infinity
+
+
+redmineUsername: admin
+redminePassword: "changeme"
+redmineEmail: rokmc756@gmail.com
+redmineLanguage: en
+allowEmptyPassword: false
+smtpHost: ""
+smtpPort: ""
+smtpUser: ""
+smtpPassword: ""
+smtpProtocol: ""
+existingSecret: ""
+smtpExistingSecret: ""
+customPostInitScripts: {}
+command: []
+args: []
+extraEnvVars: []
+extraEnvVarsCM: ""
+extraEnvVarsSecret: ""
+replicaCount: "{{ _redmine.replica|int }}"
+containerPorts:
+  http: 3000
+
+
+resourcesPreset: "micro"
+
+resources: {}
+
+lifecycleHooks: {}
+
+
+automountServiceAccountToken: false
+podAffinityPreset: ""
+podAntiAffinityPreset: soft
+nodeAffinityPreset:
+  type: ""
+  key: ""
+  values: []
+
+
+priorityClassName: ""
+schedulerName: ""
+terminationGracePeriodSeconds: ""
+
+
+updateStrategy:
+  type: RollingUpdate
+
+
+service:
+  type: ClusterIP
+  # type: LoadBalancer
+  ports:
+    http: 80
+  nodePorts:
+    http: ""
+  sessionAffinity: None
+  clusterIP: ""
+  loadBalancerIP: ""
+  externalTrafficPolicy: Cluster
+
+
+ingress:
+  enabled: false
+  ingressClassName: ""
+  pathType: ImplementationSpecific
+  apiVersion: ""
+  hostname: redmine.local
+  path: /
+  annotations: {}
+  tls: false
+  selfSigned: false
+  extraHosts: []
+  extraPaths: []
+  extraTls: []
+  secrets: []
+  extraRules: []
+
+
+persistence:
+  enabled: true
+  storageClass: "{{ _redmine.storage_class }}"
+  accessModes:
+    - ReadWriteOnce
+  size: 8Gi
+  dataSource: {}
+  annotations: {}
+  selector: {}
+  existingClaim: "redmine"
+
+
+volumePermissions:
+  enabled: false
+  resourcesPreset: "nano"
+  resources: {}
+  containerSecurityContext:
+    enabled: true
+    seLinuxOptions: {}
+    runAsUser: 0
+
+
+serviceAccount:
+  create: true
+  name: ""
+  automountServiceAccountToken: false
+
+
+pdb:
+  create: true
+  minAvailable: ""
+  maxUnavailable: ""
+
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 11
+  targetCPU: 50
+  targetMemory: 50
+
+
+databaseType: mariadb
+
+
+mariadb:
+  enabled: true
+  auth:
+    rootPassword: "changeme"
+    username: admin
+    password: "changeme"
+    existingSecret: ""
+  architecture: standalone
+
+
+postgresql:
+  enabled: true
+  auth:
+    username: admin
+    password: "changeme"
+    database: redmine
+    existingSecret: ""
+  architecture: standalone
+
+
+externalDatabase:
+  host: ""
+  port: 5432
+  user: bn_redmine
+  database: bitnami_redmine
+  password: ""
+  existingSecret: ""
+  existingSecretPasswordKey: ""
+
+
+mailReceiver:
+  enabled: false
+  schedule: "*/5 * * * *"
+  suspend: true
+  mailProtocol: IMAP
+  host: ""
+  port: 993
+  username: ""
+  password: ""
+  ssl: true
+  startTLS: false
+  imapFolder: "INBOX"
+  moveOnSuccess: ""
+  moveOnFailure: ""
+  unknownUserAction: ignore
+  noPermissionCheck: 0
+  noAccountNotice: 1
+  defaultGroup: ""
+  project: ""
+  projectFromSubaddress: ""
+  status: ""
+  tracker: ""
+  category: ""
+  priority: ""
+  assignedTo: ""
+  allowOverride: ""
+
+
+certificates:
+  customCertificate:
+    certificateSecret: ""
+    chainSecret:
+      name: ""
+      key: ""
+    certificateLocation: /etc/ssl/certs/ssl-cert-snakeoil.pem
+    keyLocation: /etc/ssl/private/ssl-cert-snakeoil.key
+    chainLocation: /etc/ssl/certs/mychain.pem
+
+
+networkPolicy:
+  enabled: true
+  allowExternal: true
+  allowExternalEgress: true
+

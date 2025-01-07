@@ -1,9 +1,9 @@
 - name: Create Namespace for Persistent Volumes
   shell: |
-    kubectl create namespace {{ _minio.namespace }}
+    kubectl create namespace {{ _influxdb.namespace }}
   register: create_namespace
   #with_items:
-  #  - minio
+  #  - influxdb
 - debug: msg={{ create_namespace }}
   when: print_debug == true
 
@@ -34,33 +34,33 @@
   when: print_debug == true
 
 
-- name: Copy MinIO Helm Config
+- name: Copy InfluxDB Helm Config
   template:
     src: "{{ item }}.j2"
     dest: "{{ base_path }}/{{ item }}"
-  register: copy_minio_helm_config
+  register: copy_influxdb_helm_config
   with_items:
-    - "minio-values.yaml"
-- debug: msg={{ copy_minio_helm_config }}
+    - "influxdb-values.yaml"
+- debug: msg={{ copy_influxdb_helm_config }}
 
 
-- name: Deploy MinIO
+- name: Deploy InfluxDB
   shell: |
-    /usr/local/bin/helm install minio bitnami/minio -n {{ _minio.namespace }} -f {{ base_path }}/minio-values.yaml
-  register: deploy_minio
-- debug: msg={{ deploy_minio }}
+    /usr/local/bin/helm install influxdb bitnami/influxdb -n {{ _influxdb.namespace }} -f {{ base_path }}/influxdb-values.yaml
+  register: deploy_influxdb
+- debug: msg={{ deploy_influxdb }}
   when: print_debug == true
 
 
-- name: Validate if MinIO Controller Containers are Running
+- name: Validate if InfluxDB Controller Containers are Running
   shell: |
-    kubectl get pods -n {{ _minio.namespace }} | grep {{ item.svc }} | awk '{print $3}' | grep Running | wc -l
-  register: check_minio_containers
-  until: check_minio_containers.stdout|int == item.replica|int
+    kubectl get pods -n {{ _influxdb.namespace }} | grep {{ item.svc }} | awk '{print $3}' | grep Running | wc -l
+  register: check_influxdb_containers
+  until: check_influxdb_containers.stdout|int == item.replica|int
   retries: 100
   delay: 10
   with_items:
-    - { svc: "minio-", replica: "{{ _minio.replica }}" }
-- debug: msg={{ check_minio_containers }}
+    - { svc: "influxdb-", replica: "{{ _influxdb.replica }}" }
+- debug: msg={{ check_influxdb_containers }}
   when: print_debug == true
 

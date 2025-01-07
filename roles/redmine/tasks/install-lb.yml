@@ -1,21 +1,23 @@
 ---
-- name: Copy Minio Loadbalancer Config Yaml
+- name: Copy Redmine Loadbalancer Config Yaml
   template:
-    src: minio-loadbalancer.yaml.j2
-    dest: "{{ base_path }}/minio-loadbalancer.yaml"
-  register: copy_minio_lb_config_yaml
-- debug: msg={{ copy_minio_lb_config_yaml }}
+    src: redmine-loadbalancer.yaml.j2
+    dest: "{{ base_path }}/redmine-loadbalancer.yaml"
+  register: copy_redmine_lb_config_yaml
+- debug: msg={{ copy_redmine_lb_config_yaml }}
 
 
-- name: Apply MinIO Load Balancer
+- name: Apply Redmine Load Balancer
   shell: |
-    kubectl patch svc {{ item.svc }} -n {{ _minio.namespace }} -p '{"spec": {"type": "LoadBalancer", "loadBalancerIP": "{{ item.lb_ip_addr }}"}}'
-  register: apply_minio_lb
+    kubectl patch svc {{ item.svc }} -n {{ _redmine.namespace }} -p '{"spec": {"type": "LoadBalancer", "loadBalancerIP": "{{ item.lb_ip_addr }}"}}'
+  register: apply_redmine_lb
   args:
     chdir: "{{ base_path }}"
   with_items:
-    - { svc: "minio", lb_ip_addr: "{{ _minio.lb.ip_addr }}" }
-- debug: msg={{ apply_minio_lb }}
+    - { svc: "redmine", lb_ip_addr: "{{ _redmine.lb.ip_addr }}" }
+    - { svc: "redmine-mariadb", lb_ip_addr: "{{ _redmine.mariadb.ip_addr }}" }
+    - { svc: "redmine-postgresql", lb_ip_addr: "{{ _redmine.postgresql.ip_addr }}" }
+- debug: msg={{ apply_redmine_lb }}
   when: print_debug == true
 
 
