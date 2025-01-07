@@ -1,5 +1,5 @@
 ---
-- name: Copy valkey Loadbalancer Config Yaml
+- name: Copy Valkey Loadbalancer Config Yaml
   template:
     src: valkey-loadbalancer.yaml.j2
     dest: "{{ base_path }}/valkey-loadbalancer.yaml"
@@ -8,7 +8,7 @@
 - debug: msg={{ copy_valkey_lb_config_yaml }}
 
 
-- name: Delete valkey Load Balancer
+- name: Delete Valkey Load Balancer
   shell: |
     kubectl patch svc {{ item.svc }} -n {{ _valkey.namespace }} -p '{"spec": {"type": "ClusterIP"}}'
   register: delete_valkey_lb
@@ -16,7 +16,9 @@
   args:
     chdir: "{{ base_path }}"
   with_items:
-    - { svc: "valkey", lb_ip_addr: "{{ _valkey.lb.ip_addr }}" }
+    - { svc: "valkey-metrics", lb_ip_addr: "{{ _valkey.metrics.ip_addr }}" }
+    - { svc: "valkey-replicas", lb_ip_addr: "{{ _valkey.replicas.ip_addr }}" }
+    - { svc: "valkey-primary",  lb_ip_addr: "{{ _valkey.primary.ip_addr }}" }
 - debug: msg={{ delete_valkey_lb }}
   ignore_errors: true
   when: print_debug == true

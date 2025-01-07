@@ -45,11 +45,17 @@ _valkey:
     - "fs.inotify.max_user_watches=755360"
   lb:
     install: true
-    ip_addr: 192.168.1.219
-  replica: 8
+  primary:
+    num: 2
+    ip_addr: "192.168.1.219"
+  replicas:
+    num: 6
+    ip_addr: "192.168.1.220"
+  metrics:
+    ip_addr: "192.168.1.221"
 
 
-total_valkey_containers: "{{ _valkey.replica|int }}"
+total_valkey_containers: "{{ _valkey.primary.num|int + _valkey.replicas.num|int }}"
 
 
 _helm:

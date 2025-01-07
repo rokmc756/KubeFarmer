@@ -1,0 +1,29 @@
+{% for h in groups["workers"] %}
+{% for n in range(0, total_minio_containers|int) %}
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: minio-pv-{{ hostvars[h]['ansible_hostname'] }}-{{ n }}
+  namespace: {{ _minio.namespace }}
+spec:
+  capacity:
+    storage: 15Gi
+  volumeMode: Filesystem
+  accessModes:
+  - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: {{ _minio.storage_class }}
+  local:
+    path: {{ _minio.storage_path }}-{{ n }}
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - {{ hostvars[h]['ansible_hostname'] }}
+{% endfor %}
+{% endfor %}
+

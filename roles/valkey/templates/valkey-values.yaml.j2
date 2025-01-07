@@ -31,7 +31,7 @@ existingConfigmap: ""
 
 
 primary:
-  replicaCount: 1
+  replicaCount: {{ _valkey.primary.num }}
   configuration: ""
   disableCommands:
     - FLUSHDB
@@ -98,7 +98,7 @@ primary:
 
 replica:
   kind: StatefulSet
-  replicaCount: 3
+  replicaCount: {{ _valkey.replicas.num }}
   configuration: ""
   disableCommands:
     - FLUSHDB
@@ -251,12 +251,12 @@ tls:
 
 
 metrics:
-  enabled: false
+  enabled: true
   containerPorts:
     http: 9121
   valkeyTargetHost: "localhost"
   containerSecurityContext:
-    enabled: true
+    enabled: false
     runAsUser: 1001
     runAsGroup: 1001
     runAsNonRoot: true
@@ -279,7 +279,7 @@ metrics:
   serviceMonitor:
     port: http-metrics
     enabled: false
-    namespace: ""
+    namespace: "{{ _valkey.namespace }}"
     interval: 30s
     scrapeTimeout: ""
     honorLabels: false

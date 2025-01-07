@@ -11,6 +11,19 @@
     - uninstall
 
 
+# https://techdocs.broadcom.com/us/en/vmware-tanzu/data-solutions/tanzu-valkey/1-0-0-beta/tanzu-valkey-docs/operator-install-operator.html
+# https://hub.docker.com/r/bitnamicharts/valkey-cluster
+# https://docs.vmware.com/en/VMware-Tanzu-Application-Catalog/services/apps/GUID-apps-valkey-index.html
+# https://freshbrewed.science/2024/04/16/valkey.html
+# https://learn.microsoft.com/en-us/azure/aks/valkey-overviewk
+
+
+# certmanager acme challenge dns01 provider
+# Hostname to use for the Rook Ceph Manager Dashboard.
+# You will need to manually configure your DNS to point to the ingress ingress/ip-address.
+# If no hostname is provided a rook-db.$INGRESSIP.xip.io hostname will be assigned
+
+
 - name: Apply Kernel Parameters
   import_tasks: apply-valkey-kernel-parameters.yml
   tags: install

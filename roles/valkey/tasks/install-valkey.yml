@@ -34,7 +34,7 @@
   when: print_debug == true
 
 
-- name: Copy valkey Helm Config
+- name: Copy Valkey Helm Config
   template:
     src: "{{ item }}.j2"
     dest: "{{ base_path }}/{{ item }}"
@@ -44,7 +44,7 @@
 - debug: msg={{ copy_valkey_helm_config }}
 
 
-- name: Deploy valkey
+- name: Deploy Valkey
   shell: |
     /usr/local/bin/helm install valkey bitnami/valkey -n {{ _valkey.namespace }} -f {{ base_path }}/valkey-values.yaml
   register: deploy_valkey
@@ -52,7 +52,7 @@
   when: print_debug == true
 
 
-- name: Validate if valkey Controller Containers are Running
+- name: Validate if Valkey Controller Containers are Running
   shell: |
     kubectl get pods -n {{ _valkey.namespace }} | grep {{ item.svc }} | awk '{print $3}' | grep Running | wc -l
   register: check_valkey_containers
@@ -60,7 +60,12 @@
   retries: 100
   delay: 10
   with_items:
-    - { svc: "valkey-", replica: "{{ _valkey.replica }}" }
+    - { svc: "valkey-primary", replica: "{{ _valkey.primary.num }}" }
+    - { svc: "valkey-replicas", replica: "{{ _valkey.replicas.num }}" }
 - debug: msg={{ check_valkey_containers }}
   when: print_debug == true
+
+
+# https://apgapg.medium.com/creating-a-service-monitor-in-kubernetes-c0941a63c227
+
 

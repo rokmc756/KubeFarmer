@@ -1,20 +1,48 @@
 ---
+#apiVersion: networking.k8s.io/v1
+#kind: Ingress
+#metadata:
+#  name: {{ _rook.ingress.metadata.name }}
+#  namespace: {{ _rook.ingress.metadata.namespace }}
+#  annotations:
+#    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+#spec:
+#  rules:
+#    - host: {{ _rook.ingress.hostname }}
+#      http:
+#        paths:
+#          - path: /
+#            pathType: Prefix
+#            backend:
+#              service:
+#                name: rook-ceph-mgr-dashboard
+#                port:
+#                  name: http
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ _rook.ingress.metadata.name }}
-  namespace: {{ _rook.ingress.metadata.namespace }}
+  name: rook-ceph-mgr-dashboard
+  namespace: rook-ceph
   annotations:
-    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    kubernetes.io/tls-acme: "true"
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+    nginx.ingress.kubernetes.io/server-snippet: |
+      proxy_ssl_verify off;
 spec:
+  ingressClassName: "nginx"
+  tls:
+   - hosts:
+     - rook.jtest.pivotal.io
+     secretName: rook.jtest.pivotal.io
   rules:
-    - host: {{ _rook.ingress.hostname }}
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: rook-ceph-mgr-dashboard
-                port:
-                  name: http
+  - host: rook.jtest.pivotal.io
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: rook-ceph-mgr-dashboard
+            port:
+              name: https-dashboard
+

@@ -1,0 +1,23 @@
+---
+- name: Copy WildFly Loadbalancer Config Yaml
+  template:
+    src: wildfly-loadbalancer.yaml.j2
+    dest: "{{ base_path }}/wildfly-loadbalancer.yaml"
+  register: copy_wildfly_lb_config_yaml
+  ignore_errors: true
+- debug: msg={{ copy_wildfly_lb_config_yaml }}
+
+
+- name: Delete WildFly Load Balancer
+  shell: |
+    kubectl patch svc {{ item.svc }} -n {{ _wildfly.namespace }} -p '{"spec": {"type": "ClusterIP"}}'
+  register: delete_wildfly_lb
+  ignore_errors: true
+  args:
+    chdir: "{{ base_path }}"
+  with_items:
+    - { svc: "wildfly", lb_ip_addr: "{{ _wildfly.lb.ip_addr }}" }
+- debug: msg={{ delete_wildfly_lb }}
+  ignore_errors: true
+  when: print_debug == true
+

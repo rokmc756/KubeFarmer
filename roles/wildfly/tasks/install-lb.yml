@@ -1,0 +1,29 @@
+---
+- name: Copy WildFly Loadbalancer Config Yaml
+  template:
+    src: wildfly-loadbalancer.yaml.j2
+    dest: "{{ base_path }}/wildfly-loadbalancer.yaml"
+  register: copy_wildfly_lb_config_yaml
+- debug: msg={{ copy_wildfly_lb_config_yaml }}
+
+
+- name: Apply WildFly Load Balancer
+  shell: |
+    kubectl patch svc {{ item.svc }} -n {{ _wildfly.namespace }} -p '{"spec": {"type": "LoadBalancer", "loadBalancerIP": "{{ item.lb_ip_addr }}"}}'
+  register: apply_wildfly_lb
+  args:
+    chdir: "{{ base_path }}"
+  with_items:
+    - { svc: "wildfly",  lb_ip_addr: "{{ _wildfly.lb.ip_addr }}" }
+- debug: msg={{ apply_wildfly_lb }}
+  when: print_debug == true
+
+
+- name: Print IP Addresses for LoadBalancer
+  shell: |
+    kubectl get all -A | grep LoadBalancer
+  register: print_lb_ipaddr
+  args:
+    chdir: "{{ base_path }}"
+- debug: msg={{ print_lb_ipaddr }}
+

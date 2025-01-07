@@ -1,0 +1,70 @@
+- name: Create Namespace for Persistent Volumes
+  shell: |
+    kubectl create namespace {{ _wildfly.namespace }}
+  register: create_namespace
+  #with_items:
+  #  - wildfly
+- debug: msg={{ create_namespace }}
+  when: print_debug == true
+
+
+- name: Copy Cluster Local PVC Config Yaml
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ base_path }}/{{ item }}"
+  register: copy_cluster_local_pvc_config_yaml
+  with_items:
+    - "local-storage-class.yaml"
+    - "local-storage-pv.yaml"
+    - "local-storage-pvc.yaml"
+- debug: msg={{ copy_cluster_local_pvc_config_yaml }}
+
+
+- name: Cluster Settings for a Production Cluster Running in a Dynamic Cloud Environment including VMware
+  shell: |
+    kubectl create -f {{ item }}
+  register: create_pvc
+  with_items:
+    - "local-storage-class.yaml"
+    - "local-storage-pv.yaml"
+    - "local-storage-pvc.yaml"
+  args:
+    chdir: "{{ base_path }}/"
+- debug: msg={{ create_pvc }}
+  when: print_debug == true
+
+
+- name: Copy WildFly Helm Config
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ base_path }}/{{ item }}"
+  register: copy_wildfly_helm_config
+  with_items:
+    - "wildfly-values.yaml"
+- debug: msg={{ copy_wildfly_helm_config }}
+
+
+- name: Deploy WildFly
+  shell: |
+    /usr/local/bin/helm install wildfly bitnami/wildfly -n {{ _wildfly.namespace }} -f {{ base_path }}/wildfly-values.yaml
+  register: deploy_wildfly
+- debug: msg={{ deploy_wildfly }}
+  when: print_debug == true
+
+
+- name: Validate if WildFly Containers are Running
+  shell: |
+    kubectl get pods -n {{ _wildfly.namespace }} | grep {{ item.svc }} | awk '{print $3}' | grep Running | wc -l
+  register: check_wildfly_containers
+  until: check_wildfly_containers.stdout|int == item.replica|int
+  retries: 100
+  delay: 10
+  with_items:
+    - { svc: "wildfly-", replica: "{{ _wildfly.replicas.num }}" }
+- debug: msg={{ check_wildfly_containers }}
+  when: print_debug == true
+
+
+# https://apgapg.medium.com/creating-a-service-monitor-in-kubernetes-c0941a63c227
+
+

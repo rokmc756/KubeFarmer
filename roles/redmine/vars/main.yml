@@ -1,0 +1,62 @@
+base_path: /root
+
+
+_kustomize:
+  install: true
+  download_url: "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"
+  major_version: 5
+  minor_version: 4
+  patch_version: 2
+
+
+_minio:
+  install: true
+  major_version:
+  minor_version:
+  patch_version:
+  build_version:
+  admin_user: "admin"
+  admin_password: "changeme"
+  admin_email: "rokmc756@gmail.com"
+  enable_discovery_daemon: false
+  clone_git: true
+  nvme: true
+  namespace: minio
+  storage_path: "/mnt/minio-storage"
+  storage_class: "minio-storage"
+  k8s:
+    major_version: 1
+    minor_version: 28
+    patch_version: 0
+    build_version:
+  hostname: "minio.jtest.pivotal.io"
+  service:
+    metadata:
+      name: minio-loadbalancer
+      namespace: minio
+  ingress:
+    metadata:
+      name: minio-ingress
+      namespace: minio
+    hostname: "minio.jtest.pivotal.io"
+  kernel_parameters:
+    - "net.ipv4.neigh.default.gc_thresh1 = 0"   # For ARP Cache
+    - "fs.inotify.max_user_instances=2280"
+    - "fs.inotify.max_user_watches=755360"
+  lb:
+    install: true
+    ip_addr: 192.168.1.219
+  replica: 8
+
+
+total_minio_containers: "{{ _minio.replica|int }}"
+
+
+_helm:
+  enable_repo: true
+  major_version: 3
+  minor_version:
+  patch_version:
+  build_version:
+
+

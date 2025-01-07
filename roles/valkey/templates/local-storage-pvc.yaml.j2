@@ -1,9 +1,54 @@
-{% for n in range(0, _valkey.replica|int) %}
+{% for n in range(0, _valkey.primary.num|int) %}
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: data-valkey-{{ n }}
+  name: valkey-data-valkey-primary-{{ n }}
+  namespace: {{ _valkey.namespace }}
+spec:
+  storageClassName: {{ _valkey.storage_class }}
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+{% endfor %}
+{% for n in range(0, _valkey.replicas.num|int) %}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: valkey-data-valkey-replicas-{{ n }}
+  namespace: {{ _valkey.namespace }}
+spec:
+  storageClassName: {{ _valkey.storage_class }}
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+{% endfor %}
+{% for n in range(0, _valkey.replicas.num|int) %}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: valkey-data-valkey-node-{{ n }}
+  namespace: {{ _valkey.namespace }}
+spec:
+  storageClassName: {{ _valkey.storage_class }}
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+{% endfor %}
+{% for n in range(0, _valkey.replicas.num|int) %}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: sentinel-data-valkey-node-{{ n }}
   namespace: {{ _valkey.namespace }}
 spec:
   storageClassName: {{ _valkey.storage_class }}

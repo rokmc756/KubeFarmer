@@ -1,5 +1,5 @@
 ---
-- name: Uninstall valkey
+- name: Uninstall Valkey
   shell: |
     /usr/local/bin/helm uninstall valkey -n {{ _valkey.namespace }}
   register: uninstall_valkey
@@ -9,7 +9,7 @@
   when: print_debug == true
 
 
-- name: Validate if valkey Controller Containers are Deleted
+- name: Validate if Valkey Controller Containers are Deleted
   shell: |
     kubectl get pods -n {{ _valkey.namespace }} | grep {{ item.svc }} | awk '{print $3}' | grep -E "Running|Terminating" | wc -l
   register: check_valkey_containers
@@ -17,7 +17,8 @@
   retries: 100
   delay: 10
   with_items:
-    - { svc: "valkey-", replica: "{{ _valkey.replica }}" }
+    - { svc: "valkey-replicas", replica: "{{ _valkey.replicas.num }}" }
+    - { svc: "valkey-primary", replica: "{{ _valkey.primary.num }}" }
 - debug: msg={{ check_valkey_containers }}
   when: print_debug == true
 
@@ -78,7 +79,7 @@
   when: print_debug == true
 
 
-- name: Delete valkey Helm Config
+- name: Delete Valkey Helm Config
   file:
     path: "{{ base_path }}/{{ item }}"
     state: absent

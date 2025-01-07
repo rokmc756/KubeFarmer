@@ -1,0 +1,135 @@
+wildflyUsername: admin
+
+wildflyPassword: "changeme"
+
+exposeManagementConsole: true
+
+replicaCount: "{{ _wildfly.replicas.num }}"
+
+
+updateStrategy:
+  type: RollingUpdate
+
+
+automountServiceAccountToken: true
+hostAliases: []
+extraVolumes: []
+extraVolumeMounts: []
+serviceAccountName: ""
+sidecars: []
+initContainers: []
+
+
+pdb:
+  create: true
+  minAvailable: ""
+  maxUnavailable: ""
+
+
+podLabels: {}
+podAnnotations: {}
+podAffinityPreset: ""
+podAntiAffinityPreset: soft
+
+
+nodeAffinityPreset:
+  type: ""
+  key: ""
+  values: []
+
+
+affinity: {}
+nodeSelector: {}
+tolerations: []
+priorityClassName: ""
+schedulerName: ""
+topologySpreadConstraints: []
+resourcesPreset: "small"
+resources: {}
+
+
+containerPorts:
+  http: 8080
+  https: 8443
+  mgmt: 9990
+
+
+extraContainerPorts: []
+
+
+service:
+  type: ClusterIP
+  # type: LoadBalancer
+  ports:
+    http: 80
+    mgmt: 9990
+  nodePorts:
+    http: ""
+    mgmt: ""
+  clusterIP: ""
+  loadBalancerIP: ""
+  loadBalancerSourceRanges: []
+  externalTrafficPolicy: Cluster
+  annotations: {}
+  extraPorts: []
+  sessionAffinity: None
+  sessionAffinityConfig: {}
+
+
+serviceAccount:
+  create: true
+  name: ""
+  automountServiceAccountToken: false
+  annotations: {}
+
+
+networkPolicy:
+  enabled: true
+  allowExternal: true
+  allowExternalEgress: true
+  extraIngress: []
+  extraEgress: []
+  ingressNSMatchLabels: {}
+  ingressNSPodMatchLabels: {}
+
+
+ingress:
+  enabled: false
+  pathType: ImplementationSpecific
+  apiVersion: ""
+  # hostname: wildfly.local
+  hostname: wildfly.jtest.pivotal.io
+  path: /
+  annotations: {}
+  tls: false
+  extraHosts: []
+  extraPaths: []
+  extraTls: []
+  secrets: []
+  ingressClassName: ""
+  extraRules: []
+
+
+mgmtIngress:
+  enabled: true
+  pathType: ImplementationSpecific
+  hostname: wildfly.jtest.pivotal.io
+  # hostname: management.local
+  annotations: {}
+  tls: true
+  extraHosts: []
+  extraPaths: []
+  extraTls: []
+  secrets: []
+  ingressClassName: ""
+
+
+persistence:
+  enabled: true
+  storageClass: "{{ _wildfly.storage_class }}"
+  existingClaim: "wildfly"
+  accessModes:
+    - ReadWriteOnce
+  size: 8Gi
+  annotations: {}
+

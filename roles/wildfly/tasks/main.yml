@@ -1,0 +1,79 @@
+---
+- name: Check OS ( Valkey )
+  fail: msg="Not a Red Hat or SUSE based System!"
+  when: ansible_os_family != 'RedHat' or  ansible_os_family != 'CentOS' or  ansible_os_family != 'Rocky' or ansible_os_family != 'openSUSE Leap'
+
+
+- name: Set facts for Valkey
+  import_tasks: set-wildfly-facts.yml
+  tags:
+    - install
+    - uninstall
+
+
+# https://techdocs.broadcom.com/us/en/vmware-tanzu/data-solutions/tanzu-wildfly/1-0-0-beta/tanzu-wildfly-docs/operator-install-operator.html
+# https://hub.docker.com/r/bitnamicharts/wildfly-cluster
+# https://docs.vmware.com/en/VMware-Tanzu-Application-Catalog/services/apps/GUID-apps-wildfly-index.html
+# https://freshbrewed.science/2024/04/16/wildfly.html
+# https://learn.microsoft.com/en-us/azure/aks/wildfly-overviewk
+
+
+# certmanager acme challenge dns01 provider
+# Hostname to use for the Rook Ceph Manager Dashboard.
+# You will need to manually configure your DNS to point to the ingress ingress/ip-address.
+# If no hostname is provided a rook-db.$INGRESSIP.xip.io hostname will be assigned
+
+
+- name: Apply Kernel Parameters
+  import_tasks: apply-wildfly-kernel-parameters.yml
+  tags: install
+  when: ( wildfly is defined and wildfly == true ) or ( wildfly_all is defined and wildfly_all == true )
+
+
+- name: Enable Helm Repository
+  import_tasks: enable-helm-repo.yml
+  tags: install
+  when: (( wildfly is defined and wildfly == true ) or ( wildfly_all is defined and wildfly_all == true )) and inventory_hostname in groups['master']
+
+
+- name: Install Kustomize
+  import_tasks: install-kustomize.yml
+  tags: install
+  when: _kustomize.install == true and inventory_hostname in groups['master']
+
+
+- name: Deploy wildfly
+  import_tasks: install-wildfly.yml
+  tags: install
+  when: (( wildfly is defined and wildfly == true ) or ( wildfly_all is defined and wildfly_all == true )) and inventory_hostname in groups['master']
+
+
+- name: Install Load Balancer
+  import_tasks: install-lb.yml
+  tags: install
+  when: (( lb is defined and lb == true ) or ( wildfly_all is defined and wildfly_all == true )) and inventory_hostname in groups['master']
+
+
+- name: Uninstall Load Balancer
+  import_tasks: uninstall-lb.yml
+  tags: uninstall
+  when: (( lb is defined and lb == true ) or ( wildfly_all is defined and wildfly_all == true )) and inventory_hostname in groups['master']
+
+
+- name: Destroy wildfly
+  import_tasks: uninstall-wildfly.yml
+  tags: uninstall
+  when: (( wildfly is defined and wildfly == true ) or ( wildfly_all is defined and wildfly_all == true )) and inventory_hostname in groups['master']
+
+
+- name: Disable Helm Repository
+  import_tasks: disable-helm-repo.yml
+  tags: uninstall
+  when: (( wildfly is defined and wildfly == true ) or ( wildfly_all is defined and wildfly_all == true )) and inventory_hostname in groups['master']
+
+
+- name: Remove Kernel Parameters
+  import_tasks: remove-wildfly-kernel-parameters.yml
+  tags: uninstall
+  when: ( wildfly is defined and wildfly == true ) or ( wildfly_all is defined and wildfly_all == true )
+

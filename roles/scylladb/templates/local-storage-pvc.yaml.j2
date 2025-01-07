@@ -1,0 +1,16 @@
+{% for n in range(0, _minio.replica|int) %}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: data-minio-{{ n }}
+  namespace: {{ _minio.namespace }}
+spec:
+  storageClassName: {{ _minio.storage_class }}
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+{% endfor %}
+

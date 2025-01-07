@@ -1,0 +1,66 @@
+---
+- name: Check OS ( minio )
+  fail: msg="Not a Red Hat or SUSE based System!"
+  when: ansible_os_family != 'RedHat' or  ansible_os_family != 'CentOS' or  ansible_os_family != 'Rocky' or ansible_os_family != 'openSUSE Leap'
+
+
+- name: Set facts for Minio
+  import_tasks: set-minio-facts.yml
+  tags:
+    - install
+    - uninstall
+
+
+- name: Apply Kernel Parameters
+  import_tasks: apply-minio-kernel-parameters.yml
+  tags: install
+  when: ( minio is defined and minio == true ) or ( minio_all is defined and minio_all == true )
+
+
+- name: Enable Helm Repository
+  import_tasks: enable-helm-repo.yml
+  tags: install
+  when: (( minio is defined and minio == true ) or ( minio_all is defined and minio_all == true )) and inventory_hostname in groups['master']
+
+
+- name: Install Kustomize
+  import_tasks: install-kustomize.yml
+  tags: install
+  when: _kustomize.install == true and inventory_hostname in groups['master']
+
+
+- name: Deploy Minio
+  import_tasks: install-minio.yml
+  tags: install
+  when: (( minio is defined and minio == true ) or ( minio_all is defined and minio_all == true )) and inventory_hostname in groups['master']
+
+
+- name: Install Load Balancer
+  import_tasks: install-lb.yml
+  tags: install
+  when: (( lb is defined and lb == true ) or ( minio_all is defined and minio_all == true )) and inventory_hostname in groups['master']
+
+
+- name: Uninstall Load Balancer
+  import_tasks: uninstall-lb.yml
+  tags: uninstall
+  when: (( lb is defined and lb == true ) or ( minio_all is defined and minio_all == true )) and inventory_hostname in groups['master']
+
+
+- name: Destroy Minio
+  import_tasks: uninstall-minio.yml
+  tags: uninstall
+  when: (( minio is defined and minio == true ) or ( minio_all is defined and minio_all == true )) and inventory_hostname in groups['master']
+
+
+- name: Disable Helm Repository
+  import_tasks: disable-helm-repo.yml
+  tags: uninstall
+  when: (( minio is defined and minio == true ) or ( minio_all is defined and minio_all == true )) and inventory_hostname in groups['master']
+
+
+- name: Remove Kernel Parameters
+  import_tasks: remove-minio-kernel-parameters.yml
+  tags: uninstall
+  when: ( minio is defined and minio == true ) or ( minio_all is defined and minio_all == true )
+

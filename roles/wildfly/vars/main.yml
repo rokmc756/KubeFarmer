@@ -1,0 +1,63 @@
+base_path: /root
+
+
+_kustomize:
+  install: true
+  download_url: "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"
+  major_version: 5
+  minor_version: 4
+  patch_version: 2
+
+
+_wildfly:
+  install: true
+  major_version:
+  minor_version:
+  patch_version:
+  build_version:
+  admin_user: "admin"
+  admin_password: "changeme"
+  admin_email: "rokmc756@gmail.com"
+  enable_discovery_daemon: false
+  clone_git: true
+  nvme: true
+  namespace: wildfly
+  storage_path: "/mnt/wildfly-storage"
+  storage_class: "wildfly-storage"
+  k8s:
+    major_version: 1
+    minor_version: 28
+    patch_version: 0
+    build_version:
+  hostname: "wildfly.jtest.pivotal.io"
+  service:
+    metadata:
+      name: wildfly-loadbalancer
+      namespace: wildfly
+  ingress:
+    metadata:
+      name: wildfly-ingress
+      namespace: wildfly
+    hostname: "wildfly.jtest.pivotal.io"
+  kernel_parameters:
+    - "net.ipv4.neigh.default.gc_thresh1 = 0"   # For ARP Cache
+    - "fs.inotify.max_user_instances=2280"
+    - "fs.inotify.max_user_watches=755360"
+  lb:
+    install: true
+    ip_addr: "192.168.1.219"
+  replicas:
+    num: 3
+
+
+total_wildfly_containers: "{{ _wildfly.replicas.num|int }}"
+
+
+_helm:
+  enable_repo: true
+  major_version: 3
+  minor_version:
+  patch_version:
+  build_version:
+
+

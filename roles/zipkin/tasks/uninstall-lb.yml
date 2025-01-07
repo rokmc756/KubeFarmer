@@ -1,0 +1,23 @@
+---
+- name: Copy MinIO Loadbalancer Config Yaml
+  template:
+    src: minio-loadbalancer.yaml.j2
+    dest: "{{ base_path }}/minio-loadbalancer.yaml"
+  register: copy_minio_lb_config_yaml
+  ignore_errors: true
+- debug: msg={{ copy_minio_lb_config_yaml }}
+
+
+- name: Delete MinIO Load Balancer
+  shell: |
+    kubectl patch svc {{ item.svc }} -n {{ _minio.namespace }} -p '{"spec": {"type": "ClusterIP"}}'
+  register: delete_minio_lb
+  ignore_errors: true
+  args:
+    chdir: "{{ base_path }}"
+  with_items:
+    - { svc: "minio", lb_ip_addr: "{{ _minio.lb.ip_addr }}" }
+- debug: msg={{ delete_minio_lb }}
+  ignore_errors: true
+  when: print_debug == true
+

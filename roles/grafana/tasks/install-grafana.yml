@@ -96,3 +96,7 @@
 #- debug: msg={{ create_tls_secret }}
 #  when: print_debug == true
 
+
+# PostgreSQL Monitor
+# https://apgapg.medium.com/analyzing-postgres-queries-performance-with-grafana-b8cd2f74c401
+
