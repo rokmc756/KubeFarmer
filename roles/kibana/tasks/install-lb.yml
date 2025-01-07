@@ -1,0 +1,29 @@
+---
+- name: Copy Kibana Loadbalancer Config Yaml
+  template:
+    src: kibana-loadbalancer.yaml.j2
+    dest: "{{ base_path }}/kibana-loadbalancer.yaml"
+  register: copy_kibana_lb_config_yaml
+- debug: msg={{ copy_kibana_lb_config_yaml }}
+
+
+- name: Apply Kibana Load Balancer
+  shell: |
+    kubectl patch svc {{ item.svc }} -n {{ _kibana.namespace }} -p '{"spec": {"type": "LoadBalancer", "loadBalancerIP": "{{ item.lb_ip_addr }}"}}'
+  register: apply_kibana_lb
+  args:
+    chdir: "{{ base_path }}"
+  with_items:
+    - { svc: "kibana", lb_ip_addr: "{{ _kibana.lb.ip_addr }}" }
+- debug: msg={{ apply_kibana_lb }}
+  when: print_debug == true
+
+
+- name: Print IP Addresses for LoadBalancer
+  shell: |
+    kubectl get all -A | grep LoadBalancer
+  register: print_lb_ipaddr
+  args:
+    chdir: "{{ base_path }}"
+- debug: msg={{ print_lb_ipaddr }}
+

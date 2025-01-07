@@ -1,11 +1,11 @@
 {% for h in groups["workers"] %}
-{% for n in range(0, total_minio_containers|int) %}
+{% for n in range(0, total_tomcat_containers|int) %}
 ---
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: minio-pv-{{ hostvars[h]['ansible_hostname'] }}-{{ n }}
-  namespace: {{ _minio.namespace }}
+  name: tomcat-pv-{{ hostvars[h]['ansible_hostname'] }}-{{ n }}
+  namespace: {{ _tomcat.namespace }}
 spec:
   capacity:
     storage: 15Gi
@@ -13,9 +13,9 @@ spec:
   accessModes:
   - ReadWriteOnce
   persistentVolumeReclaimPolicy: Retain
-  storageClassName: {{ _minio.storage_class }}
+  storageClassName: {{ _tomcat.storage_class }}
   local:
-    path: {{ _minio.storage_path }}-{{ n }}
+    path: {{ _tomcat.storage_path }}-{{ n }}
   nodeAffinity:
     required:
       nodeSelectorTerms:

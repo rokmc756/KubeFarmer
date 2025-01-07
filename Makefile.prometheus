@@ -1,0 +1,84 @@
+prometheus:
+	@if [ "${r}" = "reinit" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-prometheus.yml -e '{"${s}": True}' --tags='reinit';\
+			else\
+				echo "No actions to configure prometheus";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-prometheus.yml -e '{prometheus_all: True}' --tags='reinit';\
+			else\
+				echo "No actions to configure prometheus";\
+			fi\
+		else\
+			echo "No Actions to configure prometheus";\
+		fi;\
+	elif [ "${r}" = "prepare" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-prometheus.yml -e '{"${s}": True}' --tags='prepare';\
+			else\
+				echo "No actions to configure prometheus";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-prometheus.yml -e '{prometheus_all: True}' --tags='prepare';\
+			else\
+				echo "No actions to configure prometheus";\
+			fi\
+		else\
+			echo "No Actions to configure prometheus";\
+		fi;\
+	elif [ "${r}" = "install" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-prometheus.yml -e '{"${s}": True}' --tags='install';\
+			else\
+				echo "No actions to install prometheus";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-prometheus.yml -e '{prometheus_all: True}' --tags='install';\
+			else\
+				echo "No actions to install prometheus";\
+			fi\
+		else\
+			echo "No actions to install prometheus";\
+		fi;\
+	elif [ "${r}" = "uninstall" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-prometheus.yml -e '{"${s}": True}' --tags='uninstall';\
+			else\
+				echo "No actions to uninstall prometheus";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-prometheus.yml -e '{prometheus_all: True}' --tags='uninstall';\
+			else\
+				echo "No actions to uninstall prometheus";\
+			fi\
+		fi;\
+	elif [ "${r}" = "upgrade" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-prometheus.yml -e '{"${s}": True}' --tags='upgrade';\
+			else\
+				echo "No actions to uninstall prometheus";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-prometheus.yml -e '{prometheus_all: True}' --tags='upgrade';\
+			else\
+				echo "No actions to uninstall prometheus";\
+			fi\
+		else\
+			echo "No actions to uninstall prometheus";\
+		fi;\
+	else\
+		echo "No actions to prometheus role";\
+		exit;\
+	fi
+

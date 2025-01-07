@@ -1,0 +1,102 @@
+base_path: /root
+
+
+_kustomize:
+  install: true
+  download_url: "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"
+  major_version: 5
+  minor_version: 4
+  patch_version: 2
+
+
+_prometheus:
+  install: true
+  major_version:
+  minor_version:
+  patch_version:
+  build_version:
+  admin_user: "admin"
+  admin_password: "changeme"
+  admin_email: "rokmc756@gmail.com"
+  enable_discovery_daemon: false
+  clone_git: true
+  nvme: true
+  namespace: prometheus
+  storage_path: "/mnt/prometheus-storage"
+  storage_class: "prometheus-storage"
+  k8s:
+    major_version: 1
+    minor_version: 28
+    patch_version: 0
+    build_version:
+  hostname: "prometheus.jtest.pivotal.io"
+  service:
+    metadata:
+      name: prometheus-loadbalancer
+      namespace: prometheus
+  ingress:
+    metadata:
+      name: prometheus-ingress
+      namespace: prometheus
+    hostname: "prometheus.jtest.pivotal.io"
+  kernel_parameters:
+    - "net.ipv4.neigh.default.gc_thresh1 = 0"   # For ARP Cache
+    - "fs.inotify.max_user_instances=2280"
+    - "fs.inotify.max_user_watches=755360"
+  lb:
+    install: true
+    ip_addr: 192.168.1.219
+  # replica: 3
+  server:
+    replica: 1
+    ip_addr: 192.168.1.219
+  alertmanager:
+    replica: 3
+    ip_addr: 192.168.1.220
+
+
+total_prometheus_containers: "{{ _prometheus.server.replica|int +_prometheus.alertmanager.replica|int }}"
+
+
+_helm:
+  enable_repo: true
+  major_version: 3
+  minor_version:
+  patch_version:
+  build_version:
+
+
+
+_nginx:
+  ingress:
+    install: true
+    name: nginx-ingress
+    class_name: prometheus-ingress-class
+    namespace: "nginx-ingress"
+    major_version:
+    minor_version:
+    patch_version:
+    hostname: 
+      - prometheus-server
+      - prometheus-alertmanager
+    domain: jtest.pivotal.io
+    ip_addr:
+      - "192.168.1.219"
+      - "192.168.1.220"
+  k8s_ingress:
+    major_version: 3
+    minor_version: 0
+    patch_version: 2
+
+
+_ssl:
+  dir: "{{ base_path }}/prometheus-certs"
+  days: 3660
+  country: "KR"
+  state: "Seoul"
+  location: "Guro"
+  organization: "Pivotal"
+  common_name: "jest.pivotal.io"
+  email: "rokmc756@gmail.com"
+
+

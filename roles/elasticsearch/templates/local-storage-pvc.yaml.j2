@@ -1,0 +1,16 @@
+{% for n in range(0, _elasticsearch.replica|int) %}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: data-elasticsearch-{{ n }}
+  namespace: {{ _elasticsearch.namespace }}
+spec:
+  storageClassName: {{ _elasticsearch.storage_class }}
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+{% endfor %}
+

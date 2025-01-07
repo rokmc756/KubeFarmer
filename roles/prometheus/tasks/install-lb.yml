@@ -1,0 +1,30 @@
+---
+- name: Copy Prometheus Loadbalancer Config Yaml
+  template:
+    src: prometheus-loadbalancer.yaml.j2
+    dest: "{{ base_path }}/prometheus-loadbalancer.yaml"
+  register: copy_prometheus_lb_config_yaml
+- debug: msg={{ copy_prometheus_lb_config_yaml }}
+
+
+- name: Apply Prometheus Load Balancer
+  shell: |
+    kubectl patch svc {{ item.svc }} -n {{ _prometheus.namespace }} -p '{"spec": {"type": "LoadBalancer", "loadBalancerIP": "{{ item.lb_ip_addr }}"}}'
+  register: apply_prometheus_lb
+  args:
+    chdir: "{{ base_path }}"
+  with_items:
+    - { svc: "prometheus-server",       lb_ip_addr: "{{ _prometheus.server.ip_addr }}" }
+    - { svc: "prometheus-alertmanager", lb_ip_addr: "{{ _prometheus.alertmanager.ip_addr }}" }
+- debug: msg={{ apply_prometheus_lb }}
+  when: print_debug == true
+
+
+- name: Print IP Addresses for LoadBalancer
+  shell: |
+    kubectl get all -A | grep LoadBalancer
+  register: print_lb_ipaddr
+  args:
+    chdir: "{{ base_path }}"
+- debug: msg={{ print_lb_ipaddr }}
+

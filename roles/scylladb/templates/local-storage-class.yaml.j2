@@ -2,8 +2,8 @@
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
-  name: {{ _minio.storage_class }}
-  namespace: {{ _minio.namespace }}
+  name: {{ _scylladb.storage_class }}
+  namespace: {{ _scylladb.namespace }}
 provisioner: kubernetes.io/no-provisioner
 volumeBindingMode: WaitForFirstConsumer
 

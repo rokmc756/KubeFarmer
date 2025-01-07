@@ -1,0 +1,29 @@
+---
+- name: Copy ElasticSearch Loadbalancer Config Yaml
+  template:
+    src: elasticsearch-loadbalancer.yaml.j2
+    dest: "{{ base_path }}/elasticsearch-loadbalancer.yaml"
+  register: copy_elasticsearch_lb_config_yaml
+- debug: msg={{ copy_elasticsearch_lb_config_yaml }}
+
+
+- name: Apply ElasticSearch Load Balancer
+  shell: |
+    kubectl patch svc {{ item.svc }} -n {{ _elasticsearch.namespace }} -p '{"spec": {"type": "LoadBalancer", "loadBalancerIP": "{{ item.lb_ip_addr }}"}}'
+  register: apply_elasticsearch_lb
+  args:
+    chdir: "{{ base_path }}"
+  with_items:
+    - { svc: "elasticsearch", lb_ip_addr: "{{ _elasticsearch.lb.ip_addr }}" }
+- debug: msg={{ apply_elasticsearch_lb }}
+  when: print_debug == true
+
+
+- name: Print IP Addresses for LoadBalancer
+  shell: |
+    kubectl get all -A | grep LoadBalancer
+  register: print_lb_ipaddr
+  args:
+    chdir: "{{ base_path }}"
+- debug: msg={{ print_lb_ipaddr }}
+

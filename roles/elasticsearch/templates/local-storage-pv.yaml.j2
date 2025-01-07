@@ -1,0 +1,29 @@
+{% for h in groups["workers"] %}
+{% for n in range(0, total_elasticsearch_containers|int) %}
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: elasticsearch-pv-{{ hostvars[h]['ansible_hostname'] }}-{{ n }}
+  namespace: {{ _elasticsearch.namespace }}
+spec:
+  capacity:
+    storage: 15Gi
+  volumeMode: Filesystem
+  accessModes:
+  - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: {{ _elasticsearch.storage_class }}
+  local:
+    path: {{ _elasticsearch.storage_path }}-{{ n }}
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - {{ hostvars[h]['ansible_hostname'] }}
+{% endfor %}
+{% endfor %}
+

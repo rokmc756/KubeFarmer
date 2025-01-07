@@ -1,0 +1,89 @@
+---
+- name: Uninstall MinIO
+  shell: |
+    /usr/local/bin/helm uninstall tomcat -n {{ _tomcat.namespace }}
+  register: uninstall_tomcat
+  ignore_errors: true
+- debug: msg={{ uninstall_tomcat }}
+  ignore_errors: true
+  when: print_debug == true
+
+
+- name: Validate if MinIO Controller Containers are Deleted
+  shell: |
+    kubectl get pods -n {{ _tomcat.namespace }} | grep {{ item.svc }} | awk '{print $3}' | grep -E "Running|Terminating" | wc -l
+  register: check_tomcat_containers
+  until: check_tomcat_containers.stdout|int == 0
+  retries: 100
+  delay: 10
+  with_items:
+    - { svc: "tomcat-", replica: "{{ _tomcat.replica }}" }
+- debug: msg={{ check_tomcat_containers }}
+  when: print_debug == true
+
+
+- name: Copy Cluster Local PVC Config Yaml
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ base_path }}/{{ item }}"
+  register: copy_cluster_local_pvc_config_yaml
+  ignore_errors: true
+  with_items:
+    - "local-storage-class.yaml"
+    - "local-storage-pv.yaml"
+    - "local-storage-pvc.yaml"
+- debug: msg={{ copy_cluster_local_pvc_config_yaml }}
+  ignore_errors: true
+  when: print_debug == true
+
+
+- name: Delete Persistent Volumes, Claim and Storage Class
+  shell: |
+    kubectl delete -f {{ item }}
+  register: delete_pvc
+  ignore_errors: true
+  with_items:
+    - "local-storage-pvc.yaml"
+    - "local-storage-pv.yaml"
+    - "local-storage-class.yaml"
+  args:
+    chdir: "{{ base_path }}/"
+- debug: msg={{ delete_pvc }}
+  ignore_errors: true
+  when: print_debug == true
+
+
+- name: Delete Cluster Local PVC Config Yaml
+  file:
+    path: "{{ base_path }}/{{ item }}"
+    state: absent
+  register: delete_cluster_local_pvc_config_yaml
+  ignore_errors: true
+  with_items:
+    - "local-storage-class.yaml"
+    - "local-storage-pv.yaml"
+    - "local-storage-pvc.yaml"
+- debug: msg={{ delete_cluster_local_pvc_config_yaml }}
+  ignore_errors: true
+  when: print_debug == true
+
+
+- name: Delete Namespace for Persistent Volumes
+  shell: |
+    kubectl delete namespace {{ _tomcat.namespace }}
+  register: delete_namespace
+  ignore_errors: true
+- debug: msg={{ delete_namespace }}
+  ignore_errors: true
+  when: print_debug == true
+
+
+- name: Delete MinIO Helm Config
+  file:
+    path: "{{ base_path }}/{{ item }}"
+    state: absent
+  register: delete_tomcat_helm_config
+  with_items:
+    - "tomcat-values.yaml"
+- debug: msg={{ delete_tomcat_helm_config }}
+

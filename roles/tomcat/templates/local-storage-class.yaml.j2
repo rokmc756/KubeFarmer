@@ -2,8 +2,8 @@
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
-  name: {{ _minio.storage_class }}
-  namespace: {{ _minio.namespace }}
+  name: {{ _tomcat.storage_class }}
+  namespace: {{ _tomcat.namespace }}
 provisioner: kubernetes.io/no-provisioner
 volumeBindingMode: WaitForFirstConsumer
 

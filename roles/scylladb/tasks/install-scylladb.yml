@@ -1,0 +1,70 @@
+- name: Create Namespace for Persistent Volumes
+  shell: |
+    kubectl create namespace {{ _scylladb.namespace }}
+  register: create_namespace
+  #with_items:
+  #  - scylladb
+- debug: msg={{ create_namespace }}
+  when: print_debug == true
+
+
+- name: Copy Cluster Local PVC Config Yaml
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ base_path }}/{{ item }}"
+  register: copy_cluster_local_pvc_config_yaml
+  with_items:
+    - "local-storage-class.yaml"
+    - "local-storage-pv.yaml"
+- debug: msg={{ copy_cluster_local_pvc_config_yaml }}
+  #  - "local-storage-pvc.yaml"
+
+
+- name: Cluster Settings for a Production Cluster Running in a Dynamic Cloud Environment including VMware
+  shell: |
+    kubectl create -f {{ item }}
+  register: create_pvc
+  with_items:
+    - "local-storage-class.yaml"
+    - "local-storage-pv.yaml"
+  args:
+    chdir: "{{ base_path }}/"
+- debug: msg={{ create_pvc }}
+  when: print_debug == true
+    #  - "local-storage-pvc.yaml"
+
+
+- name: Copy ScyllaDB Helm Config
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ base_path }}/{{ item }}"
+  register: copy_scylladb_helm_config
+  with_items:
+    - "scylladb-values.yaml"
+- debug: msg={{ copy_scylladb_helm_config }}
+
+
+- name: Deploy ScyllaDB
+  shell: |
+    /usr/local/bin/helm install scylladb bitnami/scylladb -n {{ _scylladb.namespace }} -f {{ base_path }}/scylladb-values.yaml
+  register: deploy_scylladb
+- debug: msg={{ deploy_scylladb }}
+  when: print_debug == true
+
+
+- name: Validate if ScyllaDB Containers are Running
+  shell: |
+    kubectl get pods -n {{ _scylladb.namespace }} | grep {{ item.svc }} | awk '{print $3}' | grep Running | wc -l
+  register: check_scylladb_containers
+  until: check_scylladb_containers.stdout|int == item.replica|int
+  retries: 100
+  delay: 10
+  with_items:
+    - { svc: "scylladb-", replica: "{{ _scylladb.replica }}" }
+- debug: msg={{ check_scylladb_containers }}
+  when: print_debug == true
+
+
+# sudo pip install cqlsh
+# cqlsh -u cassandra -p changeme 192.168.1.219 9042
+

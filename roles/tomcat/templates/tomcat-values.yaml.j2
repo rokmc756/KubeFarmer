@@ -1,0 +1,160 @@
+automountServiceAccountToken: false
+
+
+tomcatUsername: admin
+tomcatPassword: "changeme"
+existingSecret: ""
+
+
+secretKeys:
+  adminUsernameKey: "jomoon"
+  adminPasswordKey: "jomoon"
+
+
+tomcatAllowRemoteManagement: 1
+
+
+catalinaOpts: ""
+
+
+extraEnvVarsCM: ""
+
+
+extraEnvVarsSecret: ""
+
+
+replicaCount: {{ _tomcat.replica }}
+
+
+deployment:
+  type: deployment
+
+
+updateStrategy:
+  type: RollingUpdate
+
+
+containerPorts:
+  http: 8080
+
+
+resourcesPreset: "micro"
+
+
+schedulerName: ""
+
+
+podManagementPolicy: ""
+
+
+pdb:
+  create: true
+  minAvailable: ""
+  maxUnavailable: ""
+
+
+persistence:
+  enabled: true
+  storageClass: "{{ _tomcat.storage_class }}"
+  annotations: {}
+  accessModes:
+    - ReadWriteOnce
+  size: 8Gi
+  existingClaim: "tomcat"
+  selectorLabels: {}
+
+
+networkPolicy:
+  enabled: true
+  allowExternal: true
+  allowExternalEgress: true
+  extraIngress: []
+  extraEgress: []
+  ingressNSMatchLabels: {}
+  ingressNSPodMatchLabels: {}
+
+
+serviceAccount:
+  create: true
+  name: ""
+  automountServiceAccountToken: false
+  annotations: {}
+
+
+service:
+  # type: LoadBalancer
+  type: ClusterIP
+  ports:
+    http: 80
+  nodePorts:
+    http: ""
+  extraPorts: []
+  loadBalancerIP: ""
+  clusterIP: ""
+
+
+ingress:
+  enabled: false
+  hostname: tomcat.local
+  annotations: {}
+  tls: false
+  extraHosts: []
+  extraTls: []
+  extraPaths: []
+  selfSigned: false
+  ingressClassName: ""
+  secrets: []
+  extraRules: []
+  apiVersion: ""
+  path: /
+  pathType: ImplementationSpecific
+
+
+volumePermissions:
+  enabled: false
+  resourcesPreset: "none"
+
+
+metrics:
+  jmx:
+    enabled: false
+    catalinaOpts: -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=5555 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.local.only=true
+    image:
+      registry: docker.io
+      repository: bitnami/jmx-exporter
+      tag: 1.1.0-debian-12-r1
+      digest: ""
+      pullPolicy: IfNotPresent
+      pullSecrets: []
+    config: |
+      jmxUrl: service:jmx:rmi:///jndi/rmi://127.0.0.1:5555/jmxrmi
+      startDelaySecs: 120
+      ssl: false
+      lowercaseOutputName: true
+      lowercaseOutputLabelNames: true
+      attrNameSnakeCase: true
+    containerSecurityContext:
+      enabled: true
+      runAsUser: 1001
+      runAsGroup: 1001
+      runAsNonRoot: true
+      privileged: false
+      readOnlyRootFilesystem: true
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop: ["ALL"]
+      seccompProfile:
+        type: "RuntimeDefault"
+    resourcesPreset: "none"
+    ports:
+      metrics: 5556
+    existingConfigmap: ""
+  podMonitor:
+    enabled: false
+    namespace: ""
+    interval: 30s
+    scrapeTimeout: 30s
+    scheme: http
+  prometheusRule:
+    enabled: false
+

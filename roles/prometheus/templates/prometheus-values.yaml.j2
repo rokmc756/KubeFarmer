@@ -1,0 +1,233 @@
+diagnosticMode:
+  enabled: false
+  command:
+    - sleep
+  args:
+    - infinity
+
+
+alertmanager:
+  enabled: true
+  configuration: |
+    receivers:
+      - name: default-receiver
+    route:
+      group_wait: 10s
+      group_interval: 5m
+      receiver: default-receiver
+      repeat_interval: 3h
+  replicaCount: {{ _prometheus.alertmanager.replica|int }}
+  containerPorts:
+    http: 9093
+    cluster: 9094
+  resourcesPreset: "nano"
+  resources: {}
+  existingConfigmap: ""
+  existingConfigmapKey: ""
+  command: []
+  args: []
+  extraArgs: []
+  automountServiceAccountToken: false
+  hostAliases: []
+  podLabels: {}
+  podAnnotations: {}
+  podAffinityPreset: ""
+  podAntiAffinityPreset: soft
+  pdb:
+    create: true
+    minAvailable: ""
+    maxUnavailable: ""
+  nodeAffinityPreset:
+    type: ""
+    key: ""
+    values: []
+  affinity: {}
+  nodeSelector: {}
+  tolerations: []
+  updateStrategy:
+    type: RollingUpdate
+  podManagementPolicy: OrderedReady
+  priorityClassName: ""
+  topologySpreadConstraints: []
+  schedulerName: ""
+  terminationGracePeriodSeconds: ""
+  lifecycleHooks: {}
+  extraEnvVars: []
+  extraEnvVarsCM: ""
+  extraEnvVarsSecret: ""
+  extraVolumes: []
+  extraVolumeMounts: []
+  sidecars: []
+  initContainers: []
+  serviceAccount:
+    create: true
+    name: ""
+    annotations: {}
+    automountServiceAccountToken: false
+  networkPolicy:
+    enabled: true
+    allowExternal: true
+    allowExternalEgress: true
+    addExternalClientAccess: true
+  service:
+    type: ClusterIP
+    ports:
+      http: 80
+      cluster: 9094
+    nodePorts:
+      http: ""
+    clusterIP: ""
+    loadBalancerIP: ""
+    loadBalancerClass: ""
+    loadBalancerSourceRanges: []
+    externalTrafficPolicy: Cluster
+    annotations: {}
+    extraPorts: []
+    sessionAffinity: None
+    sessionAffinityConfig: {}
+  persistence:
+    enabled: true
+    mountPath: /bitnami/alertmanager/data
+    subPath: ""
+    storageClass: "{{ _prometheus.storage_class }}"
+    accessModes:
+      - ReadWriteOnce
+    size: 8Gi
+    annotations: {}
+    selector: {}
+
+
+server:
+  alertingRules: {}
+  extraScrapeConfigs: []
+  replicaCount: {{ _prometheus.server.replica|int }}
+  containerPorts:
+    http: 9090
+  resourcesPreset: "nano"
+  resources: {}
+  existingConfigmap: ""
+  existingConfigmapKey: ""
+  command: []
+  args: []
+  extraArgs: []
+  automountServiceAccountToken: true
+  hostAliases: []
+  podLabels: {}
+  podAnnotations: {}
+  podAffinityPreset: ""
+  podAntiAffinityPreset: soft
+  pdb:
+    create: true
+    minAvailable: ""
+    maxUnavailable: ""
+  nodeAffinityPreset:
+    type: ""
+    key: ""
+    values: []
+  affinity: {}
+  nodeSelector: {}
+  tolerations: []
+  updateStrategy:
+    type: RollingUpdate
+  priorityClassName: ""
+  topologySpreadConstraints: []
+  schedulerName: ""
+  terminationGracePeriodSeconds: ""
+  lifecycleHooks: {}
+  extraEnvVars: []
+  extraEnvVarsCM: ""
+  extraEnvVarsSecret: ""
+  extraVolumes: []
+  extraVolumeMounts: []
+  sidecars: []
+  initContainers: []
+  routePrefix: /
+  remoteWrite: []
+  scrapeInterval: ""
+  scrapeTimeout: ""
+  evaluationInterval: ""
+  enableAdminAPI: false
+  enableRemoteWriteReceiver: false
+  enableFeatures: []
+  logLevel: info
+  logFormat: logfmt
+  retention: 10d
+  retentionSize: "0"
+  alertingEndpoints: []
+  externalLabels: {}
+  thanos:
+    create: true
+    prometheusUrl: ""
+    extraArgs: []
+    objectStorageConfig:
+      secretName: ""
+      secretKey: thanos.yaml
+    extraVolumeMounts: []
+    resourcesPreset: "nano"
+    resources: {}
+    service:
+      type: ClusterIP
+      ports:
+        grpc: 10901
+      clusterIP: None
+      nodePorts:
+        grpc: ""
+      loadBalancerIP: ""
+      loadBalancerClass: ""
+      loadBalancerSourceRanges: []
+      annotations: {}
+      extraPorts: []
+      externalTrafficPolicy: Cluster
+      sessionAffinity: None
+      sessionAffinityConfig: {}
+  serviceAccount:
+    create: true
+    name: ""
+    annotations: {}
+    automountServiceAccountToken: false
+  networkPolicy:
+    enabled: true
+    allowExternal: true
+    allowExternalEgress: true
+    addExternalClientAccess: true
+    extraEgress: []
+  service:
+    type: ClusterIP
+    ports:
+      http: 80
+    nodePorts:
+      http: ""
+    clusterIP: ""
+    loadBalancerIP: ""
+    loadBalancerClass: ""
+    loadBalancerSourceRanges: []
+    externalTrafficPolicy: Cluster
+    annotations: {}
+    extraPorts: []
+    sessionAffinity: ClientIP
+    sessionAffinityConfig: {}
+  persistence:
+    enabled: true
+    mountPath: /bitnami/prometheus/data
+    subPath: ""
+    storageClass: "{{ _prometheus.storage_class }}"
+    annotations: {}
+    accessModes:
+      - ReadWriteOnce
+    size: 8Gi
+    existingClaim: "prometheus-server"
+    selector: {}
+    dataSource: {}
+  rbac:
+    create: true
+    rules: []
+
+
+volumePermissions:
+  enabled: false
+  resourcesPreset: "nano"
+  resources: {}
+  containerSecurityContext:
+    seLinuxOptions: {}
+    runAsUser: 0
+

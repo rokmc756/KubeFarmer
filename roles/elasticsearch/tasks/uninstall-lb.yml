@@ -1,0 +1,23 @@
+---
+- name: Copy ElasticSearch Loadbalancer Config Yaml
+  template:
+    src: elasticsearch-loadbalancer.yaml.j2
+    dest: "{{ base_path }}/elasticsearch-loadbalancer.yaml"
+  register: copy_elasticsearch_lb_config_yaml
+  ignore_errors: true
+- debug: msg={{ copy_elasticsearch_lb_config_yaml }}
+
+
+- name: Delete ElasticSearch Load Balancer
+  shell: |
+    kubectl patch svc {{ item.svc }} -n {{ _elasticsearch.namespace }} -p '{"spec": {"type": "ClusterIP"}}'
+  register: delete_elasticsearch_lb
+  ignore_errors: true
+  args:
+    chdir: "{{ base_path }}"
+  with_items:
+    - { svc: "elasticsearch", lb_ip_addr: "{{ _elasticsearch.lb.ip_addr }}" }
+- debug: msg={{ delete_elasticsearch_lb }}
+  ignore_errors: true
+  when: print_debug == true
+

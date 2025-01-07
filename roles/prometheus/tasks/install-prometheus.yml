@@ -1,0 +1,67 @@
+- name: Create Namespace for Persistent Volumes
+  shell: |
+    kubectl create namespace {{ _prometheus.namespace }}
+  register: create_namespace
+  #with_items:
+  #  - prometheus
+- debug: msg={{ create_namespace }}
+  when: print_debug == true
+
+
+- name: Copy Cluster Local PVC Config Yaml
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ base_path }}/{{ item }}"
+  register: copy_cluster_local_pvc_config_yaml
+  with_items:
+    - "local-storage-class.yaml"
+    - "local-storage-pv.yaml"
+    - "local-storage-pvc.yaml"
+- debug: msg={{ copy_cluster_local_pvc_config_yaml }}
+
+
+- name: Cluster Settings for a Production Cluster Running in a Dynamic Cloud Environment including VMware
+  shell: |
+    kubectl create -f {{ item }}
+  register: create_pvc
+  with_items:
+    - "local-storage-class.yaml"
+    - "local-storage-pv.yaml"
+    - "local-storage-pvc.yaml"
+  args:
+    chdir: "{{ base_path }}/"
+- debug: msg={{ create_pvc }}
+  when: print_debug == true
+
+
+- name: Copy Prometheus Helm Config
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ base_path }}/{{ item }}"
+  register: copy_prometheus_helm_config
+  with_items:
+    - "prometheus-values.yaml"
+- debug: msg={{ copy_prometheus_helm_config }}
+
+
+- name: Deploy Prometheus
+  shell: |
+    /usr/local/bin/helm install prometheus bitnami/prometheus -n {{ _prometheus.namespace }} -f {{ base_path }}/prometheus-values.yaml
+  register: deploy_prometheus
+- debug: msg={{ deploy_prometheus }}
+  when: print_debug == true
+
+
+- name: Validate if Prometheus Containers are Running
+  shell: |
+    kubectl get pods -n {{ _prometheus.namespace }} | grep {{ item.svc }} | awk '{print $3}' | grep Running | wc -l
+  register: check_prometheus_containers
+  until: check_prometheus_containers.stdout|int == item.replica|int
+  retries: 100
+  delay: 10
+  with_items:
+    - { svc: "prometheus-server-",       replica: "{{ _prometheus.server.replica }}" }
+    - { svc: "prometheus-alertmanager-", replica: "{{ _prometheus.alertmanager.replica }}" }
+- debug: msg={{ check_prometheus_containers }}
+  when: print_debug == true
+

@@ -1,0 +1,11 @@
+---
+- name: Remove Helm Repositories
+  shell: |
+    /usr/local/bin/helm repo remove {{ item }}
+  register: remove_helm_repos
+  ignore_errors: yes
+  with_items:
+    - jetstack
+    - bitnami
+- debug: msg={{ remove_helm_repos }}
+

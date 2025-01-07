@@ -1,0 +1,16 @@
+{% for n in range(0, _kibana.replica|int) %}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: data-kibana-{{ n }}
+  namespace: {{ _kibana.namespace }}
+spec:
+  storageClassName: {{ _kibana.storage_class }}
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+{% endfor %}
+

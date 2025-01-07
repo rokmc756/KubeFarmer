@@ -1,0 +1,66 @@
+- name: Create Namespace for Persistent Volumes
+  shell: |
+    kubectl create namespace {{ _elasticsearch.namespace }}
+  register: create_namespace
+  #with_items:
+  #  - elasticsearch
+- debug: msg={{ create_namespace }}
+  when: print_debug == true
+
+
+- name: Copy Cluster Local PVC Config Yaml
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ base_path }}/{{ item }}"
+  register: copy_cluster_local_pvc_config_yaml
+  with_items:
+    - "local-storage-class.yaml"
+    - "local-storage-pv.yaml"
+    - "local-storage-pvc.yaml"
+- debug: msg={{ copy_cluster_local_pvc_config_yaml }}
+
+
+- name: Cluster Settings for a Production Cluster Running in a Dynamic Cloud Environment including VMware
+  shell: |
+    kubectl create -f {{ item }}
+  register: create_pvc
+  with_items:
+    - "local-storage-class.yaml"
+    - "local-storage-pv.yaml"
+    - "local-storage-pvc.yaml"
+  args:
+    chdir: "{{ base_path }}/"
+- debug: msg={{ create_pvc }}
+  when: print_debug == true
+
+
+- name: Copy ElasticSearch Helm Config
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ base_path }}/{{ item }}"
+  register: copy_elasticsearch_helm_config
+  with_items:
+    - "elasticsearch-values.yaml"
+- debug: msg={{ copy_elasticsearch_helm_config }}
+
+
+- name: Deploy ElasticSearch
+  shell: |
+    /usr/local/bin/helm install elasticsearch bitnami/elasticsearch -n {{ _elasticsearch.namespace }} -f {{ base_path }}/elasticsearch-values.yaml
+  register: deploy_elasticsearch
+- debug: msg={{ deploy_elasticsearch }}
+  when: print_debug == true
+
+
+- name: Validate if ElasticSearch Containers are Running
+  shell: |
+    kubectl get pods -n {{ _elasticsearch.namespace }} | grep {{ item.svc }} | awk '{print $3}' | grep Running | wc -l
+  register: check_elasticsearch_containers
+  until: check_elasticsearch_containers.stdout|int == item.replica|int
+  retries: 100
+  delay: 10
+  with_items:
+    - { svc: "elasticsearch-", replica: "{{ _elasticsearch.replica }}" }
+- debug: msg={{ check_elasticsearch_containers }}
+  when: print_debug == true
+

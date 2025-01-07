@@ -1,0 +1,89 @@
+---
+- name: Uninstall ScyllaDB
+  shell: |
+    /usr/local/bin/helm uninstall scylladb -n {{ _scylladb.namespace }}
+  register: uninstall_scylladb
+  ignore_errors: true
+- debug: msg={{ uninstall_scylladb }}
+  ignore_errors: true
+  when: print_debug == true
+
+
+- name: Validate if ScyllaDB Containers are Deleted
+  shell: |
+    kubectl get pods -n {{ _scylladb.namespace }} | grep {{ item.svc }} | awk '{print $3}' | grep -E "Running|Terminating" | wc -l
+  register: check_scylladb_containers
+  until: check_scylladb_containers.stdout|int == 0
+  retries: 100
+  delay: 10
+  with_items:
+    - { svc: "scylladb-", replica: "{{ _scylladb.replica }}" }
+- debug: msg={{ check_scylladb_containers }}
+  when: print_debug == true
+
+
+- name: Copy Cluster Local PVC Config Yaml
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ base_path }}/{{ item }}"
+  register: copy_cluster_local_pvc_config_yaml
+  ignore_errors: true
+  with_items:
+    - "local-storage-class.yaml"
+    - "local-storage-pv.yaml"
+- debug: msg={{ copy_cluster_local_pvc_config_yaml }}
+  ignore_errors: true
+  when: print_debug == true
+  #  - "local-storage-pvc.yaml"
+
+
+- name: Delete Persistent Volumes, Claim and Storage Class
+  shell: |
+    kubectl delete -f {{ item }}
+  register: delete_pvc
+  ignore_errors: true
+  with_items:
+    - "local-storage-pv.yaml"
+    - "local-storage-class.yaml"
+  args:
+    chdir: "{{ base_path }}/"
+- debug: msg={{ delete_pvc }}
+  ignore_errors: true
+  when: print_debug == true
+  #  - "local-storage-pvc.yaml"
+
+
+- name: Delete Cluster Local PVC Config Yaml
+  file:
+    path: "{{ base_path }}/{{ item }}"
+    state: absent
+  register: delete_cluster_local_pvc_config_yaml
+  ignore_errors: true
+  with_items:
+    - "local-storage-class.yaml"
+    - "local-storage-pv.yaml"
+- debug: msg={{ delete_cluster_local_pvc_config_yaml }}
+  ignore_errors: true
+  when: print_debug == true
+  # - "local-storage-pvc.yaml"
+
+
+- name: Delete Namespace for Persistent Volumes
+  shell: |
+    kubectl delete namespace {{ _scylladb.namespace }}
+  register: delete_namespace
+  ignore_errors: true
+- debug: msg={{ delete_namespace }}
+  ignore_errors: true
+  when: print_debug == true
+
+
+- name: Delete ScyllaDB Helm Config
+  file:
+    path: "{{ base_path }}/{{ item }}"
+    state: absent
+  register: delete_scylladb_helm_config
+  with_items:
+    - "scylladb-values.yaml"
+- debug: msg={{ delete_scylladb_helm_config }}
+

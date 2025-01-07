@@ -1,22 +1,25 @@
 ---
-- name: Copy Minio Loadbalancer Config Yaml
+- name: Copy ScyllaDB Loadbalancer Config Yaml
   template:
-    src: minio-loadbalancer.yaml.j2
-    dest: "{{ base_path }}/minio-loadbalancer.yaml"
-  register: copy_minio_lb_config_yaml
-- debug: msg={{ copy_minio_lb_config_yaml }}
+    src: scylladb-loadbalancer.yaml.j2
+    dest: "{{ base_path }}/scylladb-loadbalancer.yaml"
+  register: copy_scylladb_lb_config_yaml
+- debug: msg={{ copy_scylladb_lb_config_yaml }}
 
 
-- name: Apply MinIO Load Balancer
+- name: Apply ScyllaDB Load Balancer
   shell: |
-    kubectl patch svc {{ item.svc }} -n {{ _minio.namespace }} -p '{"spec": {"type": "LoadBalancer", "loadBalancerIP": "{{ item.lb_ip_addr }}"}}'
-  register: apply_minio_lb
+    kubectl patch svc {{ item.svc }} -n {{ _scylladb.namespace }} -p '{"spec": {"type": "LoadBalancer", "loadBalancerIP": "{{ item.lb_ip_addr }}"}}'
+  register: apply_scylladb_lb
   args:
     chdir: "{{ base_path }}"
   with_items:
-    - { svc: "minio", lb_ip_addr: "{{ _minio.lb.ip_addr }}" }
-- debug: msg={{ apply_minio_lb }}
+    - { svc: "scylladb", lb_ip_addr: "{{ _scylladb.lb.ip_addr }}" }
+- debug: msg={{ apply_scylladb_lb }}
   when: print_debug == true
+  #  - { svc: "scylladb-0-internal", lb_ip_addr: "192.168.1.220" }
+  #  - { svc: "scylladb-1-internal", lb_ip_addr: "192.168.1.221" }
+  #  - { svc: "scylladb-2-internal", lb_ip_addr: "192.168.1.222" }
 
 
 - name: Print IP Addresses for LoadBalancer

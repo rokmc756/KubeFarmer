@@ -1,16 +1,29 @@
-{% for n in range(0, _minio.replica|int) %}
+{% for n in range(0, _tomcat.replica|int) %}
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: data-minio-{{ n }}
-  namespace: {{ _minio.namespace }}
+  name: data-tomcat-{{ n }}
+  namespace: {{ _tomcat.namespace }}
 spec:
-  storageClassName: {{ _minio.storage_class }}
+  storageClassName: {{ _tomcat.storage_class }}
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
       storage: 10Gi
 {% endfor %}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: tomcat
+  namespace: {{ _tomcat.namespace }}
+spec:
+  storageClassName: {{ _tomcat.storage_class }}
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
 

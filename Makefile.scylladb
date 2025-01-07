@@ -1,0 +1,84 @@
+scylladb:
+	@if [ "${r}" = "reinit" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-scylladb.yml -e '{"${s}": True}' --tags='reinit';\
+			else\
+				echo "No actions to configure scylladb";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-scylladb.yml -e '{scylladb_all: True}' --tags='reinit';\
+			else\
+				echo "No actions to configure scylladb";\
+			fi\
+		else\
+			echo "No Actions to configure scylladb";\
+		fi;\
+	elif [ "${r}" = "prepare" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-scylladb.yml -e '{"${s}": True}' --tags='prepare';\
+			else\
+				echo "No actions to configure scylladb";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-scylladb.yml -e '{scylladb_all: True}' --tags='prepare';\
+			else\
+				echo "No actions to configure scylladb";\
+			fi\
+		else\
+			echo "No Actions to configure scylladb";\
+		fi;\
+	elif [ "${r}" = "install" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-scylladb.yml -e '{"${s}": True}' --tags='install';\
+			else\
+				echo "No actions to install scylladb";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-scylladb.yml -e '{scylladb_all: True}' --tags='install';\
+			else\
+				echo "No actions to install scylladb";\
+			fi\
+		else\
+			echo "No actions to install scylladb";\
+		fi;\
+	elif [ "${r}" = "uninstall" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-scylladb.yml -e '{"${s}": True}' --tags='uninstall';\
+			else\
+				echo "No actions to uninstall scylladb";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-scylladb.yml -e '{scylladb_all: True}' --tags='uninstall';\
+			else\
+				echo "No actions to uninstall scylladb";\
+			fi\
+		fi;\
+	elif [ "${r}" = "upgrade" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-scylladb.yml -e '{"${s}": True}' --tags='upgrade';\
+			else\
+				echo "No actions to uninstall scylladb";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-scylladb.yml -e '{scylladb_all: True}' --tags='upgrade';\
+			else\
+				echo "No actions to uninstall scylladb";\
+			fi\
+		else\
+			echo "No actions to uninstall scylladb";\
+		fi;\
+	else\
+		echo "No actions to scylladb role";\
+		exit;\
+	fi
+

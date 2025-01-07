@@ -1,0 +1,29 @@
+{% for n in range(0, _prometheus.alertmanager.replica|int) %}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: data-prometheus-alertmanager-{{ n }}
+  namespace: {{ _prometheus.namespace }}
+spec:
+  storageClassName: {{ _prometheus.storage_class }}
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+{% endfor %}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: prometheus-server
+  namespace: {{ _prometheus.namespace }}
+spec:
+  storageClassName: {{ _prometheus.storage_class }}
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+

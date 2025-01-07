@@ -1,0 +1,24 @@
+---
+- name: Copy Prometheus Loadbalancer Config Yaml
+  template:
+    src: prometheus-loadbalancer.yaml.j2
+    dest: "{{ base_path }}/prometheus-loadbalancer.yaml"
+  register: copy_prometheus_lb_config_yaml
+  ignore_errors: true
+- debug: msg={{ copy_prometheus_lb_config_yaml }}
+
+
+- name: Delete Prometheus Load Balancer
+  shell: |
+    kubectl patch svc {{ item.svc }} -n {{ _prometheus.namespace }} -p '{"spec": {"type": "ClusterIP"}}'
+  register: delete_prometheus_lb
+  ignore_errors: true
+  args:
+    chdir: "{{ base_path }}"
+  with_items:
+    - { svc: "prometheus-alertmanager", lb_ip_addr: "{{ _prometheus.alertmanager.ip_addr }}" }
+    - { svc: "prometheus-server",       lb_ip_addr: "{{ _prometheus.server.ip_addr }}" }
+- debug: msg={{ delete_prometheus_lb }}
+  ignore_errors: true
+  when: print_debug == true
+
