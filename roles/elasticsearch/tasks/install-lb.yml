@@ -14,9 +14,12 @@
   args:
     chdir: "{{ base_path }}"
   with_items:
-    - { svc: "elasticsearch", lb_ip_addr: "{{ _elasticsearch.lb.ip_addr }}" }
+    - { svc: "elasticsearch-master", repo: "elasticsearch", lb_ip_addr: "{{ _elasticsearch.elasticsearch.ip_addr }}" }
+    - { svc: "kibana-kibana", repo: "kibana", lb_ip_addr: "{{ _elasticsearch.kibana.ip_addr }}" }
+    - { svc: "logstash-logstash", repo: "logstash", lb_ip_addr: "{{ _elasticsearch.logstash.ip_addr }}" }
 - debug: msg={{ apply_elasticsearch_lb }}
   when: print_debug == true
+  #  - { svc: "filebeat",  repo: "filebeat", lb_ip_addr: "{{ _elasticsearch.filebeat.ip_addr }}" }
 
 
 - name: Print IP Addresses for LoadBalancer
@@ -26,4 +29,15 @@
   args:
     chdir: "{{ base_path }}"
 - debug: msg={{ print_lb_ipaddr }}
+
+
+- name: Print ElasticSearch Secret
+  shell: |
+    kubectl -n {{ _elasticsearch.namespace }} get secret elasticsearch-master-credentials -o jsonpath="{.data.username}" | base64 --decode
+    kubectl -n {{ _elasticsearch.namespace }} get secret elasticsearch-master-credentials -o jsonpath="{.data.password}" | base64 --decode
+  register: print_elasticsearch_secret
+  args:
+    chdir: "{{ base_path }}"
+- debug: msg={{ print_elasticsearch_secret }}
+
 

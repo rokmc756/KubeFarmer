@@ -1,9 +1,24 @@
-{% for n in range(0, _elasticsearch.replica|int) %}
+{% for n in range(0, _elasticsearch.elasticsearch.replica|int) %}
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: data-elasticsearch-{{ n }}
+  name: elasticsearch-master-elasticsearch-master-{{ n }}
+  namespace: {{ _elasticsearch.namespace }}
+spec:
+  storageClassName: {{ _elasticsearch.storage_class }}
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+{% endfor %}
+{% for n in range(0, _elasticsearch.logstash.replica|int) %}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: logstash-logstash-logstash-logstash-{{ n }}
   namespace: {{ _elasticsearch.namespace }}
 spec:
   storageClassName: {{ _elasticsearch.storage_class }}

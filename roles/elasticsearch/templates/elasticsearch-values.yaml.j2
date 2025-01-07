@@ -1,188 +1,292 @@
 ---
-daemonset:
-  annotations: {}
-  labels: {}
-  affinity: {}
+clusterName: "elasticsearch"
+nodeGroup: "master"
+
+
+masterService: ""
+
+
+roles:
+  - master
+  - data
+  - data_content
+  - data_hot
+  - data_warm
+  - data_cold
+  - ingest
+  - ml
+  - remote_cluster_client
+  - transform
+
+
+replicas: "{{ _elasticsearch.elasticsearch.replica|int }}"
+minimumMasterNodes: 2
+esMajorVersion: ""
+
+
+esConfig: {}
+#  elasticsearch.yml: |
+#    key:
+#      nestedkey: value
+#  log4j2.properties: |
+#    key = value
+
+
+createCert: true
+
+
+esJvmOptions: {}
+#  processors.options: |
+#    -XX:ActiveProcessorCount=3
+
+
+extraEnvs: []
+#  - name: MY_ENVIRONMENT_VAR
+#    value: the_value_goes_here
+
+
+envFrom: []
+# - secretRef:
+#     name: env-secret
+# - configMapRef:
+#     name: config-map
+
+
+secret:
   enabled: true
-  envFrom: []
-  extraEnvs:
-    - name: "ELASTICSEARCH_USERNAME"
-      valueFrom:
-        secretKeyRef:
-          name: elasticsearch-master-credentials
-          key: username
-    - name: "ELASTICSEARCH_PASSWORD"
-      valueFrom:
-        secretKeyRef:
-          name: elasticsearch-master-credentials
-          key: password
-  extraVolumes: []
-  extraVolumeMounts: []
-  hostNetworking: false
-  filebeatConfig:
-    filebeat.yml: |
-      filebeat.inputs:
-      - type: container
-        paths:
-          - /var/log/containers/*.log
-        processors:
-        - add_kubernetes_metadata:
-            host: ${NODE_NAME}
-            matchers:
-            - logs_path:
-                logs_path: "/var/log/containers/"
-      output.elasticsearch:
-        host: '${NODE_NAME}'
-        hosts: '["https://${ELASTICSEARCH_HOSTS:elasticsearch-master:9200}"]'
-        username: '${ELASTICSEARCH_USERNAME}'
-        password: '${ELASTICSEARCH_PASSWORD}'
-        protocol: https
-        ssl.certificate_authorities: ["/usr/share/filebeat/certs/ca.crt"]
-  maxUnavailable: 1
-  nodeSelector: {}
-  secretMounts:
-    - name: elasticsearch-master-certs
-      secretName: elasticsearch-master-certs
-      path: /usr/share/filebeat/certs/
-  securityContext:
-    runAsUser: 0
-    privileged: false
-  resources:
-    requests:
-      cpu: "100m"
-      memory: "100Mi"
-    limits:
-      cpu: "1000m"
-      memory: "200Mi"
-  tolerations: []
+  password: "changeme" # generated randomly if not defined
 
 
-deployment:
-  annotations: {}
-  labels: {}
-  affinity: {}
-  enabled: false
-  envFrom: []
-  extraEnvs:
-    - name: "ELASTICSEARCH_USERNAME"
-      valueFrom:
-        secretKeyRef:
-          name: elasticsearch-master-credentials
-          key: username
-    - name: "ELASTICSEARCH_PASSWORD"
-      valueFrom:
-        secretKeyRef:
-          name: elasticsearch-master-credentials
-          key: password
-  extraVolumes: []
-  extraVolumeMounts: []
-  filebeatConfig:
-    filebeat.yml: |
-      filebeat.inputs:
-        - type: log
-          paths:
-            - /usr/share/filebeat/logs/filebeat
-      output.elasticsearch:
-        host: "${NODE_NAME}"
-        hosts: '["https://${ELASTICSEARCH_HOSTS:elasticsearch-master:9200}"]'
-        username: "${ELASTICSEARCH_USERNAME}"
-        password: "${ELASTICSEARCH_PASSWORD}"
-        protocol: https
-        ssl.certificate_authorities: ["/usr/share/filebeat/certs/ca.crt"]
-  nodeSelector: {}
-  secretMounts:
-    - name: elasticsearch-master-certs
-      secretName: elasticsearch-master-certs
-      path: /usr/share/filebeat/certs/
-  #  - name: filebeat-certificates
-  #    secretName: filebeat-certificates
-  #    path: /usr/share/filebeat/certs
-  securityContext:
-    runAsUser: 0
-    privileged: false
-  resources:
-    requests:
-      cpu: "100m"
-      memory: "100Mi"
-    limits:
-      cpu: "1000m"
-      memory: "200Mi"
-  tolerations: []
+# A list of secrets and their paths to mount inside the pod
+# This is useful for mounting certificates for security and for mounting
+# the X-Pack license
+secretMounts: []
+#  - name: elastic-certificates
+#    secretName: elastic-certificates
+#    path: /usr/share/elasticsearch/config/certs
+#    defaultMode: 0755
 
 
-replicas: "{{ _elasticsearch.replica }}"
-
-
-extraContainers: ""
-extraInitContainers: []
-hostPathRoot: /var/lib
-dnsConfig: {}
 hostAliases: []
+#- ip: "127.0.0.1"
+#  hostnames:
+#  - "foo.local"
+#  - "bar.local"
 
 
-image: "docker.elastic.co/beats/filebeat"
+image: "docker.elastic.co/elasticsearch/elasticsearch"
 imageTag: "8.5.1"
 imagePullPolicy: "IfNotPresent"
-imagePullSecrets: []
-
-
-livenessProbe:
-  exec:
-    command:
-      - sh
-      - -c
-      - |
-        #!/usr/bin/env bash -e
-        curl --fail 127.0.0.1:5066
-  failureThreshold: 3
-  initialDelaySeconds: 10
-  periodSeconds: 10
-  timeoutSeconds: 5
-
-
-readinessProbe:
-  exec:
-    command:
-      - sh
-      - -c
-      - |
-        #!/usr/bin/env bash -e
-        filebeat test output
-  failureThreshold: 3
-  initialDelaySeconds: 10
-  periodSeconds: 10
-  timeoutSeconds: 5
-
-
-managedServiceAccount: true
-
-
-clusterRoleRules:
-  - apiGroups:
-      - ""
-    resources:
-      - namespaces
-      - nodes
-      - pods
-    verbs:
-      - get
-      - list
-      - watch
-  - apiGroups:
-      - "apps"
-    resources:
-      - replicasets
-    verbs:
-      - get
-      - list
-      - watch
 
 
 podAnnotations: {}
-serviceAccount: ""
-serviceAccountAnnotations: {}
-terminationGracePeriod: 30
+
+
+# additionals labels
+labels: {}
+
+
+esJavaOpts: "" # example: "-Xmx1g -Xms1g"
+
+
+resources:
+  requests:
+    cpu: "1000m"
+    memory: "2Gi"
+  limits:
+    cpu: "1000m"
+    memory: "2Gi"
+
+
+initResources: {}
+# limits:
+#   cpu: "25m"
+#   # memory: "128Mi"
+# requests:
+#   cpu: "25m"
+#   memory: "128Mi"
+
+
+networkHost: "0.0.0.0"
+
+volumeClaimTemplate:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 30Gi
+
+
+rbac:
+  create: false
+  serviceAccountAnnotations: {}
+  serviceAccountName: ""
+  automountToken: true
+
+
+podSecurityPolicy:
+  create: false
+  name: ""
+  spec:
+    privileged: true
+    fsGroup:
+      rule: RunAsAny
+    runAsUser:
+      rule: RunAsAny
+    seLinux:
+      rule: RunAsAny
+    supplementalGroups:
+      rule: RunAsAny
+    volumes:
+      - secret
+      - configMap
+      - persistentVolumeClaim
+      - emptyDir
+
+
+persistence:
+  enabled: true
+  labels:
+    # Add default labels for the volumeClaimTemplate of the StatefulSet
+    enabled: false
+  annotations: {}
+
+
+extraVolumes: []
+extraVolumeMounts: []
+extraContainers: []
+extraInitContainers: []
+
+
 priorityClassName: ""
+antiAffinityTopologyKey: "kubernetes.io/hostname"
+antiAffinity: "hard"
+nodeAffinity: {}
+
+
+podManagementPolicy: "Parallel"
+enableServiceLinks: true
+
+
+protocol: https
+httpPort: 9200
+transportPort: 9300
+
+
+service:
+  enabled: true
+  labels: {}
+  labelsHeadless: {}
+  type: ClusterIP
+  publishNotReadyAddresses: false
+  nodePort: ""
+  annotations: {}
+  httpPortName: http
+  transportPortName: transport
+  loadBalancerIP: ""
+  loadBalancerSourceRanges: []
+  externalTrafficPolicy: ""
+
+
 updateStrategy: RollingUpdate
+
+
+maxUnavailable: 1
+
+
+podSecurityContext:
+  fsGroup: 1000
+  runAsUser: 1000
+
+
+securityContext:
+  capabilities:
+    drop:
+      - ALL
+  # readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 1000
+
+
+# How long to wait for elasticsearch to stop gracefully
+terminationGracePeriod: 120
+
+
+sysctlVmMaxMapCount: 262144
+
+
+readinessProbe:
+  failureThreshold: 3
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  successThreshold: 3
+  timeoutSeconds: 5
+
+
+clusterHealthCheckParams: "wait_for_status=green&timeout=1s"
+
+
+schedulerName: ""
+imagePullSecrets: []
+nodeSelector: {}
+tolerations: []
+
+
+ingress:
+  enabled: false
+  annotations: {}
+  # kubernetes.io/ingress.class: nginx
+  # kubernetes.io/tls-acme: "true"
+  className: "nginx"
+  pathtype: ImplementationSpecific
+  hosts:
+    - host: elastic.jtest.pivotal.io
+      paths:
+        - path: /
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+
 nameOverride: ""
 fullnameOverride: ""
+healthNameOverride: ""
+
+
+lifecycle: {}
+# preStop:
+#   exec:
+#     command: ["/bin/sh", "-c", "echo Hello from the postStart handler > /usr/share/message"]
+# postStart:
+#   exec:
+#     command:
+#       - bash
+#       - -c
+#       - |
+#         #!/bin/bash
+#         # Add a template to adjust number of shards/replicas
+#         TEMPLATE_NAME=my_template
+#         INDEX_PATTERN="logstash-*"
+#         SHARD_COUNT=8
+#         REPLICA_COUNT=1
+#         ES_URL=http://localhost:9200
+#         while [[ "$(curl -s -o /dev/null -w '%{http_code}\n' $ES_URL)" != "200" ]]; do sleep 1; done
+#         curl -XPUT "$ES_URL/_template/$TEMPLATE_NAME" -H 'Content-Type: application/json' -d'{"index_patterns":['\""$INDEX_PATTERN"\"'],"settings":{"number_of_shards":'$SHARD_COUNT',"number_of_replicas":'$REPLICA_COUNT'}}'
+
+
+sysctlInitContainer:
+  enabled: true
+
+
+keystore: []
+
+
+networkPolicy:
+  http:
+    enabled: false
+  transport:
+    enabled: false
+
+tests:
+  enabled: true
+

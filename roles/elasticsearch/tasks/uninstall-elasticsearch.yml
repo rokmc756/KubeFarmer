@@ -1,24 +1,34 @@
 ---
 - name: Uninstall ElasticSearch
   shell: |
-    /usr/local/bin/helm uninstall elasticsearch -n {{ _elasticsearch.namespace }}
+    /usr/local/bin/helm uninstall {{ item.name }} -n {{ _elasticsearch.namespace }}
   register: uninstall_elasticsearch
   ignore_errors: true
+  with_items:
+    - { name: "logstash", repo: "logstash", val: "logstash-values.yaml" }
+    - { name: "kibana", repo: "kibana", val: "kibana-values.yaml" }
+    - { name: "filebeat",  repo: "filebeat", val: "filebeat-values.yaml" }
+    - { name: "elasticsearch", repo: "elasticsearch", val: "elasticsearch-values.yaml" }
 - debug: msg={{ uninstall_elasticsearch }}
   ignore_errors: true
   when: print_debug == true
 
 
-- name: Validate if ElasticSearch Containers are Deleted
+- name: Validate if ElasticSearch Containers are Running
   shell: |
     kubectl get pods -n {{ _elasticsearch.namespace }} | grep {{ item.svc }} | awk '{print $3}' | grep -E "Running|Terminating" | wc -l
   register: check_elasticsearch_containers
+  ignore_errors: true
   until: check_elasticsearch_containers.stdout|int == 0
   retries: 100
   delay: 10
   with_items:
-    - { svc: "elasticsearch-", replica: "{{ _elasticsearch.replica }}" }
+    - { svc: "logstash-", repo: "logstash", replica: "{{ _elasticsearch.logstash.replica }}" }
+    - { svc: "kibana-kibana-", repo: "kibana", replica: "{{ _elasticsearch.kibana.replica }}" }
+    - { svc: "filebeat-filebeat-",  repo: "filebeat", replica: "{{ _elasticsearch.filebeat.replica }}" }
+    - { svc: "elasticsearch-master-", repo: "elasticsearch", replica: "{{ _elasticsearch.elasticsearch.replica }}" }
 - debug: msg={{ check_elasticsearch_containers }}
+  ignore_errors: true
   when: print_debug == true
 
 
@@ -83,7 +93,13 @@
     path: "{{ base_path }}/{{ item }}"
     state: absent
   register: delete_elasticsearch_helm_config
+  ignore_errors: true
   with_items:
+    - "kibana-values.yaml"
+    - "logstash-values.yaml"
+    - "filebeat-values.yaml"
     - "elasticsearch-values.yaml"
 - debug: msg={{ delete_elasticsearch_helm_config }}
+  ignore_errors: true
+  when: print_debug == true
 

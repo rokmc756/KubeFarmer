@@ -6,6 +6,8 @@
   register: copy_elasticsearch_lb_config_yaml
   ignore_errors: true
 - debug: msg={{ copy_elasticsearch_lb_config_yaml }}
+  ignore_errors: true
+  when: print_debug == true
 
 
 - name: Delete ElasticSearch Load Balancer
@@ -16,8 +18,12 @@
   args:
     chdir: "{{ base_path }}"
   with_items:
-    - { svc: "elasticsearch", lb_ip_addr: "{{ _elasticsearch.lb.ip_addr }}" }
+    - { svc: "logstash-logstash", repo: "logstash", lb_ip_addr: "{{ _elasticsearch.logstash.ip_addr }}" }
+    - { svc: "kibana-kibana", repo: "kibana", lb_ip_addr: "{{ _elasticsearch.kibana.ip_addr }}" }
+    - { svc: "elasticsearch-master", repo: "elasticsearch", lb_ip_addr: "{{ _elasticsearch.elasticsearch.ip_addr }}" }
 - debug: msg={{ delete_elasticsearch_lb }}
   ignore_errors: true
   when: print_debug == true
+  #  - { svc: "filebeat",  repo: "filebeat", lb_ip_addr: "{{ _elasticsearch.filebeat.ip_addr }}" }
+
 
