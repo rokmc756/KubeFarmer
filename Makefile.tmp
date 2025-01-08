@@ -1,5 +1,21 @@
 temp:
-	@if [ "${r}" = "reinit" ]; then\
+	@if [ "${r}" = "uninit" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-temp.yml -e '{"${s}": True}' --tags='uninit';\
+			else\
+				echo "No actions to configure temp";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-temp.yml -e '{temp_all: True}' --tags='uninit';\
+			else\
+				echo "No actions to configure temp";\
+			fi\
+		else\
+			echo "No Actions to configure temp";\
+		fi;\
+	elif [ "${r}" = "reinit" ]; then\
 		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
 			if [ -z ${c} ];  then\
 				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-temp.yml -e '{"${s}": True}' --tags='reinit';\

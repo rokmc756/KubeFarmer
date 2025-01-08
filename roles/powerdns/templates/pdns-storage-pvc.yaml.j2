@@ -3,9 +3,9 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: data-pdns-mariadb-master-0
-  namespace: powerdns
+  namespace: {{ _powerdns.namespace }}
 spec:
-  storageClassName: powerdns-storage
+  storageClassName: {{ _powerdns.storage_class }}
   accessModes:
     - ReadWriteOnce
   resources:
@@ -16,9 +16,9 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: data-pdns-mariadb-slave-0
-  namespace: powerdns
+  namespace: {{ _powerdns.namespace }}
 spec:
-  storageClassName: powerdns-storage
+  storageClassName: {{ _powerdns.storage_class }}
   accessModes:
     - ReadWriteOnce
   resources:

@@ -1,25 +1,14 @@
 ---
-- name: Remove Jetstack Helm Repo
+- name: Remove Helm Repositories
   shell: |
-    /usr/local/bin/helm repo remove jetstack
-  register: remove_jetstack_helm_repo
-  ignore_errors: yes
-- debug: msg={{ remove_jetstack_helm_repo }}
-
-
-#- name: Remove Bitnami Helm Repo
-#  shell: |
-#    /usr/local/bin/helm repo remove bitnami
-#  register: remove_bitnami_helm_repo
-#  ignore_errors: yes
-#- debug: msg={{ remove_bitnami_helm_repo }}
-
-
-- name: Remove PowerDNS Helm Repo
-  shell: |
-    /usr/local/bin/helm repo remove k8s-at-home
-  register: remove_powerdns_helm_repo
-- debug: msg={{ remove_powerdns_helm_repo }}
+    /usr/local/bin/helm repo remove {{ item }}
+  register: remove_helm_repos
+  ignore_errors: true
+  with_items:
+    - jetstack
+    - k8s-at-home
+    - nginx-ingress
+- debug: msg={{ remove_helm_repos }}
 
 
 #- name: Delete Helm Install Script
@@ -31,5 +20,4 @@
 #    - "{{ base_path }}/get_helm.sh"
 #    - "/usr/local/bin/helm"
 #- debug: msg={{ delete_helm }}
-
 

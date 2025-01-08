@@ -1,39 +1,44 @@
+{% for n in range(0, _powerdns.db.postgresql.replica|int) %}
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: data-powerdns-postgresql-0
-  namespace: powerdns
+  name: data-powerdns-postgresql-{{ n }}
+  namespace: {{ _powerdns.namespace }}
 spec:
-  storageClassName: powerdns-storage
+  storageClassName: {{ _powerdns.storage_class }}
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
       storage: 10Gi
+{% endfor %}
+{% for n in range(0, _powerdns.db.mariadb.replica|int) %}
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: data-powerdns-mariadb-0
-  namespace: powerdns
+  name: data-powerdns-mariadb-{{ n }}
+  namespace: {{ _powerdns.namespace }}
 spec:
-  storageClassName: powerdns-storage
+  storageClassName: {{ _powerdns.storage_class }}
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
       storage: 10Gi
+{% endfor %}
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: powerdns-admin-data
-  namespace: powerdns
+  namespace: {{ _powerdns.namespace }}
 spec:
-  storageClassName: powerdns-storage
+  storageClassName: {{ _powerdns.storage_class }}
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
       storage: 10Gi
+

@@ -3,7 +3,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: powerdns-udp-lb
-  namespace: powerdns
+  namespace: {{ _powerdns.namespace }}
   annotations:
     nginx.ingress.kubernetes.io/proxy-protocol: "true"
 spec:
@@ -21,7 +21,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: powerdns-tcp-lb
-  namespace: powerdns
+  namespace: {{ _powerdns.namespace }}
   annotations:
     nginx.ingress.kubernetes.io/proxy-protocol: "true"
 spec:

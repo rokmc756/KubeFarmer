@@ -1,0 +1,9 @@
+#
+- name: Initialize Ansible Installation on a Given Hosts
+  become_user: "{{ local_sudo_user }}"
+  shell: "{{ playbook_dir }}/roles/init-hosts/files/init_hosts.sh {{ hostvars[item]['ansible_'~netdev0]['ipv4']['address'] }} {{ remote_machine_username }}"
+  register: init_hosts
+  with_items: "{{ groups['all'] }}"
+  delegate_to: localhost
+  failed_when: init_hosts.rc != 0
+  when: inventory_hostname in hostvars[groups['all'][0]].ansible_hostname

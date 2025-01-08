@@ -1,0 +1,82 @@
+- name: Check if SSL Directory Already Exists
+  stat: path={{ _ssl.dir }}
+  register: check_dir_sslkey_installed
+
+
+- name: Create SSL Directory
+  file: path={{ _ssl.dir }} state=directory owner=root group=root
+  changed_when: False
+  register: dir_sslkey_installed
+
+
+- name: Generate a CA certificate private key
+  shell: |
+    openssl genrsa -out {{ _ssl.dir }}/ca.key 4096
+  args:
+    executable: /bin/bash
+
+
+- name: Generate the CA certificate
+  shell: |
+    openssl req -x509 -new -nodes -sha512 -days 3650 \
+    -subj "/C={{ _ssl.country }}/ST={{ _ssl.state }}/L={{ _ssl.location }}/O={{ _ssl.organization }}/OU={{ _ssl.common_name }}/CN={{ _elasticsearch.hostname }}" \
+    -key {{ _ssl.dir }}/ca.key -out {{ _ssl.dir }}/ca.crt
+  args:
+    executable: /bin/bash
+
+
+- name: Generate a Private Key
+  shell: |
+    openssl genrsa -out {{ _ssl.dir }}/{{ _elasticsearch.hostname }}.key 4096
+  args:
+    executable: /bin/bash
+
+
+- name: Turn the Certificate into a Self-Signed Certificate
+  shell: |
+    openssl req -sha512 -new \
+    -subj "/C={{ _ssl.country }}/ST={{ _ssl.state }}/L={{ _ssl.location }}/O={{ _ssl.organization }}/OU={{ _ssl.common_name }}/CN={{ _elasticsearch.hostname }}" \
+    -key {{ _ssl.dir }}/{{ _elasticsearch.hostname }}.key -out {{ _ssl.dir }}/{{ _elasticsearch.hostname }}.csr
+  args:
+    executable: /bin/bash
+
+
+- name: Copy an x509 v3 Extension File
+  template: src=v3.ext.j2 dest={{ _ssl.dir }}/v3.ext  owner=root group=root mode=644 force=yes
+  register: v3_ext_copied
+- debug: msg={{ v3_ext_copied }}
+  when: print_debug == true
+
+
+- name: Generate an x509 v3 Extension File
+  shell: |
+    openssl x509 -req -sha512 -days 3650 -extfile {{ _ssl.dir }}/v3.ext -CA {{ _ssl.dir }}/ca.crt \
+    -CAkey {{ _ssl.dir }}/ca.key -CAcreateserial -in {{ _ssl.dir }}/{{ _elasticsearch.hostname }}.csr \
+    -out {{ _ssl.dir }}/{{ _elasticsearch.hostname }}.crt
+  register: v3_ext_generated
+- debug: msg={{ v3_ext_generated }}
+  when: print_debug == true
+
+
+- name: Convert Crt to Cert Use by Containers
+  shell: |
+    openssl x509 -inform PEM -in {{ _ssl.dir }}/{{ _elasticsearch.hostname }}.crt -out {{ _ssl.dir }}/{{ _elasticsearch.hostname }}.cert
+  register: elasticsearch_crt
+
+
+- name: Change Permission of SSL Key Files to Login via SSL
+  file:
+    path: "{{ _ssl.dir }}/{{ item }}"
+    state: file
+    owner: root
+    group: root
+    mode: "0600"
+  with_items:
+    - "{{ _elasticsearch.hostname }}.cert"
+    - "{{ _elasticsearch.hostname }}.crt"
+    - "{{ _elasticsearch.hostname }}.key"
+    - "ca.key"
+    - "ca.crt"
+    # - "server.req"
+    # - "cert.pem"
+

@@ -1,36 +1,7 @@
 ---
-- name: Uninstall PowerDNS Admin
-  shell: |
-    helm uninstall powerdns-admin --namespace powerdns
-  register: uninstall_powerdns_admin
-  ignore_errors: true
-  args:
-    chdir: "{{ base_path }}/"
-  environment:
-    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-- debug: msg={{ uninstall_powerdns_admin }}
-  when: print_debug == true
-
-
-- name: Validate if PowerDNS Containers are Deleted
-  shell: |
-    kubectl get pods -n powerdns | sed 1d | grep powerdns-admin- | awk '{print $3}' | uniq
-  register: delete_powerdns_admin_container
-  ignore_errors: true
-  until: delete_powerdns_admin_container.stdout.find("") != -1
-  retries: 100
-  delay: 10
-  args:
-    chdir: "{{ base_path }}/"
-  environment:
-    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-- debug: msg={{ delete_powerdns_admin_container }}
-  when: print_debug == true
-
-
 - name: Uninstall PowerDNS
   shell: |
-    helm uninstall powerdns --namespace powerdns
+    helm uninstall powerdns --namespace {{ _powerdns.namespace }}
   register: uninstall_powerdns
   ignore_errors: true
   args:
@@ -92,30 +63,14 @@
 
 - name: Delete Namespace for Persistent Volumes
   shell: |
-    kubectl delete namespace {{ item }}
+    kubectl delete namespace {{ _powerdns.namespace }}
   register: delete_namespace
   ignore_errors: true
-  with_items:
-    - powerdns
   args:
     chdir: "{{ base_path }}/"
   environment:
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ delete_namespace }}
-  when: print_debug == true
-
-
-- name: Directory for Persistent Volumes
-  file:
-    path: "{{ powerdns.storage_path }}"
-    state: absent
-  register: delete_pv_dir
-  ignore_errors: true
-  delegate_to: "{{ item }}"
-  delegate_facts: True
-  with_items:
-    - "{{ groups['all'] }}"
-- debug: msg={{ delete_pv_dir }}
   when: print_debug == true
 
 
@@ -132,5 +87,4 @@
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ check_powerdns_container }}
   when: print_debug == true
-
 

@@ -10,23 +10,17 @@
 - debug: msg={{ install_helm }}
 
 
-- name: Add PowerDNS Helm Repo
+- name: Add Helm Repositories
   shell: |
-    /usr/local/bin/helm repo add k8s-at-home https://k8s-at-home.com/charts/
-  register: add_powerdns_helm_repo
-- debug: msg={{ add_powerdns_helm_repo }}
-
-
+    /usr/local/bin/helm repo add {{ item.name }} {{ item.link }}
+  register: add_helm_repos
+  with_items:
+    - { name: 'jetstack', link: 'https://charts.jetstack.io' }
+    - { name: 'k8s-at-home', link: 'https://k8s-at-home.com/charts/' }
+    - { name: 'nginx-ingress',  link: 'https://kubernetes.github.io/ingress-nginx' }
+- debug: msg={{ add_helm_repos }}
 # helm repo add fsdrw08 https://fsdrw08.github.io/helm-charts/
 # helm install fsdrw08/powerdns
-
-
-
-- name: Add Jetstack Helm Repo
-  shell: |
-    /usr/local/bin/helm repo add jetstack https://charts.jetstack.io
-  register: add_jetstack_helm_repo
-- debug: msg={{ add_jetstack_helm_repo }}
 
 
 - name: Update Helm Repo
@@ -34,5 +28,4 @@
     /usr/local/bin/helm repo update
   register: update_helm_repo
 - debug: msg={{ update_helm_repo }}
-
 

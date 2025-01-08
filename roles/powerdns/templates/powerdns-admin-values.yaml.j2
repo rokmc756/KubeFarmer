@@ -16,8 +16,8 @@ env:
 service:
   main:
     enabled: true
-    type: LoadBalancer
-    loadBalancerIP: "192.168.1.223"
+    type: ClusterIP
+    loadBalancerIP: "{{ _powerdns.admin.ip_addr }}"
     ports:
       http:
         port: 80
@@ -25,14 +25,14 @@ service:
 
 ingress:
   main:
-    enabled: true
+    enabled: false
 
 
 persistence:
   config:
     enabled: true
     type: pvc
-    storageClass: powerdns-storage
+    storageClass: "{{ _powerdns.storage_class }}"
     existingClaim: powerdns-admin-data
     accessMode: ReadWriteOnce
     size: 10Gi

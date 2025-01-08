@@ -1,20 +1,4 @@
 ---
-- name: Create Directory for Persistent Volumes
-  file:
-    path: "{{ powerdns.storage_path }}"
-    state: directory
-    owner: root
-    group: root
-    mode: 0777
-  register: create_pv_dir
-  delegate_to: "{{ item }}"
-  delegate_facts: True
-  with_items:
-    - "{{ groups['all'] }}"
-- debug: msg={{ create_pv_dir }}
-  when: print_debug == true
-
-
 - name: Create Namespace for Persistent Volumes
   shell: |
     kubectl create namespace {{ item }}
@@ -72,7 +56,8 @@
 
 - name: Deploy PowerDNS
   shell:
-    helm install powerdns k8s-at-home/powerdns -n powerdns -f {{ base_path }}/powerdns-values.yaml --version 4.1.2
+    helm install powerdns k8s-at-home/powerdns -n powerdns -f {{ base_path }}/powerdns-values.yaml \
+    --version {{ _powerdns.major_version }}.{{ _powerdns.minor_version }}.{{ _powerdns.patch_version }}
   register: deploy_powerdns
   args:
     chdir: "{{ base_path }}/"
@@ -86,7 +71,7 @@
   shell: |
     kubectl get pods -n powerdns | grep powerdns- | grep -v powerdns-postgresql- | awk '{print $3}' | grep Running | wc -l
   register: check_powerdns_container
-  until: check_powerdns_container.stdout|int == powerdns.replica|int
+  until: check_powerdns_container.stdout|int == _powerdns.dns.replica|int
   retries: 60
   delay: 10
   args:
@@ -96,37 +81,3 @@
 - debug: msg={{ check_powerdns_container }}
   when: print_debug == true
 
-
-# https://github.com/poweradmin/poweradmin
-# https://github.com/PowerDNS-Admin/PowerDNS-Admin
-- name: Deploy PowerDNS Admin
-  shell:
-    helm install powerdns-admin k8s-at-home/powerdns-admin -n powerdns -f {{ base_path }}/powerdns-admin-values.yaml --version 1.2.2
-  register: deploy_powerdns_admin
-  args:
-    chdir: "{{ base_path }}/"
-  environment:
-    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-- debug: msg={{ deploy_powerdns_admin }}
-  when: print_debug == true
-
-
-# until: check_powerdns_container.stdout.find("Running") != -1
-- name: Validate if PowerDNS Admin Containers are Running Normally
-  shell: |
-    kubectl get pods -n powerdns | grep powerdns-admin- | awk '{print $3}' | grep Running | wc -l
-  register: check_powerdns_admin_container
-  until: check_powerdns_admin_container.stdout|int == powerdns.admin.replica|int
-  retries: 20
-  delay: 10
-  args:
-    chdir: "{{ base_path }}"
-  environment:
-    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-- debug: msg={{ check_powerdns_admin_container }}
-  when: print_debug == true
-
-
-# curl -H 'X-API-Key: changeme' http://192.168.1.223:80/api/v1/servers | jq .
-# https://medium.com/@fhc.silv/running-powerdns-in-the-local-environment-with-powerdns-admin-d4872c793a9b
-#

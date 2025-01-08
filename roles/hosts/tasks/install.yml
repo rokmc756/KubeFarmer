@@ -1,0 +1,88 @@
+---
+#
+- name: Install YUM or DNF Config Manager for RedHat Based Linux Distribution
+  package: name={{ item }} state=present
+  with_items:
+    - "dnf-utils"
+  ignore_errors: true
+  when: ansible_distribution == "RedHat" or ansible_distribution == "CentOS" or ansible_distribution == "Rocky"
+  # "yum-utils"
+
+#
+- name: Enable Development Package Repository for RedHat Based Linux Distribution
+  shell: |
+    yum-config-manager --enable {{ item }}
+  with_items:
+    - "devel"
+  when: ansible_distribution == "RedHat" or ansible_distribution == "CentOS" or ansible_distribution == "Rocky"
+
+#
+- name: Install Prerequest Software Packages
+  package: name={{ item }} state=present
+  with_items: "{{ install_pkgs }}"
+
+#
+- name: Add the inventory into /etc/hosts
+  template:
+    src: hosts.j2
+    dest: /etc/hosts
+    owner: root
+    group: root
+    mode: 0644
+
+#
+- name: Ensure group "{{ sudo_group }}" exists
+  group:
+    name: "{{ sudo_group }}"
+    state: present
+
+#
+- name: Create "{{ sudo_user }}" user
+  user:
+    name: "{{ sudo_user }}"
+    state: present
+    password: "{{ 'changeme' | password_hash('sha512','A512') }}"
+    shell: /bin/bash
+    group: "{{ sudo_group }}"
+    createhome: yes
+    home: "/home/{{ sudo_user }}"
+
+# This will overwrite the first line which starts with %wheel
+- name: Add group to /etc/sudoers file without password
+  lineinfile: "dest=/etc/sudoers state=present regexp='^%{{ sudo_user }}' line='%{{ sudo_user }} ALL=(ALL) NOPASSWD: ALL'"
+
+#
+- name: Read /etc/group entries
+  # become: true
+  shell: "/usr/bin/getent group | grep ^sudo{{':'}} | cut -f4 -d{{':'}}"
+  register: etc_group
+  changed_when: false
+
+#
+- name: Split group members
+  set_fact:
+    etc_group_members: "{{ etc_group.stdout.split(',') }}"
+    changed_when: false
+
+#
+- name: Add user to 'sudo' group (Debian)
+  user:
+    name: "{{ sudo_user }}"
+    groups: sudo
+    append: true
+    state: present
+    createhome: true
+  when: ansible_distribution == "Debian" or ansible_distribution == "Ubuntu"
+
+#
+- name: Check needed OS tools exist
+  shell: which sshpass ssh-keygen ssh-copy-id
+  register: os_tools_exist
+  ignore_errors: true
+
+#
+- name: Fail execution if any of the needed OS tools is missing
+  fail:
+    msg: "One or more of the: sshpass, ssh-keygen, ssh-copy-id are missing on this machine. Please install them - using your distribution's recommended method - before continuing."
+  when: os_tools_exist.rc != 0
+

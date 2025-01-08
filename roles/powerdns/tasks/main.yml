@@ -1,61 +1,97 @@
 ---
-- name: Check OS ( MariaDB }
+- name: Check OS ( PowerDNS )
   fail: msg="Not a Red Hat based system!"
   when: ansible_os_family != 'RedHat' or ansible_os_family != 'CentOS' or ansible_os_family != 'Rocky'
 
 
-- name: Set Facts for MariaDB
-  import_tasks: set-mariadb-facts.yml
+- name: Set Facts for PowerDNS
+  import_tasks: set-powerdns-facts.yml
   tags:
     - install
     - uninstall
     - reinit
 
 
+- name: Apply Kernel Parameters
+  import_tasks: apply-powerdns-kernel-parameters.yml
+  tags: install
+  when: ( dns is defined and dns == true ) or ( powerdns_all is defined and powerdns_all )
+
+
 - name: Enable Helm Repository
   import_tasks: enable-helm-repo.yml
   tags: install
-  when: helm.enable_repo == true and inventory_hostname in groups['master']
+  when: (( dns is defined and dns == true ) or ( powerdns_all is defined and powerdns_all )) and inventory_hostname in groups['master']
 
 
 - name: Deploy PowerDNS
   import_tasks: install-powerdns.yml
   tags: install
-  when: powerdns.install == true and inventory_hostname in groups['master']
+  when: (( dns is defined and dns == true ) or ( powerdns_all is defined and powerdns_all )) and inventory_hostname in groups['master']
+
+
+- name: Deploy PowerDNS Admin
+  import_tasks: install-powerdns-admin.yml
+  tags: install
+  when: (( admin is defined and admin == true ) or ( powerdns_all is defined and powerdns_all )) and inventory_hostname in groups['master']
 
 
 - name: Install Cert Manager
   import_tasks: install-cert-manager.yml
   tags: install
-  when: cert_manager.install == true and inventory_hostname in groups['master']
+  when: _cert_manager.install == true and inventory_hostname in groups['master']
 
 
 - name: Install Load Balancer
   import_tasks: install-lb.yml
   tags: install
-  when: powerdns.lb.install == true and inventory_hostname in groups['master']
+  when: (( lb is defined and lb == true ) or ( powerdns_all is defined and powerdns_all )) and inventory_hostname in groups['master']
+
+
+- name: Install NGINX Ingress
+  import_tasks: install-ingress.yml
+  tags: install
+  when: (( ingress is defined and ingress == true ) or ( powerdns_all is defined and powerdns_all )) and inventory_hostname in groups['master']
+
+
+- name: Unstall NGINX Ingress
+  import_tasks: uninstall-ingress.yml
+  tags: uninstall
+  when: (( ingress is defined and ingress == true ) or ( powerdns_all is defined and powerdns_all )) and inventory_hostname in groups['master']
 
 
 - name: Uninstall Load Balancer
   import_tasks: uninstall-lb.yml
   tags: uninstall
-  when: powerdns.lb.install == true and inventory_hostname in groups['master']
+  when: (( lb is defined and lb == true ) or ( powerdns_all is defined and powerdns_all )) and inventory_hostname in groups['master']
 
 
 - name: Uninstall Cert Manager
   import_tasks: uninstall-cert-manager.yml
   tags: uninstall
-  when: cert_manager.install == true and inventory_hostname in groups['master']
+  when: _cert_manager.install == true and inventory_hostname in groups['master']
+
+
+- name: Destroy PowerDNS Admin
+  import_tasks: uninstall-powerdns-admin.yml
+  tags: uninstall
+  when: (( admin is defined and admin == true ) or ( powerdns_all is defined and powerdns_all )) and inventory_hostname in groups['master']
 
 
 - name: Destroy PowerDNS
   import_tasks: uninstall-powerdns.yml
   tags: uninstall
-  when: powerdns.install == true and inventory_hostname in groups['master']
+  when: (( dns is defined and dns == true ) or ( powerdns_all is defined and powerdns_all )) and inventory_hostname in groups['master']
 
 
 - name: Disable Helm Repository
   import_tasks: disable-helm-repo.yml
   tags: uninstall
-  when: helm.enable_repo == true and inventory_hostname in groups['master']
+  when: (( dns is defined and dns == true ) or ( powerdns_all is defined and powerdns_all )) and inventory_hostname in groups['master']
+
+
+- name: Remove Kernel Parameters
+  import_tasks: remove-powerdns-kernel-parameters.yml
+  tags: uninstall
+  when: ( dns is defined and dns == true ) or ( powerdns_all is defined and powerdns_all )
 

@@ -1,0 +1,54 @@
+---
+#
+- name: Rollback defatul group to /etc/sudoers file
+  lineinfile:
+    dest: /etc/sudoers
+    state: absent
+    regexp: '^%{{ sudo_user }}'
+    line: '%{{ sudo_user }}  ALL=(ALL)        ALL'
+
+#
+- name: Remove bash_history and .ssh directory
+  file:
+    path: "{{ item }}"
+    state: absent
+  with_items:
+    - "/root/.bash_history"
+    - "/home/{{ sudo_user }}/.bash_history"
+    - "/root/.ssh"
+    - "/home/{{ sudo_user }}/.ssh"
+
+#
+- name: Remove hostname entries in /etc/hosts file
+  lineinfile:
+    dest: /etc/hosts
+    regexp: "{{ domain_name }}"
+    line: "{{ hostvars[ item ][ 'ansible_'~netdev0 ][ 'ipv4' ][ 'address' ] }} {{ item }}"
+    state: absent
+    backup: yes
+  register: hosts_deleted
+  when: hostvars[ item ][ 'ansible_'~netdev0 ]['ipv4']['address'] is defined
+  with_items: "{{ groups['all'] }}"
+
+#
+- name: Delete "{{ sudo_user }}" user and group
+  user:
+    name: "{{ sudo_user }}"
+    group: "{{ sudo_group }}"
+    state: absent
+
+#
+- name: Uninstall Prerequest Software Packages
+  package:
+    name: "{{ item }}"
+    state: absent
+  with_items: "{{ install_pkgs }}"
+  when: uninstall_deps_pkgs == true
+
+#
+- name: Disable Development Package Repository for RedHat Based Linux Distribution
+  shell: |
+    yum-config-manager --disable {{ item }}
+  with_items:
+    - "devel"
+  when: ansible_distribution == "RedHat" or ansible_distribution == "CentOS" or ansible_distribution == "Rocky"

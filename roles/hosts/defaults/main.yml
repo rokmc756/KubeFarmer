@@ -1,0 +1,28 @@
+rh_common_pkgs: "firewalld,sshpass,cifs-utils,nfs-utils,lsof,elfutils-libelf-devel,glibc-headers,glibc-devel,rpcbind,xfsprogs,kernel-devel,jq,expect,net-tools,ipvsadm,lvm2,bind-utils,python3-passlib,open-vm-tools,frr"
+rh_common_devel_pkgs: "git"
+# libxml2-python,s3cmd
+
+rh7_common_devel_pkgs: "make,perl,gcc,tcl,tk,libnl"
+rh8_common_devel_pkgs: "make,perl,gcc,tcl,tk,libnl3"
+rh9_common_devel_pkgs: "make,perl,gcc,tcl,tk,libnl3"
+
+suse_common_pkgs: "firewalld,sshpass,cifs-utils,nfs-utils,lsof,glibc-devel,rpcbind,xfsprogs,kernel-devel,jq,expect,net-tools,ipvsadm,lvm2,docker,containerd,bind-utils,python3-passlib,frr"
+suse_common_devel_pkgs: "git"
+suse15_common_devel_pkgs: "make,perl,gcc,tcl,tk,helm"
+# libnl, glibc-headers, elfutils-libelf-devel - No provider
+
+# libnl,elfutils-libelf-devel,kernel-devel
+ubt_common_pkgs: "firewalld,sshpass,s3cmd,cifs-utils,nfs-client,libnl-*,elfutils*,lsof,rpcbind,glibc-*,xfsprogs,linux-headers-generic,jq,expect,ipvsadm,lvm2,python3-passlib,frr"
+ubt_common_devel_pkgs: "git,make,gcc,tcl,tk"
+
+ubt20_common_devel_pkgs: "perl"
+ubt22_common_devel_pkgs: "perl"
+ubt23_common_devel_pkgs: "perl"
+
+official_rh_pkgs: "pdsh"
+official_ubt_pkgs: "pdsh"
+official_suse_pkgs: "pdsh"
+
+update_cache: false
+upgrade_packages: false
+

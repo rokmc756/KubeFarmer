@@ -1,0 +1,140 @@
+---
+- name: Flush IP Route Cache
+  shell: |
+    ip route flush cache
+  register: flush_ip_route_cache
+  delegate_to: "{{ item }}"
+  delegate_facts: True
+  with_items: "{{ groups['all'] }}"
+- debug: msg={{ flush_ip_route_cache }}
+
+
+- name: Create Namespace for Persistent Volumes
+  shell: |
+    kubectl create namespace {{ _nginx.ingress.namespace }}
+  register: create_namespace
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ create_namespace }}
+  when: print_debug == true
+
+
+- name: Copy NGINX Ingress Helm Config
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ base_path }}/{{ item }}"
+  register: copy_nginx_ingress_helm_config
+  with_items:
+    - "ingress-nginx-values.yaml"
+- debug: msg={{ copy_nginx_ingress_helm_config }}
+
+
+- name: Install NGINX Ingress
+  shell: |
+    helm install {{ _nginx.ingress.name }} ingress-nginx/ingress-nginx -n {{ _nginx.ingress.namespace }} \
+    --set controller.service.enabled=true \
+    --set controller.external.enabled=true \
+    --set controller.service.type=LoadBalancer \
+    --set controller.service.loadBalancerIP={{ _nginx.ingress.ip_addr }}
+  register: install_nginx_ingress
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ install_nginx_ingress }}
+
+
+- name: Validate if NGINX Ingress Controller Containers are Running
+  shell: |
+    kubectl get pod -n {{ _nginx.ingress.namespace }} | grep {{ item.svc }} | awk '{print $3}' | grep Running | wc -l
+  register: check_nginx_ingress_controller_container
+  until: check_nginx_ingress_controller_container.stdout|int == 1
+  retries: 100
+  delay: 10
+  with_items:
+    - { svc: "ingress-nginx-controller-", replica: "{{ _powerdns.admin.replica }}" }
+- debug: msg={{ check_nginx_ingress_controller_container }}
+  when: print_debug == true
+
+
+- name: Validate if NGINX Ingress Controller got IP Address
+  shell: |
+    kubectl -n {{ _nginx.ingress.namespace }} get svc | grep -v admission | grep nginx-ingress | awk '{print $4}'
+  register: check_nginx_ingress_controller_container_ip
+  until: check_nginx_ingress_controller_container_ip.stdout.find(item.ip) != -1
+  retries: 100
+  delay: 10
+  with_items:
+    - { svc: "ingress-nginx-controller-", ip: "{{ _powerdns.admin.ip_addr }}" }
+- debug: msg={{ check_nginx_ingress_controller_container_ip }}
+  when: print_debug == true
+
+
+- name: Copy NGINX Ingress Config
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ base_path }}/{{ item }}"
+  register: copy_nginx_ingress_config
+  with_items:
+    - "powerdns-ingress-class.yaml"
+    - "create-powerdns-ingress.yaml"
+- debug: msg={{ copy_nginx_ingress_config }}
+
+
+- name: Apply NGINX Ingress
+  shell: |
+    kubectl apply -f {{ base_path }}/{{ item }}
+  register: apply_nginx_ingress
+  with_items:
+    - "powerdns-ingress-class.yaml"
+    - "create-powerdns-ingress.yaml"
+  args:
+    chdir: "{{ base_path }}"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ apply_nginx_ingress }}
+  when: print_debug == true
+
+
+- name: Apply NGINX Ingress Class
+  shell: |
+    kubectl apply -f {{ base_path }}/{{ item }}
+  register: apply_nginx_ingress_class
+  with_items:
+    - "powerdns-ingress-class.yaml"
+  args:
+    chdir: "{{ base_path }}"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ apply_nginx_ingress_class }}
+  when: print_debug == true
+
+
+- name: Validate if NGINX Controller Adminission is Connected
+  shell: |
+    nc -zv $(kubectl -n nginx-ingress get svc | grep nginx-controller-admission | awk '{print $3}') 443 2>&1 | grep Connected | awk '{print $2}'
+  register: check_nginx_controller_admission
+  until: check_nginx_controller_admission.stdout.find(item.string) != -1
+  retries: 100
+  delay: 10
+  with_items:
+    - { svc: "nginx-controller-admission", string: "Connected" }
+- debug: msg={{ check_nginx_controller_admission }}
+  when: print_debug == true
+
+
+- name: Create PowerDNS Ingress
+  shell: |
+    kubectl apply -f {{ base_path }}/{{ item }}
+  register: create_powerdns_ingress
+  with_items:
+    - "create-powerdns-ingress.yaml"
+  args:
+    chdir: "{{ base_path }}"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ create_powerdns_ingress }}
+  when: print_debug == true
+

@@ -10,13 +10,14 @@
 # kubectl apply -f powerdns-loadbalancer.yaml
 - name: Apply PowerDNS Load Balancer
   shell: |
-    kubectl patch svc powerdns-{{ item.proto }} -n powerdns -p '{"spec": {"type": "LoadBalancer", "loadBalancerIP": "{{ item.ip_addr }}"}}'
+    kubectl patch svc powerdns-{{ item.proto }} -n {{ _powerdns.namespace }} -p '{"spec": {"type": "LoadBalancer", "loadBalancerIP": "{{ item.ip_addr }}"}}'
   register: apply_powerdns_lb
   ignore_errors: yes
   args:
     chdir: "{{ base_path }}"
   with_items:
-    - { proto: "udp", ip_addr: "192.168.1.222" }
-    - { proto: "tcp", ip_addr: "192.168.1.221" }
+    - { proto: "udp", ip_addr: "{{ _powerdns.dns.udp.ip_addr }}" }
+    - { proto: "tcp", ip_addr: "{{ _powerdns.dns.tcp.ip_addr }}" }
+    - { proto: "postgresql", ip_addr: "{{ _powerdns.db.postgresql.ip_addr }}" }
 - debug: msg={{ apply_powerdns_lb }}
 

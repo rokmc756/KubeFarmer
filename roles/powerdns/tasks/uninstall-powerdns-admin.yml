@@ -1,0 +1,29 @@
+---
+- name: Uninstall PowerDNS Admin
+  shell: |
+    helm uninstall powerdns-admin --namespace {{ _powerdns.namespace }}
+  register: uninstall_powerdns_admin
+  ignore_errors: true
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ uninstall_powerdns_admin }}
+  when: print_debug == true
+
+
+- name: Validate if PowerDNS Containers are Deleted
+  shell: |
+    kubectl get pods -n powerdns | sed 1d | grep powerdns-admin- | awk '{print $3}' | uniq
+  register: delete_powerdns_admin_container
+  ignore_errors: true
+  until: delete_powerdns_admin_container.stdout.find("") != -1
+  retries: 100
+  delay: 10
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ delete_powerdns_admin_container }}
+  when: print_debug == true
+

@@ -1,0 +1,20 @@
+ansible_ssh_pass: "changeme"
+ansible_become_pass: "changeme"
+
+# sudo_user: "jomoon"
+# sudo_group: "jomoon"
+# local_sudo_user: "jomoon"
+
+sudo_user: "kubeadmin"
+sudo_group: "kubeadmin"
+
+local_sudo_user: "jomoon"
+wheel_group: "wheel"            # RHEL / CentOS / Rocky / SUSE / OpenSUSE
+# wheel_group: "sudo"           # Debian / Ubuntu
+root_user_pass: "changeme"
+sudo_user_pass: "changeme"
+sudo_user_home_dir: "/home/{{ sudo_user }}"
+domain_name: "jtest.pivotal.io"
+
+uninstall_deps_pkgs: false
+

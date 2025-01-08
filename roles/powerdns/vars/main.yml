@@ -1,23 +1,17 @@
 ---
 base_path: /root
 
-powerdns:
+_powerdns:
   install: true
-  major_version: 10
+  major_version: 4
   minor_version: 1
-  patch_version: 0
+  patch_version: 2
   build_version:
   clone_git: true
   nvme: true
-  lb_ip_addr: "192.168.1.213"
+  namespace: "powerdns"
   storage_path: "/mnt/powerdns-storage"
-  replica: 3
-  db:
-    name: "powerdns"
-    user: "jomoon"
-    password: "Changeme1234"
-  root_password: "Changeme1234"
-  mariabackup_password: "Changeme1234"
+  storage_class: "powerdns-storage"
   k8s:
     major_version: 1
     minor_version: 30
@@ -35,15 +29,36 @@ powerdns:
     hostname: "powerdns.jtest.pivotal.io"
   kernel_parameters:
     - "net.ipv4.neigh.default.gc_thresh1 = 0"       # For ARP Cache
-  manager:
+  dns:
     install: true
-  lb:
-    install: true
+    replica: 3
+    udp:
+      ip_addr: "192.168.1.220"
+    tcp:
+      ip_addr: "192.168.1.221"
   admin:
+    install: true
     replica: 1
+    version: "1.2.2"
+    ip_addr: "192.168.1.219"
+  db:
+    name: "powerdns"
+    user: "jomoon"
+    password: "changeme"
+    root_password: "changeme"
+    mariabackup_password: "changeme"
+    mariadb:
+      replica: 1
+      ip_addr: "192.168.1.222"
+    postgresql:
+      replica: 1
+      ip_addr: "192.168.1.223"
 
 
-helm:
+total_powerdns_containers: "{{ _powerdns.dns.replica|int + _powerdns.admin.replica|int + _powerdns.db.mariadb.replica|int + _powerdns.db.postgresql.replica|int }}"
+
+
+_helm:
   enable_repo: true
   major_version: 3
   minor_version:
@@ -51,9 +66,40 @@ helm:
   build_version:
 
 
-cert_manager:
+_cert_manager:
   install: false
   major_version: 1
   minor_version: 7
   patch_version: 1
+
+
+_nginx:
+  ingress:
+    install: true
+    name: nginx-ingress
+    class_name: powerdns-ingress-class
+    namespace: "nginx-ingress"
+    major_version:
+    minor_version:
+    patch_version:
+    hostname: powerdns
+    domain: jtest.pivotal.io
+    service: powerdns-admin
+    ip_addr: "192.168.1.219"
+    port: 80
+  k8s_ingress:
+    major_version: 3
+    minor_version: 0
+    patch_version: 2
+
+
+_ssl:
+  dir: "{{ base_path }}/powerdns-certs"
+  days: 3660
+  country: "KR"
+  state: "Seoul"
+  location: "Guro"
+  organization: "Pivotal"
+  common_name: "jest.pivotal.io"
+  email: "rokmc756@gmail.com"
 

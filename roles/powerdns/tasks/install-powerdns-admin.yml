@@ -1,0 +1,33 @@
+# https://github.com/poweradmin/poweradmin
+# https://github.com/PowerDNS-Admin/PowerDNS-Admin
+- name: Deploy PowerDNS Admin
+  shell:
+    helm install powerdns-admin k8s-at-home/powerdns-admin -n powerdns -f {{ base_path }}/powerdns-admin-values.yaml --version {{ _powerdns.admin.version }}
+  register: deploy_powerdns_admin
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ deploy_powerdns_admin }}
+  when: print_debug == true
+
+
+# until: check_powerdns_container.stdout.find("Running") != -1
+- name: Validate if PowerDNS Admin Containers are Running Normally
+  shell: |
+    kubectl get pods -n powerdns | grep powerdns-admin- | awk '{print $3}' | grep Running | wc -l
+  register: check_powerdns_admin_container
+  until: check_powerdns_admin_container.stdout|int == _powerdns.admin.replica|int
+  retries: 20
+  delay: 10
+  args:
+    chdir: "{{ base_path }}"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ check_powerdns_admin_container }}
+  when: print_debug == true
+
+
+# curl -H 'X-API-Key: changeme' http://192.168.1.223:80/api/v1/servers | jq .
+# https://medium.com/@fhc.silv/running-powerdns-in-the-local-environment-with-powerdns-admin-d4872c793a9b
+

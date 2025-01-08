@@ -1,15 +1,15 @@
 ---
 - name: Delete PowerDNS Load Balancer
   shell: |
-    kubectl patch svc powerdns-{{ item.proto }} -n powerdns -p '{"spec": {"type": "ClusterIP"}}'
+    kubectl patch svc powerdns-{{ item.proto }} -n {{ _powerdns.namespace }} -p '{"spec": {"type": "ClusterIP"}}'
   register: delete_powerdns_lb
   ignore_errors: yes
   args:
     chdir: "{{ base_path }}"
   with_items:
-    - { proto: "udp", ip_addr: "192.168.1.222" }
-    - { proto: "tcp", ip_addr: "192.168.1.221" }
+    - { proto: "postgresql", ip_addr: "{{ _powerdns.db.postgresql.ip_addr }}" }
+    - { proto: "tcp", ip_addr: "{{ _powerdns.dns.tcp.ip_addr }}" }
+    - { proto: "udp", ip_addr: "{{ _powerdns.dns.udp.ip_addr }}" }
 - debug: msg={{ delete_powerdns_lb }}
-
 # kubectl delete -f powerdns-loadbalancer.yaml
 
