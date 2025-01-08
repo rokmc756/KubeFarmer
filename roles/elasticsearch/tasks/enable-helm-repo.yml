@@ -19,6 +19,7 @@
   with_items:
     - { name: 'jetstack', link: 'https://charts.jetstack.io' }
     - { name: 'elastic',  link: 'https://helm.elastic.co' }
+    - { name: 'nginx-ingress',  link: 'https://kubernetes.github.io/ingress-nginx' }
 - debug: msg={{ add_helm_repos }}
 
 

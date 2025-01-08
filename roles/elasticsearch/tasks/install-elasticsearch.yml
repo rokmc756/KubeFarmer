@@ -47,21 +47,21 @@
 - debug: msg={{ copy_elasticsearch_helm_config }}
 
 
-- name: Generate ElasticSearch TLS Cert Files
-  import_tasks: gen-elasticsearch-certs.yml
-
-
-- name: Create a TLS Secret with the Contents of tls.key and tls.crt in the ElasticSearch Namespace
-  shell: |
-    kubectl create secret tls elasticsearch-cert --key {{ _ssl.dir }}/{{ _elasticsearch.hostname }}.key \
-    --cert {{ _ssl.dir }}/{{ _elasticsearch.hostname }}.crt -n {{ _elasticsearch.namespace }}
-  register: create_tls_secret
-  args:
-    chdir: "{{ base_path }}/"
-  environment:
-    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-- debug: msg={{ create_tls_secret }}
-  when: print_debug == true
+#- name: Generate ElasticSearch TLS Cert Files
+#  import_tasks: gen-elasticsearch-certs.yml
+#
+#
+#- name: Create a TLS Secret with the Contents of tls.key and tls.crt in the ElasticSearch Namespace
+#  shell: |
+#    kubectl create secret tls elasticsearch-cert --key {{ _ssl.dir }}/{{ _elasticsearch.hostname }}.key \
+#    --cert {{ _ssl.dir }}/{{ _elasticsearch.hostname }}.crt -n {{ _elasticsearch.namespace }}
+#  register: create_tls_secret
+#  args:
+#    chdir: "{{ base_path }}/"
+#  environment:
+#    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+#- debug: msg={{ create_tls_secret }}
+#  when: print_debug == true
 
 
 - name: Deploy ElasticSearch

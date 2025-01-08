@@ -41,6 +41,18 @@
   when: (( lb is defined and lb == true ) or ( elasticsearch_all is defined and elasticsearch_all == true )) and inventory_hostname in groups['master']
 
 
+- name: Install NGINX Ingress
+  import_tasks: install-ingress.yml
+  tags: install
+  when: ( ingress is defined and ingress == true ) and inventory_hostname in groups['master']
+
+
+- name: Unstall NGINX Ingress
+  import_tasks: uninstall-ingress.yml
+  tags: uninstall
+  when: ( ingress is defined and ingress == true ) and inventory_hostname in groups['master']
+
+
 - name: Uninstall Load Balancer
   import_tasks: uninstall-lb.yml
   tags: uninstall

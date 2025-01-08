@@ -7,5 +7,6 @@
   with_items:
     - jetstack
     - elastic
+    - nginx-ingress
 - debug: msg={{ remove_helm_repos }}
 
