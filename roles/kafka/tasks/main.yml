@@ -32,61 +32,61 @@
 - name: Deploy Kafka
   import_tasks: install-kafka.yml
   tags: install
-  when:
-    - inventory_hostname in groups['master']
-    - ( kafka is defined and kafka == true ) or ( kafka_all is defined and kafka_all == true )
+  when: (( kafka is defined and kafka == true ) or ( kafka_all is defined and kafka_all == true )) and inventory_hostname in groups['master']
 
 
 - name: Deploy Kafka UI
   import_tasks: install-kafka-ui.yml
   tags: install
-  when:
-    - inventory_hostname in groups['master']
-    - ( ui is defined and ui == true ) or ( kafka_all is defined and kafka_all == true )
+  when: (( ui is defined and ui == true ) or ( kafka_all is defined and kafka_all == true )) and inventory_hostname in groups['master']
 
 
 - name: Deploy Kafdrop
   import_tasks: install-kafdrop.yml
   tags: install
-  when:
-    - inventory_hostname in groups['master']
-    - ( kafdrop is defined and kafdrop == true ) or ( kafka_all is defined and kafka_all == true )
+  when: (( kafdrop is defined and kafdrop == true ) or ( kafka_all is defined and kafka_all == true )) and inventory_hostname in groups['master']
 
 
 - name: Install Load Balancer
   import_tasks: install-lb.yml
   tags: install
-  when: _kafka.lb.install == true and inventory_hostname in groups['master']
+  when: (( lb is defined and lb == true ) or ( kafka_all is defined and kafka_all )) and inventory_hostname in groups['master']
+
+
+- name: Install NGINX Ingress
+  import_tasks: install-ingress.yml
+  tags: install
+  when: (( ingress is defined and ingress == true ) or ( kafka_all is defined and kafka_all )) and inventory_hostname in groups['master']
+
+
+- name: Unstall NGINX Ingress
+  import_tasks: uninstall-ingress.yml
+  tags: uninstall
+  when: (( ingress is defined and ingress == true ) or ( kafka_all is defined and kafka_all )) and inventory_hostname in groups['master']
 
 
 - name: Uninstall Load Balancer
   import_tasks: uninstall-lb.yml
   tags: uninstall
-  when: _kafka.lb.install == true and inventory_hostname in groups['master']
+  when: (( lb is defined and lb == true ) or ( kafka_all is defined and kafka_all )) and inventory_hostname in groups['master']
 
 
 - name: Destroy Kafdrop
   import_tasks: uninstall-kafdrop.yml
   tags: uninstall
-  when:
-    - inventory_hostname in groups['master']
-    - ( kafdrop is defined and kafdrop == true ) or ( kafka_all is defined and kafka_all == true )
+  when: (( kafdrop is defined and kafdrop == true ) or ( kafka_all is defined and kafka_all == true )) and inventory_hostname in groups['master']
 
 
 - name: Destroy Kafka UI
   import_tasks: uninstall-kafka-ui.yml
   tags: uninstall
-  when:
-    - inventory_hostname in groups['master']
-    - ( ui is defined and ui == true ) or ( kafka_all is defined and kafka_all == true )
+  when: (( ui is defined and ui == true ) or ( kafka_all is defined and kafka_all == true )) and inventory_hostname in groups['master']
 
 
 - name: Destroy Kafka
   import_tasks: uninstall-kafka.yml
   tags: uninstall
-  when:
-    - inventory_hostname in groups['master']
-    - ( kafka is defined and kafka == true ) or ( kafka_all is defined and kafka_all == true )
+  when: (( kafka is defined and kafka == true ) or ( kafka_all is defined and kafka_all == true )) and inventory_hostname in groups['master']
 
 
 - name: Disable Helm Repository
