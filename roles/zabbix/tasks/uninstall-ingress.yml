@@ -6,8 +6,8 @@
   register: copy_nginx_ingress_config
   ignore_errors: true
   with_items:
-    - "phpmyadmin-ingress-class.yaml"
-    - "create-phpmyadmin-ingress.yaml"
+    - "zabbix-ingress-class.yaml"
+    - "create-zabbix-ingress.yaml"
 - debug: msg={{ copy_nginx_ingress_config }}
 
 
@@ -17,8 +17,8 @@
   register: delete_nginx_ingress
   ignore_errors: true
   with_items:
-    - "create-phpmyadmin-ingress.yaml"
-    - "phpmyadmin-ingress-class.yaml"
+    - "create-zabbix-ingress.yaml"
+    - "zabbix-ingress-class.yaml"
   args:
     chdir: "{{ base_path }}/"
   environment:
@@ -48,7 +48,7 @@
   retries: 100
   delay: 10
   with_items:
-    - { svc: "ingress-nginx-controller-", replica: "{{ _phpmyadmin.replica }}" }
+    - { svc: "ingress-nginx-controller-", replica: "{{ _zabbix.replica }}" }
 - debug: msg={{ check_nginx_ingress_controller_container }}
   when: print_debug == true
 
@@ -73,8 +73,8 @@
   register: delete_nginx_ingress_config
   ignore_errors: true
   with_items:
-    - "phpmyadmin-ingress-class.yaml"
-    - "create-phpmyadmin-ingress.yaml"
+    - "zabbix-ingress-class.yaml"
+    - "create-zabbix-ingress.yaml"
 - debug: msg={{ delete_nginx_ingress_config }}
 
 

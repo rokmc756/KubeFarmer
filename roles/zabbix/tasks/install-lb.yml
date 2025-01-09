@@ -15,18 +15,8 @@
   args:
     chdir: "{{ base_path }}"
   with_items:
-    - { svc: "zabbix-chrome", lb_ip_addr: "192.168.1.234" }
-    - { svc: "zabbix-postgresql", lb_ip_addr: "192.168.1.235" }
-    - { svc: "zabbix-zabbix-web", lb_ip_addr: "192.168.1.237" }
+    - { svc: "zabbix-postgresql", lb_ip_addr: "{{ _zabbix.postgresql.ip_addr }}" }
+    - { svc: "zabbix-zabbix-web", lb_ip_addr: "{{ _zabbix.web.ip_addr }}" }
+    - { svc: "zabbix-chrome", lb_ip_addr: "{{ _zabbix.chrome.ip_addr }}" }
 - debug: msg={{ apply_zabbix_lb }}
-
-
-#NAME                                 TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)               AGE
-#service/zabbix-chrome                ClusterIP   10.103.86.128    <none>        4444/TCP              10m
-#service/zabbix-postgresql            ClusterIP   10.108.175.196   <none>        5432/TCP              10m
-#service/zabbix-zabbix-java-gateway   ClusterIP   10.98.31.118     <none>        10052/TCP             10m
-#service/zabbix-zabbix-proxy          ClusterIP   10.99.170.131    <none>        10051/TCP             10m
-#service/zabbix-zabbix-server         ClusterIP   10.103.226.146   <none>        10051/TCP,10052/TCP   10m
-#service/zabbix-zabbix-web            ClusterIP   10.101.57.22     <none>        80/TCP                10m
-#service/zabbix-zabbix-webservice     ClusterIP   10.106.5.75      <none>        10053/TCP             10m
 

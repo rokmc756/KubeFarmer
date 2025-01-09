@@ -54,7 +54,7 @@
   retries: 100
   delay: 10
   with_items:
-    - { svc: "ingress-nginx-controller-", replica: "{{ _phpmyadmin.replica }}" }
+    - { svc: "ingress-nginx-controller-", replica: "{{ _zabbix.replica }}" }
 - debug: msg={{ check_nginx_ingress_controller_container }}
   when: print_debug == true
 
@@ -78,8 +78,8 @@
     dest: "{{ base_path }}/{{ item }}"
   register: copy_nginx_ingress_config
   with_items:
-    - "phpmyadmin-ingress-class.yaml"
-    - "create-phpmyadmin-ingress.yaml"
+    - "zabbix-ingress-class.yaml"
+    - "create-zabbix-ingress.yaml"
 - debug: msg={{ copy_nginx_ingress_config }}
 
 
@@ -88,8 +88,8 @@
     kubectl apply -f {{ base_path }}/{{ item }}
   register: apply_nginx_ingress
   with_items:
-    - "phpmyadmin-ingress-class.yaml"
-    - "create-phpmyadmin-ingress.yaml"
+    - "zabbix-ingress-class.yaml"
+    - "create-zabbix-ingress.yaml"
   args:
     chdir: "{{ base_path }}"
   environment:
@@ -103,7 +103,7 @@
     kubectl apply -f {{ base_path }}/{{ item }}
   register: apply_nginx_ingress_class
   with_items:
-    - "phpmyadmin-ingress-class.yaml"
+    - "zabbix-ingress-class.yaml"
   args:
     chdir: "{{ base_path }}"
   environment:
@@ -125,12 +125,12 @@
   when: print_debug == true
 
 
-- name: Create phpmyadmin Ingress
+- name: Create zabbix Ingress
   shell: |
     kubectl apply -f {{ base_path }}/{{ item }}
   register: create_elastic_ingress
   with_items:
-    - "create-phpmyadmin-ingress.yaml"
+    - "create-zabbix-ingress.yaml"
   args:
     chdir: "{{ base_path }}"
   environment:

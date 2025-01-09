@@ -11,38 +11,17 @@
   when: print_debug == true
 
 
-- name: Add MySQL Helm Repo
+- name: Add Helm Repositories
   shell: |
-    /usr/local/bin/helm repo add mysql-operator https://mysql.github.io/mysql-operator/
-  register: add_mysql_helm_repo
-- debug: msg={{ add_mysql_helm_repo }}
-  when: print_debug == true
-
-
-- name: Add MySQL NDB Helm Repo
-  shell: |
-    /usr/local/bin/helm repo add ndb-operator-repo https://mysql.github.io/mysql-ndb-operator/
-  register: add_mysql_ndb_helm_repo
-  when: ndb is defined and ndb == true
-- debug: msg={{ add_mysql_ndb_helm_repo }}
-  when: print_debug == true and ( ndb is defined and ndb == true )
-
-
-- name: Add MySQL Workbench Helm Repo
-  shell: |
-    /usr/local/bin/helm repo add truecharts https://charts.truecharts.org/
-  register: add_mysql_workbench_helm_repo
-  when: workbench is defined and workbench == true
-- debug: msg={{ add_mysql_workbench_helm_repo }}
-  when: print_debug == true and ( workbench is defined and workbench == true )
-
-
-- name: Add Jetstack Helm Repo
-  shell: |
-    /usr/local/bin/helm repo add jetstack https://charts.jetstack.io
-  register: add_jetstack_helm_repo
-- debug: msg={{ add_jetstack_helm_repo }}
-  when: print_debug == true
+    /usr/local/bin/helm repo add {{ item.name }} {{ item.link }}
+  register: add_helm_repos
+  with_items:
+    - { name: 'jetstack',  link: 'https://charts.jetstack.io' }
+    - { name: 'bitnami',  link: 'https://charts.bitnami.com/bitnami' }
+    - { name: 'mysql-operator', link: 'https://mysql.github.io/mysql-operator/' }
+    - { name: 'ndb-operator-repo', link: 'https://mysql.github.io/mysql-ndb-operator/' }
+- debug: msg={{ add_helm_repos }}
+  #  - { name: 'truecharts', link: 'https://charts.truecharts.org/' }
 
 
 - name: Update Helm Repo

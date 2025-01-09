@@ -1,5 +1,1 @@
 
-2025-01-10 03:49:17,782 p=19475 u=jomoon n=ansible | skipping: [rk9-node05]
-2025-01-10 03:49:17,784 p=19475 u=jomoon n=ansible | skipping: [rk9-node06]
-2025-01-10 03:49:17,793 p=19475 u=jomoon n=ansible | skipping: [rk9-node07]
-2025-01-10 03:49:17,800 p=19475 u=jomoon n=ansible | TASK [kafka : Remove Kernel Parameters for Kafka] *********************************************************************************************************************************

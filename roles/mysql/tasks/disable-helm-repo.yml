@@ -1,27 +1,24 @@
 ---
-- name: Remove Jetstack Helm Repo
+- name: Remove Helm Repositories
   shell: |
-    /usr/local/bin/helm repo remove jetstack
-  register: remove_jetstack_helm_repo
-  ignore_errors: yes
-- debug: msg={{ remove_jetstack_helm_repo }}
-
-
-- name: Remove Bitnami Helm Repo
-  shell: |
-    /usr/local/bin/helm repo remove bitnami
-  register: remove_bitnami_helm_repo
-  ignore_errors: yes
-- debug: msg={{ remove_bitnami_helm_repo }}
-
-
-- name: Delete Helm Install Script
-  file:
-    path: "{{ item }}"
-    state: absent
-  register: delete_helm
+    /usr/local/bin/helm repo remove {{ item.name }}
+  register: remove_helm_repos
   with_items:
-    - "{{ base_path }}/get_helm.sh"
-    - "/usr/local/bin/helm"
-- debug: msg={{ delete_helm }}
+    - { name: 'ndb-operator-repo', link: 'https://mysql.github.io/mysql-ndb-operator/' }
+    - { name: 'mysql-operator', link: 'https://mysql.github.io/mysql-operator/' }
+    - { name: 'bitnami',  link: 'https://charts.bitnami.com/bitnami' }
+    - { name: 'jetstack',  link: 'https://charts.jetstack.io' }
+- debug: msg={{ remove_helm_repos }}
+  #  - { name: 'truecharts', link: 'https://charts.truecharts.org/' }
+
+
+#- name: Delete Helm Install Script
+#  file:
+#    path: "{{ item }}"
+#    state: absent
+#  register: delete_helm
+#  with_items:
+#    - "{{ base_path }}/get_helm.sh"
+#    - "/usr/local/bin/helm"
+#- debug: msg={{ delete_helm }}
 

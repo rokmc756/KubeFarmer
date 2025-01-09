@@ -12,7 +12,7 @@
   when: print_debug == true
 
 
-- name: Validate if MySQL InnoDB Containers are Destroyed Normally
+- name: Validate if MySQL InnoDB Containers are Uninstalled Completedly
   shell: |
     kubectl -n mysql-innodb get pods | sed 1d | grep mysql-innodb- | awk '{print $3}' | wc -l
   register: check_mysql_innodb_container

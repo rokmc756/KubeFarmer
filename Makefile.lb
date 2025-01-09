@@ -1,0 +1,100 @@
+lb:
+	@if [ "${r}" = "uninit" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-lb.yml -e '{"${s}": True}' --tags='uninit';\
+			else\
+				echo "No actions to configure lb";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-lb.yml -e '{lb_all: True}' --tags='uninit';\
+			else\
+				echo "No actions to configure lb";\
+			fi\
+		else\
+			echo "No Actions to configure lb";\
+		fi;\
+	elif [ "${r}" = "reinit" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-lb.yml -e '{"${s}": True}' --tags='reinit';\
+			else\
+				echo "No actions to configure lb";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-lb.yml -e '{lb_all: True}' --tags='reinit';\
+			else\
+				echo "No actions to configure lb";\
+			fi\
+		else\
+			echo "No Actions to configure lb";\
+		fi;\
+	elif [ "${r}" = "prepare" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-lb.yml -e '{"${s}": True}' --tags='prepare';\
+			else\
+				echo "No actions to configure lb";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-lb.yml -e '{lb_all: True}' --tags='prepare';\
+			else\
+				echo "No actions to configure lb";\
+			fi\
+		else\
+			echo "No Actions to configure lb";\
+		fi;\
+	elif [ "${r}" = "install" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-lb.yml -e '{"${s}": True}' --tags='install';\
+			else\
+				echo "No actions to install lb";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-lb.yml -e '{lb_all: True}' --tags='install';\
+			else\
+				echo "No actions to install lb";\
+			fi\
+		else\
+			echo "No actions to install lb";\
+		fi;\
+	elif [ "${r}" = "uninstall" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-lb.yml -e '{"${s}": True}' --tags='uninstall';\
+			else\
+				echo "No actions to uninstall lb";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-lb.yml -e '{lb_all: True}' --tags='uninstall';\
+			else\
+				echo "No actions to uninstall lb";\
+			fi\
+		fi;\
+	elif [ "${r}" = "upgrade" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-lb.yml -e '{"${s}": True}' --tags='upgrade';\
+			else\
+				echo "No actions to uninstall lb";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-lb.yml -e '{lb_all: True}' --tags='upgrade';\
+			else\
+				echo "No actions to uninstall lb";\
+			fi\
+		else\
+			echo "No actions to uninstall lb";\
+		fi;\
+	else\
+		echo "No actions to lb role";\
+		exit;\
+	fi
+

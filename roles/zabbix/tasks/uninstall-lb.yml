@@ -7,8 +7,8 @@
   args:
     chdir: "{{ base_path }}"
   with_items:
-    - { svc: "zabbix-chrome",     lb_ip_addr: "192.168.1.234" }
-    - { svc: "zabbix-postgresql", lb_ip_addr: "192.168.1.235" }
-    - { svc: "zabbix-zabbix-web", lb_ip_addr: "192.168.1.237" }
+    - { svc: "zabbix-chrome", lb_ip_addr: "{{ _zabbix.chrome.ip_addr }}" }
+    - { svc: "zabbix-postgresql", lb_ip_addr: "{{ _zabbix.postgresql.ip_addr }}" }
+    - { svc: "zabbix-zabbix-web", lb_ip_addr: "{{ _zabbix.web.ip_addr }}" }
 - debug: msg={{ delete_zabbix_lb }}
 

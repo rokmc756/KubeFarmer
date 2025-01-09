@@ -10,19 +10,14 @@
 - debug: msg={{ install_helm }}
 
 
-- name: Add Zabbix Helm Repo
+- name: Add Helm Repositories
   shell: |
-    /usr/local/bin/helm repo add zabbix-community https://zabbix-community.github.io/helm-zabbix
-  register: add_zabbix_helm_repo
-- debug: msg={{ add_zabbix_helm_repo }}
-  # /usr/local/bin/helm repo add zabbix-chart-7.0 https://cdn.zabbix.com/zabbix/integrations/kubernetes-helm/7.0
-
-
-- name: Add Jetstack Helm Repo
-  shell: |
-    /usr/local/bin/helm repo add jetstack https://charts.jetstack.io
-  register: add_jetstack_helm_repo
-- debug: msg={{ add_jetstack_helm_repo }}
+    /usr/local/bin/helm repo add {{ item.name }} {{ item.link }}
+  register: add_helm_repos
+  with_items:
+    - { name: 'jetstack',  link: 'https://charts.jetstack.io' }
+    - { name: 'zabbix-community', link: 'https://zabbix-community.github.io/helm-zabbix' }
+- debug: msg={{ add_helm_repos }}
 
 
 - name: Update Helm Repo
@@ -30,5 +25,4 @@
     /usr/local/bin/helm repo update
   register: update_helm_repo
 - debug: msg={{ update_helm_repo }}
-
 

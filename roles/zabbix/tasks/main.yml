@@ -14,8 +14,7 @@
 - name: Enable Helm Repository
   import_tasks: enable-helm-repo.yml
   tags: install
-  when: helm.enable_repo == true and inventory_hostname in groups['master']
-
+  when: ( zabbix is defined and zabbix == true ) and inventory_hostname in groups['master']
 
 - name: Deploy Zabbix
   import_tasks: install-zabbix.yml
@@ -26,25 +25,37 @@
 - name: Install Cert Manager
   import_tasks: install-cert-manager.yml
   tags: install
-  when: cert_manager.install == true and inventory_hostname in groups['master']
+  when: _cm.install == true and inventory_hostname in groups['master']
 
 
 - name: Install Load Balancer
   import_tasks: install-lb.yml
   tags: install
-  when: _zabbix.lb.install == true and inventory_hostname in groups['master']
+  when: ( lb is defined and lb == true ) and inventory_hostname in groups['master']
+
+
+- name: Install NGINX Ingress
+  import_tasks: install-ingress.yml
+  tags: install
+  when: ( ingress is defined and ingress == true ) and inventory_hostname in groups['master']
+
+
+- name: Unstall NGINX Ingress
+  import_tasks: uninstall-ingress.yml
+  tags: uninstall
+  when: ( ingress is defined and ingress == true ) and inventory_hostname in groups['master']
 
 
 - name: Uninstall Load Balancer
   import_tasks: uninstall-lb.yml
   tags: uninstall
-  when: _zabbix.lb.install == true and inventory_hostname in groups['master']
+  when: ( lb is defined and lb == true ) and inventory_hostname in groups['master']
 
 
 - name: Uninstall Cert Manager
   import_tasks: uninstall-cert-manager.yml
   tags: uninstall
-  when: cert_manager.install == true and inventory_hostname in groups['master']
+  when: _cm.install == true and inventory_hostname in groups['master']
 
 
 - name: Destroy Zabbix
@@ -56,5 +67,5 @@
 - name: Disable Helm Repository
   import_tasks: disable-helm-repo.yml
   tags: uninstall
-  when: helm.enable_repo == true and inventory_hostname in groups['master']
+  when: ( zabbix is defined and zabbix == true ) and inventory_hostname in groups['master']
 
