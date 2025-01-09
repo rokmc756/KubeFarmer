@@ -11,7 +11,7 @@
 - debug: msg={{ copy_nginx_ingress_config }}
 
 
-- name: Delete NGINX Ingress for Geode
+- name: Delete NGINX Ingress
   shell: |
     kubectl delete -f {{ item }}
   register: delete_nginx_ingress
@@ -48,7 +48,7 @@
   retries: 100
   delay: 10
   with_items:
-    - { svc: "ingress-nginx-controller-", replica: "{{ _geode.locators.replica }}" }
+    - { svc: "ingress-nginx-controller-", replica: "{{ _grafana.admin.replica }}" }
 - debug: msg={{ check_nginx_ingress_controller_container }}
   when: print_debug == true
 

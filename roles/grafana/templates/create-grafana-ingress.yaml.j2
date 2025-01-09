@@ -3,6 +3,8 @@ kind: Ingress
 metadata:
   name: {{ _nginx.ingress.name }}
   namespace: {{ _grafana.namespace }}
+  annotations:
+    nginx.ingress.kubernetes.io/affinity: "cookie"                      # Added for login problem into multiple grafana containers
 spec:
   ingressClassName: {{ _nginx.ingress.class_name }}
   tls:
@@ -17,7 +19,7 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: grafana
+            name: {{ _nginx.ingress.service }}
             port:
               number: 80
 

@@ -21,3 +21,5 @@
         - "harbor"
         - "VMware vCenter Server"
 
+# https://ugurakgul.medium.com/provisioning-a-linux-vm-with-ansible-in-vmware-18cf45a53cb3
+

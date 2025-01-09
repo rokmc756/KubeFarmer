@@ -44,7 +44,7 @@
   retries: 100
   delay: 10
   with_items:
-    - { svc: "ingress-nginx-controller-", replica: "{{ _geode.locators.replica }}" }
+    - { svc: "ingress-nginx-controller-", replica: "{{ _grafana.admin.replica }}" }
 - debug: msg={{ check_nginx_ingress_controller_container }}
   when: print_debug == true
 
@@ -60,7 +60,7 @@
 - debug: msg={{ copy_nginx_ingress_config }}
 
 
-- name: Apply NGINX Ingress for Geode
+- name: Apply NGINX Ingress
   shell: |
     kubectl apply -f {{ item }}
   register: apply_nginx_ingress
@@ -71,6 +71,6 @@
     chdir: "{{ base_path }}/"
   environment:
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-- debug: msg={{ apply_nginx_ingress
+- debug: msg={{ apply_nginx_ingress }}
   when: print_debug == true
 

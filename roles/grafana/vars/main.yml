@@ -65,8 +65,9 @@ _nginx:
     minor_version:
     patch_version:
     hostname: grafana
+    service: grafana
     domain: jtest.pivotal.io
-    ip_addr: "192.168.1.213"
+    ip_addr: "192.168.1.219"
   k8s_ingress:
     major_version: 3
     minor_version: 0

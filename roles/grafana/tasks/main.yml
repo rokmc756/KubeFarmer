@@ -36,6 +36,18 @@
   when: (( lb is defined and lb == true ) or ( grafana_all is defined and grafana_all == true )) and inventory_hostname in groups['master']
 
 
+- name: Install NGINX Ingress
+  import_tasks: install-ingress.yml
+  tags: install
+  when: (( ingress is defined and ingress == true ) or ( powerdns_all is defined and powerdns_all )) and inventory_hostname in groups['master']
+
+
+- name: Unstall NGINX Ingress
+  import_tasks: uninstall-ingress.yml
+  tags: uninstall
+  when: (( ingress is defined and ingress == true ) or ( powerdns_all is defined and powerdns_all )) and inventory_hostname in groups['master']
+
+
 - name: Uninstall Load Balancer
   import_tasks: uninstall-lb.yml
   tags: uninstall
