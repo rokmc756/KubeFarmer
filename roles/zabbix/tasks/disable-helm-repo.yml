@@ -4,8 +4,8 @@
     /usr/local/bin/helm repo remove {{ item.name }}
   register: remove_helm_repos
   with_items:
-    - { name: 'jetstack',  link: 'https://charts.jetstack.io' }
     - { name: 'zabbix-community', link: 'https://zabbix-community.github.io/helm-zabbix' }
+    - { name: 'jetstack',  link: 'https://charts.jetstack.io' }
 - debug: msg={{ remove_helm_repos }}
 
 

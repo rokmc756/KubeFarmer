@@ -16,16 +16,17 @@
   tags: install
   when: ( zabbix is defined and zabbix == true ) and inventory_hostname in groups['master']
 
-- name: Deploy Zabbix
-  import_tasks: install-zabbix.yml
-  tags: install
-  when: ( zabbix is defined and zabbix == true ) and inventory_hostname in groups['master']
-
 
 - name: Install Cert Manager
   import_tasks: install-cert-manager.yml
   tags: install
-  when: _cm.install == true and inventory_hostname in groups['master']
+  when: ( zabbix is defined and zabbix == true ) and inventory_hostname in groups['master']
+
+
+- name: Deploy Zabbix
+  import_tasks: install-zabbix.yml
+  tags: install
+  when: ( zabbix is defined and zabbix == true ) and inventory_hostname in groups['master']
 
 
 - name: Install Load Balancer
@@ -52,14 +53,14 @@
   when: ( lb is defined and lb == true ) and inventory_hostname in groups['master']
 
 
-- name: Uninstall Cert Manager
-  import_tasks: uninstall-cert-manager.yml
-  tags: uninstall
-  when: _cm.install == true and inventory_hostname in groups['master']
-
-
 - name: Destroy Zabbix
   import_tasks: uninstall-zabbix.yml
+  tags: uninstall
+  when: ( zabbix is defined and zabbix == true ) and inventory_hostname in groups['master']
+
+
+- name: Uninstall Cert Manager
+  import_tasks: uninstall-cert-manager.yml
   tags: uninstall
   when: ( zabbix is defined and zabbix == true ) and inventory_hostname in groups['master']
 
