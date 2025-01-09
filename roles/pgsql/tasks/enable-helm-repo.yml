@@ -10,25 +10,16 @@
 - debug: msg={{ install_helm }}
 
 
-- name: Add Bitnami Helm Repo
+- name: Add Helm Repositories
   shell: |
-    /usr/local/bin/helm repo add bitnami https://charts.bitnami.com/bitnami
-  register: add_bitnami_helm_repo
-- debug: msg={{ add_bitnami_helm_repo }}
-
-
-- name: Add Runix Helm Repo
-  shell: |
-    /usr/local/bin/helm repo add runix https://helm.runix.net
-  register: add_runix_helm_repo
-- debug: msg={{ add_runix_helm_repo }}
-
-
-- name: Add Jetstack Helm Repo
-  shell: |
-    /usr/local/bin/helm repo add jetstack https://charts.jetstack.io
-  register: add_jetstack_helm_repo
-- debug: msg={{ add_jetstack_helm_repo }}
+    /usr/local/bin/helm repo add {{ item.name }} {{ item.link }}
+  register: add_helm_repos
+  with_items:
+    - { name: 'jetstack',  link: 'https://charts.jetstack.io' }
+    - { name: 'bitnami',  link: 'https://charts.bitnami.com/bitnami' }
+    - { name: 'runix',  link: 'https://helm.runix.net' }
+    - { name: 'ingress-nginx',  link: 'https://kubernetes.github.io/ingress-nginx' }
+- debug: msg={{ add_helm_repos }}
 
 
 - name: Update Helm Repo
@@ -36,5 +27,4 @@
     /usr/local/bin/helm repo update
   register: update_helm_repo
 - debug: msg={{ update_helm_repo }}
-
 

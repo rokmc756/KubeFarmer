@@ -1,0 +1,140 @@
+---
+controller:
+  name: controller
+  autoscaling:
+    enabled: false
+
+  service:
+    enabled: true
+    external:
+      enabled: true
+    type: LoadBalancer
+    externalIPs: []
+    loadBalancerIP: "{{ _nginx.ingress.ip_addr }}"
+    ipFamilyPolicy: SingleStack
+    ipFamilies:
+      - IPv4
+    enableHttp: true
+    enableHttps: true
+    ports:
+      http: 80
+      https: 443
+    targetPorts:
+      http: http
+      https: https
+    appProtocol: true
+
+  admissionWebhooks:
+    name: admission
+    enabled: true
+    failurePolicy: Fail
+    port: 8443
+    certificate: "/usr/local/certificates/cert"
+    key: "/usr/local/certificates/key"
+    service:
+      servicePort: 443
+      type: ClusterIP
+    createSecretJob:
+      name: create
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        allowPrivilegeEscalation: false
+        seccompProfile:
+          type: RuntimeDefault
+        capabilities:
+          drop:
+            - ALL
+        readOnlyRootFilesystem: true
+    patchWebhookJob:
+      name: patch
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        allowPrivilegeEscalation: false
+        seccompProfile:
+          type: RuntimeDefault
+        capabilities:
+          drop:
+            - ALL
+        readOnlyRootFilesystem: true
+      resources: {}
+    patch:
+      enabled: true
+      networkPolicy:
+        enabled: false
+      nodeSelector:
+        kubernetes.io/os: linux
+      rbac:
+        create: true
+      serviceAccount:
+        create: true
+        automountServiceAccountToken: true
+    certManager:
+      enabled: false
+      rootCert:
+        duration: ""
+      admissionCert:
+        duration: ""
+  metrics:
+    port: 10254
+    portName: metrics
+    enabled: false
+    service:
+      enabled: true
+      servicePort: 10254
+      type: ClusterIP
+    serviceMonitor:
+      enabled: false
+    prometheusRule:
+      enabled: false
+  lifecycle:
+    preStop:
+      exec:
+        command:
+          - /wait-shutdown
+  priorityClassName: ""
+
+
+revisionHistoryLimit: 10
+
+
+defaultBackend:
+  enabled: false
+  name: defaultbackend
+  serviceAccount:
+    create: true
+    name: ""
+    automountServiceAccountToken: true
+  port: 8080
+  minReadySeconds: 0
+  nodeSelector:
+    kubernetes.io/os: linux
+  replicaCount: {{ _nginx.ingress.replica }}
+  minAvailable: 1
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 2
+    targetCPUUtilizationPercentage: 50
+    targetMemoryUtilizationPercentage: 50
+  networkPolicy:
+    enabled: false
+  service:
+    servicePort: 80
+    type: ClusterIP
+
+
+rbac:
+  create: true
+  scope: false
+
+
+serviceAccount:
+  create: true
+  name: ""
+  automountServiceAccountToken: true
+  annotations: {}
+

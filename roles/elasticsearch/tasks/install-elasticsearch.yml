@@ -1,3 +1,4 @@
+---
 - name: Create Namespace for Persistent Volumes
   shell: |
     kubectl create namespace {{ _elasticsearch.namespace }}
@@ -89,27 +90,27 @@
   # - { svc: "filebeat-filebeat-",  repo: "filebeat", replica: "{{ _elasticsearch.filebeat.replica }}" }
 
 
-- name: Deploy ElasticSearch
+- name: Deploy Kibana
   shell: |
     /usr/local/bin/helm install {{ item.name }} elastic/{{ item.repo }} -n {{ _elasticsearch.namespace }} -f {{ base_path }}/{{ item.val }}
-  register: deploy_elasticsearch
+  register: deploy_kibana
   with_items:
     - { name: "kibana", repo: "kibana", val: "kibana-values.yaml" }
     - { name: "logstash", repo: "logstash", val: "logstash-values.yaml" }
-- debug: msg={{ deploy_elasticsearch }}
+- debug: msg={{ deploy_kibana }}
   when: print_debug == true
 
 
-- name: Validate if ElasticSearch Containers are Running
+- name: Validate if Kibana Containers are Running
   shell: |
     kubectl get pods -n {{ _elasticsearch.namespace }} | grep {{ item.svc }} | awk '{print $3}' | grep Running | wc -l
-  register: check_elasticsearch_containers
-  until: check_elasticsearch_containers.stdout|int == item.replica|int
+  register: check_kibana_containers
+  until: check_kibana_containers.stdout|int == item.replica|int
   retries: 100
   delay: 10
   with_items:
     - { svc: "kibana-kibana-", repo: "kibana", replica: "{{ _elasticsearch.kibana.replica }}" }
     - { svc: "logstash-", repo: "logstash", replica: "{{ _elasticsearch.logstash.replica }}" }
-- debug: msg={{ check_elasticsearch_containers }}
+- debug: msg={{ check_kibana_containers }}
   when: print_debug == true
 

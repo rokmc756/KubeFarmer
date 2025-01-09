@@ -1,44 +1,80 @@
-- name: Check if the Kube Ingress is Already Downloaded
-  stat: path={{ base_path }}/kubernetes-ingress
-  register: kube_ingress_dir_existed
-- debug: msg={{ kube_ingress_dir_existed }}
-
-
-- name: Clone Kubernetest Ingress
+- name: Create Namespace for Persistent Volumes
   shell: |
-    git -C "{{ base_path }}" clone https://github.com/nginxinc/kubernetes-ingress.git \
-    --branch v{{ ingress.k8s.major_version }}.{{ ingress.k8s.minor_version }}.{{ ingress.k8s.patch_version }}
-  register: clone_k8s_ingress
-  when: kube_ingress_dir_existed.stat.exists != True
-- debug: msg={{ clone_k8s_ingress }}
-
-
-- name: Apply NGINX Ingress CRDs
-  shell: |
-    kubectl create -f crds/ --namespace=nginx-ingress
-  register: apply_nginx_ingress_crds
-  ignore_errors: yes
+    kubectl create namespace {{ _nginx.ingress.namespace }}
+  register: create_namespace
   args:
-    chdir: "{{ base_path }}/kubernetes-ingress/deployments/helm-chart"
-- debug: msg={{ apply_nginx_ingress_crds }}
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ create_namespace }}
+  when: print_debug == true
 
 
+- name: Copy NGINX Ingress Helm Config
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ base_path }}/{{ item }}"
+  register: copy_nginx_ingress_helm_config
+  with_items:
+    - "ingress-nginx-values.yaml"
+- debug: msg={{ copy_nginx_ingress_helm_config }}
+
+
+# helm install {{ _nginx.ingress.name }} ingress-nginx/ingress-nginx -n {{ _nginx.ingress.namespace }} -f {{ base_path }}/ingress-nginx-values.yaml
 - name: Install NGINX Ingress
   shell: |
-    /usr/local/bin/helm install nginx-ingress nginx-stable/nginx-ingress --namespace=nginx-ingress --create-namespace
+    helm install {{ _nginx.ingress.name }} ingress-nginx/ingress-nginx -n {{ _nginx.ingress.namespace }} \
+    --set controller.service.enabled=true \
+    --set controller.external.enabled=true \
+    --set controller.service.type=LoadBalancer \
+    --set controller.service.loadBalancerIP={{ _nginx.ingress.ip_addr }}
   register: install_nginx_ingress
-  ignore_errors: yes
   args:
-    chdir: "{{ base_path }}/kubernetes-ingress/deployments/helm-chart"
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ install_nginx_ingress }}
+# helm upgrade --install {{ _nginx.ingress.name }} ingress-nginx/ingress-nginx -n {{ _nginx.ingress.namespace }} \
+# kubectl -n {{ _nginx.ingress.namespace }} get svc ingress-nginx-controller -o jsonpath='{.spec.externalTrafficPolicy}{"\n"}'    # Default is Local
+# kubectl -n {{ _nginx.ingress.namespace }} patch svc ingress-nginx-controller -p '{"spec": {"externalTrafficPolicy": "Cluster"} }'
 
 
-- name: Upgrade NGINX Ingress CRDs
+- name: Validate if NGINX Ingress Controller Containers are Running
   shell: |
-    /usr/local/bin/helm upgrade nginx-ingress nginx-stable/nginx-ingress --namespace=nginx-ingress
-  register: upgrade_nginx_ingress_crds
-  ignore_errors: yes
+    kubectl get pod -n {{ _nginx.ingress.namespace }} | grep {{ item.svc }} | awk '{print $3}' | grep Running | wc -l
+  register: check_nginx_ingress_controller_container
+  until: check_nginx_ingress_controller_container.stdout|int == item.replica|int
+  retries: 100
+  delay: 10
+  with_items:
+    - { svc: "ingress-nginx-controller-", replica: "{{ _nginx.ingress.replica|int }}" }
+- debug: msg={{ check_nginx_ingress_controller_container }}
+  when: print_debug == true
+
+
+- name: Copy NGINX Ingress Config
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ base_path }}/{{ item }}"
+  register: copy_nginx_ingress_config
+  with_items:
+    - "pgadmin-ingress-class.yaml"
+    - "create-pgadmin-ingress.yaml"
+- debug: msg={{ copy_nginx_ingress_config }}
+
+
+- name: Apply NGINX Ingress
+  shell: |
+    kubectl apply -f {{ item }}
+  register: apply_nginx_ingress
+  with_items:
+    - "pgadmin-ingress-class.yaml"
+    - "create-pgadmin-ingress.yaml"
   args:
-    chdir: "{{ base_path }}/kubernetes-ingress/deployments/helm-chart"
-- debug: msg={{ upgrade_nginx_ingress_crds }}
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ apply_nginx_ingress }}
+  when: print_debug == true
+
 

@@ -1,18 +1,16 @@
 ---
-- name: Remove Jetstack Helm Repo
+- name: Remove Helm Repositories
   shell: |
-    /usr/local/bin/helm repo remove jetstack
-  register: remove_jetstack_helm_repo
+    /usr/local/bin/helm repo remove {{ item.name }}
+  register: remove_helm_repos
   ignore_errors: yes
-- debug: msg={{ remove_jetstack_helm_repo }}
+  with_items:
+    - { name: 'jetstack',  link: 'https://charts.jetstack.io' }
+    - { name: 'bitnami',  link: 'https://charts.bitnami.com/bitnami' }
+    - { name: 'runix',  link: 'https://helm.runix.net' }
+    - { name: 'ingress-nginx',  link: 'https://kubernetes.github.io/ingress-nginx' }
+- debug: msg={{ remove_helm_repos }}
 
-
-- name: Remove Bitnami Helm Repo
-  shell: |
-    /usr/local/bin/helm repo remove bitnami
-  register: remove_bitnami_helm_repo
-  ignore_errors: yes
-- debug: msg={{ remove_bitnami_helm_repo }}
 
 
 #- name: Delete Helm Install Script
