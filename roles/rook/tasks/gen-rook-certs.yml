@@ -19,7 +19,7 @@
 - name: Generate the CA certificate
   shell: |
     openssl req -x509 -new -nodes -sha512 -days 3650 \
-    -subj "/C={{ _ssl.country }}/ST={{ _ssl.state }}/L={{ _ssl.location }}/O={{ _ssl.organization }}/OU={{ _ssl.common_name }}/CN={{ _powerdns.hostname }}" \
+    -subj "/C={{ _ssl.country }}/ST={{ _ssl.state }}/L={{ _ssl.location }}/O={{ _ssl.organization }}/OU={{ _ssl.common_name }}/CN={{ _rook.hostname }}" \
     -key {{ _ssl.dir }}/ca.key -out {{ _ssl.dir }}/ca.crt
   args:
     executable: /bin/bash
@@ -27,7 +27,7 @@
 
 - name: Generate a Private Key
   shell: |
-    openssl genrsa -out {{ _ssl.dir }}/{{ _powerdns.hostname }}.key 4096
+    openssl genrsa -out {{ _ssl.dir }}/{{ _rook.hostname }}.key 4096
   args:
     executable: /bin/bash
 
@@ -35,8 +35,8 @@
 - name: Turn the Certificate into a Self-Signed Certificate
   shell: |
     openssl req -sha512 -new \
-    -subj "/C={{ _ssl.country }}/ST={{ _ssl.state }}/L={{ _ssl.location }}/O={{ _ssl.organization }}/OU={{ _ssl.common_name }}/CN={{ _powerdns.hostname }}" \
-    -key {{ _ssl.dir }}/{{ _powerdns.hostname }}.key -out {{ _ssl.dir }}/{{ _powerdns.hostname }}.csr
+    -subj "/C={{ _ssl.country }}/ST={{ _ssl.state }}/L={{ _ssl.location }}/O={{ _ssl.organization }}/OU={{ _ssl.common_name }}/CN={{ _elasticsearch.hostname }}" \
+    -key {{ _ssl.dir }}/{{ _rook.hostname }}.key -out {{ _ssl.dir }}/{{ _rook.hostname }}.csr
   args:
     executable: /bin/bash
 
@@ -51,8 +51,8 @@
 - name: Generate an x509 v3 Extension File
   shell: |
     openssl x509 -req -sha512 -days 3650 -extfile {{ _ssl.dir }}/v3.ext -CA {{ _ssl.dir }}/ca.crt \
-    -CAkey {{ _ssl.dir }}/ca.key -CAcreateserial -in {{ _ssl.dir }}/{{ _powerdns.hostname }}.csr \
-    -out {{ _ssl.dir }}/{{ _powerdns.hostname }}.crt
+    -CAkey {{ _ssl.dir }}/ca.key -CAcreateserial -in {{ _ssl.dir }}/{{ _rook.hostname }}.csr \
+    -out {{ _ssl.dir }}/{{ _rook.hostname }}.crt
   register: v3_ext_generated
 - debug: msg={{ v3_ext_generated }}
   when: print_debug == true
@@ -60,8 +60,8 @@
 
 - name: Convert Crt to Cert Use by Containers
   shell: |
-    openssl x509 -inform PEM -in {{ _ssl.dir }}/{{ _powerdns.hostname }}.crt -out {{ _ssl.dir }}/{{ _powerdns.hostname }}.cert
-  register: powerdns_crt
+    openssl x509 -inform PEM -in {{ _ssl.dir }}/{{ _rook.hostname }}.crt -out {{ _ssl.dir }}/{{ _rook.hostname }}.cert
+  register: elasticsearch_crt
 
 
 - name: Change Permission of SSL Key Files to Login via SSL
@@ -72,9 +72,9 @@
     group: root
     mode: "0600"
   with_items:
-    - "{{ _powerdns.hostname }}.cert"
-    - "{{ _powerdns.hostname }}.crt"
-    - "{{ _powerdns.hostname }}.key"
+    - "{{ _rook.hostname }}.cert"
+    - "{{ _rook.hostname }}.crt"
+    - "{{ _rook.hostname }}.key"
     - "ca.key"
     - "ca.crt"
     # - "server.req"

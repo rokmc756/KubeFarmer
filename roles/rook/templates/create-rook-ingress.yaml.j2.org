@@ -5,7 +5,7 @@ metadata:
   namespace: {{ _rook.namespace }}
   annotations:
     nginx.ingress.kubernetes.io/affinity: "cookie"                      # Added for login problem into multiple rook containers
-    nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
 spec:
   ingressClassName: {{ _nginx.ingress.class_name }}
   tls:

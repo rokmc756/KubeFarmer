@@ -1,0 +1,51 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ _nginx.ingress.server.ingress_name }}
+  namespace: {{ _prometheus.namespace }}
+  annotations:
+    nginx.ingress.kubernetes.io/affinity: "cookie"                      # Added for login problem into multiple prometheus containers
+spec:
+  ingressClassName: {{ _nginx.ingress.class_name }}
+  tls:
+  - hosts:
+    - "*.{{ _nginx.ingress.server.hostname }}"
+    secretName: secret-tls
+  rules:
+  - host: "{{ _nginx.ingress.server.hostname }}.{{ _nginx.ingress.domain }}"
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: {{ _nginx.ingress.server.service }}
+            port:
+              number: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ _nginx.ingress.alertmanager.ingress_name }}
+  namespace: {{ _prometheus.namespace }}
+  annotations:
+    nginx.ingress.kubernetes.io/affinity: "cookie"                      # Added for login problem into multiple prometheus containers
+spec:
+  ingressClassName: {{ _nginx.ingress.class_name }}
+  tls:
+  - hosts:
+    - "*.{{ _nginx.ingress.alertmanager.hostname }}"
+    secretName: secret-tls
+  rules:
+  - host: "{{ _nginx.ingress.alertmanager.hostname }}.{{ _nginx.ingress.domain }}"
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: {{ _nginx.ingress.alertmanager.service }}
+            port:
+              number: 80
+

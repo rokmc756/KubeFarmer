@@ -10,7 +10,7 @@ controller:
       enabled: true
     type: LoadBalancer
     externalIPs: []
-    loadBalancerIP: "{{ _nginx.ingress.ip_addr }}"
+    loadBalancerIP: "{{ _nginx.ingress.server.ip_addr }}"
     ipFamilyPolicy: SingleStack
     ipFamilies:
       - IPv4
@@ -112,7 +112,7 @@ defaultBackend:
   minReadySeconds: 0
   nodeSelector:
     kubernetes.io/os: linux
-  replicaCount: {{ _nginx.ingress.replica }}
+  replicaCount: 1
   minAvailable: 1
   autoscaling:
     enabled: false
@@ -137,4 +137,5 @@ serviceAccount:
   name: ""
   automountServiceAccountToken: true
   annotations: {}
+
 

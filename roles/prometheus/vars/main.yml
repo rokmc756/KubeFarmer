@@ -66,7 +66,6 @@ _helm:
   build_version:
 
 
-
 _nginx:
   ingress:
     install: true
@@ -76,13 +75,17 @@ _nginx:
     major_version:
     minor_version:
     patch_version:
-    hostname: 
-      - prometheus-server
-      - prometheus-alertmanager
+    server:
+      ingress_name: server-ingress
+      ip_addr: 192.168.1.219
+      hostname: prometheus-server
+      service: prometheus-server
+    alertmanager:
+      ingress_name: alertmanager-ingress
+      ip_addr: 192.168.1.220
+      hostnaame: prometheus-alertmanager
+      service: prometheus-alertmanager
     domain: jtest.pivotal.io
-    ip_addr:
-      - "192.168.1.219"
-      - "192.168.1.220"
   k8s_ingress:
     major_version: 3
     minor_version: 0

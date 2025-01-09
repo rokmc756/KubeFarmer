@@ -1,3 +1,4 @@
+---
 - name: Create Namespace for Persistent Volumes
   shell: |
     kubectl create namespace {{ _nginx.ingress.namespace }}
@@ -20,7 +21,6 @@
 - debug: msg={{ copy_nginx_ingress_helm_config }}
 
 
-# helm install {{ _nginx.ingress.name }} ingress-nginx/ingress-nginx -n {{ _nginx.ingress.namespace }} -f {{ base_path }}/ingress-nginx-values.yaml
 - name: Install NGINX Ingress
   shell: |
     helm install {{ _nginx.ingress.name }} ingress-nginx/ingress-nginx -n {{ _nginx.ingress.namespace }} \
@@ -34,9 +34,6 @@
   environment:
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ install_nginx_ingress }}
-# helm upgrade --install {{ _nginx.ingress.name }} ingress-nginx/ingress-nginx -n {{ _nginx.ingress.namespace }} \
-# kubectl -n {{ _nginx.ingress.namespace }} get svc ingress-nginx-controller -o jsonpath='{.spec.externalTrafficPolicy}{"\n"}'    # Default is Local
-# kubectl -n {{ _nginx.ingress.namespace }} patch svc ingress-nginx-controller -p '{"spec": {"externalTrafficPolicy": "Cluster"} }'
 
 
 - name: Validate if NGINX Ingress Controller Containers are Running
@@ -47,7 +44,7 @@
   retries: 100
   delay: 10
   with_items:
-    - { svc: "ingress-nginx-controller-", replica: "{{ _prometheus.master.replica }}" }
+    - { svc: "ingress-nginx-controller-", replica: "{{ _prometheus.admin.replica }}" }
 - debug: msg={{ check_nginx_ingress_controller_container }}
   when: print_debug == true
 
@@ -76,5 +73,4 @@
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ apply_nginx_ingress }}
   when: print_debug == true
-
 

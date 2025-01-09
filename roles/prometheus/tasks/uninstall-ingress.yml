@@ -48,8 +48,7 @@
   retries: 100
   delay: 10
   with_items:
-    - { svc: "ingress-nginx-controller-", replica: "{{ _prometheus.server.replica }}" }
-    - { svc: "ingress-nginx-controller-", replica: "{{ _prometheus.alertmanager.replica }}" }
+    - { svc: "ingress-nginx-controller-", replica: "{{ _prometheus.admin.replica }}" }
 - debug: msg={{ check_nginx_ingress_controller_container }}
   when: print_debug == true
 
