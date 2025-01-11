@@ -17,10 +17,10 @@
   when: ( zabbix is defined and zabbix == true ) and inventory_hostname in groups['master']
 
 
-- name: Install Cert Manager
-  import_tasks: install-cert-manager.yml
-  tags: install
-  when: ( zabbix is defined and zabbix == true ) and inventory_hostname in groups['master']
+#- name: Install Cert Manager
+#  import_tasks: install-cert-manager.yml
+#  tags: install
+#  when: ( zabbix is defined and zabbix == true ) and inventory_hostname in groups['master']
 
 
 - name: Deploy Zabbix
@@ -59,10 +59,10 @@
   when: ( zabbix is defined and zabbix == true ) and inventory_hostname in groups['master']
 
 
-- name: Uninstall Cert Manager
-  import_tasks: uninstall-cert-manager.yml
-  tags: uninstall
-  when: ( zabbix is defined and zabbix == true ) and inventory_hostname in groups['master']
+#- name: Uninstall Cert Manager
+#  import_tasks: uninstall-cert-manager.yml
+#  tags: uninstall
+#  when: ( zabbix is defined and zabbix == true ) and inventory_hostname in groups['master']
 
 
 - name: Disable Helm Repository

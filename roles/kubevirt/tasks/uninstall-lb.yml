@@ -1,9 +1,33 @@
-- name: Delete KubeVirt Load Balancer
+---
+- name: Copy KubeVirt LoadBalancer Config Yaml
+  template:
+    src: kubevirt-loadbalancer.yaml.j2
+    dest: "{{ base_path }}/kubevirt-loadbalancer.yaml"
+  register: copy_kubevirt_lb_config_yaml
+- debug: msg={{ copy_kubevirt_lb_config_yaml }}
+
+
+- name: Delete KubeVirt Manager Load Balancer
   shell: |
-    kubectl delete -f kubevirt-loadbalancer.yaml
-  register: delete_kubevirt_lb
+    kubectl patch svc {{ item.svc }} -n {{ _kubevirt_manager.namespace }} -p '{"spec": {"type": "ClusterIP"}}'
+  register: delete_mongodb_lb
   ignore_errors: yes
   args:
     chdir: "{{ base_path }}"
-- debug: msg={{ delete_kubevirt_lb }}
+  with_items:
+    - { svc: "kubevirt-manager", lb_ip_addr: "{{ _kubevirt_manager.lb.ip_addr }}" }
+- debug: msg={{ delete_mongodb_lb }}
+  when: print_debug == true
+
+
+#- name: Delete KubeVirt Load Balancer
+#  shell: |
+#    kubectl delete -f kubevirt-loadbalancer.yaml
+#  register: delete_kubevirt_lb
+#  ignore_errors: yes
+#  args:
+#    chdir: "{{ base_path }}"
+#- debug: msg={{ delete_kubevirt_lb }}
+
+
 

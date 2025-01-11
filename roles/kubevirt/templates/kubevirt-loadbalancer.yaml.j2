@@ -3,7 +3,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: kubevirt-manager-loadbalancer
-  namespace: kubevirt-manager
+  namespace: {{ _kubevirt_manager.namespace }}
   annotations:
     nginx.ingress.kubernetes.io/proxy-protocol: "true"
 spec:
@@ -15,25 +15,5 @@ spec:
       port: 8080
       targetPort: 8080
   type: LoadBalancer
-  loadBalancerIP: {{ kubevirt.lb_ip_addr }}
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: kubevirt-ingress
-  namespace: kubevirt-manager
-  annotations:
-    nginx.ingress.kubernetes.io/ssl-redirect: "false"
-spec:
-  rules:
-    - host: {{ kubevirt.ingress.hostname }}
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: kubevirt-manager
-                port:
-                  name: http
+  loadBalancerIP: {{ _kubevirt_manager.lb.ip_addr }}
 

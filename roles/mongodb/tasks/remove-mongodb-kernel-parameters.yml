@@ -1,4 +1,5 @@
-- name: Remove Directory for Persistent Volumes
+---
+- name: Remove Directory for Persistent Volumes for MongoDB
   file:
     path: "{{ _mongodb.storage_path }}-{{ item }}"
     state: absent
@@ -6,8 +7,16 @@
   with_sequence: start=0 end={{ total_pvs|int }}
 - debug: msg={{ remove_pv_dir }}
   when: print_debug == true
-  # with_sequence: start=0 end={{ _mongodb.sharded_shard|int*_mongodb.shardsvr|int + _mongodb.configsvr|int - 1 }}
-  # with_sequence: start=0 end={{ ( _mongodb.sharded_shard|int * _mongodb.shardsvr|int ) + _mongodb.configsvr|int }}
+
+
+- name: Remove Directory for Persistent Volumes for MongoDB Express
+  file:
+    path: "{{ _mongo_express.storage_path }}-{{ item }}"
+    state: absent
+  register: remove_pv_dir_express
+  with_sequence: start=0 end=1
+- debug: msg={{ remove_pv_dir_express }}
+  when: print_debug == true
 
 
 - name: Remove Kernel Parameters for MongoDB

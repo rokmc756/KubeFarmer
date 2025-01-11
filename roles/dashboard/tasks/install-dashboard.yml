@@ -7,7 +7,7 @@
 - name: Deploy Kubernetes the Dashboard UI
   become: true
   shell: |
-    kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v{{ dashboard.major_version }}.{{ dashboard.minor_version }}.{{ dashboard.patch_version }}/aio/deploy/recommended.yaml
+    kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v{{ _dashboard.major_version }}.{{ _dashboard.minor_version }}.{{ _dashboard.patch_version }}/aio/deploy/recommended.yaml
   register: dashboard_ui_deployed
 - debug: msg={{ dashboard_ui_deployed }}
 

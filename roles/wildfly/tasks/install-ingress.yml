@@ -1,0 +1,80 @@
+- name: Create Namespace for Persistent Volumes
+  shell: |
+    kubectl create namespace {{ _nginx.ingress.namespace }}
+  register: create_namespace
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ create_namespace }}
+  when: print_debug == true
+
+
+- name: Copy NGINX Ingress Helm Config
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ base_path }}/{{ item }}"
+  register: copy_nginx_ingress_helm_config
+  with_items:
+    - "ingress-nginx-values.yaml"
+- debug: msg={{ copy_nginx_ingress_helm_config }}
+
+
+# helm install {{ _nginx.ingress.name }} ingress-nginx/ingress-nginx -n {{ _nginx.ingress.namespace }} -f {{ base_path }}/ingress-nginx-values.yaml
+- name: Install NGINX Ingress
+  shell: |
+    helm install {{ _nginx.ingress.name }} ingress-nginx/ingress-nginx -n {{ _nginx.ingress.namespace }} \
+    --set controller.service.enabled=true \
+    --set controller.external.enabled=true \
+    --set controller.service.type=LoadBalancer \
+    --set controller.service.loadBalancerIP={{ _nginx.ingress.ip_addr }}
+  register: install_nginx_ingress
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ install_nginx_ingress }}
+# helm upgrade --install {{ _nginx.ingress.name }} ingress-nginx/ingress-nginx -n {{ _nginx.ingress.namespace }} \
+# kubectl -n {{ _nginx.ingress.namespace }} get svc ingress-nginx-controller -o jsonpath='{.spec.externalTrafficPolicy}{"\n"}'    # Default is Local
+# kubectl -n {{ _nginx.ingress.namespace }} patch svc ingress-nginx-controller -p '{"spec": {"externalTrafficPolicy": "Cluster"} }'
+
+
+- name: Validate if NGINX Ingress Controller Containers are Running
+  shell: |
+    kubectl get pod -n {{ _nginx.ingress.namespace }} | grep {{ item.svc }} | awk '{print $3}' | grep Running | wc -l
+  register: check_nginx_ingress_controller_container
+  until: check_nginx_ingress_controller_container.stdout|int == item.replica|int
+  retries: 100
+  delay: 10
+  with_items:
+    - { svc: "ingress-nginx-controller-", replica: "{{ _nginx.ingress.replica|int }}" }
+- debug: msg={{ check_nginx_ingress_controller_container }}
+  when: print_debug == true
+
+
+- name: Copy NGINX Ingress Config
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ base_path }}/{{ item }}"
+  register: copy_nginx_ingress_config
+  with_items:
+    - "wildfly-ingress-class.yaml"
+    - "create-wildfly-ingress.yaml"
+- debug: msg={{ copy_nginx_ingress_config }}
+
+
+- name: Apply NGINX Ingress
+  shell: |
+    kubectl apply -f {{ item }}
+  register: apply_nginx_ingress
+  with_items:
+    - "wildfly-ingress-class.yaml"
+    - "create-wildfly-ingress.yaml"
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ apply_nginx_ingress }}
+  when: print_debug == true
+
+

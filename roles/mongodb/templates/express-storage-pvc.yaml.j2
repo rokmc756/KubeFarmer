@@ -1,0 +1,13 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mongo-express-mongodb
+  namespace: {{ _mongo_express.namespace }}
+spec:
+  storageClassName: {{ _mongo_express.storage_class}}
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi

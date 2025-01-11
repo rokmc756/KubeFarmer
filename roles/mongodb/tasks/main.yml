@@ -11,16 +11,16 @@
     - uninstall
 
 
-- name: Apply Kernel Parameters for mongodb
-  import_tasks: apply-mongodb-kernel-parameters.yml
-  tags: install
-  when: db is defined and db == true
-
-
 - name: Enable Helm Repository
   import_tasks: enable-helm-repo.yml
   tags: install
-  when: helm.enable_repo == true and inventory_hostname in groups['master']
+  when: (( repo is defined and repo == true ) or ( mongodb_all is defined and mongodb_all == true )) and inventory_hostname in groups['master']
+
+
+- name: Apply Kernel Parameters for mongodb
+  import_tasks: apply-mongodb-kernel-parameters.yml
+  tags: install
+  when: ( db is defined and db == true ) or ( mongodb_all is defined and mongodb_all == true )
 
 
 - name: Install Kustomize
@@ -32,47 +32,59 @@
 - name: Deploy MongoDB
   import_tasks: install-mongodb.yml
   tags: install
-  when: ( db is defined and db == true ) and inventory_hostname in groups['master']
+  when: (( db is defined and db == true ) or ( mongodb_all is defined and mongodb_all == true )) and inventory_hostname in groups['master']
 
 
 - name: Deploy Mongo Express
   import_tasks: install-mongo-express.yml
   tags: install
-  when: ( express is defined and express == true ) and inventory_hostname in groups['master']
+  when: (( express is defined and express == true ) or ( mongodb_all is defined and mongodb_all == true )) and inventory_hostname in groups['master']
 
 
 - name: Install Load Balancer
   import_tasks: install-lb.yml
   tags: install
-  when: _mongodb.lb.install == true and inventory_hostname in groups['master']
+  when: (( lb is defined and lb == true ) or ( mongodb_all is defined and mongodb_all == true )) and inventory_hostname in groups['master']
+
+
+- name: Install NGINX Ingress
+  import_tasks: install-ingress.yml
+  tags: install
+  when: (( ingress is defined and ingress == true ) or ( mongodb_all is defined and mongodb_all == true )) and inventory_hostname in groups['master']
+
+
+- name: Unstall NGINX Ingress
+  import_tasks: uninstall-ingress.yml
+  tags: uninstall
+  when: (( ingress is defined and ingress == true ) or ( mongodb_all is defined and mongodb_all == true )) and inventory_hostname in groups['master']
 
 
 - name: Uninstall Load Balancer
   import_tasks: uninstall-lb.yml
   tags: uninstall
-  when: _mongodb.lb.install == true and inventory_hostname in groups['master']
+  when: (( lb is defined and lb == true ) or ( mongodb_all is defined and mongodb_all == true )) and inventory_hostname in groups['master']
 
 
 - name: Destroy Mongo Express
   import_tasks: uninstall-mongo-express.yml
   tags: uninstall
-  when: ( express is defined and express == true ) and inventory_hostname in groups['master']
+  when: (( express is defined and express == true ) or ( mongodb_all is defined and mongodb_all == true )) and inventory_hostname in groups['master']
 
 
 - name: Destroy MongoDB
   import_tasks: uninstall-mongodb.yml
   tags: uninstall
-  when: ( db is defined and db == true ) and inventory_hostname in groups['master']
-
-
-- name: Disable Helm Repository
-  import_tasks: disable-helm-repo.yml
-  tags: uninstall
-  when: helm.enable_repo == true and inventory_hostname in groups['master']
+  when: (( db is defined and db == true ) or ( mongodb_all is defined and mongodb_all == true )) and inventory_hostname in groups['master']
 
 
 - name: Remove Kernel Parameters for MongoDB
   import_tasks: remove-mongodb-kernel-parameters.yml
   tags: uninstall
-  when: db is defined and db == true
+  when: ( db is defined and db == true ) or ( mongodb_all is defined and mongodb_all == true )
+
+
+- name: Disable Helm Repository
+  import_tasks: disable-helm-repo.yml
+  tags: uninstall
+  when: (( repo is defined and repo == true ) or ( mongodb_all is defined and mongodb_all == true )) and inventory_hostname in groups['master']
 

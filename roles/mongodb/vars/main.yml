@@ -2,7 +2,7 @@ base_path: /root
 
 
 _kustomize:
-  install: true
+  install: false
   download_url: "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"
   major_version: 5
   minor_version: 4
@@ -57,23 +57,57 @@ total_pvs: "{{ ( _mongodb.sharded_shard|int * _mongodb.shardsvr|int ) + _mongodb
 
 _mongo_express:
   install: true
+  namespace: mongo-express
   major_version: 2
   minor_version: 6
   patch_version: 5
   build_version:
-  namespace: mongo-express
+  storage_class: "mongo-express-storage"
+  storage_path: "/mnt/mongo-express-storage"
   repo_name: cowboysysop
   download_link: "https://cowboysysop.github.io/charts/"
   replica: 1
   lb:
     install: true
-    ip_addr: "192.168.1.235"
+    ip_addr: "192.168.1.218"
 
 
-helm:
+_helm:
   enable_repo: true
   major_version: 3
   minor_version:
   patch_version:
   build_version:
+
+
+_nginx:
+  ingress:
+    install: true
+    name: nginx-ingress
+    class_name: mongo-express-ingress-class
+    namespace: "nginx-ingress"
+    major_version:
+    minor_version:
+    patch_version:
+    replica: 1
+    hostname: mongo-express
+    domain: jtest.pivotal.io
+    service: mongo-express
+    ip_addr: "192.168.1.219"
+    port: 8081
+  k8s_ingress:
+    major_version: 3
+    minor_version: 0
+    patch_version: 2
+
+
+_ssl:
+  dir: "{{ base_path }}/mongo-express-certs"
+  days: 3660
+  country: "KR"
+  state: "Seoul"
+  location: "Guro"
+  organization: "Pivotal"
+  common_name: "jest.pivotal.io"
+  email: "rokmc756@gmail.com"
 

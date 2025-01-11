@@ -1,88 +1,79 @@
+---
+- name: Copy NGINX Ingress Config
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ base_path }}/{{ item }}"
+  register: copy_nginx_ingress_config
+  ignore_errors: true
+  with_items:
+    - "kubevirt-manager-ingress-class.yaml"
+    - "create-kubevirt-manager-ingress.yaml"
+- debug: msg={{ copy_nginx_ingress_config }}
+
+
+- name: Delete NGINX Ingress
+  shell: |
+    kubectl delete -f {{ item }}
+  register: delete_nginx_ingress
+  ignore_errors: true
+  with_items:
+    - "create-kubevirt-manager-ingress.yaml"
+    - "kubevirt-manager-ingress-class.yaml"
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ delete_nginx_ingress }}
+  when: print_debug == true
+
+
 - name: Uninstall NGINX Ingress
   shell: |
-    /usr/local/bin/helm uninstall nginx-ingress --namespace=nginx-ingress
+    helm uninstall {{ _nginx.ingress.name }} -n {{ _nginx.ingress.namespace }}
   register: uninstall_nginx_ingress
-  ignore_errors: yes
+  ignore_errors: true
   args:
-    chdir: "{{ base_path }}/kubernetes-ingress/deployments/helm-chart"
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ uninstall_nginx_ingress }}
 
 
-- name: Delete NGINX Ingress CRDs
+- name: Validate if NGINX Ingress Controller Containers are Running
   shell: |
-    kubectl delete -f crds/ --namespace=nginx-ingress
-  register: delete_nginx_ingress_crds
-  ignore_errors: yes
+    kubectl get pod -n {{ _nginx.ingress.namespace }} | grep {{ item.svc }} | awk '{print $3}' | grep Running | wc -l
+  register: check_nginx_ingress_controller_container
+  ignore_errors: true
+  until: check_nginx_ingress_controller_container.stdout|int == 0
+  retries: 100
+  delay: 10
+  with_items:
+    - { svc: "ingress-nginx-controller-", replica: "{{ _nginx.ingress.replica }}" }
+- debug: msg={{ check_nginx_ingress_controller_container }}
+  when: print_debug == true
+
+
+- name: Delete Namespace for NGINX Ingress
+  shell: |
+    kubectl delete namespace {{ _nginx.ingress.namespace }}
+  register: delete_namespace
+  ignore_errors: true
   args:
-    chdir: "{{ base_path }}/kubernetes-ingress/deployments/helm-chart"
-- debug: msg={{ delete_nginx_ingress_crds }}
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ delete_namespace }}
+  when: print_debug == true
 
 
-#- name: Delete the Metallb Config for VMware
-#  shell: |
-#    kubectl delete -f "{{ base_path }}"/metallb-config-vmware.yaml
-#  register: delete_metallb_config
-#  ignore_errors: yes
-#  until: delete_metallb_config is succeeded
-#- debug: msg={{ delete_metallb_config }}
-#
-#
-#- name: Delete Secret for Metallb Namespace
-#  shell: |
-#    kubectl delete secret -n metallb-system memberlist
-#  register: delete_metallb_secret
-#  ignore_errors: yes
-#- debug: msg={{ delete_metallb_secret }}
-#
-#
-##- name: Delete the Metallb Native
-##  shell: |
-##    kubectl delete -f \
-##    https://raw.githubusercontent.com/metallb/metallb/v{{ metallb.major_version }}.{{ metallb.minor_version }}.{{ metallb.patch_version }}/config/manifests/metallb-native.yaml
-##  register: apply_metallb_native_config
-##- debug: msg={{ apply_metallb_native_config }}
-#
-#
-#- name: Uninstall the Metallb Native
-#  shell: |
-#    /usr/local/bin/helm uninstall metallb -n metallb-system
-#  register: uninstall_metallb_native_config
-#  ignore_errors: yes
-#- debug: msg={{ uninstall_metallb_native_config }}
-#
-#
-#- name: Delete Namespace for Metallb
-#  shell: |
-#    kubectl delete namespace metallb-system
-#  register: delete_metallb_namespace
-#  ignore_errors: yes
-#- debug: msg={{ delete_metallb_namespace }}
-#
-#
-#- name: Check strictARP
-#  shell: |
-#    kubectl get configmap kube-proxy -n kube-system -o yaml | grep strictARP
-#  register: check_strict_arp
-#  ignore_errors: yes
-#- debug: msg={{ check_strict_arp }}
-#
-#
-#- name: Rollback strictARP for VMWare or Cloud
-#  shell: |
-#    kubectl get configmap kube-proxy -n kube-system -o yaml | \
-#    sed -e "s/strictARP: true/strictARP: false/" | kubectl apply -f - -n kube-system
-#  register: rollback_strict_arp
-#  ignore_errors: yes
-#- debug: msg={{ rollback_strict_arp }}
-#
-#
-#- name: Remove Metallb Config Yaml File and Kubernetes-ingress
-#  file:
-#    path: "{{ item }}"
-#    state: absent
-#  register: remove_config_yaml_and_kube_ingress_dir
-#  with_items:
-#    - "{{ base_path }}/metallb-config-vmware.yaml"
-#    - "{{ base_path }}/kubernetes-ingress"
-#- debug: msg={{ remove_config_yaml_and_kube_ingress_dir }}
+- name: Delete NGINX Ingress Config
+  file:
+    path: "{{ base_path }}/{{ item }}"
+    state: absent
+  register: delete_nginx_ingress_config
+  ignore_errors: true
+  with_items:
+    - "kubevirt-manager-ingress-class.yaml"
+    - "create-kubevirt-manager-ingress.yaml"
+- debug: msg={{ delete_nginx_ingress_config }}
 

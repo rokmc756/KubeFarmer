@@ -8,9 +8,8 @@
     chdir: "{{ base_path }}"
   with_items:
     - { svc: "mongodb-mongodb-sharded", lb_ip_addr: "{{ _mongodb.lb.ip_addr }}" }
-  when: db is defined and db == true
 - debug: msg={{ delete_mongodb_lb }}
-  when: print_debug == true and ( db is defined and db == true )
+  when: print_debug == true
 
 
 - name: Delete Mongo Express Load Balancer
@@ -22,7 +21,6 @@
     chdir: "{{ base_path }}"
   with_items:
     - { svc: "mongo-express", lb_ip_addr: "{{ _mongo_express.lb.ip_addr }}" }
-  when: express is defined and express == true
 - debug: msg={{ delete_mongo_express_lb }}
-  when: print_debug == true and ( express is defined and express == true )
+  when: print_debug == true
 

@@ -8,6 +8,42 @@
   when: print_debug == true
 
 
+- name: Copy Cluster Local PVC Config Yaml
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ base_path }}/{{ item }}"
+  register: copy_cluster_local_pvc_config_yaml
+  with_items:
+    - "express-storage-class.yaml"
+    - "express-storage-pv.yaml"
+    - "express-storage-pvc.yaml"
+- debug: msg={{ copy_cluster_local_pvc_config_yaml }}
+
+
+- name: Cluster Settings for a Production Cluster Running in a Dynamic Cloud Environment including VMware
+  shell: |
+    kubectl create -f {{ item }}
+  register: create_pvc
+  with_items:
+    - "express-storage-class.yaml"
+    - "express-storage-pv.yaml"
+    - "express-storage-pvc.yaml"
+  args:
+    chdir: "{{ base_path }}/"
+- debug: msg={{ create_pvc }}
+  when: print_debug == true
+
+
+- name: Copy MongoDB Config Values Yaml
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ base_path }}/{{ item }}"
+  register: copy_mongodb_config_values_yaml
+  with_items:
+    - "mongodb-values.yaml"
+- debug: msg={{ copy_mongodb_config_values_yaml }}
+
+
 - name: Copy Mongo Express Config Yaml
   template:
     src: "{{ item }}.j2"

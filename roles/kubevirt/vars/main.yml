@@ -1,6 +1,6 @@
 base_path: /root
 
-kubevirt:
+_kubevirt:
   install: true
   major_version: 1
   minor_version: 15
@@ -8,7 +8,6 @@ kubevirt:
   build_version:
   clone_git: true
   nvme: true
-  lb_ip_addr: "192.168.1.217"
   k8s:
     major_version: 1
     minor_version: 30
@@ -19,51 +18,31 @@ kubevirt:
     metadata:
       name: kubevirt-loadbalancer
       namespace: kubevirt
-  ingress:
-    metadata:
-      name: kubevirt-ingress
-      namespace: nginx-ingress
     hostname: "kubevirt.jtest.pivotal.io"
   kernel_parameters:
     - "net.ipv4.neigh.default.gc_thresh1 = 0"       # For ARP Cache
   manager:
     install: true
+  prometheus:
+    ip_addr: 192.168.1.215
+  virt_api:
+    ip_addr: 192.168.1.214
+  virt_exportproxy:
+    ip_addr: 192.168.1.213
+
+
+_kubevirt_manager:
+  install: true
+  namespace: kubevirt-manager
+  major_version:
+  minor_version:
+  patch_version:
   lb:
     install: true
+    ip_addr: "192.168.1.216"
 
 
-metallb:
-  install: false
-  major_version: 0
-  minor_version: 14
-  patch_version: 8
-  vmware:
-    kind:
-      ipaddrpool:
-        metadata:
-          name: first-pool
-          namespace: metallb-system
-        spec:
-          ips_range: 192.168.1.210-192.168.1.250
-      l2advertise:
-        metadata:
-          name: example
-          namespace: metallb-system
-  baremetal:
-    kind:
-      configmap:
-        metadata:
-          name: config
-          namespace: metallb-system
-        data:
-          config:
-            ipaddr_pools:
-              name: default
-              protocol: layer2
-              ips_range: 192.168.1.210-192.168.1.250
-
-
-helm:
+_helm:
   enable_repo: false
   major_version: 3
   minor_version:
@@ -71,27 +50,41 @@ helm:
   build_version:
 
 
-cert_manager:
+_cm:
   install: false
   major_version: 1
   minor_version: 7
   patch_version: 1
 
 
-ingress:
-  install: false
-  major_version:
-  minor_version:
-  patch_version:
-  k8s:
-    name: k8s-ingress
-    major_version: 3
-    minor_version: 0
-    patch_version: 2
-  nginx:
+_nginx:
+  ingress:
+    install: true
     name: nginx-ingress
+    class_name: kubevirt-ingress-class
+    namespace: "nginx-ingress"
     major_version:
     minor_version:
     patch_version:
-    build_version:
+    replica: 1
+    hostname: kubevirt
+    domain: jtest.pivotal.io
+    service: kubevirt-manager
+    ip_addr: "192.168.1.217"
+    port: 8080
+  k8s_ingress:
+    major_version: 3
+    minor_version: 0
+    patch_version: 2
+
+
+_ssl:
+  dir: "{{ base_path }}/kubevirt-certs"
+  days: 3660
+  country: "KR"
+  state: "Seoul"
+  location: "Guro"
+  organization: "Pivotal"
+  common_name: "jest.pivotal.io"
+  email: "rokmc756@gmail.com"
 

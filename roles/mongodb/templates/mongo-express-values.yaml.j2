@@ -67,7 +67,6 @@ extraEnvVarsCM:
 extraEnvVarsSecret:
 mongodbServer: {{ _mongodb.lb.ip_addr }}
 mongodbPort: 27017
-# mongodbEnableAdmin: false
 mongodbEnableAdmin: true
 mongodbAdminUsername: root
 mongodbAdminPassword: "changeme"
@@ -89,7 +88,13 @@ existingSecretKeyBasicAuthPassword: basic-auth-password
 
 mongodb:
   enabled: true
-  # enabled: false
+  persistence:
+    enabled: true
+    storageClass: "{{ _mongo_express.storage_class }}"
+    existingClaim: "mongo-express-mongodb"
+    accessModes:
+      - ReadWriteOnce
+    size: 8Gi
 
 
 tests:

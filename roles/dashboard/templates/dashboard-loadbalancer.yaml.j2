@@ -19,7 +19,7 @@ spec:
       port: 443
       targetPort: 8443
   type: LoadBalancer
-  loadBalancerIP: {{ dashboard.lb_ip_addr }}
+  loadBalancerIP: {{ _dashboard.lb.ip_addr }}
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -30,7 +30,7 @@ metadata:
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
 spec:
   rules:
-    - host: {{ dashboard.ingress.hostname }}
+    - host: {{ _dashboard.ingress.hostname }}
       http:
         paths:
           - path: /

@@ -6,7 +6,7 @@
 
 - name: Clone KubeVirt Manager
   shell: |
-    git -C /root clone https://github.com/kubevirt-manager/kubevirt-manager
+    git -C {{ base_path }} clone https://github.com/kubevirt-manager/kubevirt-manager
   register: create_kubevirt_operator
   when: kubevirt_manager_dir_existed.stat.exists != True
   ignore_errors: true
@@ -23,7 +23,7 @@
     state: "{{ item.state }}"
   register: change_server_name
   with_items:
-    - { regexp: "^    server_name:*", line: "    server_name: {{ kubevirt.hostname }};", dest: "default.conf", state: present }
+    - { regexp: "^    server_name:*", line: "    server_name: {{ _kubevirt.hostname }};", dest: "default.conf", state: present }
 - debug: msg={{ change_server_name }}
   when: print_debug == true
 
@@ -117,6 +117,7 @@
     - secret
 - debug: msg={{ restart_kubevirt_manager_deployment }}
   when: print_debug == true
+
 
 # echo "changeme" > htpasswd-file
 # cat htpasswd-file | base64 -w0

@@ -5,18 +5,18 @@
     dest: "{{ base_path }}/kubevirt-loadbalancer.yaml"
   register: copy_kubevirt_lb_config_yaml
 - debug: msg={{ copy_kubevirt_lb_config_yaml }}
+# kubectl apply -f kubevirt-loadbalancer.yaml
 
 
-- name: Apply KubeVirt Load Balancer
+- name: Apply KubeVirt Manager Load Balancer
   shell: |
-    kubectl apply -f kubevirt-loadbalancer.yaml
-  register: apply_kubevirt_lb
+    kubectl patch svc {{ item.svc }} -n {{ _kubevirt_manager.namespace }} -p '{"spec": {"type": "LoadBalancer", "loadBalancerIP": "{{ item.lb_ip_addr }}"}}'
+  register: apply_mongodb_lb
   ignore_errors: yes
   args:
-    chdir: "/root"
-- debug: msg={{ apply_kubevirt_lb }}
+    chdir: "{{ base_path }}"
+  with_items:
+    - { svc: "kubevirt-manager", lb_ip_addr: "{{ _kubevirt_manager.lb.ip_addr }}" }
+- debug: msg={{ apply_mongodb_lb }}
+  when: print_debug == true
 
-
-# Change CluserIP to LoadBalancer
-# kubectl -n kubernetes-dashboard patch svc kubernetes-dashboard \
-# -p '{"spec": {"ports": [{"port": 443,"targetPort": 443,"name": "https"},{"port": 80,"targetPort": 80,"name": "http"}],"type": "LoadBalancer"}}'

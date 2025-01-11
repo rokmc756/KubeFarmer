@@ -1,0 +1,100 @@
+wildfly:
+	@if [ "${r}" = "uninit" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-wildfly.yml -e '{"${s}": True}' --tags='uninit';\
+			else\
+				echo "No actions to configure wildfly";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-wildfly.yml -e '{wildfly_all: True}' --tags='uninit';\
+			else\
+				echo "No actions to configure wildfly";\
+			fi\
+		else\
+			echo "No Actions to configure wildfly";\
+		fi;\
+	elif [ "${r}" = "reinit" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-wildfly.yml -e '{"${s}": True}' --tags='reinit';\
+			else\
+				echo "No actions to configure wildfly";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-wildfly.yml -e '{wildfly_all: True}' --tags='reinit';\
+			else\
+				echo "No actions to configure wildfly";\
+			fi\
+		else\
+			echo "No Actions to configure wildfly";\
+		fi;\
+	elif [ "${r}" = "prepare" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-wildfly.yml -e '{"${s}": True}' --tags='prepare';\
+			else\
+				echo "No actions to configure wildfly";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-wildfly.yml -e '{wildfly_all: True}' --tags='prepare';\
+			else\
+				echo "No actions to configure wildfly";\
+			fi\
+		else\
+			echo "No Actions to configure wildfly";\
+		fi;\
+	elif [ "${r}" = "install" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-wildfly.yml -e '{"${s}": True}' --tags='install';\
+			else\
+				echo "No actions to install wildfly";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-wildfly.yml -e '{wildfly_all: True}' --tags='install';\
+			else\
+				echo "No actions to install wildfly";\
+			fi\
+		else\
+			echo "No actions to install wildfly";\
+		fi;\
+	elif [ "${r}" = "uninstall" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-wildfly.yml -e '{"${s}": True}' --tags='uninstall';\
+			else\
+				echo "No actions to uninstall wildfly";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-wildfly.yml -e '{wildfly_all: True}' --tags='uninstall';\
+			else\
+				echo "No actions to uninstall wildfly";\
+			fi\
+		fi;\
+	elif [ "${r}" = "upgrade" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-wildfly.yml -e '{"${s}": True}' --tags='upgrade';\
+			else\
+				echo "No actions to uninstall wildfly";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-wildfly.yml -e '{wildfly_all: True}' --tags='upgrade';\
+			else\
+				echo "No actions to uninstall wildfly";\
+			fi\
+		else\
+			echo "No actions to uninstall wildfly";\
+		fi;\
+	else\
+		echo "No actions to wildfly role";\
+		exit;\
+	fi
+

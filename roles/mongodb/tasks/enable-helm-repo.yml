@@ -13,38 +13,22 @@
 - debug: msg={{ install_helm }}
 
 
-- name: Add MongoDB Helm Repo
+- name: Add Helm Repositories
   shell: |
-    /usr/local/bin/helm repo add bitnami https://charts.bitnami.com/bitnami
-  register: add_mongodb_helm_repo
-  when: db is defined and db == true
-- debug: msg={{ add_mongodb_helm_repo }}
-  when: print_debug == true and ( db is defined and db == true )
-
-
-- name: Add Mongo Express Helm Repo
-  shell: |
-    /usr/local/bin/helm repo add {{ _mongo_express.repo_name }} {{ _mongo_express.download_link }}
-  register: add_mongo_express_helm_repo
-  when: express is defined and express == true
-- debug: msg={{ add_mongo_express_helm_repo }}
-  when: print_debug == true and ( express is defined and express == true )
-
-
-- name: Add Jetstack Helm Repo
-  shell: |
-    /usr/local/bin/helm repo add jetstack https://charts.jetstack.io
-  register: add_jetstack_helm_repo
-  when: db is defined and db == true
-- debug: msg={{ add_jetstack_helm_repo }}
-  when: print_debug == true and ( db is defined and db == true )
+    /usr/local/bin/helm repo add {{ item.name }} {{ item.link }}
+  register: add_helm_repos
+  with_items:
+    - { name: 'jetstack', link: 'https://charts.jetstack.io' }
+    - { name: 'bitnami',  link: 'https://charts.bitnami.com/bitnami' }
+    - { name: 'cowboysysop', link: 'https://cowboysysop.github.io/charts/' }
+    - { name: 'nginx-ingress',  link: 'https://kubernetes.github.io/ingress-nginx' }
+- debug: msg={{ add_helm_repos }}
 
 
 - name: Update Helm Repo
   shell: |
     /usr/local/bin/helm repo update
   register: update_helm_repo
-  when: db is defined and db == true
 - debug: msg={{ update_helm_repo }}
-  when: print_debug == true and ( db is defined and db == true )
+  when: print_debug == true
 

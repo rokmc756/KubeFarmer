@@ -38,7 +38,7 @@
 - name: Delete Kubernetes the Dashboard UI
   become: true
   shell: |
-    kubectl delete -f https://raw.githubusercontent.com/kubernetes/dashboard/v{{ dashboard.major_version }}.{{ dashboard.minor_version }}.{{ dashboard.patch_version }}/aio/deploy/recommended.yaml
+    kubectl delete -f https://raw.githubusercontent.com/kubernetes/dashboard/v{{ _dashboard.major_version }}.{{ _dashboard.minor_version }}.{{ _dashboard.patch_version }}/aio/deploy/recommended.yaml
   register: delete_dashboard_ui
   ignore_errors: true
 - debug: msg={{ delete_dashboard_ui }}

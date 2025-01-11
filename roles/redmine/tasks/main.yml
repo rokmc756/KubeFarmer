@@ -29,7 +29,7 @@
   when: _kustomize.install == true and inventory_hostname in groups['master']
 
 
-- name: Deploy Minio
+- name: Deploy Redmine
   import_tasks: install-redmine.yml
   tags: install
   when: (( redmine is defined and redmine == true ) or ( redmine_all is defined and redmine_all == true )) and inventory_hostname in groups['master']
@@ -47,7 +47,7 @@
   when: (( lb is defined and lb == true ) or ( redmine_all is defined and redmine_all == true )) and inventory_hostname in groups['master']
 
 
-- name: Destroy Minio
+- name: Destroy Redmine
   import_tasks: uninstall-redmine.yml
   tags: uninstall
   when: (( redmine is defined and redmine == true ) or ( redmine_all is defined and redmine_all == true )) and inventory_hostname in groups['master']

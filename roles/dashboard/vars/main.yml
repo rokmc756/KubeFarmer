@@ -1,10 +1,7 @@
 ---
-# external_dashboard_port: 10443
-# internal_dashboard_port: 443
-
 base_path: /root
 
-dashboard:
+_dashboard:
   install: true
   major_version: 2
   minor_version: 7
@@ -12,7 +9,6 @@ dashboard:
   build_version:
   clone_git: true
   nvme: true
-  lb_ip_addr: "192.168.1.212"
   k8s:
     major_version: 1
     minor_version: 30
@@ -34,40 +30,10 @@ dashboard:
     install: true
   lb:
     install: true
+    ip_addr: "192.168.1.212"
 
 
-#metallb:
-#  install: true
-#  major_version: 0
-#  minor_version: 14
-#  patch_version: 8
-#  vmware:
-#    kind:
-#      ipaddrpool:
-#        metadata:
-#          name: first-pool
-#          namespace: metallb-system
-#        spec:
-#          ips_range: 192.168.1.210-192.168.1.250
-#      l2advertise:
-#        metadata:
-#          name: example
-#          namespace: metallb-system
-#  baremetal:
-#    kind:
-#      configmap:
-#        metadata:
-#          name: config
-#          namespace: metallb-system
-#        data:
-#          config:
-#            ipaddr_pools:
-#              name: default
-#              protocol: layer2
-#              ips_range: 192.168.1.210-192.168.1.250
-
-
-helm:
+_helm:
   enable_repo: true
   major_version: 3
   minor_version:
@@ -75,27 +41,9 @@ helm:
   build_version:
 
 
-cert_manager:
+_cm:
   install: true
   major_version: 1
   minor_version: 7
   patch_version: 1
-
-
-#ingress:
-#  install: true
-#  major_version:
-#  minor_version:
-#  patch_version:
-#  k8s:
-#    name: k8s-ingress
-#    major_version: 3
-#    minor_version: 0
-#    patch_version: 2
-#  nginx:
-#    name: nginx-ingress
-#    major_version:
-#    minor_version:
-#    patch_version:
-#    build_version:
 
