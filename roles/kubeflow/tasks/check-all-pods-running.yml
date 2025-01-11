@@ -1,0 +1,58 @@
+
+
+- name: Validate if All KubeFlow Containers are Running
+  shell: |
+    kubectl get pods -n {{ _kubeflow.namespace }} | sed 1d | awk '{print $3}' | grep -E "Running|Terminating" | wc -l
+  register: check_kubeflow_containers
+  ignore_errors: true
+  until: check_kubeflow_containers.stdout|int == 0
+  retries: 100
+  delay: 10
+  with_items:
+    - { svc: "logstash-", repo: "logstash", replica: "{{ _elasticsearch.logstash.replica }}" }
+- debug: msg={{ check_elasticsearch_containers }}
+  ignore_errors: true
+  when: print_debug == true
+
+
+#pod/admission-webhook-deployment-5b88996c9f-rs5hz            1/1     Running             0               5m36s
+#pod/cache-server-5c87d6f8f5-s7w5s                            2/2     Running             0               7m12s
+#pod/centraldashboard-7d79c45f4d-pskhv                        2/2     Running             0               5m37s
+#pod/jupyter-web-app-deployment-74c49cb8ff-zh649              2/2     Running             0               5m33s
+#pod/katib-controller-6c5684bf6b-6bf7x                        1/1     Running             0               5m39s
+#pod/katib-db-manager-7866998cf9-9qd8j                        0/1     CrashLoopBackOff    3 (49s ago)     5m39s
+#pod/katib-mysql-65d74487b7-cs2qw                             0/1     ContainerCreating   0               5m39s
+#pod/katib-ui-657777bbff-lp69k                                2/2     Running             0               5m38s
+#pod/kserve-controller-manager-7b4989568c-jhcp8               2/2     Running             0               6m48s
+#pod/kserve-models-web-app-8485988f76-nhd64                   2/2     Running             0               5m40s
+#pod/kubeflow-pipelines-profile-controller-5dcf75b69f-45fkx   1/1     Running             0               7m12s
+#pod/metacontroller-0                                         1/1     Running             0               7m12s
+#pod/metadata-envoy-deployment-7fc8c8c85f-hwxk5               1/1     Running             0               7m12s
+#pod/metadata-grpc-deployment-d94cc8676-5tjnx                 1/2     CrashLoopBackOff    6 (32s ago)     7m12s
+#pod/metadata-writer-6f4c6d898-gl9xk                          2/2     Running             3 (70s ago)     7m12s
+#pod/minio-5dc6ff5b96-wd742                                   0/2     Init:0/1            0               7m12s
+#pod/ml-pipeline-9c8bc4bc-wd56m                               1/2     Running             4 (26s ago)     7m12s
+#pod/ml-pipeline-persistenceagent-5876c667f5-z75xl            2/2     Running             0               7m12s
+#pod/ml-pipeline-scheduledworkflow-57dcbc7799-ddfnb           2/2     Running             0               7m12s
+#pod/ml-pipeline-ui-dbc8ff8f8-5hwfw                           2/2     Running             0               7m11s
+#pod/ml-pipeline-viewer-crd-75f665d644-nf9vd                  2/2     Running             1 (6m49s ago)   7m11s
+#pod/ml-pipeline-visualizationserver-5445b658d5-8qmk5         2/2     Running             0               7m11s
+#pod/mysql-5b446b5744-p5454                                   0/2     Init:0/1            0               7m11s
+#pod/notebook-controller-deployment-7978975c5b-xsnvx          2/2     Running             1 (5m18s ago)   5m34s
+#pod/profiles-deployment-688cc95cdb-hl9f2                     3/3     Running             2 (5m4s ago)    5m28s
+#pod/pvcviewer-controller-manager-5b8c866b58-xn2l7            3/3     Running             0               5m29s
+#pod/tensorboard-controller-deployment-85c9d7f7dd-kmj9w       3/3     Running             2 (4m57s ago)   5m24s
+#
+#
+#
+#
+#pod/admission-webhook-deployment-5b88996c9f-rs5hz            0/1     ContainerCreating   0              49s
+#pod/katib-mysql-65d74487b7-cs2qw                             0/1     ContainerCreating   0              52s
+#pod/metadata-grpc-deployment-d94cc8676-5tjnx                 1/2     CrashLoopBackOff    4 (9s ago)     2m25s
+#pod/minio-5dc6ff5b96-wd742                                   0/2     Init:0/1            0              2m25s
+#pod/ml-pipeline-visualizationserver-5445b658d5-8qmk5         0/2     PodInitializing     0              2m24s
+#pod/mysql-5b446b5744-p5454                                   0/2     Init:0/1            0              2m24s
+#pod/profiles-deployment-688cc95cdb-hl9f2                     2/3     CrashLoopBackOff    1 (17s ago)    41s
+#pod/tensorboard-controller-deployment-85c9d7f7dd-kmj9w       2/3     CrashLoopBackOff    1 (10s ago)    37s
+#pod/katib-db-manager-7866998cf9-9qd8j                        0/1     Error               1 (70s ago)     2m17s
+

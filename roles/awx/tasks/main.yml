@@ -68,7 +68,6 @@
 - name: Disable Helm Repository
   import_tasks: disable-helm-repo.yml
   tags: uninstall
-  when: inventory_hostname in groups['master']
   when: (( repo is defined and repo == true ) or ( awx_all is defined and awx_all == true )) and inventory_hostname in groups['master']
 
 

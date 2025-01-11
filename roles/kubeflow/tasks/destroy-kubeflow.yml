@@ -3,6 +3,7 @@
   shell: |
     find {{ base_path }}/manifests -name "istio-[0-9]*" | cut -d / -f 5
   register: get_istio_version
+  ignore_errors: true
   args:
     chdir: "{{ base_path }}/manifests"
   environment:
@@ -15,6 +16,7 @@
   shell: |
     find {{ base_path }}/manifests/common/cert-manager -name "base" | grep "cert-manager/base" | sed 's/\/root\/manifests\///g'
   register: get_cert_manager_dir
+  ignore_errors: true
   args:
     chdir: "{{ base_path }}/manifests"
   environment:
@@ -27,6 +29,7 @@
   shell: |
     find {{ base_path }}/manifests/common/cert-manager -name "base" | grep "kubeflow-issuer/base" | sed 's/\/root\/manifests\///g'
   register: get_kubeflow_issuer_dir
+  ignore_errors: true
   args:
     chdir: "{{ base_path }}/manifests"
   environment:
@@ -101,6 +104,7 @@
 - name: Check if the status of ContainerCreating is Still Terminating
   shell: kubectl get pods -A | sed 1d | awk '{print $4}' | sort | uniq
   register: check_container_terminating
+  ignore_errors: true
   until: check_container_terminating.stdout.find("Terminating") == -1
   retries: 100
   delay: 10

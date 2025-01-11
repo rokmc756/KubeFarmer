@@ -1,0 +1,39 @@
+---
+- name: Delete KubeFlow Load Balancer
+  shell: |
+    kubectl delete -f "{{ base_path }}/{{ item }}"
+  register: delete_kubeflow_lb
+  ignore_errors: true
+  with_items:
+    - "istio-ingressgateway-loadbalancer.yaml"
+- debug: msg={{ delete_kubeflow_lb }}
+
+
+- name: Check KubeFlow Pods
+  shell: kubectl get all -n kubeflow
+  register: check_kubeflow_pods
+  ignore_errors: true
+  until: check_kubeflow_pods.stdout.find("Terminating") == -1
+  retries: 20
+- debug: msg={{ check_kubeflow_pods }}
+
+
+- name: Delete KubeFlow Loadbalancer Config Yaml
+  file:
+    path: "{{ item }}"
+    state: absent
+  register: delete_kubeflow_lb_config_yaml
+  ignore_errors: true
+  with_items:
+    - "auth-policy.yaml"
+    - "kubeflow-certs.yaml"
+    - "kubeflow-loadbalancer.yaml"
+    - "minio-loadbalancer.yaml"
+    - "katib-ui-loadbalancer.yaml"
+    - "ml-pipeline-ui-loadbalancer.yaml"
+    - "centraldashboard-loadbalancer.yaml"
+    - "tensorboards-web-app-loadbalancer.yaml"
+    - "istio-ingressgateway-loadbalancer.yaml"
+    - "patch-ingress.yaml"
+- debug: msg={{ delete_kubeflow_lb_config_yaml }}
+

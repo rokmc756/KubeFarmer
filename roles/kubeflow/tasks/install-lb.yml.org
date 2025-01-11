@@ -1,0 +1,65 @@
+---
+- name: Copy KubeFlow Loadbalancer Config Yaml
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ base_path }}/{{ item }}"
+  register: copy_kubeflow_lb_config_yaml
+  with_items:
+    - "auth-policy.yaml"
+    - "kubeflow-certs.yaml"
+    - "kubeflow-loadbalancer.yaml"
+    - "minio-loadbalancer.yaml"
+    - "katib-ui-loadbalancer.yaml"
+    - "ml-pipeline-ui-loadbalancer.yaml"
+    - "centraldashboard-loadbalancer.yaml"
+    - "tensorboards-web-app-loadbalancer.yaml"
+    - "istio-ingressgateway-loadbalancer.yaml"
+    - "patch-ingress.yaml"
+- debug: msg={{ copy_kubeflow_lb_config_yaml }}
+
+
+# --type=strategic
+#- name: Apply Ingress Patch for SSL Connection
+#  shell: |
+#    kubectl -n kubeflow patch --type=merge gateways.networking.istio.io kubeflow-gateway --patch-file {{ base_path }}/patch-ingress.yaml
+#  register: apply_ingress_patch
+#- debug: msg={{ apply_ingress_patch }}
+
+
+- name: Create KubeFlow Load Balancer
+  shell: |
+    kubectl apply -f "{{ base_path }}/{{ item }}"
+  register: create_rancher_lb
+  with_items:
+    - "istio-ingressgateway-loadbalancer.yaml"
+    - "auth-policy.yaml"
+- debug: msg={{ create_rancher_lb }}
+
+
+- name: Check if the status of ContainerCreating is Still Creating
+  shell: kubectl get pods -n {{ kubeflow.namespace }} | sed 1d | awk '{print $3}' | sort | uniq
+  register: check_container_creating
+  until: check_container_creating.stdout.find("CrashLoopBackOff") == -1
+  retries: 100
+  delay: 10
+- debug: msg={{ check_container_creating }}
+
+
+
+- name: Check if the status of ContainerCreating is Still Creating
+  shell: kubectl get pods -n {{ kubeflow.namespace }} | sed 1d | awk '{print $3}' | sort | uniq
+  register: check_container_creating
+  until: check_container_creating.stdout.find("ContainerCreating") == -1
+  retries: 100
+  delay: 10
+- debug: msg={{ check_container_creating }}
+
+
+- name: Check if the status of Container is Still CrashLoopBackOff
+  shell: kubectl get pods -n {{ kubeflow.namespace }} | sed 1d | awk '{print $3}' | sort | uniq
+  register: check_container_crashloopbackoff
+  until: check_container_creating.stdout.find("CrashLoopBackOff") == -1
+  retries: 100
+  delay: 10
+- debug: msg={{ check_container_crashloopbackoff }}
+

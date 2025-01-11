@@ -1,39 +1,13 @@
 ---
-- name: Delete KubeFlow Load Balancer
+- name: Delete ISTIO Ingress Gateway Load Balancer
   shell: |
-    kubectl delete -f "{{ base_path }}/{{ item }}"
+    kubectl patch svc {{ item.svc }} -n {{ item.ns }} -p '{"spec": {"type": "ClusterIP"}}'
   register: delete_kubeflow_lb
-  ignore_errors: true
+  ignore_errors: yes
+  args:
+    chdir: "{{ base_path }}"
   with_items:
-    - "istio-ingressgateway-loadbalancer.yaml"
+    - { ns: "istio-system", svc: "istio-ingressgateway", lb_ip_addr: "{{ _kubeflow.lb.ip_addr }}" }
 - debug: msg={{ delete_kubeflow_lb }}
-
-
-- name: Check KubeFlow Pods
-  shell: kubectl get all -n kubeflow
-  register: check_kubeflow_pods
-  ignore_errors: true
-  until: check_kubeflow_pods.stdout.find("Terminating") == -1
-  retries: 20
-- debug: msg={{ check_kubeflow_pods }}
-
-
-- name: Delete KubeFlow Loadbalancer Config Yaml
-  file:
-    path: "{{ item }}"
-    state: absent
-  register: delete_kubeflow_lb_config_yaml
-  ignore_errors: true
-  with_items:
-    - "auth-policy.yaml"
-    - "kubeflow-certs.yaml"
-    - "kubeflow-loadbalancer.yaml"
-    - "minio-loadbalancer.yaml"
-    - "katib-ui-loadbalancer.yaml"
-    - "ml-pipeline-ui-loadbalancer.yaml"
-    - "centraldashboard-loadbalancer.yaml"
-    - "tensorboards-web-app-loadbalancer.yaml"
-    - "istio-ingressgateway-loadbalancer.yaml"
-    - "patch-ingress.yaml"
-- debug: msg={{ delete_kubeflow_lb_config_yaml }}
+  when: print_debug == true
 

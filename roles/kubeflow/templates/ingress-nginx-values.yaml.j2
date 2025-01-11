@@ -11,7 +11,6 @@ controller:
     type: LoadBalancer
     externalIPs: []
     loadBalancerIP: "{{ _nginx.ingress.ip_addr }}"
-    # loadBalancerSourceRanges: [ "192.168.1.250/30" ]
     ipFamilyPolicy: SingleStack
     ipFamilies:
       - IPv4

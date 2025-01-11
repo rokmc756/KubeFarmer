@@ -1,14 +1,14 @@
 base_path: /root
 
-kustomize:
-  install: true
+_kustomize:
+  install: false
   download_url: "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"
   major_version: 5
   minor_version: 4
   patch_version: 2
 
 
-kubeflow:
+_kubeflow:
   install: true
   deploy: true
   major_version: 1
@@ -25,6 +25,8 @@ kubeflow:
   nfs_server: "192.168.1.90"
   nfs_root_dir: /nfs-root
   lb_ip_addr: "192.168.1.223"
+  storage_path: "/mnt/kubeflow-storage"
+  storage_class: "kubeflow-storage"
   k8s:
     major_version: 1
     minor_version: 29
@@ -46,40 +48,10 @@ kubeflow:
     - "fs.inotify.max_user_watches=1255360"
   lb:
     install: true
+    ip_addr: "192.168.1.218"
 
 
-metallb:
-  install: false
-  major_version: 0
-  minor_version: 13
-  patch_version: 11
-  vmware:
-    kind:
-      ipaddrpool:
-        metadata:
-          name: first-pool
-          namespace: metallb-system
-        spec:
-          ips_range: 192.168.1.210-200.168.1.250
-      l2advertise:
-        metadata:
-          name: example
-          namespace: metallb-system
-  baremetal:
-    kind:
-      configmap:
-        metadata:
-          name: config
-          namespace: metallb-system
-        data:
-          config:
-            ipaddr_pools:
-              name: default
-              protocol: layer2
-              ips_range: 192.168.1.210-192.168.1.250
-
-
-helm:
+_helm:
   enable_repo: true
   major_version: 3
   minor_version:
@@ -87,7 +59,7 @@ helm:
   build_version:
 
 
-nfs_provider:
+_nfs_provider:
   install: true
   major_version:
   minor_version:
@@ -95,35 +67,22 @@ nfs_provider:
   server_ip_addr: "192.168.1.90"
 
 
-nginx:
-  install: true
-  major_version:
-  minor_version:
-  patch_version:
-  k8s_ingress:
-    major_version: 3
-    minor_version: 0
-    patch_version: 2
-  ingress:
-    name: nginx-ingress
-    major_version:
-    minor_version:
-    patch_version:
-    build_version:
-
-
 _nginx:
   ingress:
     install: true
     name: nginx-ingress
-    class_name: spark-ingress-class
+    class_name: kubeflow-ingress-class
     namespace: "nginx-ingress"
     major_version:
     minor_version:
     patch_version:
-    hostname: spark
+    hostname: kubeflow
+    # ns: "istio-system",
     domain: jtest.pivotal.io
-    ip_addr: "192.168.1.249"
+    service: "istio-ingressgateway"
+    ip_addr: "192.168.1.223"
+    port: "80"
+    replica: 1
   k8s_ingress:
     major_version: 3
     minor_version: 0

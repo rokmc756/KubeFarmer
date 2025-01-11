@@ -3,7 +3,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: katib-mysql-pvc
-  namespace: {{ kubeflow.namespace }}
+  namespace: {{ _kubeflow.namespace }}
 spec:
   storageClassName: kubeflow-storage
   accessModes:
@@ -17,9 +17,9 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: mysql-pv-claim
-  namespace: {{ kubeflow.namespace }}
+  namespace: {{ _kubeflow.namespace }}
 spec:
-  storageClassName: kubeflow-storage
+  storageClassName: {{ _kubeflow.storage_class }}
   accessModes:
     - ReadWriteOnce
   volumeMode: Filesystem
@@ -31,9 +31,9 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: minio-pvc
-  namespace: {{ kubeflow.namespace }}
+  namespace: {{ _kubeflow.namespace }}
 spec:
-  storageClassName: kubeflow-storage
+  storageClassName: {{ _kubeflow.storage_class }}
   accessModes:
     - ReadWriteOnce
   volumeMode: Filesystem

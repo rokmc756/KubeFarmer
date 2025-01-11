@@ -23,25 +23,5 @@ spec:
     protocol: TCP
     targetPort: 8443
   type: LoadBalancer
-  loadBalancerIP: {{ kubeflow.lb_ip_addr }}
-#---
-#apiVersion: networking.k8s.io/v1
-#kind: Ingress
-#metadata:
-#  name: istio-ingressgateway-ingress
-#  namespace: istio-system
-#  annotations:
-#    nginx.ingress.kubernetes.io/ssl-redirect: "false"
-#spec:
-#  rules:
-#    - host: kubeflow.jtest.pivotal.io
-#      http:
-#        paths:
-#          - path: /
-#            pathType: Prefix
-#            backend:
-#              service:
-#                name: istio-ingressgateway
-#                port:
-#                  name: http
+  loadBalancerIP: {{ _kubeflow.lb_ip_addr }}
 

@@ -3,7 +3,7 @@ apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
   name: kubeflow-storage
-  namespace: {{ kubeflow.namespace }}
+  namespace: {{ _kubeflow.namespace }}
 provisioner: kubernetes.io/no-provisioner
 allowVolumeExpansion: true
 ---

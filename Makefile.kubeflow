@@ -1,0 +1,100 @@
+kubeflow:
+	@if [ "${r}" = "uninit" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-kubeflow.yml -e '{"${s}": True}' --tags='uninit';\
+			else\
+				echo "No actions to configure kubeflow";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-kubeflow.yml -e '{kubeflow_all: True}' --tags='uninit';\
+			else\
+				echo "No actions to configure kubeflow";\
+			fi\
+		else\
+			echo "No Actions to configure kubeflow";\
+		fi;\
+	elif [ "${r}" = "reinit" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-kubeflow.yml -e '{"${s}": True}' --tags='reinit';\
+			else\
+				echo "No actions to configure kubeflow";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-kubeflow.yml -e '{kubeflow_all: True}' --tags='reinit';\
+			else\
+				echo "No actions to configure kubeflow";\
+			fi\
+		else\
+			echo "No Actions to configure kubeflow";\
+		fi;\
+	elif [ "${r}" = "prepare" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-kubeflow.yml -e '{"${s}": True}' --tags='prepare';\
+			else\
+				echo "No actions to configure kubeflow";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-kubeflow.yml -e '{kubeflow_all: True}' --tags='prepare';\
+			else\
+				echo "No actions to configure kubeflow";\
+			fi\
+		else\
+			echo "No Actions to configure kubeflow";\
+		fi;\
+	elif [ "${r}" = "install" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-kubeflow.yml -e '{"${s}": True}' --tags='install';\
+			else\
+				echo "No actions to install kubeflow";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-kubeflow.yml -e '{kubeflow_all: True}' --tags='install';\
+			else\
+				echo "No actions to install kubeflow";\
+			fi\
+		else\
+			echo "No actions to install kubeflow";\
+		fi;\
+	elif [ "${r}" = "uninstall" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-kubeflow.yml -e '{"${s}": True}' --tags='uninstall';\
+			else\
+				echo "No actions to uninstall kubeflow";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-kubeflow.yml -e '{kubeflow_all: True}' --tags='uninstall';\
+			else\
+				echo "No actions to uninstall kubeflow";\
+			fi\
+		fi;\
+	elif [ "${r}" = "upgrade" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-kubeflow.yml -e '{"${s}": True}' --tags='upgrade';\
+			else\
+				echo "No actions to uninstall kubeflow";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-kubeflow.yml -e '{kubeflow_all: True}' --tags='upgrade';\
+			else\
+				echo "No actions to uninstall kubeflow";\
+			fi\
+		else\
+			echo "No actions to uninstall kubeflow";\
+		fi;\
+	else\
+		echo "No actions to kubeflow role";\
+		exit;\
+	fi
+

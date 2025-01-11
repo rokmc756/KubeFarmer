@@ -127,7 +127,6 @@
   when: print_debug == true
 
 # line 116: mapping key "observedGeneration" already defined at line 85
-#
 # - "apps/pipeline/upstream/env/platform-agnostic | kubectl apply -f - "                                # Additionally appended thirdly
 # - "apps/pipeline/upstream/cluster-scoped-resources | kubectl apply -f -"                              # Additionally appended secondly
 # - "apps/katib/upstream/installs/katib-standalone | kubectl apply -f -"                                # 18

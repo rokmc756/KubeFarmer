@@ -10,9 +10,9 @@
     git -C "{{ base_path }}" clone https://github.com/kubernetes-sigs/nfs-subdir-external-provisioner.git
   register: git_clone_nfs_provider
   ignore_errors: true
-  when: kubeflow.clone_git == true and nfs_provider_dir_existed.stat.exists != True
+  when: _kubeflow.clone_git == true and nfs_provider_dir_existed.stat.exists != True
 - debug: msg={{ git_clone_nfs_provider }}
-  when: print_debug == true and kubeflow.clone_git == true and nfs_provider_dir_existed.stat.exists != True
+  when: print_debug == true and _kubeflow.clone_git == true and nfs_provider_dir_existed.stat.exists != True
 
 
 - name: Create RBAC
@@ -33,9 +33,9 @@
     state: "{{ item.state }}"
   register: replace_nfs_server_lines
   with_items:
-    - { regexp: '^              value: 10.3.243.101', line: '              value: {{ nfs_provider.server_ip_addr }}', state: present }
+    - { regexp: '^              value: 10.3.243.101', line: '              value: {{ _nfs_provider.server_ip_addr }}', state: present }
     - { regexp: '^              value: /ifs/kubernetes', line: '              value: /nfs-root', state: present }
-    - { regexp: '^            server: 10.3.243.101', line: '            server: {{ nfs_provider.server_ip_addr }}', state: present }
+    - { regexp: '^            server: 10.3.243.101', line: '            server: {{ _nfs_provider.server_ip_addr }}', state: present }
     - { regexp: '^            path: /ifs/kubernetes', line: '            path: /nfs-root', state: present }
 - debug: msg={{ replace_nfs_server_lines  }}
   when: print_debug == true

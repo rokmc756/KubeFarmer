@@ -1,7 +1,7 @@
 ---
 - name: Create NFS Directory
   file:
-    path: "{{ kubeflow.nfs_root_dir }}"
+    path: "{{ _kubeflow.nfs_root_dir }}"
     state: directory
     mode: 0777
 

@@ -22,13 +22,13 @@
 
 - name: Clone Kubeflow
   shell: |
-    git -C "{{ base_path }}" clone --single-branch --branch v{{ kubeflow.major_version }}.{{ kubeflow.minor_version }}.{{ kubeflow.patch_version }} \
+    git -C "{{ base_path }}" clone --single-branch --branch v{{ _kubeflow.major_version }}.{{ _kubeflow.minor_version }}.{{ _kubeflow.patch_version }} \
     https://github.com/kubeflow/manifests.git
   register: git_clone_kubeflow
   ignore_errors: true
-  when: kubeflow.clone_git == true and kubeflow_dir_existed.stat.exists != True
+  when: _kubeflow.clone_git == true and kubeflow_dir_existed.stat.exists != True
 - debug: msg={{ git_clone_kubeflow }}
-  when: print_debug == true and kubeflow.clone_git == true and kubeflow_dir_existed.stat.exists != True
+  when: print_debug == true and _kubeflow.clone_git == true and kubeflow_dir_existed.stat.exists != True
 
 
 - name: Create KubeFlow PVC
