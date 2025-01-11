@@ -4,25 +4,17 @@
     dest: "{{ base_path }}/awx-loadbalancer.yaml"
   register: copy_awx_lb_config_yaml
 - debug: msg={{ copy_awx_lb_config_yaml }}
-
-
-#- name: Create AWX Load Balancer
-#  shell: |
 #    kubectl apply -f awx-loadbalancer.yaml
-#  register: create_awx_lb
-#  args:
-#    chdir: "{{ base_path }}/"
-#- debug: msg={{ create_awx_lb }}
 
 
-#- name: Apply AWX Load Balancer
-#  shell: |
-#    kubectl patch svc {{ item.svc }} -n {{ _awx.namespace }} -p '{"spec": {"type": "LoadBalancer", "loadBalancerIP": "{{ item.lb_ip_addr }}"}}'
-#  register: apply_awx_lb
-#  args:
-#    chdir: "{{ base_path }}"
-#  with_items:
-#    - { svc: "awx-service", lb_ip_addr: "{{ _awx.lb.ip_addr }}" }
-#- debug: msg={{ apply_awx_lb }}
-#  when: print_debug == true
+- name: Apply AWX Load Balancer
+  shell: |
+    kubectl patch svc {{ item.svc }} -n {{ _awx.namespace }} -p '{"spec": {"type": "LoadBalancer", "loadBalancerIP": "{{ item.lb_ip_addr }}"}}'
+  register: apply_awx_lb
+  args:
+    chdir: "{{ base_path }}"
+  with_items:
+    - { svc: "awx-service", lb_ip_addr: "{{ _awx.lb.ip_addr }}" }
+- debug: msg={{ apply_awx_lb }}
+  when: print_debug == true
 

@@ -55,14 +55,14 @@
   when: print_debug == true
 
 
-- name: Copy ArgoCD Loadbalancer Config Yaml
-  template:
-    src: "{{ item }}.j2"
-    dest: "{{ base_path }}/{{ item }}"
-  register: copy_argocd_lb_config_yaml
-  with_items:
-    - "argocd-values.yaml"
-- debug: msg={{ copy_argocd_lb_config_yaml }}
+#- name: Copy ArgoCD Loadbalancer Config Yaml
+#  template:
+#    src: "{{ item }}.j2"
+#    dest: "{{ base_path }}/{{ item }}"
+#  register: copy_argocd_lb_config_yaml
+#  with_items:
+#    - "argocd-values.yaml"
+#- debug: msg={{ copy_argocd_lb_config_yaml }}
 
 
 - name: Deploy ArgoCD

@@ -1,5 +1,5 @@
 ---
-- name: Check OS ( argocd }
+- name: Check OS ( ArgoCD }
   fail: msg="Not a Red Hat based system!"
   when: ansible_os_family != 'RedHat' or ansible_os_family != 'CentOS' or ansible_os_family != 'Rocky'
 
@@ -14,47 +14,35 @@
 - name: Enable Helm Repository
   import_tasks: enable-helm-repo.yml
   tags: install
-  when: helm.enable_repo == true and inventory_hostname in groups['master']
+  when: (( repo is defined and repo == true ) or ( argocd_all is defined and argocd_all == true )) and inventory_hostname in groups['master']
 
 
 - name: Deploy ArgoCD
   import_tasks: install-argocd.yml
   tags: install
-  when: ( argocd is defined and argocd == true ) and inventory_hostname in groups['master']
-
-
-- name: Install Cert Manager
-  import_tasks: install-cert-manager.yml
-  tags: install
-  when: cert_manager.install == true and inventory_hostname in groups['master']
+  when: (( argocd is defined and argocd == true ) or ( argocd_all is defined and argocd_all == true )) and inventory_hostname in groups['master']
 
 
 - name: Install Load Balancer
   import_tasks: install-lb.yml
   tags: install
-  when: _argocd.lb.install == true and inventory_hostname in groups['master']
+  when: (( lb is defined and lb == true ) or ( argocd_all is defined and argocd_all == true )) and inventory_hostname in groups['master']
 
 
 - name: Uninstall Load Balancer
   import_tasks: uninstall-lb.yml
   tags: uninstall
-  when: _argocd.lb.install == true and inventory_hostname in groups['master']
-
-
-- name: Uninstall Cert Manager
-  import_tasks: uninstall-cert-manager.yml
-  tags: uninstall
-  when: cert_manager.install == true and inventory_hostname in groups['master']
+  when: (( lb is defined and lb == true ) or ( argocd_all is defined and argocd_all == true )) and inventory_hostname in groups['master']
 
 
 - name: Destroy ArgoCD
   import_tasks: uninstall-argocd.yml
   tags: uninstall
-  when: ( argocd is defined and argocd == true ) and inventory_hostname in groups['master']
+  when: (( argocd is defined and argocd == true ) or ( argocd_all is defined and argocd_all == true )) and inventory_hostname in groups['master']
 
 
 - name: Disable Helm Repository
   import_tasks: disable-helm-repo.yml
   tags: uninstall
-  when: helm.enable_repo == true and inventory_hostname in groups['master']
+  when: (( repo is defined and repo == true ) or ( argocd_all is defined and argocd_all == true )) and inventory_hostname in groups['master']
 

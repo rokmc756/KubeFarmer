@@ -7,7 +7,6 @@ _argocd:
   minor_version: 0
   patch_version: 0
   build_version:
-  lb_ip_addr: "192.168.1.213"
   namespace: argocd
   storage_class: "argocd-storage"
   storage_path: "/mnt/argocd-storage"
@@ -37,10 +36,10 @@ _argocd:
     - "net.ipv4.neigh.default.gc_thresh1 = 0"       # For ARP Cache
   lb:
     install: true
-    ip_addr: "192.168.1.213"
+    ip_addr: "192.168.1.219"
 
 
-helm:
+_helm:
   enable_repo: true
   major_version: 3
   minor_version:
@@ -48,7 +47,7 @@ helm:
   build_version:
 
 
-cert_manager:
+_cm:
   install: false
   major_version: 1
   minor_version: 7

@@ -26,16 +26,12 @@ _awx:
     metadata:
       name: awx-loadbalancer
       namespace: awx
-  ingress:
-    metadata:
-      name: awx-ingress
-      namespace: awx
     hostname: "awx.jtest.pivotal.io"
   kernel_parameters:
     - "net.ipv4.neigh.default.gc_thresh1 = 0"   # For ARP Cache
   lb:
     install: true
-    ip_addr: "192.168.1.219"
+    ip_addr: "192.168.1.218"
 
 
 total_awx_containers: 4
@@ -58,9 +54,12 @@ _nginx:
     major_version:
     minor_version:
     patch_version:
+    replica: 1
     hostname: awx
+    service: awx-service
     domain: jtest.pivotal.io
     ip_addr: "192.168.1.219"
+    port: 80
   k8s_ingress:
     major_version: 3
     minor_version: 0

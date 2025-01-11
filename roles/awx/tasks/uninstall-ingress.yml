@@ -11,10 +11,10 @@
 - debug: msg={{ copy_nginx_ingress_config }}
 
 
-- name: Delete NGINX Ingress for awx
+- name: Delete NGINX Ingress
   shell: |
     kubectl delete -f {{ item }}
-  register: delete_nginx_ingress_for_awx
+  register: delete_nginx_ingress
   ignore_errors: true
   with_items:
     - "create-awx-ingress.yaml"
@@ -23,7 +23,7 @@
     chdir: "{{ base_path }}/"
   environment:
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-- debug: msg={{ delete_nginx_ingress_for_awx }}
+- debug: msg={{ delete_nginx_ingress }}
   when: print_debug == true
 
 
@@ -48,7 +48,7 @@
   retries: 100
   delay: 10
   with_items:
-    - { svc: "ingress-nginx-controller-", replica: "{{ _awx.locators.replica }}" }
+    - { svc: "ingress-nginx-controller-", replica: "{{ _nginx.ingress.replica }}" }
 - debug: msg={{ check_nginx_ingress_controller_container }}
   when: print_debug == true
 

@@ -3,6 +3,9 @@ kind: Ingress
 metadata:
   name: {{ _nginx.ingress.name }}
   namespace: {{ _awx.namespace }}
+  annotations:
+    nginx.ingress.kubernetes.io/affinity: "cookie"                      # Added for login problem into multiple rook containers
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
 spec:
   ingressClassName: {{ _nginx.ingress.class_name }}
   tls:
@@ -17,6 +20,6 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: awx
+            name: {{ _nginx.ingress.service }}
             port:
-              number: 80
+              number: {{ _nginx.ingress.port }}

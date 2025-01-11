@@ -144,27 +144,27 @@
 # pod/awx-web-869f9bf988-9mxj5                           3/3     Running     0          5m26s
 
 
-- name: Get AXE Web Pod Name
-  shell: |
-    kubectl -n awx get pods | grep awx-web | awk '{print $1}'
-  register: get_awx_web_pod_name
-- debug: msg={{ get_awx_web_pod_name }}
-  when: print_debug == true
+#- name: Get AXE Web Pod Name
+#  shell: |
+#    kubectl -n awx get pods | grep awx-web | awk '{print $1}'
+#  register: get_awx_web_pod_name
+#- debug: msg={{ get_awx_web_pod_name }}
+#  when: print_debug == true
 
 
-- name: Create AXE Admin User and Password
-  expect:
-    command: kubectl exec -n awx pods/{{ get_awx_web_pod_name.stdout }} -it -- awx-manage createsuperuser
-    responses:
-      (?i)Username: "{{ _awx.admin_user }}"
-      (?i)Email address: "{{ _awx.admin_email }}"
-      (?i)Password: "{{ _awx.admin_password }}"
-      (?i)Password (again): "{{ _awx.admin_password }}"
-    echo: yes
-    timeout: 5
-  register: create_axe_admin_user
-- debug: msg={{ create_axe_admin_user }}
-  when: print_debug == true
-  # no_log: true
-  # you don't want to show passwords in your logs
+#- name: Create AXE Admin User and Password
+#  expect:
+#    command: kubectl exec -n awx pods/{{ get_awx_web_pod_name.stdout }} -it -- awx-manage createsuperuser
+#    responses:
+#      (?i)Username: "{{ _awx.admin_user }}"
+#      (?i)Email address: "{{ _awx.admin_email }}"
+#      (?i)Password: "{{ _awx.admin_password }}"
+#      (?i)Password (again): "{{ _awx.admin_password }}"
+#    echo: yes
+#    timeout: 5
+#  register: create_axe_admin_user
+#- debug: msg={{ create_axe_admin_user }}
+#  when: print_debug == true
+#  # no_log: true
+#  # you don't want to show passwords in your logs
 

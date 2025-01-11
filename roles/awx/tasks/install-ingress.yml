@@ -1,4 +1,3 @@
----
 - name: Create Namespace for Persistent Volumes
   shell: |
     kubectl create namespace {{ _nginx.ingress.namespace }}
@@ -44,8 +43,21 @@
   retries: 100
   delay: 10
   with_items:
-    - { svc: "ingress-nginx-controller-", replica: "{{ _awx.locators.replica }}" }
+    - { svc: "ingress-nginx-controller-", replica: "{{ _nginx.ingress.replica }}" }
 - debug: msg={{ check_nginx_ingress_controller_container }}
+  when: print_debug == true
+
+
+- name: Validate if NGINX Ingress Controller got IP Address
+  shell: |
+    kubectl -n {{ _nginx.ingress.namespace }} get svc | grep -v admission | grep nginx-ingress | awk '{print $4}'
+  register: check_nginx_ingress_controller_container_ip
+  until: check_nginx_ingress_controller_container_ip.stdout.find(item.ip) != -1
+  retries: 100
+  delay: 10
+  with_items:
+    - { svc: "ingress-nginx-controller-", ip: "{{ _nginx.ingress.ip_addr }}" }
+- debug: msg={{ check_nginx_ingress_controller_container_ip }}
   when: print_debug == true
 
 
@@ -60,17 +72,43 @@
 - debug: msg={{ copy_nginx_ingress_config }}
 
 
-- name: Apply NGINX Ingress
+- name: Apply NGINX Ingress Class
   shell: |
-    kubectl apply -f {{ item }}
-  register: apply_nginx_ingress
+    kubectl apply -f {{ base_path }}/{{ item }}
+  register: apply_nginx_ingress_class
   with_items:
     - "awx-ingress-class.yaml"
-    - "create-awx-ingress.yaml"
   args:
-    chdir: "{{ base_path }}/"
+    chdir: "{{ base_path }}"
   environment:
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-- debug: msg={{ apply_nginx_ingress }}
+- debug: msg={{ apply_nginx_ingress_class }}
+  when: print_debug == true
+
+
+- name: Validate if NGINX Controller Adminission is Connected
+  shell: |
+    nc -zv $(kubectl -n nginx-ingress get svc | grep nginx-controller-admission | awk '{print $3}') 443 2>&1 | grep Connected | awk '{print $2}'
+  register: check_nginx_controller_admission
+  until: check_nginx_controller_admission.stdout.find(item.string) != -1
+  retries: 100
+  delay: 10
+  with_items:
+    - { svc: "nginx-controller-admission", string: "Connected" }
+- debug: msg={{ check_nginx_controller_admission }}
+  when: print_debug == true
+
+
+- name: Create AWX Ingress
+  shell: |
+    kubectl apply -f {{ base_path }}/{{ item }}
+  register: create_elastic_ingress
+  with_items:
+    - "create-awx-ingress.yaml"
+  args:
+    chdir: "{{ base_path }}"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ create_elastic_ingress }}
   when: print_debug == true
 

@@ -6,10 +6,12 @@ metadata:
   namespace: {{ _awx.namespace }}
 spec:
   postgres_storage_class: {{ _awx.storage_class }}
-  service_type: LoadBalancer                           # NodePort or ClusterIP or LoadBalancer
-  loadbalancer_protocol: http
-  loadbalancer_ip: {{ _awx.lb.ip_addr }}
-  loadbalancer_port: 80
+  service_type: ClusterIP
+
+  # service_type: LoadBalancer                           # NodePort or ClusterIP or LoadBalancer
+  # loadbalancer_protocol: http
+  # loadbalancer_ip: {{ _awx.lb.ip_addr }}
+  # loadbalancer_port: 80
 
 
 # ingress_type: none ( Default ) # Ingress or Route

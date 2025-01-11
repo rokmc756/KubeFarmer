@@ -20,7 +20,7 @@
 - name: Enable Helm Repository
   import_tasks: enable-helm-repo.yml
   tags: install
-  when: (( awx is defined and awx == true ) or ( awx_all is defined and awx_all == true )) and inventory_hostname in groups['master']
+  when: (( repo is defined and repo == true ) or ( awx_all is defined and awx_all == true )) and inventory_hostname in groups['master']
 
 
 - name: Deploy AWX
@@ -33,6 +33,24 @@
   import_tasks: install-lb.yml
   tags: install
   when: (( lb is defined and lb == true ) or ( awx_all is defined and awx_all == true )) and inventory_hostname in groups['master']
+
+
+- name: Install NGINX Ingress
+  import_tasks: install-ingress.yml
+  tags: install
+  when: (( ingress is defined and ingress == true ) or ( awx_all is defined and awx_all == true )) and inventory_hostname in groups['master']
+
+
+- name: Change Admin Password
+  import_tasks: change-admin-password.yml
+  tags: install
+  when: (( password is defined and password == true ) or ( rook_all is defined and rook_all == true )) and inventory_hostname in groups['master']
+
+
+- name: Unstall NGINX Ingress
+  import_tasks: uninstall-ingress.yml
+  tags: uninstall
+  when: (( ingress is defined and ingress == true ) or ( kubevirt_all is defined and kubevirt_all == true )) and inventory_hostname in groups['master']
 
 
 - name: Uninstall Load Balancer
@@ -50,7 +68,8 @@
 - name: Disable Helm Repository
   import_tasks: disable-helm-repo.yml
   tags: uninstall
-  when: (( awx is defined and awx == true ) or ( awx_all is defined and awx_all == true )) and inventory_hostname in groups['master']
+  when: inventory_hostname in groups['master']
+  when: (( repo is defined and repo == true ) or ( awx_all is defined and awx_all == true )) and inventory_hostname in groups['master']
 
 
 - name: Remove Kernel Parameters

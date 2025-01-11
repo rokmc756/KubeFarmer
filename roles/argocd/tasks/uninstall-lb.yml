@@ -7,5 +7,5 @@
   args:
     chdir: "{{ base_path }}"
   with_items:
-    - { svc: "argocd-server",     lb_ip_addr: "192.168.1.234" }
+    - { svc: "argocd-server",     lb_ip_addr: "{{ _argocd.lb.ip_addr }}" }
 - debug: msg={{ delete_argocd_lb }}
