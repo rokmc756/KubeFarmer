@@ -77,8 +77,8 @@ _nginx:
     minor_version:
     patch_version:
     hostname: kubeflow
-    # ns: "istio-system",
     domain: jtest.pivotal.io
+    # service: "centraldashboard"
     service: "istio-ingressgateway"
     ip_addr: "192.168.1.223"
     port: "80"
@@ -87,6 +87,7 @@ _nginx:
     major_version: 3
     minor_version: 0
     patch_version: 2
+    # kubeflow                    service/centraldashboard                                            ClusterIP      10.104.196.251   <none>          80/TCP
 
 
 cont_pv_dirs:

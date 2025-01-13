@@ -16,14 +16,14 @@
 # https://tommypagy.tistory.com/658
 - name: Enable Helm Repository
   import_tasks: enable-helm-repo.yml
-  tags: install
+  tags: enable, install
   when: (( repo is defined and repo == true ) or ( kubeflow_all is defined and kubeflow_all == true )) and inventory_hostname in groups['master']
 
 
 - name: Apply Kernel Parameters for KubeFlow
   import_tasks: apply-kubeflow-kernel-parameters.yml
-  tags: install
-  when: (( kubeflow is defined and kubeflow == true ) or ( kubeflow_all is defined and kubeflow_all == true )) and inventory_hostname not in groups['nfs_server']
+  tags: install, enable
+  when: (( param is defined and param == true ) or ( kubeflow_all is defined and kubeflow_all == true )) and inventory_hostname not in groups['nfs_server']
 
 
 - name: Configure NFS Server

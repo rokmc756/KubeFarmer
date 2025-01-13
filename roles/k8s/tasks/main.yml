@@ -77,7 +77,7 @@
 
 - name: Stop Docker and Kube Services
   import_tasks: stop-kube-services.yml
-  tags: uninstall
+  tags: uninstall, clean
   when: ( kube is defined and kube == true ) or ( k8s_all is defined and k8s_all == true )
 
 

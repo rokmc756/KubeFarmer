@@ -62,7 +62,7 @@
 
 - name: Setup Networking with Kube-Flannel
   shell: |
-    kubectl apply -f /root/kube-flannel.yml
+    kubectl apply -f {{ k8s.base_path }}/kube-flannel.yml
   register: kube_flannel_network_setup
   when: inventory_hostname in groups['master']
 - debug: msg={{ kube_flannel_network_setup }}

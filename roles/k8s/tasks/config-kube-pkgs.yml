@@ -30,9 +30,20 @@
   command: sysctl --system
 
 
-- name: Initialize Containerd
+- name: Create Default Containerd Directory
+  file:
+    path: "/etc/containerd"
+    state: directory
+    owner: root
+    group: root
+    mode: 0777
+  register: create_default_containerd_directory
+- debug: msg={{ create_default_containerd_directory }}
+  when: print_debug == true
+
+
+- name: Config Default Containerd
   shell: |
-    mkdir /etc/containerd
     containerd config default > /etc/containerd/config.toml
 
 

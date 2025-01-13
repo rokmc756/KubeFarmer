@@ -3,9 +3,20 @@
   import_tasks: security/disable-security.yml
 
 
+- name: Create Default Containerd Directory
+  file:
+    path: "/etc/containerd"
+    state: directory
+    owner: root
+    group: root
+    mode: 0777
+  register: create_default_containerd_directory
+- debug: msg={{ create_default_containerd_directory }}
+  when: print_debug == true
+
+
 - name: Config Default Containerd
   shell: |
-    mkdir /etc/containerd
     containerd config default > /etc/containerd/config.toml
   notify:
     - Stop Docker
@@ -79,7 +90,7 @@
 
 
 - name: Setup CNI Networking Plugin
-  import_tasks: setup-cni-plugin.yml
+  import_tasks: cni/setup-cni-plugin.yml
   when: k8s.cni.install == true and inventory_hostname in groups['master']
 
 
@@ -147,17 +158,17 @@
 
 
 - name: Check the Status fo CNI Network Plugin
-  import_tasks: check-cni-network-plugin.yml
+  import_tasks: cni/check-cni-network-plugin.yml
   when: k8s.cni.install == true and inventory_hostname in groups['master']
 
 
 - name: Apply BGP Network for Calico
-  import_tasks: apply-bgp-network.yaml
+  import_tasks: cni/apply-bgp-network.yaml
   when: k8s.cni.calico.install == true and k8s.cni.calico.ipip.enable == true and inventory_hostname in groups['master']
 
 
 - name: Apply Calico Network and Containerd
-  import_tasks: apply-cni-mtu.yaml
+  import_tasks: cni/apply-cni-mtu.yaml
   when: k8s.cni.change_mtu == true
 
 

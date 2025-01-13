@@ -1,11 +1,11 @@
 ---
-#- name: Reset Kubernetes
-#  command: kubeadm reset -f
-#  register: reset_kube
-#  ignore_errors: true
-#  when: inventory_hostname in groups['master']
-#- debug: msg={{ reset_kube }}
-#  when: print_debug == true and inventory_hostname in groups['master']
+- name: Reset Kubernetes
+  command: kubeadm reset -f
+  register: reset_kube
+  ignore_errors: true
+  when: inventory_hostname in groups['master']
+- debug: msg={{ reset_kube }}
+  when: print_debug == true and inventory_hostname in groups['master']
 
 
 - name: Unlock Those Versions to Prevent Them from Being Automatically Updated

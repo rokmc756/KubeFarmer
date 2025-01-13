@@ -2,15 +2,17 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: {{ _nginx.ingress.name }}
-  namespace: {{ _kubeflow.namespace }}
+  namespace: istio-system
   annotations:
-    nginx.ingress.kubernetes.io/affinity: "cookie"                      # Added for login problem into multiple rook containers
-    # nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/affinity: "cookie"
+    nginx.ingress.kubernetes.io/session-cookie-hash: "sha1"
+    nginx.ingress.kubernetes.io/session-cookie-name: "route"
 spec:
   ingressClassName: {{ _nginx.ingress.class_name }}
   tls:
   - hosts:
-    - "*.{{ _nginx.ingress.hostname }}"
+    - "*.{{ _nginx.ingress.domain }}"
     secretName: secret-tls
   rules:
   - host: "{{ _nginx.ingress.hostname }}.{{ _nginx.ingress.domain }}"
