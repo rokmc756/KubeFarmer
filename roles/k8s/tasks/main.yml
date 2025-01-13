@@ -1,135 +1,100 @@
 ---
 - name: Check OS ( Kubernetes )
-  fail: msg="Not a Red Hat or SuSE based system!"
+  fail: msg="Not a Red Hat or SuSE or Ubuntu based system!"
   when: ansible_os_family != 'RedHat' or  ansible_os_family != 'CentOS' or  ansible_os_family != 'Rocky' or ansible_os_family != 'Suse' or ansible_os_family != 'Ubuntu'
 
 
 - name: Set Facts For Network and Packages Informations
   import_tasks: set-k8s-facts.yml
-  tags:
-    - reinit
-    - install
-    - uninstall
-    - add-node
-    - remove-node
+  tags: init,uninit,reinit,prepare,clean,enable,disable,install,uninstall,add,remove,upgrade,downgrade,deploy,destroy
 
 
-- name: Disable SELinux and Stop Firewalld
-  import_tasks: disable-selinux.yml
-  tags:
-    - install
-    - reinit
-  notify:
-    - Stop Firewalld
+- name: Disable Seicurity Features with SELinux and Firewalld
+  import_tasks: security/disable-security.yml
+  tags: disable, reinit, install
+  when: ( sec is defined and sec == true ) or ( k8s_all is defined and k8s_all == true )
 
 
 - name: Install Kubernetes Packages
   import_tasks: install-kube-pkgs.yml
   tags: install
-  when: install_kube_pkgs is defined and install_kube_pkgs == true
+  when: ( pkgs is defined and pkgs == true ) or ( k8s_all is defined and k8s_all == true )
 
 
 - name: Configure Kubernetes Packages
   import_tasks: config-kube-pkgs.yml
   tags: install
-  when: config_kube_software is defined and config_kube_software == true
+  when: ( config is defined and config == true ) or ( k8s_all is defined and k8s_all == true )
 
 
 - name: Initialize Native Kubernetes Cluster
   import_tasks: init-k8s.yml
-  tags: install
-  when: init_k8s is defined and init_k8s == true
+  tags: init, install
+  when: ( kube is defined and kube == true ) or ( k8s_all is defined and k8s_all == true )
 
 
 - name: Add Additional Slave Master Nodes
-  import_tasks: add-masters.yml
-  tags:
-    - install
-    - add-node
-  when: multi_master is defined and multi_master == true
-
-
-- name: Remove Additional Slave Master Nodes
-  import_tasks: remove-masters.yml
-  tags:
-    - uninstall
-    - remove-node
-  when: multi_master is defined and multi_master == true
+  import_tasks: ext/add-masters.yml
+  tags: install, add
+  when: ( master is defined and master == true )
 
 
 - name: Add Additional Worker Nodes
-  import_tasks: add-workers.yml
-  tags:
-    - install
-    - add-node
-  when: add_workers is defined and add_workers == true
-
-
-- name: Enable Helm Repository
-  import_tasks: enable-helm-repo.yml
-  tags: install
-  when: _helm.enable_repo == true and inventory_hostname in groups['master']
+  import_tasks: ext/add-workers.yml
+  tags: install, add
+  when: ( worker is defined and worker == true )
 
 
 - name: Install Metallb
   import_tasks: install-metallb.yml
-  when: _metallb.install == true and inventory_hostname in groups['master']
-
-
-- name: Install NGINX Ingress
-  import_tasks: install-ingress.yml
-  when: _ingress.install == true and inventory_hostname in groups['master']
-
-
-- name: Uninstall NGINX Ingress
-  import_tasks: uninstall-ingress.yml
-  when: _ingress.install == true and inventory_hostname in groups['master']
+  tags: install
+  when: (( lb is defined and lb == true ) or ( k8s_all is defined and k8s_all == true )) and inventory_hostname in groups['master']
 
 
 - name: Uninstall Metallb
   import_tasks: uninstall-metallb.yml
-  when: _metallb.uninstall == true and inventory_hostname in groups['master']
-
-
-- name: Disable Helm Repository
-  import_tasks: disable-helm-repo.yml
   tags: uninstall
-  when: _helm.enable_repo == true and inventory_hostname in groups['master']
+  when: (( lb is defined and lb == true ) or ( k8s_all is defined and k8s_all == true )) and inventory_hostname in groups['master']
 
 
 - name: Remove Additional Worker Nodes
-  import_tasks: remove-workers.yml
-  tags:
-    - uninstall
-    - remove-node
-  when: remove_workers is defined and remove_workers == true
+  import_tasks: ext/remove-workers.yml
+  tags: uninstall, remove
+  when: ( worker is defined and worker == true )
+
+
+- name: Remove Additional Slave Master Nodes
+  import_tasks: ext/remove-masters.yml
+  tags: uninstall, remove
+  when: ( master is defined and master == true )
 
 
 - name: Reinitialize Kubernetes Cluster
-  import_tasks: reinit.yml
+  import_tasks: reinit-k8s.yml
   tags: reinit
+  when: ( kube is defined and kube == true ) or ( k8s_all is defined and k8s_all == true )
 
 
 - name: Stop Docker and Kube Services
   import_tasks: stop-kube-services.yml
   tags: uninstall
-  when: stop_services is defined and stop_services == true
+  when: ( kube is defined and kube == true ) or ( k8s_all is defined and k8s_all == true )
 
 
 - name: Uninstall Prerequistes Packages
-  import_tasks: uninstall-pkgs.yml
+  import_tasks: uninstall-kube-pkgs.yml
   tags: uninstall
-  when: uninstall_pkgs is defined and uninstall_pkgs == true
+  when: ( pkgs is defined and pkgs == true ) or ( k8s_all is defined and k8s_all == true )
 
 
 - name: Delete Kube Config Files
   import_tasks: uninstall-configs.yml
   tags: uninstall
-  when: uninstall_config is defined and uninstall_config == true
+  when: ( config is defined and config == true ) or ( k8s_all is defined and k8s_all == true )
 
 
 - name: Reboot All Systems
   import_tasks: reboot-required.yml
-  tags: uninstall
-  when: reboot_required is defined and reboot_required == true
+  tags: uninstall, clean
+  when: ( reboot is defined and reboot == true ) or ( k8s_all is defined and k8s_all == true )
 

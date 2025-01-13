@@ -1,17 +1,12 @@
 ---
-- name: Disable SELinux Policy
-  import_tasks: disable-selinux.yml
+- name: Disable Security with Firewalld and SELinux Policy
+  import_tasks: security/disable-security.yml
 
 
-#- name: Initialize Containerd
-#  shell: |
-#    mkdir /etc/containerd
-#    containerd config default > /etc/containerd/config.toml
-
-
-- name: Stop Services Before Reinitializating Kubernetes
+- name: Config Default Containerd
   shell: |
-    echo "Stop Services Before Reinitialization"
+    mkdir /etc/containerd
+    containerd config default > /etc/containerd/config.toml
   notify:
     - Stop Docker
     - Stop Containerd
@@ -19,8 +14,8 @@
     - Restart Containerd
 
 
-- name: Force to Stop and Restart Services
-  meta: flush_handlers
+#- name: Force to Stop and Restart Services
+#  meta: flush_handlers
 
 
 - name: Reset Kubernetes
@@ -34,17 +29,20 @@
 
 
 - name: Config Image Pull
-  command: kubeadm config images pull
+  shell: |
+    kubeadm config images pull --v=5
+  register: config_image_pull
+  until: config_image_pull is succeeded
+  retries: 30
+  delay: 15
   when: inventory_hostname in groups['master']
 
 
-# kubeadm init --apiserver-advertise-address={{ hostvars[groups['master'][0]]['ansible_'~netdev1]['ipv4']['address'] }} \
 # kubeadm init --control-plane-endpoint={{ hostvars[groups['master'][0]][_netdev]['ipv4']['address'] }} --upload-certs \
-# kubeadm init --control-plane-endpoint={{ k8s.net.vipaddr }} --upload-certs \
-- name: Initialize Kubernetes Master to Create Cluster
+- name: Initialize Kubernetes Master
   shell: |
-    kubeadm init --apiserver-advertise-address={{ hostvars[groups['master'][0]][_netdev]['ipv4']['address'] }} \
-    --pod-network-cidr={{ k8s.cni.pod_network }} --cri-socket=unix:///run/containerd/containerd.sock --ignore-preflight-errors=all --v=5
+    kubeadm init --apiserver-advertise-address={{ hostvars[groups['master'][0]][_netdev]['ipv4']['address'] }} --pod-network-cidr={{ k8s.cni.pod_network }} \
+    --cri-socket=unix:///run/containerd/containerd.sock --ignore-preflight-errors=all --v=5 --upload-certs
   async: 360
   poll: 5
   register: kubeadm_init
@@ -99,15 +97,7 @@
   # For earlier than 1.21.x version - kubectl taint nodes --all node-role.kubernetes.io/master-
 
 
-- name: Confirm that the Kubectl Command is Activated
-  command: kubectl get nodes
-  register: kubectl_get_nodes
-  when: inventory_hostname in groups['master']
-- debug: msg={{ kubectl_get_nodes }}
-  when: print_debug == true and inventory_hostname in groups['master']
-
-
-- name: Create POD for Master As Well
+- name: Create POD for Master
   lineinfile:
     path: "{{ k8s.base_path }}/.bashrc"
     line: "{{ item.content }}"
@@ -124,33 +114,9 @@
   when: print_debug == true and inventory_hostname in groups['master']
 
 
-#- name: Setup CNI Networking Plugin
-#  import_tasks: setup-cni-plugin.yml
-#  when: k8s.cni.install == true and inventory_hostname in groups['master']
-
-
-- name: Confirm that the Kubectl Command is Activated
-  command: kubectl get nodes
-  register: kubectl_get_nodes
-  when: inventory_hostname in groups['master']
-- debug: msg={{ kubectl_get_nodes }}
-  when: print_debug == true and inventory_hostname in groups['master']
-
-
-#- name: Reset Kubernetes on Cluster Nodes
-#  command:  kubeadm reset -f
-#  register: kube_cluster_reset
-#  when: inventory_hostname in groups['workers']
-#- debug: msg={{ kube_cluster_reset }}
-#  when: print_debug == true and inventory_hostname in groups['workers']
-
-
-# kubeadm join "{{ hostvars[groups['master'][0]][_netdev]['ipv4']['address'] }}:6443" \
-# kubeadm join "{{ k8s.net.vipaddr }}:6443" \
 - name: Join the Other Kubernetes Nodes to Cluster, the Command must be Run on the Worker Nodes Only
   shell: |
-    kubeadm join "{{ hostvars[groups['master'][0]][_netdev]['ipv4']['address'] }}:6443" \
-    --token "{{ k8s_token }}" --discovery-token-ca-cert-hash "{{ k8s_token_ca_cert }}"
+    kubeadm join "{{ hostvars[groups['master'][0]][_netdev]['ipv4']['address'] }}:6443" --token "{{ k8s_token }}" --discovery-token-ca-cert-hash "{{ k8s_token_ca_cert }}"
   register: store_it_copied
   ignore_errors: yes
   when: inventory_hostname in groups['workers']
@@ -158,51 +124,22 @@
   when: print_debug == true and inventory_hostname in groups['workers']
 
 
-- name: Confirm the Kubectl Command is Activated
-  command: kubectl get nodes
-  register: kubectl_get_nodes
-  when: inventory_hostname in groups['master']
-- debug: msg={{ kubectl_get_nodes }}
-  when: print_debug == true and inventory_hostname in groups['master']
-
-
-#- name: Disable and Stop Docker
-#  systemd:
-#    name: docker
-#    state: stopped
-#    enabled: no
-#  register: docker_stopped
-#  ignore_errors: true
-#  until: docker_stopped is succeeded
-
-
-#- name: Enable and Start Kubelet in Master Node
-#  systemd:
-#    name: kubelet
-#    state: restarted
-#    enabled: yes
-#  register: master_kubelet_restarted
-#  when: inventory_hostname in groups['master']
-#- debug: msg={{ master_kubelet_restarted }}
-#  when: print_debug == true and inventory_hostname in groups['master']
-
-
-- name: Validate if Kubernetes Workers are All Ready
+- name: Validate if Worker Nodes are all Ready
   shell: |
-    kubectl get nodes
+    kubectl get nodes | sed 1d | awk '{print $2}' | grep NotReady | wc -l
   register: check_k8s_workers_status
-  until: check_k8s_workers_status.stdout.find("NotReady") == -1
+  until: check_k8s_workers_status.stdout|int == 0
   retries: 30
   when: inventory_hostname in groups['master']
 - debug: msg={{ check_k8s_workers_status }}
   when: print_debug == true and inventory_hostname in groups['master']
 
 
-- name: Validate if All Containers Are Running
+- name: Validate if all Containers are Running Normally
   shell: |
-    kubectl get pods --all-namespaces -o wide
+    kubectl get pods --all-namespaces -o wide | sed 1d | awk '{print $4}' | grep ContainerCreating | wc -l
   register: all_containers_running_checked
-  until: all_containers_running_checked.stdout.find("ContainerCreating") == -1
+  until: all_containers_running_checked.stdout|int == 0
   retries: 60
   when: inventory_hostname in groups['master']
 - debug: msg={{ all_containers_running_checked }}
@@ -248,30 +185,8 @@
   when: _metallb.install == true and inventory_hostname in groups['master']
 
 
-- name: Install NGINX Ingress
-  import_tasks: install-ingress.yml
-  when: _ingress.install == true and inventory_hostname in groups['master']
-
-
-# rm -rf /var/lib/rook
 - name: Cleanup the NVME Devices
-  shell: |
-    rm -rf /var/lib/rook
-    lsblk
-    for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do nvme format --ses=1 /dev/$nb --force ;done
-    for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do wipefs -a /dev/$nb ;done
-    for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do sgdisk --zap-all /dev/$nb ;done
-    for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do dd if=/dev/zero of=/dev/$nb bs=10M count=10 oflag=direct,dsync ;done
-    for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do blkdiscard /dev/$nb ;done
-    for nb in $(echo 'nvme0n1 nvme0n2 nvme0n3 nvme0n4'); do partprobe /dev/$nb ;done
-  delegate_to: "{{ item }}"
-  delegate_facts: True
-  register: cleanup_ceph_block_devices
-  ignore_errors: true
-  with_items: "{{ groups['all'] }}"
-  when: inventory_hostname in groups['master']
-- debug: msg={{ cleanup_ceph_block_devices }}
-  when: print_debug == true and inventory_hostname in groups['master']
+  import_tasks: cleanup-nvme-devices.yml
 
 
 # Calico CNI
@@ -287,3 +202,4 @@
 # host-cidr, pod-cidr and service-cidrs need to be disjoint (i.e. separate and non-overlapping)
 #
 # https://www.centlinux.com/2022/11/install-kubernetes-master-node-rocky-linux.html
+

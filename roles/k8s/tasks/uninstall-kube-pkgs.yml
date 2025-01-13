@@ -1,0 +1,44 @@
+---
+#- name: Reset Kubernetes
+#  command: kubeadm reset -f
+#  register: reset_kube
+#  ignore_errors: true
+#  when: inventory_hostname in groups['master']
+#- debug: msg={{ reset_kube }}
+#  when: print_debug == true and inventory_hostname in groups['master']
+
+
+- name: Unlock Those Versions to Prevent Them from Being Automatically Updated
+  shell: |
+    {{ unlock_kube_cmds }}
+  register: unlock_kube_cmds
+  ignore_errors: yes
+- debug: msg={{ unlock_kube_cmds }}
+  when: print_debug == true
+
+
+- name: Uninstall Kubeadm Packages
+  package:
+    name: "{{ item }}"
+    state: absent
+  register: uninstall_kube_pkgs
+  ignore_errors: true
+  with_items:
+    - "kubectl"
+    - "kubelet"
+    - "kubeadm"
+- debug: msg={{ uninstall_kube_pkgs }}
+  when: print_debug == true
+
+
+- name: Uninstall Docker Packages
+  package:
+    name: "{{ item }}"
+    state: absent
+  register: uninstall_docker_pkgs
+  ignore_errors: true
+  with_items:
+    - "{{ docker_pkgs }}"
+- debug: msg={{ uninstall_docker_pkgs }}
+  when: print_debug == true
+

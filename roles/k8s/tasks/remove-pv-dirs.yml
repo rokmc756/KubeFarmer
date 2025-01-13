@@ -4,6 +4,7 @@
     path: "/mnt/{{ item }}"
     state: "unmounted" # and absent
   register: unmount_pv_dirs
+  ignore_errors: true
   with_items: "{{ cont_pv_dirs }}"
 
 
@@ -12,6 +13,7 @@
     path: "/mnt/{{ item }}"
     state: absent
   register: remove_pv_dir
+  ignore_errors: true
   with_items: "{{ cont_pv_dirs }}"
 - debug: msg={{ remove_pv_dir }}
   when: print_debug == true
@@ -22,6 +24,7 @@
     path: "{{ item }}"
     state: absent
   register: remove_common_dirs
+  ignore_errors: true
   with_items: "{{ cont_conf_files }}"
 - debug: msg={{ remove_common_dirs }}
   when: print_debug == true

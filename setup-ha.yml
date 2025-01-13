@@ -20,4 +20,3 @@
     print_debug: true
   roles:
     - haproxy
-

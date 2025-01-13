@@ -9,7 +9,7 @@ k8s:
   domain: "jtest.pivotal.io"
   major_version: "1"
   minor_version: "29"
-  patch_version: "0"
+  patch_version: "12"
   build_version: ""
   repo_url: ""
   download_url: ""

@@ -1,5 +1,3 @@
----
-# https://k21academy.com/docker-kubernetes/container-runtime-is-not-running/
 - name: Restart Containerd to Apply Changes in config.toml
   systemd:
     name: containerd
@@ -19,29 +17,32 @@
 
 
 - name: Reset Kubernetes
-  command: kubeadm reset -f
+  shell: |
+    kubeadm reset -f
   when: inventory_hostname in groups['master']
 
 
 - name: Config Image Pull
-  command: kubeadm config images pull
+  shell: |
+    kubeadm config images pull --v=5
+  register: config_image_pull
+  until: config_image_pull is succeeded
+  retries: 30
+  delay: 15
   when: inventory_hostname in groups['master']
-  # Latest version is k8s v1.24.17 for cf-for-k8s
-  # when: ( k8s.major_version|int == 1 and k8s.minor_version|int > 24 ) and inventory_hostname in groups['master']
 
 
 - name: Initialize Kubernetes Master and Create Cluster
   shell: |
     kubeadm init --apiserver-advertise-address={{ hostvars[groups['master'][0]][_netdev]['ipv4']['address'] }} \
-    --pod-network-cidr={{ k8s.cni.pod_network }}  --cri-socket=unix:///run/containerd/containerd.sock --ignore-preflight-errors=all
+    --pod-network-cidr={{ k8s.cni.pod_network }} --cri-socket=unix:///run/containerd/containerd.sock \
+    --ignore-preflight-errors=all --v=5 --upload-certs
   async: 360
   poll: 5
   register: kubeadm_init
   when: inventory_hostname in groups['master']
 - debug: msg={{ kubeadm_init }}
   when: print_debug == true and inventory_hostname in groups['master']
-  # command: kubeadm init --control-plane-endpoint={{ hostvars[groups['master'][0]].ansible_hostname }}
-  # --control-plane-endpoint={{ hostvars[groups['master'][0]][_netdev]['ipv4']['address'] }} --upload-certs \
 
 
 - name: Set Fact for Token CA Certificate
@@ -94,14 +95,6 @@
   # kubectl taint nodes --all node-role.kubernetes.io/master-
 
 
-- name: Confirm that the Kubectl Command is Activated.
-  command: kubectl get nodes
-  register: kubectl_get_nodes
-  when: inventory_hostname in groups['master']
-- debug: msg={{ kubectl_get_nodes }}
-  when: print_debug == true and inventory_hostname in groups['master']
-
-
 - name: Create POD for Master as well
   lineinfile:
     path: "{{ k8s.base_path }}/.bashrc"
@@ -124,14 +117,6 @@
   when: k8s.cni.install == true and inventory_hostname in groups['master']
 
 
-- name: Confirm that the Kubectl Command is Activated.
-  command: kubectl get nodes
-  register: kubectl_get_nodes
-  when: inventory_hostname in groups['master']
-- debug: msg={{ kubectl_get_nodes }}
-  when: print_debug == true and inventory_hostname in groups['master']
-
-
 #- name: Add New Master Nodes
 #  import_tasks: add-new-masters.yml
 #  tags: install
@@ -139,7 +124,8 @@
 
 
 - name: Reset Kubernetes on Cluster Nodes
-  command:  kubeadm reset -f
+  shell: |
+    kubeadm reset -f
   register: kube_cluster_reset
   when: inventory_hostname in groups['workers']
 - debug: msg={{ kube_cluster_reset }}
@@ -147,20 +133,14 @@
 
 
 - name: Join the Other Kubernetes Nodes to Cluster, the Command must be run on the Worker Nodes Only
-  command: kubeadm join "{{ hostvars[groups['master'][0]][_netdev]['ipv4']['address'] }}:6443" --token "{{ k8s_token }}" --discovery-token-ca-cert-hash "{{ k8s_token_ca_cert }}"
+  shell: |
+    kubeadm join "{{ hostvars[groups['master'][0]][_netdev]['ipv4']['address'] }}:6443" \
+    --token "{{ k8s_token }}" --discovery-token-ca-cert-hash "{{ k8s_token_ca_cert }}"
   register: store_it_copied
   ignore_errors: yes
   when: inventory_hostname in groups['workers']
 - debug: msg={{ store_it_copied }}
   when: print_debug == true and inventory_hostname in groups['workers']
-
-
-- name: Confirm that the Kubectl Command is Activated
-  command: kubectl get nodes
-  register: kubectl_get_nodes
-  when: inventory_hostname in groups['master']
-- debug: msg={{ kubectl_get_nodes }}
-  when: print_debug == true and inventory_hostname in groups['master']
 
 
 - name: Disable and Stop Docker
@@ -184,23 +164,26 @@
   when: print_debug == true and inventory_hostname in groups['master']
 
 
-- name: Validate If Kubernetes Workers Are All Ready
-  shell: kubectl get nodes
+- name: Validate if Worker Nodes are all Ready
+  shell: |
+    kubectl get nodes | sed 1d | awk '{print $2}' | grep NotReady | wc -l
   register: check_k8s_workers_status
-  until: check_k8s_workers_status.stdout.find("NotReady") == -1
+  until: check_k8s_workers_status.stdout|int == 0
   retries: 30
   when: inventory_hostname in groups['master']
 - debug: msg={{ check_k8s_workers_status }}
   when: print_debug == true and inventory_hostname in groups['master']
 
 
-- name: Validate If All Containers Are All Running
-  shell: kubectl get pods --all-namespaces -o wide
+- name: Validate if all Containers are Running Normally
+  shell: |
+    kubectl get pods --all-namespaces -o wide | sed 1d | awk '{print $4}' | grep ContainerCreating | wc -l
   register: all_containers_running_checked
-  until: all_containers_running_checked.stdout.find("ContainerCreating") == -1
+  until: all_containers_running_checked.stdout|int == 0
   retries: 60
   when: inventory_hostname in groups['master']
 - debug: msg={{ all_containers_running_checked }}
+  when: print_debug == true and inventory_hostname in groups['master']
 
 
 - name: Check the Status fo CNI Network Plugin
@@ -220,17 +203,12 @@
 
 - name: Enable Helm Repository
   import_tasks: enable-helm-repo.yml
-  when: _helm.enable_repo == true and inventory_hostname in groups['master']
+  when: inventory_hostname in groups['master']
 
 
-- name: Install Metallb
-  import_tasks: install-metallb.yml
-  when: _metallb.install == true and inventory_hostname in groups['master']
-
-
-- name: Install NGINX Ingress
-  import_tasks: install-ingress.yml
-  when: _ingress.install == true and inventory_hostname in groups['master']
+#- name: Install Metallb
+#  import_tasks: install-metallb.yml
+#  when: _metallb.install == true and inventory_hostname in groups['master']
 
 
 # erinformations/default": x509: certificate signed by unknown authority 

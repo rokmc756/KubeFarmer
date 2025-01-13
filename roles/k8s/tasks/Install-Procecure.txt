@@ -1,0 +1,56 @@
+
+[1] Disable Security
+make k8s r=disable s=security
+
+
+[2] Enable K8S Repository
+make k8s r=enable s=repo
+
+
+[3] Install Kubernetes Packages
+make k8s r=install s=pkgs
+
+
+[4] Version Lock
+make k8s r=version s=lock
+
+
+[5] Prepare Kubernetes Environment
+make k8s r=prepare s=env
+
+
+[6] Initialize Kubernetes
+make k8s r=init s=sinble
+
+
+[7] Enable Helm Repo
+make k8s r=enable s=helm
+
+
+[8] Install Metallb
+make k8s r=install s=metallb
+
+
+[9] Uninstall Metallb
+make k8s r=uninstall s=metallb
+
+
+[10] Disable Helm Repo
+make k8s r=disable s=helm
+
+
+[11] Stop Docker and Kube Service
+make k8s r=stop s=serivce
+
+
+[12] Uninstall Prerequistes Packages
+make k8s r=uninstall s=pkgs
+
+
+[13] Remove Remaining Gabages
+make k8s r=uninstall s=
+
+
+[14] Reboot After uninstall
+make k8s r=reboot
+

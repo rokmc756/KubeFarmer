@@ -133,8 +133,6 @@
   template: src=kubelet.systemd.j2 dest=/usr/lib/systemd/system/kubelet.service owner=root group=root mode=644 force=yes
   register: kubelet_systemd_changed
   when: ansible_distribution == "Rocky" or ansible_distribution == "RedHat" or ansible_distribution == "CentOS"
-  # No in SUSE
-  # No in Ubuntu
 
 
 - name: Add Kubelet Args Line
@@ -212,6 +210,4 @@
   when: ansible_distribution == "openSUSE Leap" and ansible_distribution_major_version|int <= 15
 - debug: msg={{ enable_cgroup }}
   when: print_debug == true and ansible_distribution == "openSUSE Leap" and ansible_distribution_major_version|int <= 15
-  #  No In Red Hat
-  #  No in Ubuntu
 

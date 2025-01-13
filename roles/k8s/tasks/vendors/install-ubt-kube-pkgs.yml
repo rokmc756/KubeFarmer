@@ -33,7 +33,6 @@
   register: download_k8s_repo
   ignore_errors: true
 - debug: msg={{ download_k8s_repo }}
-  #  | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
 
 
 - name: Add Kubernetes Repositories

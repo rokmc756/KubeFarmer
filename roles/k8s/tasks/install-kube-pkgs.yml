@@ -1,15 +1,15 @@
 ---
 - name: Install Prerequistes Packages for RedHat/CentOS/Rocky
-  import_tasks: install-rh-kube-pkgs.yml
+  import_tasks: vendors/install-rh-kube-pkgs.yml
   when: ansible_distribution == "RedHat" or ansible_distribution == "CentOS" or ansible_distribution == "Rocky"
 
 
 - name: Install Prerequistes Packages for Ubuntu
-  import_tasks: install-ubt-kube-pkgs.yml
+  import_tasks: vendors/install-ubt-kube-pkgs.yml
   when: ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
 
 
 - name: Install Prerequistes Packages for OpenSUSE
-  import_tasks: install-suse-kube-pkgs.yml
+  import_tasks: vendors/install-suse-kube-pkgs.yml
   when: ansible_distribution == "openSUSE Leap"
 

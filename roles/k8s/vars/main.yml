@@ -59,6 +59,11 @@ common_conf_files:
   - "/root/calico.yaml"
   - "/root/rook"
   - "/root/manifests"
+  - "/etc/kubernetes/manifests/kube-apiserver.yaml"
+  - "/etc/kubernetes/manifests/kube-controller-manager.yaml"
+  - "/etc/kubernetes/manifests/kube-scheduler.yaml"
+  - "/etc/kubernetes/manifests/etcd.yaml"
+  - "/var/lib/etcd"
 
 
 cont_conf_files:
@@ -91,7 +96,6 @@ rh_conf_files:
   - "/etc/sysctl.d/99-kubernetes-cir.conf"
   - "/etc/yum.repos.d/kubernetes.repo"
   - "/etc/yum.repos.d/docker-ce.repo"
-
 
 suse_conf_files:
   - "/usr/lib/systemd/system/kubelet.service"
@@ -185,16 +189,16 @@ workers_ports:
 ########################################################################################################################################################
 # References of Firewalld Rule for Rancher
 ########################################################################################################################################################
-#
 # - https://ranchermanager.docs.rancher.com/v2.5/getting-started/installation-and-upgrade/advanced-options/advanced-use-cases/open-ports-with-firewalld
 # - https://medium.com/platformer-blog/kubernetes-on-centos-7-with-firewalld-e7b53c1316af
 #
-#
+
+
 ########################################################################################################################################################
 #
 # References of Calico CNI Requirements
 # https://docs.tigera.io/calico/latest/getting-started/kubernetes/requirements
-
+#
 
 
 _metallb:
@@ -245,14 +249,6 @@ _helm:
   minor_version:
   patch_version:
   build_version:
-
-
-#container_runtime: "containerd"   # crio or podman?
-#print_debug: true
-#enable_firewall: false
-#disable_firewall: true
-#stop_services: true
-#upload_calico: true
 
 
 container_runtime: "containerd"   # crio or podman

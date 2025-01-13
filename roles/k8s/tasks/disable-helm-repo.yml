@@ -1,33 +1,14 @@
-- name: Remove NGINX Helm Repo
+---
+- name: Remove Helm Repositories
   shell: |
-    /usr/local/bin/helm repo remove ingress-nginx
-  register: remove_nginx_helm_repo
-  ignore_errors: yes
-- debug: msg={{ remove_nginx_helm_repo }}
-
-
-- name: Remove Jetstack Helm Repo
-  shell: |
-    /usr/local/bin/helm repo remove jetstack
-  register: remove_jetstack_helm_repo
-  ignore_errors: yes
-- debug: msg={{ remove_jetstack_helm_repo }}
-
-
-- name: Remove Metallb Helm Repo
-  shell: |
-    /usr/local/bin/helm repo remove metallb
-  register: remove_metallb_helm_repo
-  ignore_errors: yes
-- debug: msg={{ remove_metallb_helm_repo }}
-
-
-- name: Remove Rook Helm Repo
-  shell: |
-    /usr/local/bin/helm repo remove rook-release
-  register: remove_rook_helm_repo
-  ignore_errors: yes
-- debug: msg={{ remove_rook_helm_repo }}
+    /usr/local/bin/helm repo remove {{ item.name }}
+  register: remove_helm_repos
+  with_items:
+    - { name: 'jetstack',         link: 'https://charts.jetstack.io' }
+    - { name: 'community-charts', link: 'https://community-charts.github.io/helm-charts' }
+    - { name: 'metallb',          link: 'https://metallb.github.io/metallb' }
+    - { name: 'ingress-nginx',    link: 'https://kubernetes.github.io/ingress-nginx' }
+- debug: msg={{ remove_helm_repos }}
 
 
 - name: Delete Helm Install Script
