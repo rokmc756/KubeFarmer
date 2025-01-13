@@ -6,7 +6,8 @@
 
 - name: Set Facts For Network and Packages Informations
   import_tasks: set-k8s-facts.yml
-  tags: init,uninit,reinit,prepare,clean,enable,disable,install,uninstall,add,remove,upgrade,downgrade,deploy,destroy
+  tags: init,uninit,reinit,prepare,clean,enable,disable,install,uninstall,add,remove,upgrade,downgrade,deploy,destroy,start,stop,reboot
+  # make k8s r=version s=lock
 
 
 - name: Disable Seicurity Features with SELinux and Firewalld
@@ -16,13 +17,13 @@
 
 
 - name: Install Kubernetes Packages
-  import_tasks: install-kube-pkgs.yml
+  import_tasks: install-pkgs.yml
   tags: install
   when: ( pkgs is defined and pkgs == true ) or ( k8s_all is defined and k8s_all == true )
 
 
 - name: Configure Kubernetes Packages
-  import_tasks: config-kube-pkgs.yml
+  import_tasks: config-kube.yml
   tags: install
   when: ( config is defined and config == true ) or ( k8s_all is defined and k8s_all == true )
 
@@ -46,13 +47,13 @@
 
 
 - name: Install Metallb
-  import_tasks: install-metallb.yml
+  import_tasks: ext/install-metallb.yml
   tags: install
   when: (( lb is defined and lb == true ) or ( k8s_all is defined and k8s_all == true )) and inventory_hostname in groups['master']
 
 
 - name: Uninstall Metallb
-  import_tasks: uninstall-metallb.yml
+  import_tasks: ext/uninstall-metallb.yml
   tags: uninstall
   when: (( lb is defined and lb == true ) or ( k8s_all is defined and k8s_all == true )) and inventory_hostname in groups['master']
 
@@ -76,13 +77,13 @@
 
 
 - name: Stop Docker and Kube Services
-  import_tasks: stop-kube-services.yml
+  import_tasks: services/stop-kube-services.yml
   tags: uninstall, clean
   when: ( kube is defined and kube == true ) or ( k8s_all is defined and k8s_all == true )
 
 
 - name: Uninstall Prerequistes Packages
-  import_tasks: uninstall-kube-pkgs.yml
+  import_tasks: uninstall-pkgs.yml
   tags: uninstall
   when: ( pkgs is defined and pkgs == true ) or ( k8s_all is defined and k8s_all == true )
 

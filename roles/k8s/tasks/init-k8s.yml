@@ -202,12 +202,12 @@
 
 
 - name: Enable Helm Repository
-  import_tasks: enable-helm-repo.yml
+  import_tasks: ext/enable-helm-repo.yml
   when: inventory_hostname in groups['master']
 
 
 #- name: Install Metallb
-#  import_tasks: install-metallb.yml
+#  import_tasks: ext/install-metallb.yml
 #  when: _metallb.install == true and inventory_hostname in groups['master']
 
 

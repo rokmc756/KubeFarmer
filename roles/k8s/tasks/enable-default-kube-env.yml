@@ -46,4 +46,4 @@
 #  when: inventory_hostname in groups['master']
 #- debug: msg={{ change_kubeconfig_file_perm }}
 #  when: print_debug == true and inventory_hostname in groups['master']
-#
+
