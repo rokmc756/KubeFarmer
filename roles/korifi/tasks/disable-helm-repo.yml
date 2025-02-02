@@ -13,13 +13,6 @@
 - debug: msg={{ remove_nginx_helm_repo }}
 
 
-- name: Remove Metallb Helm Repo
-  shell: |
-    /usr/local/bin/helm repo remove metallb
-  register: remove_metallb_helm_repo
-- debug: msg={{ remove_metallb_helm_repo }}
-
-
 - name: Remove Metrics Server Helm Repo
   shell: |
     /usr/local/bin/helm repo remove metrics-server

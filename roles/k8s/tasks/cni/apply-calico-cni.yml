@@ -21,7 +21,7 @@
   with_items:
     - { regexp: "^            # - name: CALICO_IPV4POOL_CIDR",                                line: "            - name: CALICO_IPV4POOL_CIDR",                                                      state: present, backrefs: yes }
     - { regexp: "^            #   value: \"192.168.0.0/16\"",                                 line: "              value: \"{{ k8s.cni.pod_network }}\"",                                            state: present, backrefs: yes }
-    - { regexp: "^            # Enable IPIP",                                                 line: "            - name: IP_AUTODETECTION_METHOD\n              value: \"interface={{ netdev1 }}\"", state: present, backrefs: yes }
+    - { regexp: "^            # Enable IPIP",                                                 line: "            - name: IP_AUTODETECTION_METHOD\n              value: \"interface={{ netdev }}\"", state: present, backrefs: yes }
   when: inventory_hostname in groups['master']
 - debug: msg={{ modify_calica_yaml }}
   when: print_debug == true and inventory_hostname in groups['master']

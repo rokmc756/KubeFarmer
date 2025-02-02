@@ -6,11 +6,7 @@
 
 - name: Set facts for KubeFlow
   import_tasks: set-kubeflow-facts.yml
-  tags:
-    - install
-    - uninstall
-    - deploy
-    - destroy
+  tags: init,uninit,reinit,prepare,clean,enable,disable,install,uninstall,add,remove,upgrade,downgrade,deploy,destroy,start,stop,reboot
 
 
 # https://tommypagy.tistory.com/658
@@ -27,13 +23,13 @@
 
 
 - name: Configure NFS Server
-  import_tasks: config-nfs-server.yml
+  import_tasks: nfs/config-nfs-server.yml
   tags: install
   when: (( nfs is defined and nfs == true ) or ( kubeflow_all is defined and kubeflow_all == true )) and inventory_hostname in groups['nfs_server']
 
 
 - name: Deploy NFS Provider
-  import_tasks: install-nfs-provider.yml
+  import_tasks: nfs/install-nfs-provider.yml
   tags: install
   when: (( kubeflow is defined and kubeflow == true ) or ( kubeflow_all is defined and kubeflow_all == true )) and inventory_hostname in groups['master']
 
@@ -63,25 +59,25 @@
 
 
 - name: Install Load Balancer
-  import_tasks: install-lb.yml
+  import_tasks: access/install-lb.yml
   tags: install
   when: (( lb is defined and lb == true ) or ( kubeflow_all is defined and kubeflow_all == true )) and inventory_hostname in groups['master']
 
 
 - name: Install NGINX Ingress
-  import_tasks: install-ingress.yml
+  import_tasks: access/install-ingress.yml
   tags: install
-  when: (( ingress is defined and ingress == true ) or ( awx_all is defined and awx_all == true )) and inventory_hostname in groups['master']
+  when: (( ingress is defined and ingress == true ) or ( kubeflow_all is defined and kubeflow_all == true )) and inventory_hostname in groups['master']
 
 
 - name: Unstall NGINX Ingress
-  import_tasks: uninstall-ingress.yml
+  import_tasks: access/uninstall-ingress.yml
   tags: uninstall
   when: (( ingress is defined and ingress == true ) or ( kubevirt_all is defined and kubevirt_all == true )) and inventory_hostname in groups['master']
 
 
 - name: Uninstall Load Balancer
-  import_tasks: uninstall-lb.yml
+  import_tasks: access/uninstall-lb.yml
   tags: uninstall
   when: (( lb is defined and lb == true ) or ( kubeflow_all is defined and kubeflow_all == true )) and inventory_hostname in groups['master']
 
@@ -99,13 +95,13 @@
 
 
 - name: Destroy NFS Provider
-  import_tasks: uninstall-nfs-provider.yml
+  import_tasks: nfs/uninstall-nfs-provider.yml
   tags: uninstall
   when: (( kubeflow is defined and kubeflow == true ) or ( kubeflow_all is defined and kubeflow_all == true )) and inventory_hostname in groups['master']
 
 
 - name: Remove NFS Server
-  import_tasks: remove-nfs-server.yml
+  import_tasks: nfs/remove-nfs-server.yml
   tags: uninstall
   when: (( nfs is defined and nfs == true ) or ( kubeflow_all is defined and kubeflow_all == true )) and inventory_hostname in groups['nfs_server']
 

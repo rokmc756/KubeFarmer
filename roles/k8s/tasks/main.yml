@@ -6,8 +6,7 @@
 
 - name: Set Facts For Network and Packages Informations
   import_tasks: set-k8s-facts.yml
-  tags: init,uninit,reinit,prepare,clean,enable,disable,install,uninstall,add,remove,upgrade,downgrade,deploy,destroy,start,stop,reboot
-  # make k8s r=version s=lock
+  tags: init, reinit, clean, enable, disable, install, uninstall, add, remove, upgrade, deploy, destroy, start, stop, reboot
 
 
 - name: Disable Seicurity Features with SELinux and Firewalld

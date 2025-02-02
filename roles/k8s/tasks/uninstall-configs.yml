@@ -5,17 +5,15 @@
   register: umount_kubelet_dir
   ignore_errors: true
   with_items:
-    - "/run/containerd"
     - "/var/lib/kubelet/pods"
     - "/etc/kubernetes/manifests/kube-apiserver.yaml"
     - "/etc/kubernetes/manifests/kube-controller-manager.yaml"
     - "/etc/kubernetes/manifests/kube-scheduler.yaml"
     - "/etc/kubernetes/manifests/etcd.yaml"
     - "/var/lib/etcd"
+    - "/run/containerd"
 - debug: msg={{ umount_kubelet_dir }}
   when: print_debug == true
-
-
 
 
 - name: Delete Kube Directories for Common Linux Distributions

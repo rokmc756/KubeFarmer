@@ -1,0 +1,183 @@
+#!/bin/bash
+
+# zone_name="calico-net"
+# zone_name="public"
+# for i in `echo rk9-master rk9-node01 rk9-node02 rk9-node03`
+# do
+#    ssh root@$i "firewall-cmd --permanent --new-zone=${zone_name}"
+#    ssh root@$i "firewall-cmd --permanent --zone=${zone_name} --set-target=ACCEPT"
+#    ssh root@$i "firewall-cmd --permanent --zone=${zone_name} --add-interface=vxlan.calico"
+#    # Then I looped through the calico network interfaces
+#    ssh root@$i "sh /root/add-calico-net-firewalld.sh"
+#    ssh root@$i "firewall-cmd --reload"
+#done
+
+#exit
+
+
+# Control Plain
+for i in `echo rk9-master`
+do
+
+    ssh root@$i "cp -f /etc/firewalld/zones/docker.xml /root/docker.xml.org.$( date +%H-%m-%d-%S)"
+
+    ssh root@$i "firewall-cmd --load-zone-defaults=public --permanent"
+    # ssh root@$i "firewall-cmd --load-zone-defaults=docker --permanent"
+    ssh root@$i "firewall-cmd --reload"
+
+    # ssh root@$i "firewall-cmd --zone=public --permanent --add-port={6443,2379,2380,8472,10250,10251,10252,20255,30000-32767}/tcp"
+    # ssh root@$i "firewall-cmd --zone=public --permanent --add-port=30000-32767/udp"
+
+    ssh root@$i "firewall-cmd --zone=public --permanent --add-port=6443/tcp"
+    ssh root@$i "firewall-cmd --zone=public --permanent --add-port=2379/tcp"
+    ssh root@$i "firewall-cmd --zone=public --permanent --add-port=2380/tcp"
+    ssh root@$i "firewall-cmd --zone=public --permanent --add-port=8472/tcp"      # it should be included etcd node
+    ssh root@$i "firewall-cmd --zone=public --permanent --add-port=10250/tcp" # it should be included etcd node
+    ssh root@$i "firewall-cmd --zone=public --permanent --add-port=10251/tcp"
+    ssh root@$i "firewall-cmd --zone=public --permanent --add-port=10252/tcp"
+    ssh root@$i "firewall-cmd --zone=public --permanent --add-port=10255/tcp"
+    ssh root@$i "firewall-cmd --zone=public --permanent --add-port=30000-32767/tcp"
+    ssh root@$i "firewall-cmd --zone=public --permanent --add-port=30000-32767/udp"
+    ssh root@$i "firewall-cmd --zone=public  --remove-masquerade --permanent"
+    # ssh root@$i "firewall-cmd --reload"
+
+    ssh root@$i "firewall-cmd --zone=public --permanent --add-port={9345,80,443,4240,4245,6942,9090,9876,9890,9891,9892,9893}/tcp"
+
+    ssh root@$i "firewall-cmd --zone=public --permanent --add-port=9443/tcp"
+    ssh root@$i "firewall-cmd --zone=public --permanent --add-port=34283/tcp"
+    ssh root@$i "firewall-cmd --zone=public --permanent --add-port=9099/tcp"
+    ssh root@$i "firewall-cmd --zone=public --permanent --add-port=10248/tcp"
+    ssh root@$i "firewall-cmd --zone=public --permanent --add-port=10249/tcp"
+
+    ssh root@$i "firewall-cmd --zone=public --permanent --add-port=10256/tcp"
+    ssh root@$i "firewall-cmd --zone=public --permanent --add-port=10257/tcp"
+    ssh root@$i "firewall-cmd --zone=public --permanent --add-port=10259/tcp"
+    ssh root@$i "firewall-cmd --zone=public --permanent --add-port=2381/tcp"
+
+    ssh root@$i "firewall-cmd --permanent --zone=trusted --add-source=10.0.0.0/16"
+    ssh root@$i "firewall-cmd --permanent --zone=trusted --add-source=192.168.0.0/32"
+    ssh root@$i "firewall-cmd --permanent --zone=trusted --add-source=192.168.219.0/32"
+    ssh root@$i "firewall-cmd --permanent --zone=trusted --add-source=192.168.100.0/32"
+
+    # Added for vmware-postgres
+    #ssh root@$i "firewall-cmd --zone=public --permanent --add-port=22/tcp"
+    #ssh root@$i "firewall-cmd --zone=public --permanent --add-port=53/tcp"
+    #ssh root@$i "firewall-cmd --zone=public --permanent --add-port=53/udp"
+    #ssh root@$i "firewall-cmd --zone=public --permanent --add-port=80/tcp"
+    #ssh root@$i "firewall-cmd --zone=public --permanent --add-port=179/tcp"      # Bird BGP in calico network
+    #ssh root@$i "firewall-cmd --zone=public --permanent --add-port=443/tcp"
+    #ssh root@$i "firewall-cmd --zone=public --permanent --add-port=2376/tcp"      # etcd node
+    #ssh root@$i "firewall-cmd --zone=public --permanent --add-port=5432/tcp"
+    #ssh root@$i "firewall-cmd --zone=public --permanent --add-port=6080/tcp"
+    #ssh root@$i "firewall-cmd --zone=public --permanent --add-port=8080/tcp"  # Readiness probe
+    #ssh root@$i "firewall-cmd --zone=public --permanent --add-port=8181/tcp"  # Readiness probe
+    #ssh root@$i "firewall-cmd --zone=public --permanent --add-port=8443/tcp"  #
+    #ssh root@$i "firewall-cmd --zone=public --permanent --add-port=9099/tcp"      # it should be included etcd node 
+    #ssh root@$i "firewall-cmd --zone=public --permanent --add-port=9402/tcp"
+    #ssh root@$i "firewall-cmd --zone=public --permanent --add-port=9153/tcp" # core-dns
+    #ssh root@$i "firewall-cmd --zone=public --permanent --add-port=9443/tcp"
+    #ssh root@$i "firewall-cmd --zone=public --permanent --add-port=10254/tcp"
+    #ssh root@$i "firewall-cmd --zone=public --permanent --add-port=10256/tcp"
+    #ssh root@$i "firewall-cmd --zone=public --permanent --add-port=10259/tcp"
+    # ssh root@$i "firewall-cmd --zone=public --permanent --add-port=10260/tcp"
+    # ssh root@$i "firewall-cmd --zone=public --permanent --add-port=10443/tcp"
+    # only if you want NodePorts exposed on control plane IP as well
+    # ssh root@$i "firewall-cmd --zone=public --permanent --add-port=5432-31594/tcp"
+    # ssh root@$i "cp -f /root/docker.xml /etc/firewalld/zones/docker.xml"
+
+    # ssh root@$i "firewall-cmd --zone=public --permanent --add-port={6443,2379,2380,8472,10250,10251,10252,20255,30000-32767,22,54,80,179,443,2376,5432,6080,8080,8081,8181,8443,9099,9153,9443,10254,10256,10259,10260,10443,5432-31594}/tcp"
+    # ssh root@$i "firewall-cmd --zone=public --permanent --add-port={53,30000-32767}/udp"
+
+    # ssh root@$i "firewall-cmd --reload"
+
+    ssh root@$i "firewall-cmd --zone=public --permanent --add-port=10260/tcp"
+    # ssh root@$i "firewall-cmd --zone=public --add-masquerade --permanent"
+    ssh root@$i "firewall-cmd --reload"
+
+    # ssh root@$i "systemctl restart firewalld"
+
+done
+
+# For worker node
+for i in `echo rk9-node01 rk9-node02 rk9-node03`
+do
+
+    ssh root@$i "cp -f /etc/firewalld/zones/docker.xml /root/docker.xml.org.$( date +%H-%m-%d-%S)"
+    # echo $i
+    # ssh root@$i "firewall-cmd --zone=public --permanent --add-port=10256/tcp" # postgres-operator-webhook-service
+    # ssh root@$i "firewall-cmd --zone=public --permanent --add-port=6080/tcp"  # postgres-operator-webhook-service
+    # ssh root@$i "firewall-cmd --zone=public --permanent --add-port=9402/tcp" # cert-manager, http-metrics 9402
+    # ssh root@$i "systemctl restart firewalld"
+    # ssh root@$i "firewall-cmd --zone=public --permanent --add-port=8081/tcp" # Readiness: http-get http://:8081/readyz
+    # ssh root@$i "firewall-cmd --zone=public --permanent --list-ports"
+    # ssh root@$i "firewall-cmd --zone=public --permanent --add-port=443/tcp" # Internal postgres-operator-webhook-servic3
+    # ssh root@$i "firewall-cmd --reload"
+    # ssh root@$i "firewall-cmd --zone=public --permanent --list-ports"
+    # ssh root@$i "systemctl restart firewalld"
+
+    ssh root@$i "firewall-cmd --load-zone-defaults=public --permanent"
+    # ssh root@$i "firewall-cmd --load-zone-defaults=docker --permanent"
+    ssh root@$i "firewall-cmd --reload"
+
+    ssh root@$i "firewall-cmd --zone=public --permanent --add-port=10250/tcp" # it should be included in etcd node
+    ssh root@$i "firewall-cmd --zone=public --permanent --add-port=10255/tcp"
+    ssh root@$i "firewall-cmd --zone=public --permanent --add-port=8472/udp"  # it should be included in etcd node
+    ssh root@$i "firewall-cmd --zone=public --permanent --add-port=10260/tcp"
+    ssh root@$i "firewall-cmd --zone=public --permanent --add-port=30000-32767/tcp"
+    ssh root@$i "firewall-cmd --zone=public --permanent --add-port=30000-32767/udp"
+    # ssh root@$i "firewall-cmd --zone=public  --remove-masquerade --permanent"
+
+    ssh root@$i "firewall-cmd --zone=public --permanent --add-port={9345,80,443,4240,4245,6942,9090,9876,9890,9891,9892,9893}/tcp"
+
+    ssh root@$i "firewall-cmd --permanent --zone=trusted --add-source=10.0.0.0/16"
+    ssh root@$i "firewall-cmd --permanent --zone=trusted --add-source=192.168.0.0/24"
+    ssh root@$i "firewall-cmd --permanent --zone=trusted --add-source=192.168.219.0/24"
+    ssh root@$i "firewall-cmd --permanent --zone=trusted --add-source=192.168.100.0/24"
+
+    #ssh root@$i "firewall-cmd --zone=public --permanent --add-port=22/tcp"
+    #ssh root@$i "firewall-cmd --zone=public --permanent --add-port=53/tcp"
+    #ssh root@$i "firewall-cmd --zone=public --permanent --add-port=53/udp"
+    #ssh root@$i "firewall-cmd --zone=public --permanent --add-port=80/tcp"
+    #ssh root@$i "firewall-cmd --zone=public --permanent --add-port=179/tcp"      # Bird BGP in calico network
+    #ssh root@$i "firewall-cmd --zone=public --permanent --add-port=443/tcp"
+    #ssh root@$i "firewall-cmd --zone=public --permanent --add-port=5432/tcp"
+    #ssh root@$i "firewall-cmd --zone=public --permanent --add-port=2376/tcp"  # etcd node
+    #ssh root@$i "firewall-cmd --zone=public --permanent --add-port=2379/tcp"  # etcd node
+    #ssh root@$i "firewall-cmd --zone=public --permanent --add-port=2380/tcp"  # etcd node
+    #ssh root@$i "firewall-cmd --zone=public --permanent --add-port=6080/tcp"  #
+    #ssh root@$i "firewall-cmd --zone=public --permanent --add-port=6783/tcp"  #
+    #ssh root@$i "firewall-cmd --zone=public --permanent --add-port=6443/tcp"  #
+    #ssh root@$i "firewall-cmd --zone=public --permanent --add-port=8080/tcp"  #
+    #ssh root@$i "firewall-cmd --zone=public --permanent --add-port=8081/tcp"  #
+    #ssh root@$i "firewall-cmd --zone=public --permanent --add-port=8181/tcp"  # Readiness probe
+    #ssh root@$i "firewall-cmd --zone=public --permanent --add-port=8443/tcp"  #
+    #ssh root@$i "firewall-cmd --zone=public --permanent --add-port=9099/udp"  # it should be included in etcd node
+    #ssh root@$i "firewall-cmd --zone=public --permanent --add-port=9153/tcp"  # core-dns
+    #ssh root@$i "firewall-cmd --zone=public --permanent --add-port=9402/tcp"  #
+    #ssh root@$i "firewall-cmd --zone=public --permanent --add-port=9443/tcp"  #
+    #ssh root@$i "firewall-cmd --zone=public --permanent --add-port=10254/tcp"
+    #ssh root@$i "firewall-cmd --zone=public --permanent --add-port=10256/tcp"
+    #ssh root@$i "firewall-cmd --zone=public --permanent --add-port=10259/tcp"
+    #ssh root@$i "firewall-cmd --zone=public --permanent --add-port=10443/tcp"
+    # ssh root@$i "firewall-cmd --zone=public --permanent --add-port=5432-31594/tcp"
+    #ssh root@$i "firewall-cmd --zone=public --add-masquerade --permanent"
+    # ssh root@$i "cp -f /root/docker.xml /etc/firewalld/zones/docker.xml"
+
+    ssh root@$i "firewall-cmd --zone=public --permanent --add-port=10248/tcp"
+    ssh root@$i "firewall-cmd --zone=public --permanent --add-port=10249/tcp"
+    ssh root@$i "firewall-cmd --zone=public --permanent --add-port=34283/tcp"
+    ssh root@$i "firewall-cmd --zone=public --permanent --add-port=9443/tcp"
+    ssh root@$i "firewall-cmd --zone=public --permanent --add-port=9099/tcp"
+
+    ssh root@$i "firewall-cmd --zone=public --permanent --add-port=10256/tcp"
+    ssh root@$i "firewall-cmd --zone=public --permanent --add-port=10257/tcp"
+    ssh root@$i "firewall-cmd --zone=public --permanent --add-port=10259/tcp"
+    ssh root@$i "firewall-cmd --zone=public --permanent --add-port=2381/tcp"
+
+    ssh root@$i "firewall-cmd --zone=public --permanent --add-port=10260/tcp"
+    # ssh root@$i "firewall-cmd --zone=public --add-masquerade --permanent"
+    ssh root@$i "firewall-cmd --reload"
+    # ssh root@$i "systemctl restart firewalld"
+
+done
+

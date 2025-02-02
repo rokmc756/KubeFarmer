@@ -2,9 +2,9 @@ adminUserName: "cf-admin"
 rootNamespace: cf
 debug: false
 logLevel: info
-defaultAppDomainName: "apps.{{ korifi.domain_prefix }}"
+defaultAppDomainName: "apps.{{ _korifi.domain_prefix }}"
 generateIngressCertificates: true
-containerRepositoryPrefix: "harbor.{{ korifi.domain_prefix }}/"
+containerRepositoryPrefix: "harbor.{{ _korifi.domain_prefix }}/"
 containerRegistrySecrets:
 - image-registry-credentials
 eksContainerRegistryRoleARN: ""
@@ -35,7 +35,7 @@ api:
       memory: 1Gi
 
   apiServer:
-    url: "api.{{ korifi.domain_prefix }}"
+    url: "api.{{ _korifi.domain_prefix }}"
     # To override default port, set port to a non-zero value
     port: 0
     internalPort: 9000
@@ -94,7 +94,7 @@ kpackImageBuilder:
   clusterStackID: io.buildpacks.stacks.jammy
   clusterStackBuildImage: paketobuildpacks/build-jammy-full
   clusterStackRunImage: paketobuildpacks/run-jammy-full
-  builderRepository: "harbor.{{ korifi.domain_prefix }}/{{ korifi.container_repo }}"
+  builderRepository: "harbor.{{ _korifi.domain_prefix }}/{{ _korifi.container_repo }}"
 
 statefulsetRunner:
   include: true

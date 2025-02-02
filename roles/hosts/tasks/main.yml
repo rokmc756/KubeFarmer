@@ -6,32 +6,30 @@
 
 - name: Set facts for network and packages informations for Linux Distribution
   import_tasks: set-facts.yml
-  tags:
-    - install
-    - uninstall
+  tags: install, uninstall, init, uninit
 
 
 - name: Setup Hostname and IP Address in /etc/hosts
   import_tasks: init-hosts.yml
-  tags: install
+  tags: install, init
 
 
 - name: Install Prerequiestes Software Packages and Setup Hostname, IP Addresses
   import_tasks: install.yml
-  tags: install
+  tags: install, init
 
 
 - name: Create SSH Key and Exchange it for sudo user among All Hosts
   import_tasks: ssh_sudo_user.yml
-  tags: install
+  tags: install, init
 
 
 - name: Create SSH Key and Exchange it for root user among All Hosts
   import_tasks: ssh_root_user.yml
-  tags: install
+  tags: install, init
 
 
 - name: Uninstall SSH Keys and sudo users as well as Prerequiestes Software Packages
   import_tasks: uninstall.yml
-  tags: uninstall
+  tags: uninstall, uninit
 

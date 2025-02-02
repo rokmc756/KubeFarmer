@@ -30,7 +30,6 @@
   register: uninstall_metallb_native_config
   ignore_errors: true
 - debug: msg={{ uninstall_metallb_native_config }}
-  # helm uninstall metallb -n metallb-system --no-hooks
 
 
 - name: Delete Namespace for Metallb
@@ -69,7 +68,5 @@
   with_items:
     - "{{ base_path }}/metallb-config-vmware.yaml"
     - "{{ base_path }}/kubernetes-ingress"
-
-#- debug: msg={{ remove_config_yaml_and_kube_ingress_dir }}
-#  ignore_errors: true
+- debug: msg={{ remove_config_yaml_and_kube_ingress_dir }}
 

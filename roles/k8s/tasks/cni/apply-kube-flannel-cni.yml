@@ -37,7 +37,7 @@
     backup: "{{ item.backup }}"
   register: modify_flannel_netdev
   with_items:
-    - { insertafter: "        - --kube-subnet-mgr", line: "        - --iface={{ netdev1 }}", firstmatch: yes, state: present, backup: no }
+    - { insertafter: "        - --kube-subnet-mgr", line: "        - --iface={{ netdev }}", firstmatch: yes, state: present, backup: no }
   when: inventory_hostname in groups['master']
 - debug: msg={{ modify_flannel_netdev }}
   when: print_debug == true and inventory_hostname in groups['master']

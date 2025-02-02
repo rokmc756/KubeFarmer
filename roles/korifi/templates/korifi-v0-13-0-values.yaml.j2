@@ -1,0 +1,200 @@
+#adminUserName:
+#rootNamespace: cf
+#debug: false
+#logLevel: info
+#defaultAppDomainName:
+#generateIngressCertificates: false
+#containerRegistrySecrets:
+#- image-registry-credentials
+#eksContainerRegistryRoleARN: ""
+#containerRegistryCACertSecret:
+#systemImagePullSecrets: []
+
+
+adminUserName: "cf-admin"
+rootNamespace: cf
+debug: false
+logLevel: info
+defaultAppDomainName: "apps.{{ _korifi.domain_prefix }}"
+generateIngressCertificates: true
+containerRepositoryPrefix: "harbor.{{ _korifi.domain_prefix }}/"
+containerRegistrySecrets:
+- image-registry-credentials
+eksContainerRegistryRoleARN: ""
+containerRegistryCACertSecret:
+systemImagePullSecrets: []
+
+
+reconcilers:
+  build: kpack-image-builder
+  run: statefulset-runner
+
+
+stagingRequirements:
+  memoryMB: 0
+  diskMB: 0
+  buildCacheMB: 2048
+
+
+api:
+  include: true
+
+  image: cloudfoundry/korifi-api:latest
+
+  nodeSelector: {}
+  tolerations: []
+  replicas: 1
+  resources:
+    requests:
+      cpu: 50m
+      memory: 100Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+
+  #apiServer:
+  #  url: ""
+  #  # To override default port, set port to a non-zero value
+  #  port: 0
+  #  internalPort: 9000
+  #  timeouts:
+  #    read: 900
+  #    write: 900
+  #    idle: 900
+  #    readHeader: 10
+
+
+  apiServer:
+    url: "api.{{ _korifi.domain_prefix }}"
+    # To override default port, set port to a non-zero value
+    port: 0
+    internalPort: 9000
+    timeouts:
+      read: 900
+      write: 900
+      idle: 900
+      readHeader: 10
+
+
+
+  infoConfig:
+    name: "korifi"
+    description: "Korifi Cloud Foundry Environment"
+    minCLIVersion: ""
+    recommendedCLIVersion: ""
+    custom: {}
+    supportAddress: "https://www.cloudfoundry.org/technology/korifi/"
+
+  lifecycle:
+    type: buildpack
+    stack: cflinuxfs3
+
+  userCertificateExpirationWarningDuration: 168h
+
+  authProxy:
+    host: ""
+    caCert: ""
+
+
+controllers:
+  image: cloudfoundry/korifi-controllers:latest
+
+  nodeSelector: {}
+  tolerations: []
+  replicas: 1
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+    requests:
+      cpu: 50m
+      memory: 100Mi
+
+  processDefaults:
+    memoryMB: 1024
+    diskQuotaMB: 1024
+  taskTTL: 30d
+  workloadsTLSSecret: korifi-workloads-ingress-cert
+
+  namespaceLabels: {}
+  extraVCAPApplicationValues: {}
+  maxRetainedPackagesPerApp: 5
+  maxRetainedBuildsPerApp: 5
+
+
+kpackImageBuilder:
+  include: true
+  replicas: 1
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+    requests:
+      cpu: 50m
+      memory: 100Mi
+
+  # clusterBuilderName: ""
+  # builderReadinessTimeout: 30s
+  # clusterStackID: io.buildpacks.stacks.jammy
+  # clusterStackBuildImage: paketobuildpacks/build-jammy-full
+  # clusterStackRunImage: paketobuildpacks/run-jammy-full
+  # builderRepository: ""
+
+
+  # clusterBuilderName: ""
+  # builderReadinessTimeout: 30s
+  # builderRepository: ""
+  clusterBuilderName: ""
+  builderReadinessTimeout: 30s
+  clusterStackID: io.buildpacks.stacks.jammy
+  clusterStackBuildImage: paketobuildpacks/build-jammy-full
+  clusterStackRunImage: paketobuildpacks/run-jammy-full
+  builderRepository: "harbor.{{ _korifi.domain_prefix }}/{{ _korifi.domain_prefix }}"
+
+
+statefulsetRunner:
+  include: true
+  replicas: 1
+  resources:
+    limits:
+      cpu: 500m
+      memory: 128Mi
+    requests:
+      cpu: 10m
+      memory: 64Mi
+
+
+jobTaskRunner:
+  include: true
+  replicas: 1
+  resources:
+    limits:
+      cpu: 500m
+      memory: 128Mi
+    requests:
+      cpu: 10m
+      memory: 64Mi
+  jobTTL: 24h
+
+
+helm:
+  hooksImage: alpine/k8s:1.25.2
+
+
+networking:
+  gatewayPorts:
+    http: 80
+    https: 443
+  gatewayInfrastructure:
+  gatewayClass: projectcontur
+
+
+#networking:
+#  gatewayClass: projectcontur
+
+
+
+experimental:
+  managedServices:
+    enabled: false
+    trustInsecureBrokers: false

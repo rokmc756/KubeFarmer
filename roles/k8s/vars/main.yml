@@ -1,8 +1,6 @@
 ---
 base_path: /root
 
-dashboard_port: "10443"
-
 cont_pv_dirs:
   - "mysql-ndb-storage"
   - "mysql-innodb-storage"
@@ -191,14 +189,12 @@ workers_ports:
 ########################################################################################################################################################
 # - https://ranchermanager.docs.rancher.com/v2.5/getting-started/installation-and-upgrade/advanced-options/advanced-use-cases/open-ports-with-firewalld
 # - https://medium.com/platformer-blog/kubernetes-on-centos-7-with-firewalld-e7b53c1316af
-#
 
 
 ########################################################################################################################################################
-#
 # References of Calico CNI Requirements
 # https://docs.tigera.io/calico/latest/getting-started/kubernetes/requirements
-#
+
 
 
 _metallb:

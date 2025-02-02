@@ -6,9 +6,7 @@
 
 - name: Set Facts for MariaDB
   import_tasks: set-mariadb-facts.yml
-  tags:
-    - install
-    - uninstall
+  tags: install, uninstall
 
 
 - name: Enable Helm Repository

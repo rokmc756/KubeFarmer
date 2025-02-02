@@ -93,7 +93,7 @@
 - name: Copy Root User SSH Key from Local to All Hosts
   become_user: "{{ local_sudo_user }}"
   shell: |
-    sshpass -p "changeme" ssh-copy-id -f -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa.pub root@{{ hostvars[item]['ansible_'~netdev1]['ipv4']['address'] }}
+    sshpass -p "changeme" ssh-copy-id -f -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa.pub root@{{ hostvars[item][_netdev]['ipv4']['address'] }}
   register: ssh_copy_id_keys
   with_items: "{{ groups['all'] }}"
   delegate_to: localhost

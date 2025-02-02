@@ -7,7 +7,7 @@
 
 - name: Login into Cloud Foundry API
   shell: |
-    cf api https://api.jtest.suse.com --skip-ssl-validation
+    cf api https://api.jtest.pivotal.io --skip-ssl-validation
   register: login_cf_api
   args:
     chdir: "{{ base_path }}/"
@@ -95,7 +95,7 @@
 # Check Application
 # Access Application Deployed
 #
-# curl --insecure https://java1.apps.jtest.suse.com
+# curl --insecure https://java1.apps.jtest.pivotal.io
 # Hello, World!
 # Java Version: 17.0.10
 
@@ -116,7 +116,7 @@
 #
 # name:              java1
 # requested state:   started
-# routes:            java1.apps.jtest.suse.com
+# routes:            java1.apps.jtest.pivotal.io
 # last uploaded:     Fri 16 Feb 07:13:55 UTC 2024
 # stack:             io.buildpacks.stacks.bionic
 # buildpacks:        

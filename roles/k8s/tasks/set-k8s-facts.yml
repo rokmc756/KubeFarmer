@@ -18,6 +18,7 @@
 
 - name: Set Default Network Device and Address
   set_fact:
+    netdev: "{{ netdev1 }}"
     _netdev: "{{ 'ansible_'~ netdev1 }}"
     _ipaddr: "{{ ipaddr1 }}"
     _netdev0: "{{ 'ansible_'~ netdev0 }}"

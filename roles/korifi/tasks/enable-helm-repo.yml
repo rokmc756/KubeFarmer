@@ -13,24 +13,11 @@
 - debug: msg={{ install_helm }}
 
 
-- name: Add Metallb Helm Repo
-  shell: |
-    /usr/local/bin/helm repo add metallb https://metallb.github.io/metallb
-  register: add_metallb_helm_repo
-- debug: msg={{ add_metallb_helm_repo }}
-
 - name: Add NGINX Helm Repo
   shell: |
     /usr/local/bin/helm repo add nginx-stable https://helm.nginx.com/stable
   register: add_nginx_helm_repo
 - debug: msg={{ add_nginx_helm_repo }}
-
-
-#- name: Add Korifi Helm Repo
-#  shell: |
-#    /usr/local/bin/helm repo add korifi https://charts.korifi.io
-#  register: add_korifi_helm_repo
-#- debug: msg={{ add_korifi_helm_repo }}
 
 
 - name: Add Metrics Server Helm Repo
@@ -45,6 +32,13 @@
     /usr/local/bin/helm repo add emberstack https://emberstack.github.io/helm-charts
   register: add_reflector_helm_repo
 - debug: msg={{ add_reflector_helm_repo }}
+
+
+#- name: Add Korifi Helm Repo
+#  shell: |
+#    /usr/local/bin/helm repo add korifi https://charts.korifi.io
+#  register: add_korifi_helm_repo
+#- debug: msg={{ add_korifi_helm_repo }}
 
 
 - name: Update Helm Repo

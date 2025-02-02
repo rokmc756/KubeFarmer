@@ -12,103 +12,11 @@
   when: print_debug == true
 
 
-- name: Delete the Role to the cf-admin.
-  shell: |
-    kubectl delete rolebinding developer-binding-cf-admin
-  register: delete_bind_role
-  ignore_errors: true
-  args:
-    chdir: "{{ base_path }}/"
-  environment:
-    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-- debug: msg={{ delete_bind_role }}
-  when: print_debug == true
-
-
-- name: Delete Developer Role for the cf-admin.
-  shell: |
-    kubectl delete role developer
-  register: delete_developer_role
-  ignore_errors: true
-  args:
-    chdir: "{{ base_path }}/"
-  environment:
-    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-- debug: msg={{ delete_developer_role }}
-  when: print_debug == true
-
-
-- name: Delete Context For the cf-admin.
-  shell: |
-    kubectl config delete-context cf-admin --cluster=kubernetes --user=cf-admin
-  register: delete_context
-  ignore_errors: true
-  args:
-    chdir: "{{ base_path }}/"
-  environment:
-    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-- debug: msg={{ delete_context }}
-  when: print_debug == true
-
-
-#- name: Unset embed the certificate and key in the kubeconfig.
-#  shell: |
-#    kubectl config delete-credentials cf-admin --client-key=cf-admin.key --client-certificate=cf-admin.crt --embed-certs=true
-#  register: unset_embed_cert_key
-#  ignore_errors: true
-#  args:
-#    chdir: "{{ base_path }}/"
-#- debug: msg={{ unset_embed_cert_key }}
-
-
-#- name: Deny the certificate request
-#  shell: |
-#    kubectl certificate deny cf-admin
-#  register: deny_cert_request
-#  ignore_errors: true
-#  args:
-#    chdir: "{{ base_path }}/"
-#- debug: msg={{ deny_cert_request }}
-
-
-- name: Delete the Manifest Using the File You Created in Previous Step
-  shell: |
-    kubectl delete -f cert-request.yaml
-  register: delete_manifest_created
-  ignore_errors: true
-  args:
-    chdir: "{{ base_path }}/"
-  environment:
-    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-- debug: msg={{ delete_manifest_created }}
-  when: print_debug == true
-
-
-- name: Delete a Yaml File For the Certificate Request Whose Content are Like Below
-  file:
-    path: "{{ base_path }}/{{ item }}"
-    state: absent
-  register: delete_cert_request_yaml
-  ignore_errors: true
-  with_items:
-    - "cert-request.yaml"
-    - "cf-admin.key"
-    - "cf-admin.csr"
-- debug: msg={{ delete_cert_request_yaml }}
-  when: print_debug == true
-
-
-# kubectl get secret --all-namespaces --field-selector type=Opaque
-# kubectl get secrets -o json | jq -r "[.items[] | {name: .metadata.name, startTime: .metadata.creationTimestamp | fromdate } | select(.startTime < (now | . - XXX-date ))]" | jq -r ".[].name"
-# kubectl delete secret <secret name>
-# kubectl delete secret -n vnamespace $(kubectl -n vnamespace get secrets --field-selector type=my_secret -o json | jq -r "[.items[] | {name: .metadata.name, startTime: .metadata.creationTimestamp | fromdate } | select(.startTime < (now | . - 86400))]" | jq -r ".[].name")
-
-
 - name: Delete Docker Register Secret
   shell: |
     kubectl -n cf delete secret image-registry-credentials
   register: delete_docker_secret
-  ignore_errors: yes
+  ignore_errors: true
   args:
     chdir: "{{ base_path }}/"
   environment:
@@ -164,7 +72,7 @@
 
 - name: Delete Kpack
   shell: |
-    kubectl delete -f https://github.com/buildpacks-community/kpack/releases/download/v{{ kpack.major_version }}.{{ kpack.minor_version }}.{{ kpack.patch_version }}/release-{{ kpack.major_version }}.{{ kpack.minor_version }}.{{ kpack.patch_version }}.yaml
+    kubectl delete -f https://github.com/buildpacks-community/kpack/releases/download/v{{ _kpack.major_version }}.{{ _kpack.minor_version }}.{{ _kpack.patch_version }}/release-{{ _kpack.major_version }}.{{ _kpack.minor_version }}.{{ _kpack.patch_version }}.yaml
   register: delete_kpack
   ignore_errors: true
   args:
@@ -208,13 +116,13 @@
   shell: |
     kubectl delete ns cf --grace-period=0 --force &
     sleep 10
-  register: delete_cf_namespace
-  ignore_errors: yes
+  register: delete_cf_ns
+  ignore_errors: true
   args:
     chdir: "{{ base_path }}/"
   environment:
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-- debug: msg={{ delete_cf_namespace }}
+- debug: msg={{ delete_cf_ns }}
   when: print_debug == true
 
 
@@ -222,13 +130,13 @@
   shell: |
     kubectl get namespace "cf" -o json   | tr -d "\n" | sed "s/\"finalizers\": \[[^]]\+\]/\"finalizers\": []/" | \
     kubectl replace --raw /api/v1/namespaces/cf/finalize -f -
-  register: force_delete_cf_namespace
-  ignore_errors: yes
+  register: force_delete_cf_ns
+  ignore_errors: true
   args:
     chdir: "{{ base_path }}/"
   environment:
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-- debug: msg={{ force_delete_cf_namespace }}
+- debug: msg={{ force_delete_cf_ns }}
   when: print_debug == true
 
 
@@ -236,12 +144,12 @@
   file:
     path: "{{ base_path }}/{{ item }}"
     state: absent
-  register: delete_namespaces_config_yaml
+  register: delete_namespaces_config
   ignore_errors: true
   with_items:
     - "korifi-ns.yaml"
     - "cf-ns.yaml"
-- debug: msg={{ delete_namespaces_config_yaml }}
+- debug: msg={{ delete_namespaces_config }}
   when: print_debug == true
 
 
@@ -249,7 +157,7 @@
   shell: |
     helm uninstall reflector -n reflector
   register: install_reflector
-  ignore_errors: yes
+  ignore_errors: true
   args:
     chdir: "{{ base_path }}/"
   environment:

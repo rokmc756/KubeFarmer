@@ -9,7 +9,7 @@
   retries: 100
   delay: 10
   with_items:
-    - { svc: "logstash-", repo: "logstash", replica: "{{ _elasticsearch.logstash.replica }}" }
+    - { svc: "logstash-", repo: "logstash", replica: "{{ _kubeflow.svc.replica }}" }
 - debug: msg={{ check_elasticsearch_containers }}
   ignore_errors: true
   when: print_debug == true
@@ -42,10 +42,10 @@
 #pod/profiles-deployment-688cc95cdb-hl9f2                     3/3     Running             2 (5m4s ago)    5m28s
 #pod/pvcviewer-controller-manager-5b8c866b58-xn2l7            3/3     Running             0               5m29s
 #pod/tensorboard-controller-deployment-85c9d7f7dd-kmj9w       3/3     Running             2 (4m57s ago)   5m24s
-#
-#
-#
-#
+
+
+
+
 #pod/admission-webhook-deployment-5b88996c9f-rs5hz            0/1     ContainerCreating   0              49s
 #pod/katib-mysql-65d74487b7-cs2qw                             0/1     ContainerCreating   0              52s
 #pod/metadata-grpc-deployment-d94cc8676-5tjnx                 1/2     CrashLoopBackOff    4 (9s ago)     2m25s

@@ -1,44 +1,42 @@
 ---
-# Install GO language
-#
-#
-- name: Check if the GO file is is already existed
-  stat: path=/root/go{{ go.major_version }}.{{ go.minor_version }}.{{ go.patch_version }}.linux-amd64.tar.gz
-  register: go_file_existed
+- name: Check if the GO File Already Exists
+  stat: path={{ k8s.base_path }}/go{{ _go.major_version }}.{{ _go.minor_version }}.{{ _go.patch_version }}.linux-amd64.tar.gz
+  register: check_go_file
 
-#
-- name: Check if the GO binary is already existed
+
+- name: Check if the GO Binary Already Exists
   stat: path=/usr/local/go/bin/go
-  register: go_bin_existed
+  register: check_go_bin
 
-#
-- name: Copy the GO file
-  copy: src=go{{ go.major_version }}.{{ go.minor_version }}.{{ go.patch_version }}.linux-amd64.tar.gz dest=/root/go{{ go.major_version }}.{{ go.minor_version }}.{{ go.patch_version }}.linux-amd64.tar.gz mode=0644 owner=root group=root
-  register: go_file_copied
-  when: go_file_existed.stat.exists != True and go.download == false
 
-#
-- name: Download GO file if copy fails
-  shell: wget https://dl.google.com/go/go{{ go.major_version }}.{{ go.minor_version }}.{{ go.patch_version }}.linux-amd64.tar.gz -P /root/
+- name: Copy the GO File
+  copy:
+    src: "go{{ _go.major_version }}.{{ _go.minor_version }}.{{ _go.patch_version }}.linux-amd64.tar.gz"
+    dest: "{{ k8s.base_path }}/go{{ _go.major_version }}.{{ _go.minor_version }}.{{ _go.patch_version }}.linux-amd64.tar.gz"
+    mode: 0644
+    owner: root
+    group: root
+  register: copy_go_file
+  when: check_go_file.stat.exists != True and _go.download == false
+
+
+- name: Download GO File If Copy Fails
+  shell: wget https://dl.google.com/go/go{{ _go.major_version }}.{{ _go.minor_version }}.{{ _go.patch_version }}.linux-amd64.tar.gz -P {{ k8s.base_path }}
   args:
     executable: /bin/bash
     chdir: "{{ base_path }}/"
   environment:
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-  when: go.download == true
+  when: _go.download == true
   # when: go_file_copied is not succeeded and go.download == true
 
-#
+
 - name: Untar GO file
-  become: true
-  shell: tar -C /usr/local -xf /root/go{{ go.major_version }}.{{ go.minor_version }}.{{ go.patch_version }}.linux-amd64.tar.gz
+  shell: tar -C /usr/local -xf {{ k8s.base_path }}/_go{{ go.major_version }}.{{ _go.minor_version }}.{{ _go.patch_version }}.linux-amd64.tar.gz
   args:
     executable: /bin/bash
     chdir: "{{ base_path }}/"
   environment:
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-  when: go_bin_existed.stat.exists != True
-
-# echo $PATH
-# /home/hadoop/hadoop-3.3.5/sbin:/home/hadoop/hadoop-3.3.5/bin:/usr/lib64/ccache:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/root/bin:/usr/local/go/bin:/opt/vmware/postgres/15/bin
+  when: check_go_bin.stat.exists != True
 

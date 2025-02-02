@@ -104,7 +104,7 @@
   when: inventory_hostname in groups['master']
 - debug: msg={{ kubectl_configured }}
   when: print_debug == true and inventory_hostname in groups['master']
-  # For higher than 1.26.x version  - kubectl taint nodes  {{ hostvars[groups['master'][0]].ansible_hostname }} node-role.kubernetes.io/control-plane:NoSchedule-
+  # For higher than 1.26.x version in above case
   # For earlier than 1.21.x version - kubectl taint nodes --all node-role.kubernetes.io/master-
 
 
@@ -146,7 +146,7 @@
   when: print_debug == true and inventory_hostname in groups['master']
 
 
-- name: Validate if all Containers are Running Normally
+- name: Validate if All Containers are Running Normally
   shell: |
     kubectl get pods --all-namespaces -o wide | sed 1d | awk '{print $4}' | grep ContainerCreating | wc -l
   register: all_containers_running_checked

@@ -1,0 +1,10 @@
+- hosts: lab
+  tasks:
+    - name: "{{ power_title }} Virtual Machines"
+      become: true
+      shell: |
+        virsh {{ power_state }} {{ item }}
+      register: power_vms
+      ignore_errors: true
+      loop: "{{ k8s.vms.rk9 }}"
+

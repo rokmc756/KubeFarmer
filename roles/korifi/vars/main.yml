@@ -1,107 +1,102 @@
 # 2024-06-30 - First Deployment with the following versions and without any errrors although it's not working correctly yet
-#
 # OS : Rocky Linux 9.x
-# k8s_version: v1.25.0
-# kpack: v0.14.1
-# contour: v1.29.1
-# metrics_server: v0.7.1
-# korifi: v0.10.0
-
+# k8s_version: v1.29.12
 
 base_path: "/root"
 
-# go1.13.4.linux-amd64.tar.gz
-go:
+
+# go1.23.5.linux-amd64.tar.gz
+_go:
   download: true
   major_version: 1
-  minor_version: 13
-  patch_version: 4
+  minor_version: 23
+  patch_version: 5
 
-kpack:
+
+_kpack:
   install: true
   major_version: 0
-  minor_version: 13
-  patch_version: 2
-
-contour:
-  install: true
-  major_version: 1
-  minor_version: 29
+  minor_version: 16
   patch_version: 1
 
-cert_manager:
-  install: true
+
+_contour:
   major_version: 1
-  minor_version: 14
+  minor_version: 30
   patch_version: 2
 
-metrics_server:
-  install: true
+
+_cm:
+  major_version: 1
+  minor_version: 16
+  patch_version: 3
+
+
+_metrics_server:
   major_version: 0
   minor_version: 7
-  patch_version: 1
+  patch_version: 2
 
-servicebinding:
-  install: true
-  major_version: 0
-  minor_version: 9
+
+_servicebinding:
+  major_version: 1
+  minor_version: 1
   patch_version: 0
 
-kind:
-  install: true
+
+_kind:
   cli:
     download_url: "https://kind.sigs.k8s.io/dl/"
     major_version: 0
-    minor_version: 23
+    minor_version: 26
     patch_version: 0
 
-ytt:
-  install: true
+
+_ytt:
   cli:
     download_url: "https://github.com/vmware-tanzu/carvel-ytt/releases/download/"
     major_version: 0
-    minor_version: 49
+    minor_version: 51
     patch_version: 1
 
-korifi:
-  install_cli: true
-  deploy: false
+
+_korifi:
   storage_path: "/mnt/korifi-storage"
   major_version: 0
-  minor_version: 10
+  minor_version: 14
   patch_version: 0
   root_namespace: "cf"
   korifi_namespace: "korifi"
   admin_username: "cf-admin"
-  domain_prefix: "jtest.suse.com"
+  domain_prefix: "jtest.pivotal.io"
   gateway_class_name: "contour"
   container_repo: "jproject01"
 
-bosh:
-  install: true
+
+_bosh:
   environment: "192.168.1.221"
   director_name: bosh-1
   deploy_dir: "{{ base_path }}/bosh-deploy"
   cli:
     download_url: "https://github.com/cloudfoundry/bosh-cli/releases/download"
     major_version: 7
-    minor_version: 6
-    patch_version: 1
+    minor_version: 9
+    patch_version: 0
   version: ""
   internal_cidr: "192.168.1.0/24"
   internal_gw: "192.168.1.1"
   internal_ip: "192.168.1.221"
   vm_network: "VM Network"
 
-cf:
-  install: true
+
+_cf:
   deploy_dir: "{{ base_path }}/cf-release"
   dns_recursor_ip: "8.8.8.8"
   cli:
     download_url: "https://github.com/cloudfoundry/cli/releases/download"
     major_version: 8
-    minor_version: 7
-    patch_version: 10
+    minor_version: 9
+    patch_version: 0
   zone:
     az1:
       name: "jaz001"
@@ -126,89 +121,19 @@ cf:
   http_slb_id_arrary: ""
   iaas_info: vsphere-esxi
   os_info: ubuntu-jammy
-  domain: jtest.suse.com
+  domain: jtest.pivotal.io
 
-app:
-  install: true
+
+_app:
   version: ""
 
-stemcell:
-  install: true
+
+_stemcell:
   release_version: 1017
 
-helm:
-  enable_repo: true
+
+_helm:
 
 
-metallb:
-  install: true
-  major_version: 0
-  minor_version: 13
-  patch_version: 11
-  vmware:
-    kind:
-      ipaddrpool:
-        metadata:
-          name: first-pool
-          namespace: metallb-system
-        spec:
-          ips_range: 192.168.1.210-200.168.1.250
-      l2advertise:
-        metadata:
-          name: example
-          namespace: metallb-system
-  baremetal:
-    kind:
-      configmap:
-        metadata:
-          name: config
-          namespace: metallb-system
-        data:
-          config:
-            ipaddr_pools:
-              name: default
-              protocol: layer2
-              ips_range: 192.168.1.210-192.168.1.250
-
-
-apps:
-  install: false
-
-
-nginx:
-  install: false
-  major_version:
-  minor_version:
-  patch_version:
-  k8s_ingress:
-    major_version: 3
-    minor_version: 0
-    patch_version: 2
-  ingress:
-    name: nginx-ingress
-    major_version:
-    minor_version:
-    patch_version:
-    build_version:
-
-
-esxi:
-  hostname: "esxi8.jtest.weka.io"
-  ipaddr: "192.168.0.201"
-  username: "root"
-  password: "Changeme34#$"
-vcenter:
-  hostname: "vcenter8"
-  ip_addr: "192.168.0.202"
-  username: "administrator@vsphere.local"
-  password: "Changeme34#$"
-  vm_user: "root"
-  vm_password: 'Changeme34#$'
-  dns: '192.168.0.90'
-  domain: 'vcenter8.jtest.weka.io'
-  searchpath: 'jtest.weka.io'
-  datacenter: 'wDC01'
-  cluster: 'wClu01'
-  datastore: 'datastore3'
-
+_apps:
 

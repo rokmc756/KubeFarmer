@@ -95,7 +95,7 @@
   # kubectl taint nodes --all node-role.kubernetes.io/master-
 
 
-- name: Create POD for Master as well
+- name: Create POD for Master
   lineinfile:
     path: "{{ k8s.base_path }}/.bashrc"
     line: "{{ item.content }}"
@@ -175,7 +175,7 @@
   when: print_debug == true and inventory_hostname in groups['master']
 
 
-- name: Validate if all Containers are Running Normally
+- name: Validate if All Containers are Running Normally
   shell: |
     kubectl get pods --all-namespaces -o wide | sed 1d | awk '{print $4}' | grep ContainerCreating | wc -l
   register: all_containers_running_checked

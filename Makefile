@@ -3,11 +3,37 @@ COMMON="yes"
 ANSIBLE_HOST_PASS="changeme"
 ANSIBLE_TARGET_PASS="changeme"
 
+# Define Variables for KVM
+KVM_BOOT_CMD="start"
+KVM_SHUTDOWN_CMD="shutdown"
+KVM_ROLE_CONFIG="control-vms-kvm.yml"
+KVM_HOST_CONFIG="ansible-hosts-kvm"
+
+# Define Variables for VMware
+VMWARE_BOOT_CMD="powered-on"
+VMWARE_SHUTDOWN_CMD="shutdown-guest"
+VMWARE_ROLE_CONFIG="control-vms-vmware.yml"
+VMWARE_HOST_CONFIG="ansible-hosts-vmware"
+
+
+BOOT_CMD=${VMWARE_BOOT_CMD}
+SHUTDOWN_CMD=${VMWARE_SHUTDOWN_CMD}
+ROLE_CONFIG=${VMWARE_ROLE_CONFIG}
+ANSIBLE_HOST_CONFIG=${VMWARE_HOST_CONFIG}
+
+
+# Switch KVM or VMware
+kvm:
+	ln -sfv ansible-hosts-rk9-kvm ansible-hosts
+vmware:
+	ln -sfv ansible-hosts-rk9-vmware ansible-hosts
+
+
+# Control VMs in KVM For Power On or Off
 boot:
-	@ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} control-vms.yml --extra-vars "power_state=powered-on power_title=Power-On VMs"
-	
+	@ansible-playbook -i ${ANSIBLE_HOST_CONFIG} --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} ${ROLE_CONFIG} --extra-vars "power_state=${BOOT_CMD} power_title=Power-On VMs"
 shutdown:
-	@ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} control-vms.yml --extra-vars "power_state=shutdown-guest power_title=Shutdown VMs"
+	@ansible-playbook -i ${ANSIBLE_HOST_CONFIG} --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} ${ROLE_CONFIG} --extra-vars "power_state=${SHUTDOWN_CMD} power_title=Shutdown VMs"
 
 # For All Roles
 %:
@@ -22,25 +48,6 @@ shutdown:
 # clean:
 # 	rm -rf ./known_hosts install-hosts.yml update-hosts.yml
 
-
-# hosts     :  make hosts r=init ( or uninit )
-# k8s       :  make k8s r=install ( or uninstall ) s=single ( or multi )
-# rook:     :  make rook r=install or r=uninstall
-# rancher   :  make rancher r=install or r=uninstall
-# kubeflow  :  make kubeflow r=insstall or r=uninstall
-# kubevirt  :  make kubevirt r=install or r=uninstall
-# ha        :  haproxy and keeyalived
-# korifi:   :  make korifi r=install or r=uninstall
-# harbor:   :  make harbor r=install or r=uninstall
-# spark     :  make spark r=install or r=uninstall
-# dashboard :  make dashboard r=install or r=uninstall
-# stratos   :  make stratos r=install or r=uninstall
-# mariadb   :  make mariadb r=install ( or uninstall ) s=galera ( replica or phpmyadmin )
-# powerdns  :  make powernds r=install ( or uninstall )
-# grafana   :  make grafana r=install ( or unintll )
-# pgsql     :  make pgsql r=install s=repmgr or replica ( or uninstall )
-# argocd    :  make argocd
-# kafka     :  make kafka r=install ( or uninstall ) s=kafka ( or ui or kafdrop or all )
 
 # https://stackoverflow.com/questions/4219255/how-do-you-get-the-list-of-targets-in-a-makefile
 #no_targets__:

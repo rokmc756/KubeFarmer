@@ -1,0 +1,9 @@
+[all:vars]
+ssh_key_filename="id_rsa"
+remote_machine_username="jomoon"
+remote_machine_password="changeme"
+
+
+[gw]
+lab ansible_ssh_host=192.168.2.101
+

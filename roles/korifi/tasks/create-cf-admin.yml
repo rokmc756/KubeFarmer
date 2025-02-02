@@ -1,0 +1,170 @@
+---
+- name: Create User's Private Key, Replace 2048 to 3072, or 4096 for Better Security
+  shell: |
+    openssl genrsa -out cf-admin.key 2048
+  register: create_user_private_key
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ create_user_private_key }}
+  when: print_debug == true
+
+
+- name: Create a CSR for the User cf-admin
+  shell: |
+    openssl req -new -key cf-admin.key -out cf-admin.csr -subj "/CN=cf-admin"
+  register: create_csr
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ create_csr }}
+  when: print_debug == true
+
+
+- name: Convert CSR to Base64
+  shell: |
+    cat cf-admin.csr | base64 | tr -d "\n"
+  register: convert_base64
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ convert_base64 }}
+  when: print_debug == true
+
+
+- name: Create a Yaml file for the Certificate Request whose Content are like below
+  copy:
+    dest: "{{ base_path }}/cert-request.yaml"
+    content: |
+      apiVersion: certificates.k8s.io/v1
+      kind: CertificateSigningRequest
+      metadata:
+        name: cf-admin
+      spec:
+        request: {{ convert_base64.stdout }}
+        signerName: kubernetes.io/kube-apiserver-client
+        expirationSeconds: 604800
+        usages:
+          - client auth
+  register: create_cert_request_yaml
+- debug: msg={{ create_cert_request_yaml }}
+  when: print_debug == true
+
+
+- name: Apply the Manifest Using the File You Created in Previous Step
+  shell: |
+    kubectl apply -f cert-request.yaml
+  register: apply_manifest_created
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ apply_manifest_created }}
+  when: print_debug == true
+
+
+- name: Validate the CSR if It got Created Successfully.
+  shell: |
+    kubectl get csr
+  register: validate_csr
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ validate_csr }}
+  when: print_debug == true
+
+
+- name: Approve the Certificate Request
+  shell: |
+    kubectl certificate approve cf-admin
+  register: approve_cert_request
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ approve_cert_request }}
+  when: print_debug == true
+
+
+- name: Save the Certificate to a File cf-admin.crt
+  shell: |
+    kubectl get csr cf-admin -o jsonpath='{.status.certificate}'| base64 -d > cf-admin.crt
+  register: save_cert_file
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ save_cert_file }}
+  when: print_debug == true
+
+
+- name: Create Developer Role for the cf-admin.
+  shell: |
+    kubectl create role developer --verb=create --verb=get --verb=list --verb=update --verb=delete --resource=pods
+  register: create_developer_role
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ create_developer_role }}
+  when: print_debug == true
+
+
+- name: Bind the Role to the cf-admin.
+  shell: |
+    kubectl create rolebinding developer-binding-cf-admin --role=developer --user=cf-admin
+  register: bind_role
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ bind_role }}
+  when: print_debug == true
+
+
+- name: Embed the Certificate and Key In the kubeconfig.
+  shell: |
+    kubectl config set-credentials cf-admin --client-key=cf-admin.key --client-certificate=cf-admin.crt --embed-certs=true
+  register: embed_cert_key
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ embed_cert_key }}
+  when: print_debug == true
+
+
+- name: Create Context For the cf-admin.
+  shell: |
+    kubectl config set-context cf-admin --cluster=kubernetes --user=cf-admin
+  register: create_context
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ create_context }}
+  when: print_debug == true
+
+
+# export ROOT_NAMESPACE="cf"
+# export KORIFI_NAMESPACE="korifi"
+# export ADMIN_USERNAME="cf-admin"
+# export BASE_DOMAIN="jtest.pivotal.io"
+# export GATEWAY_CLASS_NAME="contour"
+
+# /usr/local/bin/helm install korifi https://github.com/cloudfoundry/korifi/releases/download/v{{ korifi.major_version }}.{{ korifi.minor_version }}.{{ korifi.patch_version }}/korifi-{{ korifi.major_version }}.{{ korifi.minor_version }}.{{ korifi.patch_version }}.tgz \
+# --namespace="korifi" \
+# --set=generateIngressCertificates=true \
+# --set=rootNamespace="cf" \
+# --set=adminUserName="cf-admin" \
+# --set=api.apiServer.url="api.jtest.pivotal.io" \
+# --set=defaultAppDomainName="apps.jtest.pivotal.io" \
+# --set=containerRepositoryPrefix="harbor.jtest.pivotal.io/"  \
+# --set=kpackImageBuilder.builderRepository="harbor.jtest.pivotal.io/jproject01" \
+# --set=networking.gatewayClass=contour \
+# --wait
+

@@ -1,4 +1,5 @@
-- name: Unintall Cert Manager by Helm
+---
+- name: Unintall Cert Manager
   shell: |
     /usr/local/bin/helm uninstall cert-manager --namespace cert-manager
   register: uninstall_cert_manager

@@ -17,6 +17,13 @@
 - debug: msg={{ apply_strict_arp }}
 
 
+#- name: Add Taint Node
+#  shell: |
+#    kubectl taint nodes rk9-node01 node-role.kubernetes.io/control-plane:NoSchedule
+#  register: add_taint_node
+#- debug: msg={{ add_taint_node }}
+
+
 - name: Create Namespace for Metallb
   shell: |
     kubectl create namespace metallb-system
