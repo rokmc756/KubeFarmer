@@ -8,7 +8,7 @@
   when: print_debug == true and inventory_hostname in groups['master']
 
 
-- name: Copy BGP Config Yaml
+- name: Copy BGP Config
   template:
     src: "{{ item }}.j2"
     dest: "{{ k8s.base_path }}/{{ item }}"
@@ -21,7 +21,7 @@
   when: print_debug == true and inventory_hostname in groups['master']
 
 
-- name: Check If BGP Peering is correctly configured
+- name: Check If BGP Peering is Correctly Configured
   shell: |
     /usr/local/bin/calicoctl apply -f "{{ k8s.base_path }}/{{ item }}" --allow-version-mismatch
   register: check_bgp_peering

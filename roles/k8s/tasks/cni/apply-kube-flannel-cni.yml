@@ -59,7 +59,6 @@
   when: print_debug == true and k8s.cni.change_mtu == true and inventory_hostname in groups['master']
 
 
-
 - name: Setup Networking with Kube-Flannel
   shell: |
     kubectl apply -f {{ k8s.base_path }}/kube-flannel.yml
@@ -67,8 +66,6 @@
   when: inventory_hostname in groups['master']
 - debug: msg={{ kube_flannel_network_setup }}
   when: print_debug == true and inventory_hostname in groups['master']
-
-
 
 # https://blog.laputa.io/kubernetes-flannel-networking-6a1cb1f8ec7c
 #

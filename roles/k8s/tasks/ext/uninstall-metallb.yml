@@ -56,7 +56,7 @@
 - debug: msg={{ rollback_strict_arp }}
 
 
-- name: Remove Metallb Config Yaml File and Kubernetes-ingress
+- name: Remove Metallb Config Yaml File and Kubernetes-Ingress
   file:
     path: "{{ item }}"
     state: absent

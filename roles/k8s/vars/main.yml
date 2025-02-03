@@ -196,7 +196,6 @@ workers_ports:
 # https://docs.tigera.io/calico/latest/getting-started/kubernetes/requirements
 
 
-
 _metallb:
   install: true
   major_version: 0

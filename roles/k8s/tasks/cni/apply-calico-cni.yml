@@ -119,7 +119,6 @@
 - debug: msg={{ install_calicoctl }}
   when: print_debug == true and upload_calico == false and calicoctl_bin_exists.stat.exists == false and inventory_hostname in groups['master']
 
-#
 # calicoctl ipam show
 # calicoctl ipam show --show-blocks
 # kubectl get nodes -o jsonpath='{.items[*].spec.podCIDR}' ;echo
@@ -172,6 +171,4 @@
 
 # [ VXLAN Issue ]
 # https://github.com/projectcalico/calico/issues/6160
-#
-
 

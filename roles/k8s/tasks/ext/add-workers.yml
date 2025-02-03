@@ -50,7 +50,7 @@
   when: print_debug == true and inventory_hostname in groups['new_workers']
 
 
-- name: Join New Worker Nodes to Cluster, the Command must be run on the Master Only
+- name: Join New Worker Nodes to Cluster, the Command must be Run on the Master Only
   shell: |
     {{ k8s_join_cmd }}
   register: add_new_masters

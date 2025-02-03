@@ -84,7 +84,7 @@
 
 - name: Configure Kubectl Config
   shell: |
-    kubectl taint nodes  {{ hostvars[groups['master'][0]].ansible_hostname }} node-role.kubernetes.io/control-plane:NoSchedule-
+    kubectl taint nodes {{ hostvars[groups['master'][0]].ansible_hostname }} node-role.kubernetes.io/control-plane:NoSchedule-
   register: kubectl_configured
   until: kubectl_configured is succeeded
   retries: 10
@@ -164,7 +164,7 @@
   when: print_debug == true and inventory_hostname in groups['master']
 
 
-- name: Validate if Worker Nodes are all Ready
+- name: Validate if Worker Nodes are All Ready
   shell: |
     kubectl get nodes | sed 1d | awk '{print $2}' | grep NotReady | wc -l
   register: check_k8s_workers_status
@@ -204,11 +204,6 @@
 - name: Enable Helm Repository
   import_tasks: ext/enable-helm-repo.yml
   when: inventory_hostname in groups['master']
-
-
-#- name: Install Metallb
-#  import_tasks: ext/install-metallb.yml
-#  when: _metallb.install == true and inventory_hostname in groups['master']
 
 
 # erinformations/default": x509: certificate signed by unknown authority 

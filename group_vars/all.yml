@@ -17,6 +17,8 @@ k8s:
   base_path: /root
   host_num: "{{ groups['all'] | length }}"
   # host_num: "{{ groups['workers'] | length }}"
+  disk:
+    nvme: false
   net:
     type: "virtual"                # Or Physical
     gateway: "192.168.0.1"

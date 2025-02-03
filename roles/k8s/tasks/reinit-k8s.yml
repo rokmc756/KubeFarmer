@@ -25,8 +25,16 @@
     - Restart Containerd
 
 
-#- name: Force to Stop and Restart Services
-#  meta: flush_handlers
+- name: Force to Stop and Restart Services
+  meta: flush_handlers
+
+
+- name: Load Kernel Modules for Kurbernetes
+  shell: |
+    modprobe {{ item }}
+  with_items:
+    - overlay
+    - br_netfilter
 
 
 - name: Reset Kubernetes
@@ -89,11 +97,6 @@
   when: inventory_hostname in groups['master']
 
 
-- name: Setup CNI Networking Plugin
-  import_tasks: cni/setup-cni-plugin.yml
-  when: k8s.cni.install == true and inventory_hostname in groups['master']
-
-
 - name: Configure Kubectl Config
   shell: |
     kubectl taint nodes {{ hostvars[groups['master'][0]].ansible_hostname }} node-role.kubernetes.io/control-plane:NoSchedule-
@@ -125,6 +128,20 @@
   when: print_debug == true and inventory_hostname in groups['master']
 
 
+- name: Setup CNI Networking Plugin
+  import_tasks: cni/setup-cni-plugin.yml
+  when: k8s.cni.install == true and inventory_hostname in groups['master']
+
+
+- name: Reset Kubernetes on Cluster Nodes
+  shell: |
+    kubeadm reset -f
+  register: kube_cluster_reset
+  when: inventory_hostname in groups['workers']
+- debug: msg={{ kube_cluster_reset }}
+  when: print_debug == true and inventory_hostname in groups['workers']
+
+
 - name: Join the Other Kubernetes Nodes to Cluster, the Command must be Run on the Worker Nodes Only
   shell: |
     kubeadm join "{{ hostvars[groups['master'][0]][_netdev]['ipv4']['address'] }}:6443" --token "{{ k8s_token }}" --discovery-token-ca-cert-hash "{{ k8s_token_ca_cert }}"
@@ -135,7 +152,7 @@
   when: print_debug == true and inventory_hostname in groups['workers']
 
 
-- name: Validate if Worker Nodes are all Ready
+- name: Validate if Worker Nodes are All Ready
   shell: |
     kubectl get nodes | sed 1d | awk '{print $2}' | grep NotReady | wc -l
   register: check_k8s_workers_status
@@ -149,11 +166,11 @@
 - name: Validate if All Containers are Running Normally
   shell: |
     kubectl get pods --all-namespaces -o wide | sed 1d | awk '{print $4}' | grep ContainerCreating | wc -l
-  register: all_containers_running_checked
-  until: all_containers_running_checked.stdout|int == 0
+  register: check_all_containers_running
+  until: check_all_containers_running.stdout|int == 0
   retries: 60
   when: inventory_hostname in groups['master']
-- debug: msg={{ all_containers_running_checked }}
+- debug: msg={{ check_all_containers_running }}
   when: print_debug == true and inventory_hostname in groups['master']
 
 
@@ -198,6 +215,7 @@
 
 - name: Cleanup the NVME Devices
   import_tasks: cleanup-nvme-devices.yml
+  when: k8s.disk.nvme == true
 
 
 # Calico CNI

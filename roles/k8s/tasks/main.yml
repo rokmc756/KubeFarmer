@@ -51,6 +51,12 @@
   when: (( lb is defined and lb == true ) or ( k8s_all is defined and k8s_all == true )) and inventory_hostname in groups['master']
 
 
+- name: Reinitialize Kubernetes Cluster
+  import_tasks: reinit-k8s.yml
+  tags: reinit
+  when: ( kube is defined and kube == true ) or ( k8s_all is defined and k8s_all == true )
+
+
 - name: Uninstall Metallb
   import_tasks: ext/uninstall-metallb.yml
   tags: uninstall
@@ -68,11 +74,6 @@
   tags: uninstall, remove
   when: ( master is defined and master == true )
 
-
-- name: Reinitialize Kubernetes Cluster
-  import_tasks: reinit-k8s.yml
-  tags: reinit
-  when: ( kube is defined and kube == true ) or ( k8s_all is defined and k8s_all == true )
 
 
 - name: Stop Docker and Kube Services

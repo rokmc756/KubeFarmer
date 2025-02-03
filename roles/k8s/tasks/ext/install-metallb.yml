@@ -9,7 +9,7 @@
 - debug: msg={{ flush_ip_route_cache }}
 
 
-- name: Apply strictARP for VMWare or Cloud
+- name: Apply StrictARP for VMWare or Cloud
   shell: |
     kubectl get configmap kube-proxy -n kube-system -o yaml | \
     sed -e "s/strictARP: false/strictARP: true/" | kubectl apply -f - -n kube-system
@@ -44,7 +44,7 @@
 - debug: msg={{ create_metallb_secret }}
 
 
-- name: Copy Metallb Config Yaml for VMware
+- name: Copy Metallb Config for VMware
   template:
     src: metallb-config-vmware.yaml.j2
     dest: "{{ base_path }}/metallb-config-vmware.yaml"

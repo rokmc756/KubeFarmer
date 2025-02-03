@@ -33,7 +33,7 @@
   when: print_debug == true and inventory_hostname in groups['master']
 
 
-- name: Get Command to join cluster
+- name: Get Command to Join Cluster
   shell: |
     kubeadm token create --certificate-key "{{ k8s_cert_key }}" --print-join-command
   register: get_join_cmd
@@ -93,7 +93,7 @@
   when: print_debug == true and inventory_hostname in groups['slaves']
 
 
-- name: Validate If Kubernetes Workers Are All Ready
+- name: Validate If Kubernetes Workers are All Ready
   shell: kubectl get nodes
   register: check_k8s_workers_status
   until: check_k8s_workers_status.stdout.find("NotReady") == -1
