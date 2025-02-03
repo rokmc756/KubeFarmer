@@ -1,51 +1,14 @@
-# https://oopflow.medium.com/setup-install-rancher-onto-existing-kubernetes-cluster-for-high-availability-7351f0284592
-
-#- name: Remove NGINX Helm Repo
-#  shell: |
-#    helm repo remove nginx-stable
-#  register: remove_nginx_helm_repo
-#  ignore_errors: yes
-#  args:
-#    chdir: "{{ base_path }}/"
-#  environment:
-#    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-#- debug: msg={{ remove_nginx_helm_repo }}
-
-
-- name: Remove Harbor Helm Repo
+---
+- name: Remove Helm Repositories
   shell: |
-    helm repo remove harbor
-  register: remove_harbor_helm_repo
+    /usr/local/bin/helm repo remove {{ item.name }}
+  register: remove_helm_repos
   ignore_errors: yes
-  args:
-    chdir: "{{ base_path }}/"
-  environment:
-    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-- debug: msg={{ remove_harbor_helm_repo }}
-
-
-- name: Remove Jetstack Helm Repo
-  shell: |
-    helm repo remove jetstack
-  register: remove_jetstack_helm_repo
-  ignore_errors: yes
-  args:
-    chdir: "{{ base_path }}/"
-  environment:
-    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-- debug: msg={{ remove_jetstack_helm_repo }}
-
-
-#- name: Remove Metallb Helm Repo
-#  shell: |
-#    helm repo remove metallb
-#  register: remove_metallb_helm_repo
-#  ignore_errors: yes
-#  args:
-#    chdir: "{{ base_path }}/"
-#  environment:
-#    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-#- debug: msg={{ remove_metallb_helm_repo }}
+  with_items:
+    - { name: 'jetstack',      link: 'https://charts.jetstack.io' }
+    - { name: 'harbor',        link: 'https://helm.goharbor.io' }
+    - { name: 'nginx-ingress', link: 'https://kubernetes.github.io/ingress-nginx' }
+- debug: msg={{ remove_helm_repos }}
 
 
 #- name: Delete Helm Install Script

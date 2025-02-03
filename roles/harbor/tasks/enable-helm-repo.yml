@@ -13,48 +13,15 @@
 - debug: msg={{ install_helm }}
 
 
-#- name: Add Metallb Helm Repo
-#  shell: |
-#    helm repo add metallb https://metallb.github.io/metallb
-#  register: add_metallb_helm_repo
-#  args:
-#    chdir: "{{ base_path }}/"
-#  environment:
-#    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-#- debug: msg={{ add_metallb_helm_repo }}
-
-
-#- name: Add NGINX Helm Repo
-#  shell: |
-#    helm repo add nginx-stable https://helm.nginx.com/stable
-#  register: add_nginx_helm_repo
-#  args:
-#    chdir: "{{ base_path }}/"
-#  environment:
-#    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-#- debug: msg={{ add_nginx_helm_repo }}
-
-
-- name: Add Harbor Helm Repo
+- name: Add Helm Repositories
   shell: |
-    helm repo add harbor https://helm.goharbor.io
-  register: add_harbor_helm_repo
-  args:
-    chdir: "{{ base_path }}/"
-  environment:
-    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-- debug: msg={{ add_harbor_helm_repo }}
-
-
-- name: Add Jetstack Helm Repo
-  shell: |
-    helm repo add jetstack https://charts.jetstack.io
-  register: add_jetstack_helm_repo
-  args:
-    chdir: "{{ base_path }}/"
-  environment:
-    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-- debug: msg={{ add_jetstack_helm_repo }}
+    /usr/local/bin/helm repo add {{ item.name }} {{ item.link }}
+  register: add_helm_repos
+  with_items:
+    - { name: 'jetstack',      link: 'https://charts.jetstack.io' }
+    - { name: 'harbor',        link: 'https://helm.goharbor.io' }
+    - { name: 'nginx-ingress', link: 'https://kubernetes.github.io/ingress-nginx' }
+- debug: msg={{ add_helm_repos }}
 
 
 - name: Update Helm Repo

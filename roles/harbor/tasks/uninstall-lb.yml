@@ -1,0 +1,12 @@
+---
+- name: Delete Harbor Load Balancer
+  shell: |
+    kubectl patch svc {{ item.svc }} -n {{ _harbor.namespace }} -p '{"spec": {"type": "ClusterIP"}}'
+  register: delete_harbor_lb
+  ignore_errors: yes
+  args:
+    chdir: "{{ base_path }}"
+  with_items:
+    - { svc: "harbor-portal", ip_addr: "{{ _harbor.lb.ip_addr }}" }
+- debug: msg={{ delete_harbor_lb }}
+

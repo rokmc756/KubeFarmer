@@ -1,15 +1,15 @@
 ---
-- name: Delete Docker Register Secret
-  shell: |
-    kubectl -n cf delete secret image-registry-credentials
-  register: delete_docker_secret
-  ignore_errors: true
-  args:
-    chdir: "{{ base_path }}/"
-  environment:
-    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-- debug: msg={{ delete_docker_secret }}
-  when: print_debug == true
+#- name: Delete Docker Register Secret
+#  shell: |
+#    kubectl -n cf delete secret image-registry-credentials
+#  register: delete_docker_secret
+#  ignore_errors: true
+#  args:
+#    chdir: "{{ base_path }}/"
+#  environment:
+#    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+#- debug: msg={{ delete_docker_secret }}
+#  when: print_debug == true
 
 
 - name: Create Namespaces

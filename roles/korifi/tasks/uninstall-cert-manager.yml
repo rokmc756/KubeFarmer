@@ -3,7 +3,7 @@
   shell: |
     /usr/local/bin/helm uninstall cert-manager --namespace cert-manager
   register: uninstall_cert_manager
-  ignore_errors: yes
+  ignore_errors: true
   args:
     chdir: "{{ base_path }}/"
   environment:
@@ -11,28 +11,43 @@
 - debug: msg={{ uninstall_cert_manager }}
 
 
-- name: Delete Namespace for Cert Manager
+- name: Delete Cert Manager Namespace
   shell: |
-    kubectl delete namespace cert-manager
-  register: delete_cert_manager_namespace
-  ignore_errors: yes
+    kubectl delete namespace cert-manager --grace-period=0 --force &
+    sleep 10
+  register: delete_cm_ns
+  ignore_errors: true
   args:
     chdir: "{{ base_path }}/"
   environment:
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-- debug: msg={{ delete_cert_manager_namespace }}
+- debug: msg={{ delete_cm_ns }}
+  when: print_debug == true
+
+
+- name: Force Delete CF Namespace
+  shell: |
+    kubectl get namespace "cert-manager" -o json   | tr -d "\n" | sed "s/\"finalizers\": \[[^]]\+\]/\"finalizers\": []/" | \
+    kubectl replace --raw /api/v1/namespaces/cert-manager/finalize -f -
+  register: force_delete_cm_ns
+  ignore_errors: true
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ force_delete_cm_ns }}
+  when: print_debug == true
 
 
 #- name: Delete Cert Manager CRDs
 #  shell: |
 #    kubectl delete \
-#    -f https://github.com/jetstack/cert-manager/releases/download/v{{ cert_manager.major_version }}.{{ cert_manager.minor_version }}.{{ cert_manager.patch_version }}/cert-manager.crds.yaml
-#  register: delete_cert_manager_crds
-#  ignore_errors: yes
+#    -f https://github.com/jetstack/cert-manager/releases/download/v{{ _cm.major_version }}.{{ _cm.minor_version }}.{{ _cm.patch_version }}/cert-manager.crds.yaml
+#  register: delete_cm_crds
+#  ignore_errors: true
 #  args:
 #    chdir: "{{ base_path }}/"
 #  environment:
 #    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-#- debug: msg={{ delete_cert_manager_crds }}
-
+#- debug: msg={{ delete_cm_crds }}
 

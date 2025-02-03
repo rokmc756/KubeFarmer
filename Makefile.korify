@@ -1,0 +1,134 @@
+korify:
+	@if [ "${r}" = "init" ] || [ "${r}" = "uninit" ] || [ "${r}" = "reinit" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-korify.yml -e '{"${s}": True}' --tags='${r}';\
+			else\
+				echo "No actions to init/uninit/reinit korify";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-korify.yml -e '{korify_all: True}' --tags='${r}';\
+			else\
+				echo "No actions to init/uninit/reinit korify";\
+			fi\
+		else\
+			echo "No actions to init/uninit/reinit korify";\
+		fi;\
+	elif [ "${r}" = "prepare" ] || [ "${r}" = "clean" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-korify.yml -e '{"${s}": True}' --tags='${r}';\
+			else\
+				echo "No actions to prepare/clean korify";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-korify.yml -e '{korify_all: True}' --tags='${r}';\
+			else\
+				echo "No actions to prepare/clean korify";\
+			fi\
+		else\
+			echo "No actions to prepare/clean korify";\
+		fi;\
+	elif [ "${r}" = "enable" ] || [ "${r}" = "disable" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-korify.yml -e '{"${s}": True}' --tags='${r}';\
+			else\
+				echo "No actions to ennable/disable korify";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-korify.yml -e '{korify_all: True}' --tags='${r}';\
+			else\
+				echo "No actions to ennable/disable korify";\
+			fi\
+		else\
+			echo "No actions to ennable/disable korify";\
+		fi;\
+	elif [ "${r}" = "deploy" ] || [ "${r}" = "destroy" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-korify.yml -e '{"${s}": True}' --tags='${r}';\
+			else\
+				echo "No actions to deploy/destroy korify";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-korify.yml -e '{korify_all: True}' --tags='${r}';\
+			else\
+				echo "No actions to deploy/destroy korify";\
+			fi\
+		else\
+			echo "No actions to deploy/destroy korify";\
+		fi;\
+	elif [ "${r}" = "create" ] || [ "${r}" = "delete" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-korify.yml -e '{"${s}": True}' --tags='${r}';\
+			else\
+				echo "No actions to create/delete korify";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-korify.yml -e '{korify_all: True}' --tags='${r}';\
+			else\
+				echo "No actions to create/delete korify";\
+			fi\
+		else\
+			echo "No actions to create/delete korify";\
+		fi;\
+	elif [ "${r}" = "install" ] || [ "${r}" = "uninstall" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-korify.yml -e '{"${s}": True}' --tags='${r}';\
+			else\
+				echo "No actions to install/uninstall korify";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-korify.yml -e '{korify_all: True}' --tags='${r}';\
+			else\
+				echo "No actions to install/uninstall korify";\
+			fi\
+		else\
+			echo "No actions to install/uninstall korify";\
+		fi;\
+	elif [ "${r}" = "add" ] || [ "${r}" = "remove" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-korify.yml -e '{"${s}": True}' --tags='${r}';\
+			else\
+				echo "No actions to add/remove korify";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-korify.yml -e '{korify_all: True}' --tags='${r}';\
+			else\
+				echo "No actions to add/remove korify";\
+			fi\
+		else\
+			echo "No actions to add/remove korify";\
+		fi;\
+	elif [ "${r}" = "upgrade" ] || [ "${r}" = "downgrade" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-korify.yml -e '{"${s}": True}' --tags='${r}';\
+			else\
+				echo "No actions to upgrade/downgrade korify";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-korify.yml -e '{korify_all: True}' --tags='${r}';\
+			else\
+				echo "No actions to upgrade/downgrade korify";\
+			fi\
+		else\
+			echo "No actions to upgrade/downgrade korify";\
+		fi;\
+	else\
+		echo "No actions to korify role";\
+		exit;\
+	fi
+

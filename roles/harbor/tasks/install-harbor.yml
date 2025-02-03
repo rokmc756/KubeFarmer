@@ -13,16 +13,16 @@
   when: print_debug == true
 
 
-- name: Copy Cluster Local PVC Config Yaml
+- name: Copy Cluster Local PVC Config
   template:
     src: "{{ item }}.j2"
     dest: "{{ base_path }}/{{ item }}"
-  register: copy_cluster_local_pvc_config_yaml
+  register: copy_cluster_local_pvc_config
   with_items:
     - "local-storage-class.yaml"
     - "local-storage-pv.yaml"
     - "local-storage-pvc.yaml"
-- debug: msg={{ copy_cluster_local_pvc_config_yaml }}
+- debug: msg={{ copy_cluster_local_pvc_config }}
 
 
 - name: Cluster Settings for a Production Cluster Running in a Dynamic Cloud Environment including VMware
@@ -55,9 +55,9 @@
   import_tasks: gen-harbor-certs.yml
 
 
-- name: Create a TLS secret with the contents of tls.key and tls.crt in the harbor namespace
+- name: Create a TLS Secret with the Contents of tls.key and tls.crt in the Harbor Namespace
   shell: |
-    kubectl create secret tls harbor-cert --key {{ _ssl.dir }}/{{ _harbor.hostname }}.key \
+    kubectl create secret tls harbor-tls --key {{ _ssl.dir }}/{{ _harbor.hostname }}.key \
     --cert {{ _ssl.dir }}/{{ _harbor.hostname }}.crt -n {{ _harbor.namespace }}
   register: create_tls_secret
   args:

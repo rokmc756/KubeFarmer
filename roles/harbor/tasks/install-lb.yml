@@ -1,0 +1,12 @@
+---
+- name: Apply Harbor Load Balancer
+  shell: |
+    kubectl patch svc {{ item.svc }} -n {{ _harbor.namespace }} -p '{"spec": {"type": "LoadBalancer", "loadBalancerIP": "{{ item.ip_addr }}"}}'
+  register: apply_harbor_lb
+  ignore_errors: yes
+  args:
+    chdir: "{{ base_path }}"
+  with_items:
+    - { svc: "harbor-portal", ip_addr: "{{ _harbor.lb.ip_addr }}" }
+- debug: msg={{ apply_harbor_lb }}
+
