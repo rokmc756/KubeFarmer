@@ -35,18 +35,41 @@
     - "korifi-v{{ _korifi.major_version }}-{{ _korifi.minor_version }}-{{ _korifi.patch_version }}-values.yaml"
 - debug: msg={{ copy_korifi_config_values }}
   when: print_debug == true
+
 # kubectl delete validatingwebhookconfigurations --all
 # kubectl delete mutatingwebhookconfigurations --all
 # --set=containerRepositoryPrefix="harbor.jtest.pivotal.io/"  \
 # --set=networking.gatewayClass=contour \
 
 
+#- name: Deploy Korifi
+#  shell: |
+#    helm install korifi \
+#    https://github.com/cloudfoundry/korifi/releases/download/v{{ _korifi.major_version }}.{{ _korifi.minor_version }}.{{ _korifi.patch_version }}/korifi-{{ _korifi.major_version }}.{{ _korifi.minor_version }}.{{ _korifi.patch_version }}.tgz \
+#    -n korifi \
+#    -f korifi-values.yaml
+#  register: install_korifi
+#  args:
+#    chdir: "{{ base_path }}/"
+#  environment:
+#    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+#- debug: msg={{ install_korifi }}
+#  when: print_debug == true
+
+
 - name: Deploy Korifi
   shell: |
-    helm install korifi \
-    https://github.com/cloudfoundry/korifi/releases/download/v{{ _korifi.major_version }}.{{ _korifi.minor_version }}.{{ _korifi.patch_version }}/korifi-{{ _korifi.major_version }}.{{ _korifi.minor_version }}.{{ _korifi.patch_version }}.tgz \
-    -n korifi \
-    -f korifi-values.yaml
+    helm install korifi https://github.com/cloudfoundry/korifi/releases/download/v{{ _korifi.major_version }}.{{ _korifi.minor_version }}.{{ _korifi.patch_version }}/korifi-{{ _korifi.major_version }}.{{ _korifi.minor_version }}.{{ _korifi.patch_version }}.tgz \
+    --namespace="korifi" \
+    --set=generateIngressCertificates=true \
+    --set=rootNamespace="cf" \
+    --set=adminUserName="cf-admin" \
+    --set=api.apiServer.url="api.jtest.pivotal.io" \
+    --set=defaultAppDomainName="apps.jtest.pivotal.io" \
+    --set=containerRepositoryPrefix=harbor.jtest.pivotal.io/ \
+    --set=kpackImageBuilder.builderRepository=harbor.jtest.pivotal.io/jproject01 \
+    --set=networking.gatewayClass=contour \
+    --wait
   register: install_korifi
   args:
     chdir: "{{ base_path }}/"
@@ -54,6 +77,7 @@
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ install_korifi }}
   when: print_debug == true
+
 
 
 # --set=generateIngressCertificates=true \

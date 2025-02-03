@@ -55,18 +55,18 @@
   when: print_debug == true
 
 
-- name: Force Delete CF Namespace
-  shell: |
-    kubectl get namespace "cf" -o json   | tr -d "\n" | sed "s/\"finalizers\": \[[^]]\+\]/\"finalizers\": []/" | \
-    kubectl replace --raw /api/v1/namespaces/cf/finalize -f -
-  register: force_delete_cf_ns
-  ignore_errors: true
-  args:
-    chdir: "{{ base_path }}/"
-  environment:
-    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-- debug: msg={{ force_delete_cf_ns }}
-  when: print_debug == true
+#- name: Force Delete CF Namespace
+#  shell: |
+#    kubectl get namespace "cf" -o json   | tr -d "\n" | sed "s/\"finalizers\": \[[^]]\+\]/\"finalizers\": []/" | \
+#    kubectl replace --raw /api/v1/namespaces/cf/finalize -f -
+#  register: force_delete_cf_ns
+#  ignore_errors: true
+#  args:
+#    chdir: "{{ base_path }}/"
+#  environment:
+#    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+#- debug: msg={{ force_delete_cf_ns }}
+#  when: print_debug == true
 
 
 - name: Delete Namespaces Config

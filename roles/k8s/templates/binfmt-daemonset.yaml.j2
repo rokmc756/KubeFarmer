@@ -1,0 +1,34 @@
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: binfmt
+  labels:
+    app: binfmt-setup
+spec:
+  selector:
+    matchLabels:
+      name: binfmt
+  template:
+    metadata:
+      labels:
+        name: binfmt
+    spec:
+      tolerations:
+        - key: node-role.kubernetes.io/control-plane
+          effect: NoSchedule
+      initContainers:
+        - name: binfmt
+          image: tonistiigi/binfmt
+          args: ["--install", "all"]
+          securityContext:
+            privileged: true
+      containers:
+        - name: pause
+          image: busybox:stable
+          command: ["sleep","infinity"]
+          resources:
+            requests:
+              memory: "1Mi"
+              cpu: "1m"
+

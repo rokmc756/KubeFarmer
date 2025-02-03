@@ -149,6 +149,7 @@
   with_items:
     - "korifi-ns.yaml"
     - "cf-ns.yaml"
+    - "gateway-class-name.yaml"
 - debug: msg={{ delete_namespaces_config }}
   when: print_debug == true
 

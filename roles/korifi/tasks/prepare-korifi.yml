@@ -72,34 +72,9 @@
   when: print_debug == true
 
 
-- name: Copy Namespaces Config
-  template:
-    src: "{{ item }}.j2"
-    dest: "{{ base_path }}/{{ item }}"
-  register: copy_namespaces_config
-  with_items:
-    - "cf-ns.yaml"
-- debug: msg={{ copy_namespaces_config }}
-  when: print_debug == true
-
-
-- name: Create Namespaces
-  shell: |
-    kubectl apply -f {{ item }}
-  register: create_namespaces
-  with_items:
-    - "cf-ns.yaml"
-  args:
-    chdir: "{{ base_path }}/"
-  environment:
-    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-- debug: msg={{ create_namespaces }}
-  when: print_debug == true
-
-
 - name: Intall Contour
   shell: |
-    helm install contour bitnami/contour --namespace projectcontour --create-namespace
+    kubectl apply -f https://raw.githubusercontent.com/projectcontour/contour/release-1.30/examples/render/contour-gateway-provisioner.yaml
   register: install_contour
   ignore_errors: yes
   args:
@@ -109,6 +84,57 @@
 - debug: msg={{ install_contour }}
   when: print_debug == true
   #  kubectl apply -f https://projectcontour.io/quickstart/contour.yaml
+
+
+- name: Copy Namespaces Config
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ base_path }}/{{ item }}"
+  register: copy_namespaces_config
+  with_items:
+    - "gateway-class-name.yaml"
+    - "cf-ns.yaml"
+- debug: msg={{ copy_namespaces_config }}
+  when: print_debug == true
+
+
+- name: Intall Service Binding Runtime
+  shell: |
+    kubectl apply \
+    -f https://github.com/servicebinding/runtime/releases/download/v{{ _servicebinding.major_version }}.{{ _servicebinding.minor_version }}.{{ _servicebinding.patch_version }}/servicebinding-runtime-v{{ _servicebinding.major_version }}.{{ _servicebinding.minor_version }}.{{ _servicebinding.patch_version }}.yaml
+  register: install_service_binding_runtime
+  args:
+    chdir: "{{ base_path }}/"
+- debug: msg={{ install_service_binding_runtime }}
+
+
+- name: Create Namespaces
+  shell: |
+    kubectl apply -f {{ item }}
+  register: create_namespaces
+  with_items:
+    - "gateway-class-name.yaml"
+    - "cf-ns.yaml"
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ create_namespaces }}
+  when: print_debug == true
+
+
+#- name: Intall Contour
+#  shell: |
+#    helm install contour bitnami/contour --namespace projectcontour --create-namespace
+#  register: install_contour
+#  ignore_errors: yes
+#  args:
+#    chdir: "{{ base_path }}/"
+#  environment:
+#    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+#- debug: msg={{ install_contour }}
+#  when: print_debug == true
+#  #  kubectl apply -f https://projectcontour.io/quickstart/contour.yaml
 
 
 - name: Create Docker Register Secret
@@ -124,4 +150,19 @@
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ create_docker_secret }}
   when: print_debug == true
+
+
+- name: Install Kubernetes Gateway API
+  shell: |
+    kubectl get crd gateways.gateway.networking.k8s.io &> /dev/null || \
+    { kubectl kustomize "github.com/kubernetes-sigs/gateway-api/config/crd?ref=v0.8.0" | kubectl apply -f -; }
+  register: install_kube_gw_api
+  ignore_errors: yes
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ install_kube_gw_api }}
+  when: print_debug == true
+
 

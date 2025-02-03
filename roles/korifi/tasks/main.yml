@@ -21,6 +21,12 @@
   when: ( go is defined and go == true ) and inventory_hostname in groups['master']
 
 
+- name: Install Kustomize
+  import_tasks: install-kustomize.yml
+  tags: install
+  when: _kustomize.install == true and inventory_hostname in groups['master']
+
+
 - name: Install Cert Manager
   import_tasks: install-cert-manager.yml
   tags: install
@@ -55,6 +61,12 @@
   import_tasks: deploy-apps.yml
   tags: deploy, install
   when: ( apps is defined and apps == true ) and inventory_hostname in groups['master']
+
+
+- name: Delete CF Admin
+  import_tasks: delete-cf-admin.yml
+  tags: delete, uninstall
+  when: ( admin is defined and admin == true ) and inventory_hostname in groups['master']
 
 
 #- name: Destroy Korifi

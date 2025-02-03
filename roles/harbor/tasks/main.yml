@@ -6,9 +6,7 @@
 
 - name: Set Facts for Harbor
   import_tasks: set-harbor-facts.yml
-  tags:
-    - install
-    - uninstall
+  tags: install, uninstall
 
 
 - name: Apply Kernel Parameters for Harbor

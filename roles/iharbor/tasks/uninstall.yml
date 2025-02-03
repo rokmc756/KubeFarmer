@@ -1,29 +1,27 @@
 ---
-# Uninstall Harbor continaer registry for CentOS 8.x or Rocky 8
-
 - name: Down All Docker Containers for Harbor
   shell: |
     export PATH=$PATH:/usr/local/bin && docker compose -f /root/harbor/docker-compose.yml down
-  register: docker_compose_down
-  until: docker_compose_down is succeeded
+  register: down_docker_compose
+  until: down_docker_compose is succeeded
   ignore_errors: yes
-- debug: msg={{ docker_compose_down }}
+- debug: msg={{ down_docker_compose }}
   when: print_debug == true
   # docker-compose down -v
 
-#
+
 - name: Remnove Database and Registry Directories Used by Harbor Containers
   file:
     path: "{{ item }}"
     state: absent
-  register: db_reg_directory_removed
+  register: remove_db_reg_directory
   with_items:
     - "/data/database"
     - "/data/registry"
-- debug: msg={{ db_reg_directory_removed }}
+- debug: msg={{ remove_db_reg_directory }}
   when: print_debug == true
 
-#
+
 #- name: Verify that Docker is Uninstalled Correctly by Removing the hello-world image
 #  shell: |
 #    export PATH=$PATH:/usr/local/bin && docker rm hello-world
@@ -33,69 +31,69 @@
 #- debug: msg={{ docker_rm_hello }}
 #  when: print_debug == true
 
-#
+
 - name: Stop Harbor in the Background
   shell: |
     export PATH=$PATH:/usr/local/bin && docker-compose stop
-  register: harbor_stop
-  until: harbor_stop is succeeded
+  register: stop_harbor
+  until: stop_harbor is succeeded
   ignore_errors: yes
-- debug: msg={{ harbor_stop }}
+- debug: msg={{ stop_harbor }}
   when: print_debug == true
   # export PATH=$PATH:/usr/local/bin && docker-compose -f /root/harbor/docker-compose.yml down
 
-#
+
 - name: Uninstall Docker-Compose Using Pip
   shell: |
     export PATH=$PATH:/usr/local/bin && pip3 uninstall docker-compose -y
     export PATH=$PATH:/usr/local/bin && pip3 uninstall setuptools_rust -y
     export PATH=$PATH:/usr/local/bin && pip3 uninstall pip setuptools -y
-  register: docker_compose_uninstalled
+  register: uninstall_docker_compose
   ignore_errors: yes
-- debug: msg={{ docker_compose_uninstalled }}
+- debug: msg={{ uninstall_docker_compose }}
   when: print_debug == true
   # pip2 install docker-compose
 
-#
+
 - name: Alternative Python Version to Python3
   command: alternatives --set python /usr/bin/python3
-  register: python_version_alternative
+  register: alternative_python_version
   when: hostvars[inventory_hostname].ansible_distribution_major_version|int <= 8
-- debug: msg={{ python_version_alternative }}
+- debug: msg={{ alternative_python_version }}
   when: print_debug == true and hostvars[inventory_hostname].ansible_distribution_major_version|int <= 8
 
-#
+
 - name: Disable and Stop Docker
   systemd:
     name: docker
     state: stopped
     enabled: no
-  register: docker_disabled
-  until: docker_disabled is succeeded
+  register: disable_docker
+  until: disable_docker is succeeded
   retries: 10
   ignore_errors: yes
-- debug: msg={{ docker_disabled }}
+- debug: msg={{ disable_docker }}
   when: print_debug == true
 
-#
+
 - name: Remove Repository ( And Clean Up left-over Metadata )
   yum_repository:
     name: epel
     file: docker_repo
     state: absent
-  register: docker_repo_removed
+  register: remove_docker_repo
   ignore_errors: yes
-- debug: msg={{ docker_repo_removed }}
+- debug: msg={{ remove_docker_repo }}
   when: print_debug == true
 
-#
+
 - name: Alternative Python 2.7 Version
   command: alternatives --set python /usr/bin/python2
   register: alternative_python_version
   when: hostvars[inventory_hostname].ansible_distribution_major_version|int <= 8
   # command: update-alternatives --install /usr/bin/python python /usr/bin/python2.7 1
 
-#
+
 - name: Uninstall the Latest Version of Docker-CE Packages
   package:
     name: "{{ item }}"
@@ -103,29 +101,29 @@
   with_items:
     - "docker-ce"
     - "python3-pip"
-  register: docker_uninstalled
-- debug: msg={{ docker_uninstalled }}
+  register: uninstall_docker
+- debug: msg={{ uninstall_docker }}
   when: print_debug == true
 
-#
+
 #- name: Uninstall the EPEL Repo and Other Required Packages to Your System
 #  package:
 #    name: "{{ item }}"
 #    state: absent
-#  register: epel_uninstalled
+#  register: uninstall_epel
 #  with_items:
 #    - epel-release
 #    - wget
 #    - yum-utils
-#- debug: msg={{ epel_uninstalled }}
+#- debug: msg={{ uninstall_epel }}
 #  when: print_debug == true
 
-#
+
 - name: Remove Certs and Harbor Files and Directories
   file:
     path: "{{ item }}"
     state: absent
-  register: certs_harbor_removed
+  register: remove_certs_harbor
   with_items:
     - "/root/harbor"
     - "/root/certs"
@@ -135,20 +133,20 @@
     - "/var/lib/docker"
     - "/etc/yum.repos.d/kubernetes.repo"
     - "/etc/yum.repos.d/docker-ce.repo"
-- debug: msg={{ certs_harbor_removed }}
+- debug: msg={{ remove_certs_harbor }}
   when: print_debug == true
 
-#
+
 - name: Enabling SELinux to be Required
   selinux:
     state: permissive
     policy: targeted
-  register: selinux_enabled
-  failed_when: selinux_enabled.reboot_required == false
-- debug: msg={{ selinux_enabled }}
+  register: enable_selinux
+  failed_when: enable_selinux.reboot_required == false
+- debug: msg={{ enable_selinux }}
   when: print_debug == true
 
-#
+
 - name: Reboot required (Red Hat) - Step 2
   shell: ( /bin/sleep 5 ; /sbin/shutdown -r now "Ansible updates triggered" ) &
   async: 30
@@ -156,14 +154,13 @@
   notify:
     - Waiting for server to come back after restart
   when: selinux_enabled.reboot_required == true
-
 # It works also
 #- name: Reboot machine and send a message
 #  reboot: msg="Rebooting machine in 5 seconds"
 
 - meta: flush_handlers
 
-#
+
 - name: Check if SELinux has been enabled in Configurtion File
   command: grep SELINUX /etc/sysconfig/selinux
   register: sevalue

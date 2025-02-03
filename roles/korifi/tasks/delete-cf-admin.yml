@@ -1,5 +1,5 @@
 ---
-- name: Delete the Role to the CF Admin
+- name: Delete the Role to the cf-admin.
   shell: |
     kubectl delete rolebinding developer-binding-cf-admin
   register: delete_bind_role
@@ -12,7 +12,7 @@
   when: print_debug == true
 
 
-- name: Delete Developer Role for the CF Admin
+- name: Delete Developer Role for the cf-admin.
   shell: |
     kubectl delete role developer
   register: delete_developer_role

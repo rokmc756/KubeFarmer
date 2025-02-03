@@ -1,6 +1,6 @@
 ---
 # Install Harbor continaer registry for CentOS 8.x or Rocky 8
-
+#
 #- name: Install Python 2.7 but do not select it
 #  alternatives:
 #    name: python
@@ -8,21 +8,21 @@
 #    link: /usr/bin/python
 #    state: present
 
-#
+
 - name: Alternative Python Version to Python2
   command: alternatives --set python /usr/bin/python2
-  register: python_version_alternative
+  register: alternative_python_version
   when: hostvars[inventory_hostname].ansible_distribution_major_version|int <= 8
-- debug: msg={{ python_version_alternative }}
+- debug: msg={{ alternative_python_version }}
   when: print_debug == true and hostvars[inventory_hostname].ansible_distribution_major_version|int <= 8
   #  update-alternatives --install /usr/bin/python python /usr/bin/python2.7 1
 
-#
+
 - name: Install the EPEL Repo and Other Required Packages to Your System
   package:
     name: "{{ item }}"
     state: present
-  register: dependency_packages_installed
+  register: install_dependency_packages
   with_items:
     - "epel-release"
     - "firewalld"
@@ -34,80 +34,75 @@
     - "libselinux-python3"
     - "wget"
     - "yum-utils"
-- debug: msg={{ dependency_packages_installed }}
+- debug: msg={{ install_dependency_packages }}
   when: print_debug == true
   # ignore_errors: yes
 
-#
+
 - name: Install the EPEL Repo and Other Required Packages to Your System
   package:
     name: "{{ item }}"
     state: present
-  register: python2_packages_installed
+  register: install_python2_packages
   with_items:
     - "python2-pip"
     - "python2-psycopg2"
     - "libselinux-python2"
   when: hostvars[inventory_hostname].ansible_distribution_major_version|int <= 8
-
-#
-- debug: msg={{ python2_packages_installed }}
+- debug: msg={{ install_python2_packages }}
   when: print_debug == true and hostvars[inventory_hostname].ansible_distribution_major_version|int <= 8
 
-#
+
 - name: Disable SELinux to be Required
   selinux:
     state: disabled
-  register: selinux_disabled
-  failed_when: selinux_disabled.reboot_required == false
-
-- debug: msg={{ selinux_disabled }}
+  register: disable_selinux
+  failed_when: disable_selinux.reboot_required == false
+- debug: msg={{ disable_selinux }}
   when: print_debug == true
 
-#
+
 - name: Reboot required
   shell: ( /bin/sleep 5 ; /sbin/shutdown -r now "Ansible updates triggered" ) &
   async: 30
   poll: 0
   notify:
     - Waiting for server to come back after restart
-  when: selinux_disabled.reboot_required == true
+  when: disable_selinux.reboot_required == true
 
-#
+
 - meta: flush_handlers
 
-#
+
 - name: Check if SELinux has been disabled in Configurtion File
   command: grep SELINUX /etc/sysconfig/selinux
   register: sevalue
-
 - debug: msg={{ sevalue }}
   when: print_debug == true
-    #- debug: msg={{ sevalue.stdout_lines }}
 
-#
+
 - name: Add Docker Repository
   yum_repository:
     name: docker-ce
     description: Add docker repsotiry
     baseurl: "https://download.docker.com/linux/centos/{{ hostvars[inventory_hostname].ansible_distribution_major_version }}/x86_64/stable/"
     gpgcheck: "no"
-  register: docker_repo_added
-- debug: msg={{ docker_repo_added }}
+  register: add_docker_repo
+- debug: msg={{ add_docker_repo }}
   when: print_debug == true
 
-#
+
 - name: Install the latest version of Docker-CE Packages in All Nodes
   package:
     name: "{{ item }}"
     state: present
   with_items:
     - "docker-ce"
-  register: docker_installed
-- debug: msg={{ docker_installed }}
+  register: install_docker
+- debug: msg={{ install_docker }}
   when: print_debug == true
 
-#
+
 - name: Install Docker-Compose Using Pip
   shell: |
     export PATH=$PATH:/usr/local/bin && pip3 install --upgrade pip
@@ -115,53 +110,54 @@
     export PATH=$PATH:/usr/local/bin && pip3 install setuptools_rust
     export PATH=$PATH:/usr/local/bin && pip3 install docker-compose
   ignore_errors: yes
-  register: docker_compose_installed
-- debug: msg={{ docker_installed }}
+  register: install_docker_compose
+- debug: msg={{ install_docker }}
   when: print_debug == true
   # pip2 install docker-compose
   # pip3.6 is on centos or rocky8
   # pip-3.6 is on /usr/local/bin installed manually
 
-#
+
 - name: Enable and Start Docker
   systemd:
     name: docker
     state: started
     enabled: yes
     daemon-reload: yes
-  register: docker_enabled
-  until: docker_enabled is succeeded
+  register: enable_docker
+  until: enable_docker is succeeded
   retries: 30
   delay: 10
-  failed_when: docker_enabled is failure
-- debug: msg={{ docker_enabled }}
+  failed_when: enable_docker is failure
+- debug: msg={{ enable_docker }}
   when: print_debug == true
 
-#
+
 - name: Verify that Docker is installed Correctly by Running the Hello-World Image
   shell: |
     docker run hello-world
   ignore_errors: yes
-  register: docker_run_hello
-- debug: msg={{ docker_run_hello }}
+  register: run_docker_hello
+- debug: msg={{ run_docker_hello }}
   when: print_debug == true
 
-#
+
 - name: The Binary of the Installer can be Downloaded From the Release page. Choose Either the Online or Offline Installer
   get_url:
     url: https://github.com/vmware/harbor/releases/download/v{{ harbor.major_version }}.{{ harbor.minor_version }}.{{ harbor.patch_version }}/harbor-online-installer-v{{ harbor.major_version }}.{{ harbor.minor_version }}.{{ harbor.patch_version }}.tgz
     dest: /root/harbor-online-installer-v{{ harbor.major_version }}.{{ harbor.minor_version }}.{{ harbor.patch_version }}.tgz
     mode: 0644
-  register: harbor_downloaded
-- debug: msg={{ harbor_downloaded }}
+  register: download_harbor
+- debug: msg={{ download_harbor }}
   when: print_debug == true
 
-#
+
 - name: Unarchive Harbor Tarball
   unarchive: src=/root/harbor-online-installer-v{{ harbor.major_version }}.{{ harbor.minor_version }}.{{ harbor.patch_version }}.tgz dest=/root/ remote_src=yes owner=root group=root
-  register: harbor_unarchived
-- debug: msg={{ harbor_unarchived }}
+  register: unarchive_harbor
+- debug: msg={{ unarchive_harbor }}
   when: print_debug == true
+
 
 # New cert
 # openssl req -x509 -newkey rsa:4096 -sha256 -days 365 -nodes -keyout ./private.key -out ./public.crt \ -subj "/CN=rk9-harbor.jtest.pivotal.io" \
@@ -173,93 +169,95 @@
   shell: |
     mkdir /root/certs && mkdir /data/certs
     openssl genrsa -out /root/certs/ca.key 4096
-    openssl req -x509 -new -nodes -sha512 -days 3650 -subj "/C={{ harbor.cert.country }}/ST={{ harbor.cert.state }}/L={{ harbor.cert.location }}/O={{ harbor.cert.org }}/OU={{ harbor.cert.org_unit }}/CN=harbor.{{ harbor.domain }}" -key /root/certs/ca.key -out /root/certs/ca.crt
-    openssl genrsa -out /root/certs/harbor.{{ harbor.domain }}.key 4096
-    openssl req -sha512 -new -subj "/C={{ harbor.cert.country }}/ST={{ harbor.cert.state }}/L={{ harbor.cert.location }}/O={{ harbor.cert.org }}/OU={{ harbor.cert.org_unit }}/CN=harbor.{{ harbor.domain }}" -key /root/certs/harbor.{{ harbor.domain }}.key -out /root/certs/harbor.{{ harbor.domain }}.csr
-  register: certs_generated
-- debug: msg={{ certs_generated }}
+    openssl req -x509 -new -nodes -sha512 -days 3650 -subj "/C={{ harbor.cert.country }}/ST={{ harbor.cert.state }}/L={{ harbor.cert.location }}/O={{ harbor.cert.org }}/OU={{ harbor.cert.org_unit }}/CN={{ harbor.hostname }}.{{ harbor.domain }}" -key /root/certs/ca.key -out /root/certs/ca.crt
+    openssl genrsa -out /root/certs/{{ harbor.hostname }}.{{ harbor.domain }}.key 4096
+    openssl req -sha512 -new -subj "/C={{ harbor.cert.country }}/ST={{ harbor.cert.state }}/L={{ harbor.cert.location }}/O={{ harbor.cert.org }}/OU={{ harbor.cert.org_unit }}/CN={{ harbor.hostname }}.{{ harbor.domain }}" -key /root/certs/{{ harbor.hostname }}.{{ harbor.domain }}.key -out /root/certs/{{ harbor.hostname }}.{{ harbor.domain }}.csr
+  register: generate_certs
+- debug: msg={{ generate_certs }}
   when: print_debug == true
 
-#
+
 - name: Copy an x509 v3 Extension File
   template: src=v3.ext.j2 dest=/root/certs/v3.ext  owner=root group=root mode=644 force=yes
-  register: v3_ext_copied
-- debug: msg={{ v3_ext_copied }}
+  register: copy_v3_ext
+- debug: msg={{ copy_v3_ext }}
   when: print_debug == true
 
-#
+
 - name: Generate an x509 v3 Extension File
   shell: |
-    openssl x509 -req -sha512 -days 3650 -extfile /root/certs/v3.ext -CA /root/certs/ca.crt -CAkey /root/certs/ca.key -CAcreateserial -in /root/certs/harbor.{{ harbor.domain }}.csr -out /root/certs/harbor.{{ harbor.domain }}.crt
-  register: v3_ext_generated
-- debug: msg={{ v3_ext_generated }}
+    openssl x509 -req -sha512 -days 3650 -extfile /root/certs/v3.ext -CA /root/certs/ca.crt -CAkey /root/certs/ca.key -CAcreateserial -in /root/certs/{{ harbor.hostname }}.{{ harbor.domain }}.csr -out /root/certs/{{ harbor.hostname }}.{{ harbor.domain }}.crt
+  register: generate_v3_ext
+- debug: msg={{ generate_v3_ext }}
   when: print_debug == true
+
 
 - name: Generate an x509 v3 Extension File
   copy:
     src: "{{ item.src }}"
     dest: "{{ item.dest }}"
     remote_src: yes
-  register: certs_copied
+  register: copy_certs
   with_items:
-    - { src: "/root/certs/harbor.{{ harbor.domain }}.crt", dest: "/data/certs/harbor.{{ harbor.domain }}.crt" }
-    - { src: "/root/certs/harbor.{{ harbor.domain }}.key", dest: "/data/certs/harbor.{{ harbor.domain }}.key" }
+    - { src: "/root/certs/{{ harbor.hostname }}.{{ harbor.domain }}.crt", dest: "/data/certs/harbor.{{ harbor.domain }}.crt" }
+    - { src: "/root/certs/{{ harbor.hostname }}.{{ harbor.domain }}.key", dest: "/data/certs/harbor.{{ harbor.domain }}.key" }
 
-#
+
 - name: Copy harbor.tmpl to harboy.yml
   shell: |
-    openssl x509 -inform PEM -in /root/certs/harbor.{{ harbor.domain }}.crt -out /root/certs/harbor.{{ harbor.domain }}.cert
-  register: harbor_yml_copied
+    openssl x509 -inform PEM -in /root/certs/{{ harbor.hostname }}.{{ harbor.domain }}.crt -out /root/certs/{{ harbor.hostname }}.{{ harbor.domain }}.cert
+  register: copy_harbor_yml
 
-#
-- name: Creates directory
+
+- name: Creates Directory
   file:
-    path: "/etc/docker/certs.d/harbor.{{ harbor.domain }}:443"
+    path: "/etc/docker/certs.d/{{ harbor.hostname }}.{{ harbor.domain }}:443"
     state: directory
     owner: root
     group: root
     mode: 0755
 
-#
+
 - name: Generate an x509 v3 Extension File
   copy:
     src: "{{ item.src }}"
     dest: "{{ item.dest }}"
     remote_src: yes
-  register: certs_copied
+  register: copy_certs
   with_items:
-    - { src: "/root/certs/harbor.{{ harbor.domain }}.cert", dest: "/etc/docker/certs.d/harbor.{{ harbor.domain }}:443/harbor.{{ harbor.domain }}.cert" }
-    - { src: "/root/certs/harbor.{{ harbor.domain }}.key",  dest: "/etc/docker/certs.d/harbor.{{ harbor.domain }}:443/harbor.{{ harbor.domain }}.key" }
-    - { src: "/root/certs/ca.crt",                  dest: "/etc/docker/certs.d/harbor.{{ harbor.domain }}:443/ca.crt" }
+    - { src: "/root/certs/{{ harbor.hostname }}.{{ harbor.domain }}.cert", dest: "/etc/docker/certs.d/{{ harbor.hostname }}.{{ harbor.domain }}:443/{{ harbor.hostname }}.{{ harbor.domain }}.cert" }
+    - { src: "/root/certs/{{ harbor.hostname }}.{{ harbor.domain }}.key",  dest: "/etc/docker/certs.d/{{ harbor.hostname }}.{{ harbor.domain }}:443/{{ harbor.hostname }}.{{ harbor.domain }}.key" }
+    - { src: "/root/certs/ca.crt",                  dest: "/etc/docker/certs.d/{{ harbor.hostname }}.{{ harbor.domain }}:443/ca.crt" }
 
-#
+
 - name: Configure the Docker Daemon to Use Systemd for the Management of the Cotainer's Cgroups and Repository
   template: src=daemon.json.j2 dest=/etc/docker/daemon.json owner=root group=root mode=644 force=yes
-  register: cgroup_docker_configured
+  register: config_cgroup_docker
 - debug:
     var: "{{ cgroup_docker_configured }}"
   when: print_debug == true
 
-#
+
 - name: Restart Docker
   systemd:
     name: docker
     state: restarted
-  register: docker_restarted
-  until: docker_restarted is succeeded
+  register: restart_docker
+  until: restart_docker is succeeded
   retries: 3
   delay: 10
-- debug: msg={{ docker_restarted }}
+- debug: msg={{ restart_docker }}
   when: print_debug == true
 
-#
+
 - name: Alternative Python Version to Python2
   command: alternatives --set python /usr/bin/python2
   ignore_errors: yes
-  register: python_version_alternative
+  register: alternative_python_version
   when: hostvars[inventory_hostname].ansible_distribution_major_version|int <= 8
-- debug: msg={{ python_version_alternative }}
+- debug: msg={{ alternative_python_version }}
   when: print_debug == true and hostvars[inventory_hostname].ansible_distribution_major_version|int <= 8
+
 
 # dest: /root/harbor/harbor.yml
 - name: Modify harbor.yml "{{ harbor.domain }}" with Control Plane's IP address
@@ -269,61 +267,57 @@
     line: "{{ item.line }}"
     state: "{{ item.state }}"
     backrefs: "{{ item.backrefs }}"
-  register: harbor_config_modified
+  register: modify_harbor_config
   with_items:
-    - { regexp: "^hostname: *", line: "hostname: harbor.{{ harbor.domain }}", state: present, backrefs: yes }
-    - { regexp: "^  certificate: *", line: "  certificate: /root/certs/harbor.{{ harbor.domain }}.crt", state: present, backrefs: yes }
-    - { regexp: "^  private_key: *", line: "  private_key: /root/certs/harbor.{{ harbor.domain }}.key", state: present, backrefs: yes }
+    - { regexp: "^hostname: *", line: "hostname: {{ harbor.hostname }}.{{ harbor.domain }}", state: present, backrefs: yes }
+    - { regexp: "^  certificate: *", line: "  certificate: /root/certs/{{ harbor.hostname }}.{{ harbor.domain }}.crt", state: present, backrefs: yes }
+    - { regexp: "^  private_key: *", line: "  private_key: /root/certs/{{ harbor.hostname }}.{{ harbor.domain }}.key", state: present, backrefs: yes }
     - { regexp: "^harbor_admin_password: *", line: "harbor_admin_password: {{ harbor.admin_password }}", state: present, backrefs: yes }
     - { regexp: "^  password: *", line: "  password: /root/certs/{{ harbor.database_password }}", state: present, backrefs: yes }
-- debug: msg={{ harbor_config_modified }}
+- debug: msg={{ modify_harbor_config }}
   when: print_debug == true
 
-#
+
 - name: Copy harbor.tmpl to harboy.yml
   copy:
     src: "{{ item.src }}"
     dest: "{{ item.dest }}"
     remote_src: yes
-  register: harbor_yml_copied
+  register: copy_harbor_yml
   with_items:
     - { src: "/root/harbor/harbor.yml.tmpl", dest: "/root/harbor/harbor.yml" }
 
-#
+
 - name: Run Prepare for Installation
   shell: |
     export PATH=$PATH:/usr/local/bin && sh /root/harbor/prepare --with-notary --with-trivy
   register: install_prepare_run
   # For 1.10
   #  export PATH=$PATH:/usr/local/bin && sh /root/harbor/prepare --with-notary --with-clair --with-chartmuseum
-
-#
 - debug: msg={{ install_prepare_run }}
   when: print_debug == true
 
-#
+
 - name: Run Harbor in the Background
   shell: |
     export PATH=$PATH:/usr/local/bin && docker compose -f /root/harbor/docker-compose.yml up -d
-  register: harbor_run
+  register: run_harbor
   async: 600
   poll: 5
   # until: docker_run is succeeded
-
-#
-- debug: msg={{ harbor_run }}
+- debug: msg={{ run_harbor }}
   when: print_debug == true
 
-#
+
 - name: Enable and Start Firewalld
   systemd:
     name: firewalld
     state: started
     enabled: yes
     daemon-reload: yes
-  register: firewalld_enabled
+  register: enable_firewalld
 
-#
+
 - name: Allow Port 80 and 20 ports through Firewalld
   firewalld:
     permanent: yes
@@ -331,13 +325,10 @@
     port: "{{ item.port }}/{{ item.proto }}"
     state: "{{ item.state }}"
     zone: "{{ item.zone }}"
-  register: firewalld_port_allowed
+  register: allow_firewalld_port
   with_items:
     - { port: "80", proto: "tcp", zone: "public", state: "enabled" }
     - { port: "80", proto: "tcp", zone: "public", state: "enabled" }
-  when: inventory_hostname in groups['master']
-
-#
-- debug: msg={{ firewalld_port_allowed }}
+- debug: msg={{ allow_firewalld_port }}
   when: print_debug == true
 

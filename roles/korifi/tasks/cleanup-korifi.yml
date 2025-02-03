@@ -12,14 +12,30 @@
   when: print_debug == true
 
 
-#- name: Delete Service Binding Runtime
-#  shell: |
-#    kubectl delete -f https://github.com/servicebinding/runtime/releases/download/v0.9.0/servicebinding-runtime-v{{ servicebinding.major_version }}.{{ servicebinding.minor_version }}.{{ servicebinding.patch_version }}.yaml
-#  register: delete_service_binding_runtime
-#  ignore_errors: true
-#  args:
-#    chdir: "{{ base_path }}/"
-#- debug: msg={{ delete_service_binding_runtime }}
+- name: Create Namespaces
+  shell: |
+    kubectl delete -f {{ item }}
+  register: create_namespaces
+  ignore_errors: true
+  with_items:
+    - "gateway-class-name.yaml"
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ create_namespaces }}
+  when: print_debug == true
+
+
+- name: Delete Service Binding Runtime
+  shell: |
+    kubectl delete -f \
+    https://github.com/servicebinding/runtime/releases/download/v{{ _servicebinding.major_version }}.{{ _servicebinding.minor_version }}.{{ _servicebinding.patch_version }}/servicebinding-runtime-v{{ _servicebinding.major_version }}.{{ _servicebinding.minor_version }}.{{ _servicebinding.patch_version }}.yaml
+  register: delete_service_binding_runtime
+  ignore_errors: true
+  args:
+    chdir: "{{ base_path }}/"
+- debug: msg={{ delete_service_binding_runtime }}
 
 
 #- name: Unintall Metrics Server
@@ -45,7 +61,7 @@
 
 - name: Unintall Contour
   shell: |
-    helm uninstall contour -n projectcontour
+    kubectl delete -f https://raw.githubusercontent.com/projectcontour/contour/release-1.30/examples/render/contour-gateway-provisioner.yaml
   register: uninstall_contour
   ignore_errors: true
   args:
@@ -55,11 +71,13 @@
 - debug: msg={{ uninstall_contour }}
   when: print_debug == true
   # kubectl delete -f https://projectcontour.io/quickstart/contour.yaml
+  # helm uninstall contour -n projectcontour
 
 
 - name: Delete Kpack
   shell: |
-    kubectl delete -f https://github.com/buildpacks-community/kpack/releases/download/v{{ _kpack.major_version }}.{{ _kpack.minor_version }}.{{ _kpack.patch_version }}/release-{{ _kpack.major_version }}.{{ _kpack.minor_version }}.{{ _kpack.patch_version }}.yaml
+    kubectl delete -f \
+    https://github.com/buildpacks-community/kpack/releases/download/v{{ _kpack.major_version }}.{{ _kpack.minor_version }}.{{ _kpack.patch_version }}/release-{{ _kpack.major_version }}.{{ _kpack.minor_version }}.{{ _kpack.patch_version }}.yaml
   register: delete_kpack
   ignore_errors: true
   args:
@@ -123,6 +141,7 @@
   ignore_errors: true
   with_items:
     - "cf-ns.yaml"
+    - "gateway-class-name.yaml"
 - debug: msg={{ delete_namespaces }}
   when: print_debug == true
 

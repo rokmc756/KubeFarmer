@@ -5,6 +5,14 @@
 base_path: "/root"
 
 
+_kustomize:
+  install: true
+  download_url: "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"
+  major_version: 5
+  minor_version: 4
+  patch_version: 2
+
+
 # go1.23.5.linux-amd64.tar.gz
 _go:
   download: true
@@ -40,7 +48,7 @@ _metrics_server:
 
 _servicebinding:
   major_version: 1
-  minor_version: 1
+  minor_version: 0
   patch_version: 0
 
 
