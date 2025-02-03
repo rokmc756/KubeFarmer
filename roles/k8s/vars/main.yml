@@ -200,8 +200,8 @@ workers_ports:
 _metallb:
   install: true
   major_version: 0
-  minor_version: 13
-  patch_version: 11
+  minor_version: 14
+  patch_version: 9
   vmware:
     kind:
       ipaddrpool:

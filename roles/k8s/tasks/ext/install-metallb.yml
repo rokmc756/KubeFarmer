@@ -17,13 +17,6 @@
 - debug: msg={{ apply_strict_arp }}
 
 
-#- name: Add Taint Node
-#  shell: |
-#    kubectl taint nodes rk9-node01 node-role.kubernetes.io/control-plane:NoSchedule
-#  register: add_taint_node
-#- debug: msg={{ add_taint_node }}
-
-
 - name: Create Namespace for Metallb
   shell: |
     kubectl create namespace metallb-system
@@ -32,13 +25,15 @@
 
 
 - name: Apply the Metallb
-  shell:
-    /usr/local/bin/helm install metallb metallb/metallb -n metallb-system
+  shell: |
+    kubectl apply -f \
+    https://raw.githubusercontent.com/metallb/metallb/v{{ _metallb.major_version }}.{{ _metallb.minor_version }}.{{ _metallb.patch_version }}/config/manifests/metallb-native.yaml
   register: apply_metallb_native_config
   ignore_errors: yes
 - debug: msg={{ apply_metallb_native_config }}
+# /usr/local/bin/helm install metallb metallb/metallb -n metallb-system
 # kubectl apply -f \
-# https://raw.githubusercontent.com/metallb/metallb/v{{ metallb.major_version }}.{{ metallb.minor_version }}.{{ metallb.patch_version }}/config/manifests/metallb-native.yaml
+# https://raw.githubusercontent.com/metallb/metallb/v{{ _metallb.major_version }}.{{ _metallb.minor_version }}.{{ _metallb.patch_version }}/config/manifests/metallb-native.yaml
 
 
 - name: Create Secret for Metallb Namespace

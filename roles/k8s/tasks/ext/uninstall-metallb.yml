@@ -16,38 +16,34 @@
 - debug: msg={{ delete_metallb_secret }}
 
 
-#- name: Delete the Metallb Native
-#  shell: |
-#    kubectl delete -f \
-#    https://raw.githubusercontent.com/metallb/metallb/v{{ metallb.major_version }}.{{ metallb.minor_version }}.{{ metallb.patch_version }}/config/manifests/metallb-native.yaml
-#  register: apply_metallb_native_config
-#- debug: msg={{ apply_metallb_native_config }}
-
-
-- name: Uninstall the Metallb
+- name: Delete the Metallb
   shell: |
-    /usr/local/bin/helm uninstall metallb -n metallb-system
-  register: uninstall_metallb_native_config
+    kubectl delete -f \
+    https://raw.githubusercontent.com/metallb/metallb/v{{ _metallb.major_version }}.{{ _metallb.minor_version }}.{{ _metallb.patch_version }}/config/manifests/metallb-native.yaml
+  register: delete_metallb
   ignore_errors: true
-- debug: msg={{ uninstall_metallb_native_config }}
+- debug: msg={{ delete_metallb }}
+# /usr/local/bin/helm uninstall metallb -n metallb-system
+# kubectl delete -f \
+# https://raw.githubusercontent.com/metallb/metallb/v{{ _metallb.major_version }}.{{ _metallb.minor_version }}.{{ _metallb.patch_version }}/config/manifests/metallb-native.yaml
 
 
 - name: Delete Namespace for Metallb
   shell: |
-    kubectl delete ns metallb-system --grace-period=0 --force &
-    sleep 20
+    kubectl delete ns metallb-system
   register: delete_metallb_namespace
   ignore_errors: true
 - debug: msg={{ delete_metallb_namespace }}
+  #  kubectl delete ns metallb-system --grace-period=0 --force &
+  #  sleep 20
 
-
-- name: Force Delete Namespace for Metallb
-  shell: |
-    kubectl get namespace "metallb-system" -o json   | tr -d "\n" | sed "s/\"finalizers\": \[[^]]\+\]/\"finalizers\": []/" | \
-    kubectl replace --raw /api/v1/namespaces/metallb-system/finalize -f -
-  register: force_delete_metallb_namespace
-  ignore_errors: true
-- debug: msg={{ force_delete_metallb_namespace }}
+#- name: Force Delete Namespace for Metallb
+#  shell: |
+#    kubectl get namespace "metallb-system" -o json   | tr -d "\n" | sed "s/\"finalizers\": \[[^]]\+\]/\"finalizers\": []/" | \
+#    kubectl replace --raw /api/v1/namespaces/metallb-system/finalize -f -
+#  register: force_delete_metallb_namespace
+#  ignore_errors: true
+#- debug: msg={{ force_delete_metallb_namespace }}
 
 
 - name: Rollback strictARP for VMWare or Cloud
