@@ -31,9 +31,9 @@
   shell: |
    helm install reflector emberstack/reflector -n reflector --create-namespace
   register: install_reflector
-  ignore_errors: yes
+  ignore_errors: true
   args:
-    chdir: "{{ base_path }}/"
+    chdir: "{{ base_path }}"
   environment:
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ install_reflector }}
@@ -45,7 +45,8 @@
 # kubectl apply -f https://github.com/buildpacks-community/kpack/releases/download/v0.12.3/release-0.12.3.yaml
 - name: Intall Kpack
   shell: |
-    kubectl apply -f https://github.com/buildpacks-community/kpack/releases/download/v{{ _kpack.major_version }}.{{ _kpack.minor_version }}.{{ _kpack.patch_version }}/release-{{ _kpack.major_version }}.{{ _kpack.minor_version }}.{{ _kpack.patch_version }}.yaml
+    kubectl apply \
+    -f https://github.com/buildpacks-community/kpack/releases/download/v{{ _kpack.major_version }}.{{ _kpack.minor_version }}.{{ _kpack.patch_version }}/release-{{ _kpack.major_version }}.{{ _kpack.minor_version }}.{{ _kpack.patch_version }}.yaml
   register: install_repflector
   args:
     chdir: "{{ base_path }}/"

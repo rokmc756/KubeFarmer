@@ -30,20 +30,21 @@
 
 - name: Delete Namespace for Metallb
   shell: |
-    kubectl delete ns metallb-system
+    kubectl delete ns metallb-system --grace-period=0 --force &
+    sleep 20
   register: delete_metallb_namespace
   ignore_errors: true
 - debug: msg={{ delete_metallb_namespace }}
-  #  kubectl delete ns metallb-system --grace-period=0 --force &
-  #  sleep 20
+  # kubectl delete ns metallb-system
 
-#- name: Force Delete Namespace for Metallb
-#  shell: |
-#    kubectl get namespace "metallb-system" -o json   | tr -d "\n" | sed "s/\"finalizers\": \[[^]]\+\]/\"finalizers\": []/" | \
-#    kubectl replace --raw /api/v1/namespaces/metallb-system/finalize -f -
-#  register: force_delete_metallb_namespace
-#  ignore_errors: true
-#- debug: msg={{ force_delete_metallb_namespace }}
+
+- name: Force Delete Namespace for Metallb
+  shell: |
+    kubectl get namespace "metallb-system" -o json   | tr -d "\n" | sed "s/\"finalizers\": \[[^]]\+\]/\"finalizers\": []/" | \
+    kubectl replace --raw /api/v1/namespaces/metallb-system/finalize -f -
+  register: force_delete_metallb_namespace
+  ignore_errors: true
+- debug: msg={{ force_delete_metallb_namespace }}
 
 
 - name: Rollback strictARP for VMWare or Cloud

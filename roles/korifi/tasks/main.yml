@@ -6,7 +6,7 @@
 
 - name: Set Facts for Network and Packages Informations
   import_tasks: set-facts.yml
-  tags: install, uninstall, deploy, enable, destroy, disable, create, delete
+  tags: prepare, install, uninstall, deploy, enable, destroy, disable, create, delete, clean
 
 
 - name: Enable Helm Repository
@@ -33,9 +33,15 @@
   when: ( cli is defined and cli == true ) and inventory_hostname in groups['master']
 
 
-- name: Deploy Korifi
-  import_tasks: deploy-korifi.yml
-  tags: deploy, install
+- name: Prepare Korifi
+  import_tasks: prepare-korifi.yml
+  tags: prepare
+  when: ( korifi is defined and korifi == true ) and inventory_hostname in groups['master']
+
+
+- name: Install Korifi
+  import_tasks: install-korifi.yml
+  tags: deploy
   when: ( korifi is defined and korifi == true ) and inventory_hostname in groups['master']
 
 
@@ -51,9 +57,21 @@
   when: ( apps is defined and apps == true ) and inventory_hostname in groups['master']
 
 
-- name: Destroy Korifi
-  import_tasks: destroy-korifi.yml
-  tags: destroy, uninstall
+#- name: Destroy Korifi
+#  import_tasks: destroy-korifi.yml
+#  tags: destroy, uninstall
+#  when: ( korifi is defined and korifi == true ) and inventory_hostname in groups['master']
+
+
+- name: Uninstall Korifi
+  import_tasks: uninstall-korifi.yml
+  tags: destroy
+  when: ( korifi is defined and korifi == true ) and inventory_hostname in groups['master']
+
+
+- name: Cleanup Korifi
+  import_tasks: cleanup-korifi.yml
+  tags: clean
   when: ( korifi is defined and korifi == true ) and inventory_hostname in groups['master']
 
 

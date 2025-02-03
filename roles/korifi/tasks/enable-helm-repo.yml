@@ -1,5 +1,4 @@
-# https://oopflow.medium.com/setup-install-rancher-onto-existing-kubernetes-cluster-for-high-availability-7351f0284592
-
+---
 - name: Download and Install Helm
   shell: |
     curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
@@ -13,25 +12,16 @@
 - debug: msg={{ install_helm }}
 
 
-- name: Add NGINX Helm Repo
+- name: Add Helm Repositories
   shell: |
-    /usr/local/bin/helm repo add nginx-stable https://helm.nginx.com/stable
-  register: add_nginx_helm_repo
-- debug: msg={{ add_nginx_helm_repo }}
-
-
-- name: Add Metrics Server Helm Repo
-  shell: |
-    /usr/local/bin/helm repo add metrics-server https://kubernetes-sigs.github.io/metrics-server
-  register: add_metrics_server_helm_repo
-- debug: msg={{ add_metrics_server_helm_repo }}
-
-
-- name: Add Reflector Helm Repo
-  shell: |
-    /usr/local/bin/helm repo add emberstack https://emberstack.github.io/helm-charts
-  register: add_reflector_helm_repo
-- debug: msg={{ add_reflector_helm_repo }}
+    /usr/local/bin/helm repo add {{ item.name }} {{ item.link }}
+  register: add_helm_repos
+  with_items:
+    - { name: 'bitnami',        link: 'https://charts.bitnami.com/bitnami' }
+    - { name: 'emberstack',     link: 'https://emberstack.github.io/helm-charts' }
+    - { name: 'nginx-ingress',  link: 'https://kubernetes.github.io/ingress-nginx' }
+    - { name: 'metrics-server', link: 'https://kubernetes-sigs.github.io/metrics-server' }
+- debug: msg={{ add_helm_repos }}
 
 
 #- name: Add Korifi Helm Repo

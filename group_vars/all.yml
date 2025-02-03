@@ -40,9 +40,9 @@ k8s:
     change_mtu: true
     # Jumbo Frame should be enabled at the side fo Switch as well when it's true.
     # In iptime, Advanced Setup -> Traffic -> Switch Setup -> Check Enable Jumbo Frame -> Apply
-    pod_network: "10.142.0.0/16"    # Calico
-    # pod_network: "100.96.0.0/16"  # Kube-Flannel
-    # pod_network: "10.244.0.0/16"  # Kube-Flannel : cni0
+    pod_network: "10.142.0.0/16"      #  Calico
+    # pod_network: "100.96.0.0/16"    #  Kube-Flannel
+    # pod_network: "10.244.0.0/16"    #  Kube-Flannel : cni0
     calico:
       install: true
       operator: ""

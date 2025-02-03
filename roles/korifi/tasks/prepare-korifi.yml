@@ -1,5 +1,5 @@
 ---
-- name: Create Directory for Korifi Persistent Volumes
+- name: Create Directory
   file:
     path: "/mnt/korifi-storage"
     state: directory
@@ -17,7 +17,7 @@
 
 - name: Intall Reflector
   shell: |
-   helm install reflector emberstack/reflector -n reflector --create-namespace
+    helm install reflector emberstack/reflector -n reflector --create-namespace
   register: install_reflector
   ignore_errors: yes
   args:
@@ -26,18 +26,34 @@
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ install_reflector }}
   when: print_debug == true
+  # kubectl -n kube-system apply -f https://github.com/emberstack/kubernetes-reflector/releases/latest/download/reflector.yaml
+
+
+- name: Validate if Reflector Containers are Running
+  shell: |
+    kubectl get pod -n reflector | sed 1d | awk '{print $3}' | sort | uniq
+  register: check_reflector_containers
+  until: check_reflector_containers.stdout.find("Running") != -1
+  retries: 30
+  delay: 10
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ check_reflector_containers }}
+  when: print_debug == true
 
 
 - name: Intall Kpack
   shell: |
     kubectl apply \
     -f https://github.com/buildpacks-community/kpack/releases/download/v{{ _kpack.major_version }}.{{ _kpack.minor_version }}.{{ _kpack.patch_version }}/release-{{ _kpack.major_version }}.{{ _kpack.minor_version }}.{{ _kpack.patch_version }}.yaml
-  register: install_repflector
+  register: install_kpack
   args:
     chdir: "{{ base_path }}/"
   environment:
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-- debug: msg={{ install_reflector }}
+- debug: msg={{ install_kpack }}
   when: print_debug == true
 
 
@@ -83,7 +99,7 @@
 
 - name: Intall Contour
   shell: |
-    kubectl apply -f https://projectcontour.io/quickstart/contour.yaml
+    helm install contour bitnami/contour --namespace projectcontour --create-namespace
   register: install_contour
   ignore_errors: yes
   args:
@@ -92,14 +108,13 @@
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ install_contour }}
   when: print_debug == true
-# /usr/local/bin/helm install contour bitnami/contour --namespace contour --create-namespace
+  #  kubectl apply -f https://projectcontour.io/quickstart/contour.yaml
 
 
 - name: Create Docker Register Secret
   shell: |
     kubectl --namespace cf create secret docker-registry image-registry-credentials \
-    --docker-username="admin" \
-    --docker-password="changeme" \
+    --docker-username="admin" --docker-password="changeme" \
     --docker-server="https://harbor.{{ _korifi.domain_prefix }}"
   register: create_docker_secret
   ignore_errors: yes

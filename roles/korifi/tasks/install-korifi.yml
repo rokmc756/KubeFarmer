@@ -1,9 +1,11 @@
 ---
+# https://github.com/cloudfoundry/korifi/blob/main/INSTALL.md
+# https://github.com/cloudfoundry/korifi/blob/main/INSTALL.kind.md#cluster-creation
 - name: Copy Namespaces Config
   template:
     src: "{{ item }}.j2"
     dest: "{{ base_path }}/{{ item }}"
-  register: copy_namespaces_config_yaml
+  register: copy_namespaces_config
   with_items:
     - "korifi-ns.yaml"
 - debug: msg={{ copy_namespaces_config }}
