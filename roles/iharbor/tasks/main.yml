@@ -6,25 +6,25 @@
 
 - name: Install Relevant Packages
   import_tasks: 01-install-pkgs.yml
-  tags: install
+  tags: create, install
   when: ( pkgs is defined and pkgs == true ) or ( harbor_all is defined and harbor_all == true )
 
 
 - name: Disable SELinux
   import_tasks: ext/disable-selinux.yml
-  tags: disable
+  tags: disable, install
   when: ( selinux is defined and selinux == true ) or ( harbor_all is defined and harbor_all == true )
 
 
 - name: Install Docker
   import_tasks: 02-install-docker.yml
-  tags: install
+  tags: create, install
   when: ( docker is defined and docker == true ) or ( harbor_all is defined and harbor_all == true )
 
 
 - name: Install Harbor
   import_tasks: 03-install-harbor.yml
-  tags: install
+  tags: create, install
   when: ( harbor is defined and harbor == true ) or ( harbor_all is defined and harbor_all == true )
 
 
@@ -36,42 +36,59 @@
 
 - name: Enable Docker
   import_tasks: 05-enable-docker.yml
-  tags: enable
+  tags: enable, install
   when: ( docker is defined and docker == true ) or ( harbor_all is defined and harbor_all == true )
 
 
 - name: Enable Harbor
   import_tasks: 06-enable-harbor.yml
-  tags: enable
+  tags: enable, install
   when: ( harbor is defined and harbor == true ) or ( harbor_all is defined and harbor_all == true )
 
 
 - name: Start Harbor
   import_tasks: 07-start-harbor.yml
-  tags: start
+  tags: start, install
   when: ( harbor is defined and harbor == true ) or ( harbor_all is defined and harbor_all == true )
+
+
+- name: Enable Firewall
+  import_tasks: ext/enable-firewall.yml
+  tags: enable, install
+  when: ( firewall is defined and firewall == true ) or ( harbor_all is defined and harbor_all == true )
 
 
 - name: Stop Harbor
   import_tasks: 08-stop-harbor.yml
-  tags: stop
+  tags: stop, uninstall
   when: ( harbor is defined and harbor == true ) or ( harbor_all is defined and harbor_all == true )
 
 
-#- name: re-initialization of Harbor container registry
-#  import_tasks: reinit.yml
-#  tags: reinit
-#  when: inventory_hostname in groups['registry']
+- name: Stop Background Harbor
+  import_tasks: 09-stop-bg-harbor.yml
+  tags: stop, uninstall
+  when: ( harbor is defined and harbor == true ) or ( harbor_all is defined and harbor_all == true )
 
 
-#- name: Uninstallation of Harbor container registry
-#  import_tasks: uninstall.yml
-#  tags: uninstall
-#  when: inventory_hostname in groups['registry']
+- name: Uninstall Docker
+  import_tasks: 10-uninstall-docker.yml
+  tags: delete, uninstall
+  when: ( docker is defined and docker == true ) or ( harbor_all is defined and harbor_all == true )
 
 
-#- name: Upgrade of Harbor container registry
-#  import_tasks: upgrade.yml
-#  tags: upgrade
-#  when: inventory_hostname in groups['registry']
+- name: Uninstall Packages
+  import_tasks: 11-uninstall-pkgs.yml
+  tags: delete, uninstall
+  when: ( pkgs is defined and pkgs == true ) or ( harbor_all is defined and harbor_all == true )
+
+
+- name: Enable SELinux
+  import_tasks: ext/enable-selinux.yml
+  tags: enable, uninstall
+  when: ( selinux is defined and selinux == true ) or ( harbor_all is defined and harbor_all == true )
+
+
+- name: Upgrade of Harbor container registry
+  import_tasks: upgrade.yml
+  tags: upgrade
 

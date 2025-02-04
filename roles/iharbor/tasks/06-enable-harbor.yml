@@ -1,4 +1,12 @@
-# dest: /root/harbor/harbor.yml
+- name: Alternative Python Version to Python2
+  command: alternatives --set python /usr/bin/python2
+  ignore_errors: yes
+  register: alternative_python_version
+  when: hostvars[inventory_hostname].ansible_distribution_major_version|int <= 8
+- debug: msg={{ alternative_python_version }}
+  when: print_debug == true and hostvars[inventory_hostname].ansible_distribution_major_version|int <= 8
+
+
 - name: Modify harbor.yml "{{ _harbor.domain }}" with Control Plane's IP address
   lineinfile:
     dest: "{{ _harbor.base_path }}/harbor/harbor.yml.tmpl"
@@ -31,8 +39,8 @@
   shell: |
     export PATH=$PATH:/usr/local/bin && sh {{ _harbor.base_path }}/harbor/prepare --with-notary --with-trivy
   register: install_prepare_run
-  # For 1.10
-  #  export PATH=$PATH:/usr/local/bin && sh {{ _harbor.base_path }}/harbor/prepare --with-notary --with-clair --with-chartmuseum
 - debug: msg={{ install_prepare_run }}
   when: print_debug == true
+  # For 1.10
+  # export PATH=$PATH:/usr/local/bin && sh {{ _harbor.base_path }}/harbor/prepare --with-notary --with-clair --with-chartmuseum
 

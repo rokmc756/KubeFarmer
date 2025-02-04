@@ -9,14 +9,13 @@
   when: print_debug == true
 
 
-- name: Reboot required (Red Hat) - Step 2
+- name: Reboot Required - Step 2
   shell: ( /bin/sleep 5 ; /sbin/shutdown -r now "Ansible updates triggered" ) &
   async: 30
   poll: 0
   notify:
-    - Waiting for server to come back after restart
-  when: selinux_enabled.reboot_required == true
-# It works also
+    - Waiting for Server to Come Back after Restart
+  when: enable_selinux.reboot_required == true
 #- name: Reboot machine and send a message
 #  reboot: msg="Rebooting machine in 5 seconds"
 

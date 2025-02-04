@@ -9,9 +9,9 @@
   register: install_docker_compose
 - debug: msg={{ install_docker }}
   when: print_debug == true
-  # pip2 install docker-compose
-  # pip3.6 is on centos or rocky8
-  # pip-3.6 is on /usr/local/bin installed manually
+# pip2 install docker-compose
+# pip3.6 is on centos or rocky8
+# pip-3.6 is on /usr/local/bin installed manually
 
 
 - name: Enable and Start Docker

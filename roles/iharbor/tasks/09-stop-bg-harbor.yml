@@ -11,11 +11,13 @@
 
 - name: Stop Harbor in the Background
   shell: |
-    export PATH=$PATH:/usr/local/bin && docker-compose stop
+    export PATH=$PATH:/usr/local/bin && docker compose -f /root/harbor/docker-compose.yml stop
   register: stop_harbor
   until: stop_harbor is succeeded
   ignore_errors: yes
 - debug: msg={{ stop_harbor }}
   when: print_debug == true
-  # export PATH=$PATH:/usr/local/bin && docker-compose -f /root/harbor/docker-compose.yml down
+# export PATH=$PATH:/usr/local/bin && docker-compose -f /root/harbor/docker-compose.yml down
+# export PATH=$PATH:/usr/local/bin && docker-compose stop
+# export PATH=$PATH:/usr/local/bin && docker compose stop
 

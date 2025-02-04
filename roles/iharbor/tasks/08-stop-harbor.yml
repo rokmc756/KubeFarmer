@@ -1,9 +1,10 @@
 ---
-- name: Down harbor
+- name: Down Harbor
   # become: true
   # become_user: root
   shell: |
-    export PATH=$PATH:/usr/local/bin && docker-compose -f {{ _harbor.base_path }}/harbor/docker-compose.yml down -v
-  register: haror_down
+    export PATH=$PATH:/usr/local/bin && docker compose -f {{ _harbor.base_path }}/harbor/docker-compose.yml down
+  register: harbor_down
+  ignore_errors: true
 - debug: msg={{ harbor_down }}
 

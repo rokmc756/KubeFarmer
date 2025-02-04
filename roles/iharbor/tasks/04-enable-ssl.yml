@@ -5,9 +5,22 @@
 
 # Previous Certs
 # openssl req -x509 -new -nodes -sha512 -days 3650 -subj "/C={{ cert_country }}/ST={{ cert_state }}/L={{ cert_location }}/O={{ cert_org }}/OU={{ cert_org_unit }}/CN={{ harbor.hostname }}.{{ harbor.domain }}" -key {{ harbor.base_path }}/certs/ca.key -out {{ harbor.base_path }}/certs/ca.crt
+
+
+- name: Create SSL Cert Directory
+  file:
+    name: "{{ item }}"
+    state: directory
+    mode: 0755
+    owner: root
+    group: root
+  with_items:
+    - "{{ _harbor.base_path }}/certs"
+    - "/data/certs"
+
+
 - name: Generate Your Own SSL Certificate
   shell: |
-    mkdir {{ _harbor.base_path }}/certs && mkdir /data/certs
     openssl genrsa -out {{ _harbor.base_path }}/certs/ca.key 4096
     openssl req -x509 -new -nodes -sha512 -days 3650 -subj "/C={{ _harbor.cert.country }}/ST={{ _harbor.cert.state }}/L={{ _harbor.cert.location }}/O={{ _harbor.cert.org }}/OU={{ _harbor.cert.org_unit }}/CN={{ _harbor.hostname }}.{{ _harbor.domain }}" -key {{ _harbor.base_path }}/certs/ca.key -out {{ _harbor.base_path }}/certs/ca.crt
     openssl genrsa -out {{ _harbor.base_path }}/certs/{{ _harbor.hostname }}.{{ _harbor.domain }}.key 4096
@@ -41,8 +54,8 @@
     remote_src: yes
   register: copy_certs
   with_items:
-    - { src: "{{ _harbor.base_path }}/certs/{{ _harbor.hostname }}.{{ _harbor.domain }}.crt", dest: "/data/certs/harbor.{{ _harbor.domain }}.crt" }
-    - { src: "{{ _harbor.base_path }}/certs/{{ _harbor.hostname }}.{{ _harbor.domain }}.key", dest: "/data/certs/harbor.{{ _harbor.domain }}.key" }
+    - { src: "{{ _harbor.base_path }}/certs/{{ _harbor.hostname }}.{{ _harbor.domain }}.crt", dest: "/data/certs/{{ _harbor.hostname }}.{{ _harbor.domain }}.crt" }
+    - { src: "{{ _harbor.base_path }}/certs/{{ _harbor.hostname }}.{{ _harbor.domain }}.key", dest: "/data/certs/{{ _harbor.hostname }}.{{ _harbor.domain }}.key" }
 
 
 - name: Copy harbor.tmpl to harboy.yml

@@ -8,12 +8,12 @@
   when: print_debug == true
 
 
-- name: Reboot required
+- name: Reboot Required
   shell: ( /bin/sleep 5 ; /sbin/shutdown -r now "Ansible updates triggered" ) &
   async: 30
   poll: 0
   notify:
-    - Waiting for server to come back after restart
+    - Waiting for Server to Come Back after Restart
   when: disable_selinux.reboot_required == true
 
 

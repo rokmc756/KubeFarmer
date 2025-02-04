@@ -1,5 +1,6 @@
 ---
 - name: Uninstall Docker-Compose Using Pip
+  become_user: root
   shell: |
     export PATH=$PATH:/usr/local/bin && pip3 uninstall docker-compose -y
     export PATH=$PATH:/usr/local/bin && pip3 uninstall setuptools_rust -y

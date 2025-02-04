@@ -1,7 +1,7 @@
 ---
 - name: Down All Docker Containers for Harbor
   shell: |
-    export PATH=$PATH:/usr/local/bin && docker compose -f /root/harbor/docker-compose.yml down
+    export PATH=$PATH:/usr/local/bin && docker compose -f {{ harbor.base_path }}/harbor/docker-compose.yml down
   register: down_docker_compose
   until: down_docker_compose is succeeded
   ignore_errors: yes
@@ -91,7 +91,6 @@
   command: alternatives --set python /usr/bin/python2
   register: alternative_python_version
   when: hostvars[inventory_hostname].ansible_distribution_major_version|int <= 8
-  # command: update-alternatives --install /usr/bin/python python /usr/bin/python2.7 1
 
 
 - name: Uninstall the Latest Version of Docker-CE Packages
@@ -125,8 +124,8 @@
     state: absent
   register: remove_certs_harbor
   with_items:
-    - "/root/harbor"
-    - "/root/certs"
+    - "{{ harbor.base_path }}/harbor"
+    - "{{ harbor.base_path }}/certs"
     - "/etc/docker/cert.d/*"
     - "/etc/docker/daemon.json"
     - "/data/certs"

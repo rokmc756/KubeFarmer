@@ -1,0 +1,62 @@
+---
+- name: Uninstall the Latest Version of Docker-CE Packages
+  package:
+    name: "{{ item }}"
+    state: absent
+  with_items:
+    - "docker-ce"
+    - "python3-pip"
+  register: uninstall_docker
+  ignore_errors: true
+- debug: msg={{ uninstall_docker }}
+  when: print_debug == true
+
+
+#- name: Uninstall the EPEL Repo and Other Required Packages to Your System
+#  package:
+#    name: "{{ item }}"
+#    state: absent
+#  register: uninstall_epel
+#  ignore_errors: true
+#  with_items:
+#    - epel-release
+#    - wget
+#    - yum-utils
+#- debug: msg={{ uninstall_epel }}
+#  when: print_debug == true
+
+
+- name: Remove Certs and Harbor Files and Directories
+  file:
+    path: "{{ item }}"
+    state: absent
+  register: remove_certs_harbor
+  ignore_errors: true
+  with_items:
+    - "{{ _harbor.base_path }}/harbor"
+    - "{{ _harbor.base_path }}/certs"
+    - "/etc/docker/cert.d/*"
+    - "/etc/docker/daemon.json"
+    - "/data/certs"
+    - "/var/lib/docker"
+    - "/etc/yum.repos.d/kubernetes.repo"
+    - "/etc/yum.repos.d/docker-ce.repo"
+    - "/data/database"
+    - "/data/registry"
+- debug: msg={{ remove_certs_harbor }}
+  when: print_debug == true
+
+
+- name: Alternative Python 2.7 Version
+  command: alternatives --set python /usr/bin/python2
+  register: alternative_python_version
+  when: hostvars[inventory_hostname].ansible_distribution_major_version|int <= 8
+
+
+- name: Alternative Python Version to Python3
+  command: alternatives --set python /usr/bin/python3
+  register: alternative_python_version
+  when: hostvars[inventory_hostname].ansible_distribution_major_version|int <= 8
+- debug: msg={{ alternative_python_version }}
+  when: print_debug == true and hostvars[inventory_hostname].ansible_distribution_major_version|int <= 8
+

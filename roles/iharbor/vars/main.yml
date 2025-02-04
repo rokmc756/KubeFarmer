@@ -17,6 +17,6 @@ _harbor:
     email_address: "rokmc756@gmail.com"
   admin_password: "changeme"
   database_password: "changeme"
-  hostname: "iharbor"
+  hostname: "harbor"
   domain: "jtest.pivotal.io"
 

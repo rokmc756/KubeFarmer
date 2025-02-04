@@ -23,8 +23,7 @@
 - name: Configure the Docker Daemon to Use Systemd for the Management of the Cotainer's Cgroups and Repository
   template: src=daemon.json.j2 dest=/etc/docker/daemon.json owner=root group=root mode=644 force=yes
   register: config_cgroup_docker
-- debug:
-    var: "{{ config_cgroup_docker }}"
+- debug: msg={{ config_cgroup_docker }}
   when: print_debug == true
 
 
