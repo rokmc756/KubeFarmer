@@ -5,5 +5,6 @@
     "max-size": "100m"
   },
   "storage-driver": "overlay2",
-  "insecure-registries": ["{{ ansible_fqdn }}"]
+  "insecure-registries": ["{{ harbor.hostname }}.{{ harbor.domain }}"]
 }
+

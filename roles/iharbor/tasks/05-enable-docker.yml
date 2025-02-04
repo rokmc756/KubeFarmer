@@ -1,0 +1,41 @@
+---
+- name: Creates Directory
+  file:
+    path: "/etc/docker/certs.d/{{ _harbor.hostname }}.{{ _harbor.domain }}:443"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+
+
+- name: Generate an x509 v3 Extension File
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    remote_src: yes
+  register: copy_certs
+  with_items:
+    - { src: "{{ _harbor.base_path }}/certs/{{ _harbor.hostname }}.{{ _harbor.domain }}.cert", dest: "/etc/docker/certs.d/{{ _harbor.hostname }}.{{ _harbor.domain }}:443/{{ _harbor.hostname }}.{{ _harbor.domain }}.cert" }
+    - { src: "{{ _harbor.base_path }}/certs/{{ _harbor.hostname }}.{{ _harbor.domain }}.key",  dest: "/etc/docker/certs.d/{{ _harbor.hostname }}.{{ _harbor.domain }}:443/{{ _harbor.hostname }}.{{ _harbor.domain }}.key" }
+    - { src: "{{ _harbor.base_path }}/certs/ca.crt",                  dest: "/etc/docker/certs.d/{{ _harbor.hostname }}.{{ _harbor.domain }}:443/ca.crt" }
+
+
+- name: Configure the Docker Daemon to Use Systemd for the Management of the Cotainer's Cgroups and Repository
+  template: src=daemon.json.j2 dest=/etc/docker/daemon.json owner=root group=root mode=644 force=yes
+  register: config_cgroup_docker
+- debug:
+    var: "{{ config_cgroup_docker }}"
+  when: print_debug == true
+
+
+- name: Restart Docker
+  systemd:
+    name: docker
+    state: restarted
+  register: restart_docker
+  until: restart_docker is succeeded
+  retries: 3
+  delay: 10
+- debug: msg={{ restart_docker }}
+  when: print_debug == true
+

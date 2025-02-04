@@ -6,10 +6,7 @@
 
 - name: Set Facts for Grafana
   import_tasks: set-grafana-facts.yml
-  tags:
-    - install
-    - uninstall
-    - reinit
+  tags: install, uninstall, enable, disable, reinit
 
 
 - name: Apply Kernel Parameters for Grafana
@@ -20,8 +17,8 @@
 
 - name: Enable Helm Repository
   import_tasks: enable-helm-repo.yml
-  tags: install
-  when: (( grafana is defined and grafana == true ) or ( grafana_all is defined and grafana_all == true )) and inventory_hostname in groups['master']
+  tags: enable, install
+  when: (( repo is defined and repo == true ) or ( grafana_all is defined and grafana_all == true )) and inventory_hostname in groups['master']
 
 
 - name: Deploy Grafana
@@ -39,13 +36,13 @@
 - name: Install NGINX Ingress
   import_tasks: install-ingress.yml
   tags: install
-  when: (( ingress is defined and ingress == true ) or ( powerdns_all is defined and powerdns_all )) and inventory_hostname in groups['master']
+  when: (( ingress is defined and ingress == true ) or ( grafana_all is defined and grafana_all )) and inventory_hostname in groups['master']
 
 
 - name: Unstall NGINX Ingress
   import_tasks: uninstall-ingress.yml
   tags: uninstall
-  when: (( ingress is defined and ingress == true ) or ( powerdns_all is defined and powerdns_all )) and inventory_hostname in groups['master']
+  when: (( ingress is defined and ingress == true ) or ( grafana_all is defined and grafana_all )) and inventory_hostname in groups['master']
 
 
 - name: Uninstall Load Balancer
@@ -62,8 +59,8 @@
 
 - name: Disable Helm Repository
   import_tasks: disable-helm-repo.yml
-  tags: uninstall
-  when: (( grafana is defined and grafana == true ) or ( grafana_all is defined and grafana_all == true )) and inventory_hostname in groups['master']
+  tags: disable, uninstall
+  when: (( repo is defined and repo == true ) or ( grafana_all is defined and grafana_all == true )) and inventory_hostname in groups['master']
 
 
 - name: Remove Kernel Parameters for Grafana

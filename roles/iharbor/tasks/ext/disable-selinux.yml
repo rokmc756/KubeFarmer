@@ -1,0 +1,28 @@
+---
+- name: Disable SELinux to be Required
+  selinux:
+    state: disabled
+  register: disable_selinux
+  failed_when: disable_selinux.reboot_required == false
+- debug: msg={{ disable_selinux }}
+  when: print_debug == true
+
+
+- name: Reboot required
+  shell: ( /bin/sleep 5 ; /sbin/shutdown -r now "Ansible updates triggered" ) &
+  async: 30
+  poll: 0
+  notify:
+    - Waiting for server to come back after restart
+  when: disable_selinux.reboot_required == true
+
+
+- meta: flush_handlers
+
+
+- name: Check if SELinux has been disabled in Configurtion File
+  command: grep SELINUX /etc/sysconfig/selinux
+  register: sevalue
+- debug: msg={{ sevalue }}
+  when: print_debug == true
+

@@ -1,0 +1,17 @@
+---
+- name: The Binary of the Installer can be Downloaded From the Release page. Choose Either the Online or Offline Installer
+  get_url:
+    url: "https://github.com/vmware/harbor/releases/download/v{{ _harbor.major_version }}.{{ _harbor.minor_version }}.{{ _harbor.patch_version }}/harbor-online-installer-v{{ _harbor.major_version }}.{{ _harbor.minor_version }}.{{ _harbor.patch_version }}.tgz"
+    dest: "{{ _harbor.base_path }}/harbor-online-installer-v{{ _harbor.major_version }}.{{ _harbor.minor_version }}.{{ _harbor.patch_version }}.tgz"
+    mode: 0644
+  register: download_harbor
+- debug: msg={{ download_harbor }}
+  when: print_debug == true
+
+
+- name: Unarchive Harbor Tarball
+  unarchive: src={{ _harbor.base_path }}/harbor-online-installer-v{{ _harbor.major_version }}.{{ _harbor.minor_version }}.{{ _harbor.patch_version }}.tgz dest={{ _harbor.base_path }}/ remote_src=yes owner=root group=root
+  register: unarchive_harbor
+- debug: msg={{ unarchive_harbor }}
+  when: print_debug == true
+

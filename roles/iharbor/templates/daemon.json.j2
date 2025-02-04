@@ -5,5 +5,6 @@
     "max-size": "100m"
   },
   "storage-driver": "",
-  "insecure-registries": ["https://{{ ansible_fqdn }}"]
+  "insecure-registries": ["https://{{ _harbor.hostname }}.{{ _harbor.domain }}"]
 }
+

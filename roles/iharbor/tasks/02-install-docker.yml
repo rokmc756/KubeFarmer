@@ -1,0 +1,39 @@
+---
+- name: Install Docker-Compose Using Pip
+  shell: |
+    export PATH=$PATH:/usr/local/bin && pip3 install --upgrade pip
+    export PATH=$PATH:/usr/local/bin && pip3 install --upgrade --ignore-installed pip setuptools
+    export PATH=$PATH:/usr/local/bin && pip3 install setuptools_rust
+    export PATH=$PATH:/usr/local/bin && pip3 install docker-compose
+  ignore_errors: yes
+  register: install_docker_compose
+- debug: msg={{ install_docker }}
+  when: print_debug == true
+  # pip2 install docker-compose
+  # pip3.6 is on centos or rocky8
+  # pip-3.6 is on /usr/local/bin installed manually
+
+
+- name: Enable and Start Docker
+  systemd:
+    name: docker
+    state: started
+    enabled: yes
+    daemon-reload: yes
+  register: enable_docker
+  until: enable_docker is succeeded
+  retries: 30
+  delay: 10
+  failed_when: enable_docker is failure
+- debug: msg={{ enable_docker }}
+  when: print_debug == true
+
+
+- name: Verify that Docker is Installed Correctly by Running the Hello-World Image
+  shell: |
+    docker run hello-world
+  ignore_errors: yes
+  register: run_docker_hello
+- debug: msg={{ run_docker_hello }}
+  when: print_debug == true
+

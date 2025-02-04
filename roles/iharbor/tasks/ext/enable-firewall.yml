@@ -1,0 +1,24 @@
+---
+- name: Enable and Start Firewalld
+  systemd:
+    name: firewalld
+    state: started
+    enabled: yes
+    daemon-reload: yes
+  register: enable_firewalld
+
+
+- name: Allow Port 80 and 20 ports through Firewalld
+  firewalld:
+    permanent: yes
+    immediate: yes
+    port: "{{ item.port }}/{{ item.proto }}"
+    state: "{{ item.state }}"
+    zone: "{{ item.zone }}"
+  register: allow_firewalld_port
+  with_items:
+    - { port: "80", proto: "tcp", zone: "public", state: "enabled" }
+    - { port: "80", proto: "tcp", zone: "public", state: "enabled" }
+- debug: msg={{ allow_firewalld_port }}
+  when: print_debug == true
+

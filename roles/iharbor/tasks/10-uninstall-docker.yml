@@ -1,0 +1,36 @@
+---
+- name: Uninstall Docker-Compose Using Pip
+  shell: |
+    export PATH=$PATH:/usr/local/bin && pip3 uninstall docker-compose -y
+    export PATH=$PATH:/usr/local/bin && pip3 uninstall setuptools_rust -y
+    export PATH=$PATH:/usr/local/bin && pip3 uninstall pip setuptools -y
+  register: uninstall_docker_compose
+  ignore_errors: yes
+- debug: msg={{ uninstall_docker_compose }}
+  when: print_debug == true
+  # pip2 install docker-compose
+
+
+- name: Disable and Stop Docker
+  systemd:
+    name: docker
+    state: stopped
+    enabled: no
+  register: disable_docker
+  until: disable_docker is succeeded
+  retries: 10
+  ignore_errors: yes
+- debug: msg={{ disable_docker }}
+  when: print_debug == true
+
+
+- name: Remove Repository ( And Clean Up left-over Metadata )
+  yum_repository:
+    name: epel
+    file: docker_repo
+    state: absent
+  register: remove_docker_repo
+  ignore_errors: yes
+- debug: msg={{ remove_docker_repo }}
+  when: print_debug == true
+

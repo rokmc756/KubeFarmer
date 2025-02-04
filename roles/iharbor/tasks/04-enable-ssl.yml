@@ -1,0 +1,52 @@
+---
+# New cert
+# openssl req -x509 -newkey rsa:4096 -sha256 -days 365 -nodes -keyout ./private.key -out ./public.crt \ -subj "/CN=rk9-harbor.jtest.pivotal.io" \
+#  -addext "subjectAltName=DNS:rk9-harbor.jtest.pivotal.io,DNS:192.168.0.2,IP:0.0.0.0,IP:127.0.0.1,IP:192.168.0.199"
+
+# Previous Certs
+# openssl req -x509 -new -nodes -sha512 -days 3650 -subj "/C={{ cert_country }}/ST={{ cert_state }}/L={{ cert_location }}/O={{ cert_org }}/OU={{ cert_org_unit }}/CN={{ harbor.hostname }}.{{ harbor.domain }}" -key {{ harbor.base_path }}/certs/ca.key -out {{ harbor.base_path }}/certs/ca.crt
+- name: Generate Your Own SSL Certificate
+  shell: |
+    mkdir {{ _harbor.base_path }}/certs && mkdir /data/certs
+    openssl genrsa -out {{ _harbor.base_path }}/certs/ca.key 4096
+    openssl req -x509 -new -nodes -sha512 -days 3650 -subj "/C={{ _harbor.cert.country }}/ST={{ _harbor.cert.state }}/L={{ _harbor.cert.location }}/O={{ _harbor.cert.org }}/OU={{ _harbor.cert.org_unit }}/CN={{ _harbor.hostname }}.{{ _harbor.domain }}" -key {{ _harbor.base_path }}/certs/ca.key -out {{ _harbor.base_path }}/certs/ca.crt
+    openssl genrsa -out {{ _harbor.base_path }}/certs/{{ _harbor.hostname }}.{{ _harbor.domain }}.key 4096
+    openssl req -sha512 -new -subj "/C={{ _harbor.cert.country }}/ST={{ _harbor.cert.state }}/L={{ _harbor.cert.location }}/O={{ _harbor.cert.org }}/OU={{ _harbor.cert.org_unit }}/CN={{ _harbor.hostname }}.{{ _harbor.domain }}" -key {{ _harbor.base_path }}/certs/{{ _harbor.hostname }}.{{ _harbor.domain }}.key -out {{ _harbor.base_path }}/certs/{{ _harbor.hostname }}.{{ _harbor.domain }}.csr
+  register: generate_certs
+- debug: msg={{ generate_certs }}
+  when: print_debug == true
+
+
+- name: Copy an x509 v3 Extension File
+  template: src=v3.ext.j2 dest={{ _harbor.base_path }}/certs/v3.ext  owner=root group=root mode=644 force=yes
+  register: copy_v3_ext
+- debug: msg={{ copy_v3_ext }}
+  when: print_debug == true
+
+
+- name: Generate an x509 v3 Extension File
+  shell: |
+    openssl x509 -req -sha512 -days 3650 -extfile {{ _harbor.base_path }}/certs/v3.ext \
+    -CA {{ _harbor.base_path }}/certs/ca.crt -CAkey {{ _harbor.base_path }}/certs/ca.key -CAcreateserial \
+    -in {{ _harbor.base_path }}/certs/{{ _harbor.hostname }}.{{ _harbor.domain }}.csr -out {{ _harbor.base_path }}/certs/{{ _harbor.hostname }}.{{ _harbor.domain }}.crt
+  register: generate_v3_ext
+- debug: msg={{ generate_v3_ext }}
+  when: print_debug == true
+
+
+- name: Generate an x509 v3 Extension File
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    remote_src: yes
+  register: copy_certs
+  with_items:
+    - { src: "{{ _harbor.base_path }}/certs/{{ _harbor.hostname }}.{{ _harbor.domain }}.crt", dest: "/data/certs/harbor.{{ _harbor.domain }}.crt" }
+    - { src: "{{ _harbor.base_path }}/certs/{{ _harbor.hostname }}.{{ _harbor.domain }}.key", dest: "/data/certs/harbor.{{ _harbor.domain }}.key" }
+
+
+- name: Copy harbor.tmpl to harboy.yml
+  shell: |
+    openssl x509 -inform PEM -in {{ _harbor.base_path }}/certs/{{ _harbor.hostname }}.{{ _harbor.domain }}.crt -out {{ _harbor.base_path }}/certs/{{ _harbor.hostname }}.{{ _harbor.domain }}.cert
+  register: copy_harbor_yml
+

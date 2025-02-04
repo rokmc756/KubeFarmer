@@ -2,7 +2,7 @@
 
 # The IP address or hostname to access admin UI and registry service.
 # DO NOT use localhost or 127.0.0.1, because Harbor needs to be accessed by external clients.
-hostname: {{ ansible_fqdn }}
+hostname: {{ _harbor.hostname }}
 
 # http related config
 http:
@@ -14,8 +14,8 @@ https:
   # https port for harbor, default is 443
   port: 443
   # The path of cert and key files for nginx
-  certificate: /data/certs/{{ ansible_fqdn }}.crt
-  private_key: /data/certs/{{ ansible_fqdn }}.key
+  certificate: /data/certs/{{ _harbor.hostname }}.{{ _harbor.domain }}.crt
+  private_key: /data/certs/{{ _harbor.hostname }}.{{ _harbor.domain }}.key
 
 # Uncomment external_url if you want to enable external proxy
 # And when it enabled the hostname will no longer used
@@ -163,3 +163,4 @@ proxy:
     - core
     - jobservice
     - clair
+

@@ -1,0 +1,32 @@
+---
+# Install Harbor container registry for Red Hat / CentOS
+
+# for now fail if it's not a Red Hat based system
+- name: Check OS ( GPDB )
+  fail: msg="Not a Red Hat based system!"
+  when: ansible_os_family != 'RedHat' and inventory_hostname in groups['registry']
+
+
+- name: Installation of Harbor container registry
+  import_tasks: install.yml
+  tags: install
+  when: inventory_hostname in groups['registry']
+
+
+- name: re-initialization of Harbor container registry
+  import_tasks: reinit.yml
+  tags: reinit
+  when: inventory_hostname in groups['registry']
+
+
+- name: Uninstallation of Harbor container registry
+  import_tasks: uninstall.yml
+  tags: uninstall
+  when: inventory_hostname in groups['registry']
+
+
+- name: Upgrade of Harbor container registry
+  import_tasks: upgrade.yml
+  tags: upgrade
+  when: inventory_hostname in groups['registry']
+

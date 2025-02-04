@@ -1,0 +1,21 @@
+---
+#- name: Verify that Docker is Uninstalled Correctly by Removing the hello-world image
+#  shell: |
+#    export PATH=$PATH:/usr/local/bin && docker rm hello-world
+#  register: docker_rm_hello
+#  until: docker_rm_hello is succeeded
+#  ignore_errors: yes
+#- debug: msg={{ docker_rm_hello }}
+#  when: print_debug == true
+
+
+- name: Stop Harbor in the Background
+  shell: |
+    export PATH=$PATH:/usr/local/bin && docker-compose stop
+  register: stop_harbor
+  until: stop_harbor is succeeded
+  ignore_errors: yes
+- debug: msg={{ stop_harbor }}
+  when: print_debug == true
+  # export PATH=$PATH:/usr/local/bin && docker-compose -f /root/harbor/docker-compose.yml down
+

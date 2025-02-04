@@ -39,7 +39,7 @@ _grafana:
     - "net.ipv4.neigh.default.gc_thresh1 = 0"       # For ARP Cache
   lb:
     install: false
-    ip_addr: "192.168.1.219"
+    ip_addr: "192.168.1.218"
   admin:
     replica: 1
 
@@ -66,6 +66,7 @@ _nginx:
     patch_version:
     hostname: grafana
     service: grafana
+    port: 80
     domain: jtest.pivotal.io
     ip_addr: "192.168.1.219"
   k8s_ingress:

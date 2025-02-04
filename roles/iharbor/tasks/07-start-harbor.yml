@@ -1,0 +1,8 @@
+---
+- name: Run Harbor in the Background
+  become_user: root
+  shell: |
+    export PATH=$PATH:/usr/local/bin && docker-compose -f {{ _harbor.base_path }}/harbor/docker-compose.yml up -d
+  register: haror_up
+- debug: msg={{ harbor_up }}
+

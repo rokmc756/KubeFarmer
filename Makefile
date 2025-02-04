@@ -32,33 +32,46 @@ vmware:
 # Control VMs in KVM For Power On or Off
 boot:
 	@ansible-playbook -i ${ANSIBLE_HOST_CONFIG} --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} ${ROLE_CONFIG} --extra-vars "power_state=${BOOT_CMD} power_title=Power-On VMs"
+
 shutdown:
 	@ansible-playbook -i ${ANSIBLE_HOST_CONFIG} --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} ${ROLE_CONFIG} --extra-vars "power_state=${SHUTDOWN_CMD} power_title=Shutdown VMs"
+
 iharbor:
-	@if [ "${r}" = "install" ]; then\
-		ansible-playbook -i ansible-hosts-iharbor --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} config-iharbor.yml --tags="install";\
-	elif [ "${r}" = "uninstall" ]; then\
-		ansible-playbook -i ansible-hosts-iharbor --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} config-iharbor.yml --tags="uninstall";\
+	@if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+		ansible-playbook -i ansible-hosts-iharbor --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} config-iharbor.yml -e '{"${s}": True}' --tags='${r}';\
+	elif [ ! -z ${r} ] && [ "${s}" == "all" ]; then \
+		ansible-playbook -i ansible-hosts-iharbor --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} config-iharbor.yml -e '{harbor_all: True}' --tags='${r}';\
 	else\
-		echo "No Actions for Harbor";\
-		exit;\
+		echo 'No item for "${r}"';\
 	fi
 
-#	if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
-#		if [ -z ${c} ];  then\
-#			ansible-playbook -i ansible-hosts-iharbor --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} config-iharbor.yml -e '{"${s}": True}' -e '{"${c}": True}' --tags='${r}';\
+
+#	@if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+#		echo ${r};\
+#		if [ ! -z ${c} ]; then\
+#			ansible-playbook -i ansible-hosts-iharbor --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} config-iharbor.yml -e '{"${s}": True}' --tags='${r}';\
 #		else\
-#			echo "No actions to ${r}";\
+#			echo 'No item for "${r}"';\
 #		fi\
-#	elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
-#		if [ -z ${c} ];  then\
-#			ansible-playbook -i ansible-hosts-iharbor --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} config-iharbor.yml -e '{iharbor_all: True}' --tags='${r}';\
+#	lif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+#		if [ ! -z ${c} ]; then\
+#			ansible-playbook -i ansible-hosts-iharbor --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} config-iharbor.yml -e '{harbor_all: True}' --tags='${r}';\
 #		else\
-#			echo "No actions to ${r}";\
+#			echo 'No item for "${r}"';\
 #		fi\
 #	else\
-		echo "No actions to ${r}";\
-#	fi;\
+#		echo 'No item for "${r}"';\
+#	fi
+
+
+#	@if [ "${r}" = "install" ]; then\
+#		ansible-playbook -i ansible-hosts-iharbor --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} config-iharbor.yml --tags="install";\
+#	elif [ "${r}" = "uninstall" ]; then\
+#		ansible-playbook -i ansible-hosts-iharbor --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} config-iharbor.yml --tags="uninstall";\
+#	else\
+#		echo "No Actions for Harbor";\
+#		exit;\
+#	fi
 
 
 # For All Roles

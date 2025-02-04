@@ -2,7 +2,7 @@
 
 #The IP address or hostname to access admin UI and registry service.
 #DO NOT use localhost or 127.0.0.1, because Harbor needs to be accessed by external clients.
-hostname = {{ inventory_hostname }}.{{ harbor.domain }}
+hostname = {{ _harbor.hostname }}.{{ _harbor.domain }}
 
 #The protocol for accessing the UI and token/notification service, by default it is http.
 #It can be set to https if ssl is enabled on nginx.
@@ -11,7 +11,7 @@ ui_url_protocol = https
 #The password for the root user of mysql db, change this before any production use.
 db_password = changeme
 
-#Maximum number of job workers in job service  
+#Maximum number of job workers in job service
 max_job_workers = 3
 
 #Determine whether or not to generate certificate for the registry's token.
@@ -21,8 +21,8 @@ max_job_workers = 3
 customize_crt = on
 
 #The path of cert and key files for nginx, they are applied only the protocol is set to https
-ssl_cert = /data/certs/{{ inventory_hostname }}.{{ harbor.domain }}.crt
-ssl_cert_key = /data/certs/{{ inventory_hostname }}.{{ harbor.domain }}.key
+ssl_cert = /data/certs/{{ _harbor.hostname }}.{{ _harbor.domain }}.crt
+ssl_cert_key = /data/certs/{{ _harbor.hostname }}.{{ _harbor.domain }}.key
 
 #The path of secretkey storage
 secretkey_path = /data
@@ -44,7 +44,7 @@ clair_db_password = password
 
 #Email server uses the given username and password to authenticate on TLS connections to host and act as identity.
 #Identity left blank to act as username.
-email_identity = 
+email_identity =
 
 email_server = smtp.mydomain.com
 email_server_port = 25
@@ -56,14 +56,14 @@ email_ssl = false
 ##The initial password of Harbor admin, only works for the first time when Harbor starts. 
 #It has no effect after the first launch of Harbor.
 #Change the admin password from UI after launching Harbor.
-harbor_admin_password = Harbor12345
+harbor_admin_password = changeme
 
 ##By default the auth mode is db_auth, i.e. the credentials are stored in a local database.
 #Set it to ldap_auth if you want to verify a user's credentials against an LDAP server.
 auth_mode = db_auth
 
 #The url for an ldap endpoint.
-ldap_url = ldaps://ldap.mydomain.com
+ldap_url = ldaps://ldap.{{ _harbor.domain }}
 
 #A user's DN who has the permission to search the LDAP/AD server. 
 #If your LDAP/AD server does not support anonymous search, you should configure this DN and ldap_search_pwd.
@@ -73,16 +73,16 @@ ldap_url = ldaps://ldap.mydomain.com
 #ldap_search_pwd = password
 
 #The base DN from which to look up a user in LDAP/AD
-ldap_basedn = ou=people,dc=mydomain,dc=com
+ldap_basedn = ou=jtest,dc=pivotal,dc=io
 
 #Search filter for LDAP/AD, make sure the syntax of the filter is correct.
 #ldap_filter = (objectClass=person)
 
 # The attribute used in a search to match a user, it could be uid, cn, email, sAMAccountName or other attributes depending on your LDAP/AD  
-ldap_uid = uid 
+ldap_uid = uid
 
 #the scope to search for users, 1-LDAP_SCOPE_BASE, 2-LDAP_SCOPE_ONELEVEL, 3-LDAP_SCOPE_SUBTREE
-ldap_scope = 3 
+ldap_scope = 3
 
 #Timeout (in seconds)  when connecting to an LDAP Server. The default value (and most reasonable) is 5 seconds.
 ldap_timeout = 5

@@ -1,0 +1,64 @@
+---
+- name: Alternative Python Version to Python2
+  command: alternatives --set python /usr/bin/python2
+  register: alternative_python_version
+  when: hostvars[inventory_hostname].ansible_distribution_major_version|int <= 8
+- debug: msg={{ alternative_python_version }}
+  when: print_debug == true and hostvars[inventory_hostname].ansible_distribution_major_version|int <= 8
+
+
+- name: Install the EPEL Repo and Other Required Packages to Your System
+  package:
+    name: "{{ item }}"
+    state: present
+  register: install_deps_pkgs
+  with_items:
+    - "epel-release"
+    - "firewalld"
+    - "python3"
+    - "python3-devel"
+    - "python3-psycopg2"
+    - "python3-pip"
+    - "python3-setuptools"
+    - "libselinux-python3"
+    - "wget"
+    - "yum-utils"
+- debug: msg={{ install_deps_pkgs }}
+  when: print_debug == true
+
+
+- name: Install the Relevant Packages
+  package:
+    name: "{{ item }}"
+    state: present
+  register: install_python2_pkgs
+  with_items:
+    - "python2-pip"
+    - "python2-psycopg2"
+    - "libselinux-python2"
+  when: hostvars[inventory_hostname].ansible_distribution_major_version|int <= 8
+- debug: msg={{ install_python2_pkgs }}
+  when: print_debug == true and hostvars[inventory_hostname].ansible_distribution_major_version|int <= 8
+
+
+- name: Add Docker Repository
+  yum_repository:
+    name: docker-ce
+    description: Add docker repsotiry
+    baseurl: "https://download.docker.com/linux/centos/{{ hostvars[inventory_hostname].ansible_distribution_major_version }}/x86_64/stable/"
+    gpgcheck: "no"
+  register: add_docker_repo
+- debug: msg={{ add_docker_repo }}
+  when: print_debug == true
+
+
+- name: Install the Latest Version of Docker-CE Packages
+  package:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - "docker-ce"
+  register: install_docker
+- debug: msg={{ install_docker }}
+  when: print_debug == true
+

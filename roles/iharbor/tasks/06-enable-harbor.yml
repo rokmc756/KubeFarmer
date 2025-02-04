@@ -1,0 +1,38 @@
+# dest: /root/harbor/harbor.yml
+- name: Modify harbor.yml "{{ _harbor.domain }}" with Control Plane's IP address
+  lineinfile:
+    dest: "{{ _harbor.base_path }}/harbor/harbor.yml.tmpl"
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    state: "{{ item.state }}"
+    backrefs: "{{ item.backrefs }}"
+  register: modify_harbor_config
+  with_items:
+    - { regexp: "^hostname: *", line: "hostname: {{ _harbor.hostname }}.{{ _harbor.domain }}", state: present, backrefs: yes }
+    - { regexp: "^  certificate: *", line: "  certificate: {{ _harbor.base_path }}/certs/{{ _harbor.hostname }}.{{ _harbor.domain }}.crt", state: present, backrefs: yes }
+    - { regexp: "^  private_key: *", line: "  private_key: {{ _harbor.base_path }}/certs/{{ _harbor.hostname }}.{{ _harbor.domain }}.key", state: present, backrefs: yes }
+    - { regexp: "^harbor_admin_password: *", line: "harbor_admin_password: {{ _harbor.admin_password }}", state: present, backrefs: yes }
+    - { regexp: "^  password: *", line: "  password: {{ _harbor.base_path }}/certs/{{ _harbor.database_password }}", state: present, backrefs: yes }
+- debug: msg={{ modify_harbor_config }}
+  when: print_debug == true
+
+
+- name: Copy harbor.tmpl to harboy.yml
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    remote_src: yes
+  register: copy_harbor_yml
+  with_items:
+    - { src: "{{ _harbor.base_path }}/harbor/harbor.yml.tmpl", dest: "{{ _harbor.base_path }}/harbor/harbor.yml" }
+
+
+- name: Run Prepare for Installation
+  shell: |
+    export PATH=$PATH:/usr/local/bin && sh {{ _harbor.base_path }}/harbor/prepare --with-notary --with-trivy
+  register: install_prepare_run
+  # For 1.10
+  #  export PATH=$PATH:/usr/local/bin && sh {{ _harbor.base_path }}/harbor/prepare --with-notary --with-clair --with-chartmuseum
+- debug: msg={{ install_prepare_run }}
+  when: print_debug == true
+
