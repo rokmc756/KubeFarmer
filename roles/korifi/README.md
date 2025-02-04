@@ -39,9 +39,9 @@ $ make  korifi  r=disable    s=docker
 $ make  korifi  r=delete     s=admin
 $ make  korifi  r=destroy    s=korifi
 $ make  korifi  r=clean      s=korifi
-$ make  korifi  r=remove     s=cli
-$ make  korifi  r=remove     s=cm
-$ make  korifi  r=remove     s=go
+$ make  korifi  r=delete     s=cli
+$ make  korifi  r=delete     s=cm
+$ make  korifi  r=delete     s=go
 $ make  korifi  r=disable    s=repo
 
 or
