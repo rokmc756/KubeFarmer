@@ -6,48 +6,49 @@
 
 - name: Set Facts for Network and Packages Informations
   import_tasks: set-facts.yml
-  tags: prepare, install, uninstall, deploy, enable, destroy, disable, create, delete, clean
+  tags: prepare, clean, install, uninstall, deploy, destroy, enable, disable, create, delete, setup, remove
 
 
 - name: Enable Helm Repository
   import_tasks: enable-helm-repo.yml
-  tags: install, enable
+  tags: enable, install
   when: ( repo is defined and repo == true ) and inventory_hostname in groups['master']
 
 
 - name: Install GO
   import_tasks: install-go.yml
-  tags: install
+  tags: setup, install
   when: ( go is defined and go == true ) and inventory_hostname in groups['master']
 
 
 - name: Install Kustomize
   import_tasks: install-kustomize.yml
-  tags: install
-  when: _kustomize.install == true and inventory_hostname in groups['master']
+  tags: setup, install
+  when: ( kustomize is defined and kustomize == true ) and inventory_hostname in groups['master']
+  # when: _kustomize.install == true and inventory_hostname in groups['master']
 
 
 - name: Install Cert Manager
   import_tasks: install-cert-manager.yml
-  tags: install
+  tags: setup, install
   when: ( cm is defined and cm == true ) and inventory_hostname in groups['master']
 
 
 - name: Install K8S CLIs
   import_tasks: install-cli.yml
-  tags: install
+  tags: setup, install
   when: ( cli is defined and cli == true ) and inventory_hostname in groups['master']
 
 
 - name: Prepare Korifi
   import_tasks: prepare-korifi.yml
-  tags: prepare
+  tags: prepare, install
   when: ( korifi is defined and korifi == true ) and inventory_hostname in groups['master']
 
 
 - name: Install Korifi
   import_tasks: install-korifi.yml
-  tags: deploy
+  tags: deploy, install
   when: ( korifi is defined and korifi == true ) and inventory_hostname in groups['master']
 
 
@@ -55,6 +56,12 @@
   import_tasks: create-cf-admin.yml
   tags: create, install
   when: ( admin is defined and admin == true ) and inventory_hostname in groups['master']
+
+
+- name: Enable Docker for Internal Harbor Registry
+  import_tasks: enable-docker.yml
+  tags: enable, install
+  when: ( docker is defined and docker == true )
 
 
 - name: Distribute Applictions
@@ -77,37 +84,37 @@
 
 - name: Uninstall Korifi
   import_tasks: uninstall-korifi.yml
-  tags: destroy
+  tags: destroy, uninstall
   when: ( korifi is defined and korifi == true ) and inventory_hostname in groups['master']
 
 
 - name: Cleanup Korifi
   import_tasks: cleanup-korifi.yml
-  tags: clean
+  tags: clean, uninstall
   when: ( korifi is defined and korifi == true ) and inventory_hostname in groups['master']
 
 
 - name: Uninstall K8S CLIs
   import_tasks: uninstall-cli.yml
-  tags: uninstall
+  tags: remove, uninstall
   when: ( cli is defined and cli == true ) and inventory_hostname in groups['master']
 
 
 - name: Uninstall Cert Manager
   import_tasks: uninstall-cert-manager.yml
-  tags: uninstall
+  tags: remove, uninstall
   when: ( cm is defined and cm == true ) and inventory_hostname in groups['master']
 
 
 - name: Uninstall GO
   import_tasks: uninstall-go.yml
-  tags: uninstall
+  tags: remove, uninstall
   when: ( go is defined and go == true ) and inventory_hostname in groups['master']
 
 
 - name: Disable Helm Repository
   import_tasks: disable-helm-repo.yml
-  tags: uninstall, disable
+  tags: disable, uninstall
   when: ( repo is defined and repo == true ) and inventory_hostname in groups['master']
 
 # https://dashaun.com/posts/korifi-on-raspberry-pi/

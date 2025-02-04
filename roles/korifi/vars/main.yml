@@ -140,8 +140,21 @@ _stemcell:
   release_version: 1017
 
 
-_helm:
-
-
-_apps:
+_harbor:
+  base_path: /root
+  major_version: "2"
+  minor_version: "8"
+  patch_version: "0"
+  os_version: "9"
+  cert:
+    country: "KR"
+    state: "Seoul"
+    location: "Gangnam"
+    org: "Pivotal"
+    org_unit: "GSS"
+    email_address: "rokmc756@gmail.com"
+  admin_password: "changeme"
+  database_password: "changeme"
+  hostname: "harbor"
+  domain: "jtest.pivotal.io"
 

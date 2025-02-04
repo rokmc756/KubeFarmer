@@ -6,7 +6,7 @@
 
 - name: Install Relevant Packages
   import_tasks: 01-install-pkgs.yml
-  tags: create, install
+  tags: setup, install
   when: ( pkgs is defined and pkgs == true ) or ( harbor_all is defined and harbor_all == true )
 
 
@@ -18,13 +18,13 @@
 
 - name: Install Docker
   import_tasks: 02-install-docker.yml
-  tags: create, install
+  tags: setup, install
   when: ( docker is defined and docker == true ) or ( harbor_all is defined and harbor_all == true )
 
 
 - name: Install Harbor
   import_tasks: 03-install-harbor.yml
-  tags: create, install
+  tags: setup, install
   when: ( harbor is defined and harbor == true ) or ( harbor_all is defined and harbor_all == true )
 
 
@@ -72,13 +72,13 @@
 
 - name: Uninstall Docker
   import_tasks: 10-uninstall-docker.yml
-  tags: delete, uninstall
+  tags: remove, uninstall
   when: ( docker is defined and docker == true ) or ( harbor_all is defined and harbor_all == true )
 
 
 - name: Uninstall Packages
   import_tasks: 11-uninstall-pkgs.yml
-  tags: delete, uninstall
+  tags: remove, uninstall
   when: ( pkgs is defined and pkgs == true ) or ( harbor_all is defined and harbor_all == true )
 
 
