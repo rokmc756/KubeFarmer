@@ -11,6 +11,3 @@
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ install_cert_manager }}
 
-
-# kubectl get pods - namespace cert-manager
-

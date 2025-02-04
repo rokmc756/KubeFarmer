@@ -3,6 +3,8 @@
   import_tasks: security/disable-security.yml
 
 
+
+
 - name: Create Default Containerd Directory
   file:
     path: "/etc/containerd"
@@ -202,6 +204,8 @@
 - name: Force to Stop and Restart Services
   meta: flush_handlers
 
+
+# fatal: [rk9-node01]: FAILED! => {"changed": true, "cmd": "kubectl create secret generic -n metallb-system memberlist --from-literal=secretkey=\"$(openssl rand -base64 128)\"\n", "delta": "0:00:00.096181", "end": "2025-02-04 17:46:57.029443", "msg": "non-zero return code", "rc": 1, "start": "2025-02-04 17:46:56.933262", "stderr": "error: failed to create secret secrets \"memberlist\" already exists", "stderr_lines": ["error: failed to create secret secrets \"memberlist\" already exists"], "stdout": "", "stdout_lines": []}
 
 - name: Enable Helm Repository
   import_tasks: ext/enable-helm-repo.yml

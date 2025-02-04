@@ -10,7 +10,7 @@
     cf api https://api.jtest.pivotal.io --skip-ssl-validation
   register: login_cf_api
   args:
-    chdir: "{{ base_path }}/"
+    chdir: "{{ base_path }}"
   environment:
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ login_cf_api }}
@@ -21,7 +21,7 @@
     cf auth cf-admin
   register: login_cf_admin_user
   args:
-    chdir: "{{ base_path }}/"
+    chdir: "{{ base_path }}"
   environment:
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ login_cf_admin_user }}
@@ -32,7 +32,7 @@
     cf create-org org1
   register: create_org
   args:
-    chdir: "{{ base_path }}/"
+    chdir: "{{ base_path }}"
   environment:
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ create_org }}
@@ -43,7 +43,7 @@
     cf create-space -o org1 space1
   register: create_space
   args:
-    chdir: "{{ base_path }}/"
+    chdir: "{{ base_path }}"
   environment:
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ create_space }}
@@ -54,7 +54,7 @@
     cf target -o org1 -s space1
   register: target_space
   args:
-    chdir: "{{ base_path }}/"
+    chdir: "{{ base_path }}"
   environment:
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ target_space }}
@@ -66,8 +66,6 @@
 - debug: msg={{ check_sample_web_apps_dir }}
 
 
-# git -C "{{ base_path }}" clone https://github.com/nginxinc/kubernetes-ingress.git \
-# --branch v{{ nginx.k8s_ingress.major_version }}.{{ nginx.k8s_ingress.minor_version }}.{{ nginx.k8s_ingress.patch_version }}
 - name: Clone Sample Web Apps
   shell: |
     git clone https://github.com/sylvainkalache/sample-web-apps
@@ -92,6 +90,8 @@
 - debug: msg={{ distribute_java_apps }}
 
 
+
+################################################################################################################
 # Check Application
 # Access Application Deployed
 #
@@ -127,16 +127,5 @@
 # memory usage:   1024M
 #     state     since                  cpu    memory   disk     logging      details
 # 0   running   2024-02-16T07:45:20Z   0.0%   0 of 0   0 of 0   0/s of 0/s   
-#
-# type:           executable-jar
-# sidecars:       
-# instances:      0/0
-# memory usage:   1024M
-# There are no running instances of this process.
-#
-# type:           task
-# sidecars:       
-# instances:      0/0
-# memory usage:   1024M
-# There are no running instances of this process.
+
 

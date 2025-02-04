@@ -21,12 +21,11 @@
   register: install_reflector
   ignore_errors: yes
   args:
-    chdir: "{{ base_path }}/"
+    chdir: "{{ base_path }}"
   environment:
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ install_reflector }}
   when: print_debug == true
-  # kubectl -n kube-system apply -f https://github.com/emberstack/kubernetes-reflector/releases/latest/download/reflector.yaml
 
 
 - name: Validate if Reflector Containers are Running
@@ -37,7 +36,7 @@
   retries: 30
   delay: 10
   args:
-    chdir: "{{ base_path }}/"
+    chdir: "{{ base_path }}"
   environment:
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ check_reflector_containers }}
@@ -50,7 +49,7 @@
     -f https://github.com/buildpacks-community/kpack/releases/download/v{{ _kpack.major_version }}.{{ _kpack.minor_version }}.{{ _kpack.patch_version }}/release-{{ _kpack.major_version }}.{{ _kpack.minor_version }}.{{ _kpack.patch_version }}.yaml
   register: install_kpack
   args:
-    chdir: "{{ base_path }}/"
+    chdir: "{{ base_path }}"
   environment:
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ install_kpack }}
@@ -65,7 +64,7 @@
   retries: 100
   delay: 10
   args:
-    chdir: "{{ base_path }}/"
+    chdir: "{{ base_path }}"
   environment:
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ check_kpack_containers }}
@@ -78,12 +77,13 @@
   register: install_contour
   ignore_errors: yes
   args:
-    chdir: "{{ base_path }}/"
+    chdir: "{{ base_path }}"
   environment:
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ install_contour }}
   when: print_debug == true
-  #  kubectl apply -f https://projectcontour.io/quickstart/contour.yaml
+# kubectl apply -f https://projectcontour.io/quickstart/contour.yaml
+# helm install contour bitnami/contour --namespace projectcontour --create-namespace
 
 
 - name: Copy Namespaces Config
@@ -104,7 +104,7 @@
     -f https://github.com/servicebinding/runtime/releases/download/v{{ _servicebinding.major_version }}.{{ _servicebinding.minor_version }}.{{ _servicebinding.patch_version }}/servicebinding-runtime-v{{ _servicebinding.major_version }}.{{ _servicebinding.minor_version }}.{{ _servicebinding.patch_version }}.yaml
   register: install_service_binding_runtime
   args:
-    chdir: "{{ base_path }}/"
+    chdir: "{{ base_path }}"
 - debug: msg={{ install_service_binding_runtime }}
 
 
@@ -121,20 +121,6 @@
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ create_namespaces }}
   when: print_debug == true
-
-
-#- name: Intall Contour
-#  shell: |
-#    helm install contour bitnami/contour --namespace projectcontour --create-namespace
-#  register: install_contour
-#  ignore_errors: yes
-#  args:
-#    chdir: "{{ base_path }}/"
-#  environment:
-#    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-#- debug: msg={{ install_contour }}
-#  when: print_debug == true
-#  #  kubectl apply -f https://projectcontour.io/quickstart/contour.yaml
 
 
 - name: Create Docker Register Secret
@@ -155,7 +141,7 @@
 - name: Install Kubernetes Gateway API
   shell: |
     kubectl get crd gateways.gateway.networking.k8s.io &> /dev/null || \
-    { kubectl kustomize "github.com/kubernetes-sigs/gateway-api/config/crd?ref=v0.8.0" | kubectl apply -f -; }
+    { kubectl kustomize "github.com/kubernetes-sigs/gateway-api/config/crd?ref=v{{ _gateway_api.major_version }}.{{ _gateway_api.minor_version }}.{{ _gateway_api.patch_version }}" | kubectl apply -f -; }
   register: install_kube_gw_api
   ignore_errors: yes
   args:
@@ -165,4 +151,23 @@
 - debug: msg={{ install_kube_gw_api }}
   when: print_debug == true
 
+
+#- name: Copy Metrics Server Config Yaml
+#  template:
+#    src: "{{ item }}.j2"
+#    dest: "{{ base_path }}/{{ item }}"
+#  register: copy_metrics_server_config_yaml
+#  with_items:
+#    - "metrics-server-values.yaml"
+#- debug: msg={{ copy_metrics_server_config_yaml }}
+
+
+#- name: Intall Metrics Server
+#  shell: |
+#    /usr/local/bin/helm install metrics-server metrics-server/metrics-server -n metrics-server --create-namespace -f metrics-server-values.yaml --wait
+#  register: install_metrics_server
+#  ignore_errors: yes
+#  args:
+#    chdir: "{{ base_path }}"
+#- debug: msg={{ install_metrics_server }}
 

@@ -28,10 +28,10 @@
   environment:
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
   when: _go.download == true
-  # when: go_file_copied is not succeeded and go.download == true
+  # when: copy_go_file is not succeeded and _go.download == true
 
 
-- name: Untar GO file
+- name: Untar GO File
   shell: tar -C /usr/local -xf {{ k8s.base_path }}/_go{{ go.major_version }}.{{ _go.minor_version }}.{{ _go.patch_version }}.linux-amd64.tar.gz
   args:
     executable: /bin/bash

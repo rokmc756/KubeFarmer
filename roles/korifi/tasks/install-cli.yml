@@ -1,10 +1,4 @@
 ---
-#- name: Register Region
-#  shell: |
-#    echo {{ alicloud_region }}
-#  register: register_region
-
-
 # https://www.devopsschool.com/blog/getting-started-with-cloud-foundry-for-kubernetes-using-cf-for-k8s-in-linuxubuntu/
 - name: Download Korifi CLI for Kind/YTT/Bosh/CF from GitHub
   get_url:

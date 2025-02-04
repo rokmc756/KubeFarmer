@@ -1,15 +1,3 @@
-# https://materialplus.srijan.net/resources/getting-started-with-korifi-cloud-foundry-a-comprehensive-guide
-# https://neuw.medium.com/cloud-foundry-setup-using-korifi-f75ad4166ce9
-# https://blog.khmersite.net/p/deploy-metrics-server-in-kubernetes-using-helm/
-# https://www.definit.co.uk/2019/08/lab-guide-kubernetes-load-balancer-and-ingress-with-metallb-and-contour/
-# https://trstringer.com/kubernetes-ingress-with-contour/
-# https://hub.docker.com/r/jmoon/cf-for-k8s-test
-# https://younsl.github.io/blog/k8s/install-metrics-server-using-helm/
-# https://blog.khmersite.net/p/deploy-metrics-server-in-kubernetes-using-helm/
-# https://sysdocu.tistory.com/1863
-# https://sysdocu.tistory.com/1904
-
-
 - name: Create Directory for Korifi Persistent Volumes
   file:
     path: "/mnt/korifi-storage"

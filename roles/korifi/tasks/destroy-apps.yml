@@ -1,0 +1,49 @@
+---
+- name: Check if the Sample Web Apps Directory
+  stat: path={{ base_path }}/sample-web-apps
+  register: check_sample_web_apps_dir
+- debug: msg={{ check_sample_web_apps_dir }}
+
+
+- name: Distribute Java Application
+  file:
+    path: "{{ base_path }}/sample-web-apps"
+    state: absent
+  register: distribute_java_apps
+  when: check_sample_web_apps_dir.stat.exists != True
+- debug: msg={{ distribute_java_apps }}
+  when: check_sample_web_apps_dir.stat.exists != True
+
+
+- name: Delete Space
+  shell: |
+    cf delete-space -o org1 space1 -f
+  register: delete_space
+  args:
+    chdir: "{{ base_path }}"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ delete_space }}
+
+
+- name: Delete Organization
+  shell: |
+    cf delete-org org1 -f
+  register: delete_org
+  args:
+    chdir: "{{ base_path }}"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ delete_org }}
+
+
+- name: LogOut CF Auth
+  shell: |
+    cf logout
+  register: logout_cf_auth
+  args:
+    chdir: "{{ base_path }}"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ logout_cf_auth }}
+

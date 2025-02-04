@@ -88,21 +88,21 @@
   when: print_debug == true
 
 
-- name: Delete Namespaces
-  shell: |
-    kubectl delete namespace {{ item }}
-  register: delete_namespaces
-  ignore_errors: true
-  with_items:
-    - korifi
-  args:
-    chdir: "{{ base_path }}/"
-  environment:
-    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-- debug: msg={{ delete_namespaces }}
-  when: print_debug == true
-#  - reflector
-#  - metrics-server
+#- name: Delete Namespaces
+#  shell: |
+#    kubectl delete namespace {{ item }}
+#  register: delete_namespaces
+#  ignore_errors: true
+#  with_items:
+#    - korifi
+#  args:
+#    chdir: "{{ base_path }}/"
+#  environment:
+#    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+#- debug: msg={{ delete_namespaces }}
+#  when: print_debug == true
+##  - reflector
+##  - metrics-server
 
 
 - name: Delete CF Namespace

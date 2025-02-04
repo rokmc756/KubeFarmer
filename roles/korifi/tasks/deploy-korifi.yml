@@ -1,6 +1,7 @@
 ---
 # https://github.com/cloudfoundry/korifi/blob/main/INSTALL.md
 # https://github.com/cloudfoundry/korifi/blob/main/INSTALL.kind.md#cluster-creation
+
 - name: Copy Namespaces Config
   template:
     src: "{{ item }}.j2"
@@ -35,27 +36,13 @@
     - "korifi-v{{ _korifi.major_version }}-{{ _korifi.minor_version }}-{{ _korifi.patch_version }}-values.yaml"
 - debug: msg={{ copy_korifi_config_values }}
   when: print_debug == true
-
 # kubectl delete validatingwebhookconfigurations --all
 # kubectl delete mutatingwebhookconfigurations --all
-# --set=containerRepositoryPrefix="harbor.jtest.pivotal.io/"  \
-# --set=networking.gatewayClass=contour \
 
 
-#- name: Deploy Korifi
-#  shell: |
-#    helm install korifi \
-#    https://github.com/cloudfoundry/korifi/releases/download/v{{ _korifi.major_version }}.{{ _korifi.minor_version }}.{{ _korifi.patch_version }}/korifi-{{ _korifi.major_version }}.{{ _korifi.minor_version }}.{{ _korifi.patch_version }}.tgz \
-#    -n korifi \
-#    -f korifi-values.yaml
-#  register: install_korifi
-#  args:
-#    chdir: "{{ base_path }}/"
-#  environment:
-#    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-#- debug: msg={{ install_korifi }}
-#  when: print_debug == true
-
+# helm install korifi \
+# https://github.com/cloudfoundry/korifi/releases/download/v{{ _korifi.major_version }}.{{ _korifi.minor_version }}.{{ _korifi.patch_version }}/korifi-{{ _korifi.major_version }}.{{ _korifi.minor_version }}.{{ _korifi.patch_version }}.tgz \
+# -n korifi -f korifi-values.yaml
 
 - name: Deploy Korifi
   shell: |
@@ -64,32 +51,29 @@
     --set=generateIngressCertificates=true \
     --set=rootNamespace="cf" \
     --set=adminUserName="cf-admin" \
+    --set=containerRegistrySecret="image-registry-credentials" \
     --set=api.apiServer.url="api.jtest.pivotal.io" \
     --set=defaultAppDomainName="apps.jtest.pivotal.io" \
     --set=containerRepositoryPrefix=harbor.jtest.pivotal.io/ \
     --set=kpackImageBuilder.builderRepository=harbor.jtest.pivotal.io/jproject01 \
     --set=networking.gatewayClass=contour \
     --wait
-  register: install_korifi
+  register: deploy_korifi
   args:
     chdir: "{{ base_path }}/"
   environment:
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-- debug: msg={{ install_korifi }}
+- debug: msg={{ deploy_korifi }}
   when: print_debug == true
-
-
-
-# --set=generateIngressCertificates=true \
-# --set=rootNamespace="cf" \
-# --set=containerRegistrySecret="image-registry-credentials" \
-# --set=containerRepositoryPrefix="harbor.jtest.pivotal.io/"  \
-# --set=adminUserName="cf-admin" \
-# --set=api.apiServer.url="api.jtest.pivotal.io" \
-# --set=defaultAppDomainName="apps.jtest.pivotal.io" \
-# --set=kpackImageBuilder.builderRepository="harbor.jtest.pivotal.io/jproject01" \
-# --wait
 # --set=networking.gatewayClass=contour \
+# --set=networking.gatewayClass=contour-korifi \
+# kubectl get service envoy-korifi -n korifi-gateway -ojsonpath='{.status.loadBalancer.ingress[0]}'
+
+
+# --set=containerRegistrySecret="image-registry-credentials" \
+# --set=networking.gatewayClass=contour \
+# --wait
+
 #
 # 설치할 Korifi 버전에 따라 사용되는 옵션이 다릅니다.
 # 가령 Korifi 0.10.0 버전에서는 옵션에 global. 이라는 명칭이 제거되고, Korifi 0.11.0 에서는 networking.gatewayClass 옵션이 추가됩니다.
@@ -99,38 +83,4 @@
 # kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
 # kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.6.1/components.yaml
 # kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.7.1/components.yaml
-
-
-#- name: Copy Metrics Server Config Yaml
-#  template:
-#    src: "{{ item }}.j2"
-#    dest: "{{ base_path }}/{{ item }}"
-#  register: copy_metrics_server_config_yaml
-#  with_items:
-#    - "metrics-server-values.yaml"
-#- debug: msg={{ copy_metrics_server_config_yaml }}
-
-
-#- name: Intall Metrics Server
-#  shell: |
-#    /usr/local/bin/helm install metrics-server metrics-server/metrics-server -n metrics-server --create-namespace -f metrics-server-values.yaml --wait
-#  register: install_metrics_server
-#  ignore_errors: yes
-#  args:
-#    chdir: "{{ base_path }}/"
-#- debug: msg={{ install_metrics_server }}
-
-
-#- name: Intall Service Binding Runtime
-#  shell: |
-#    kubectl apply -f https://github.com/servicebinding/runtime/releases/download/v0.9.0/servicebinding-runtime-v{{ servicebinding.major_version }}.{{ servicebinding.minor_version }}.{{ servicebinding.patch_version }}.yaml
-#  register: install_service_binding_runtime
-#  args:
-#    chdir: "{{ base_path }}/"
-#- debug: msg={{ install_service_binding_runtime }}
-
-
-# kubectl --namespace cf create secret docker-registry image-registry-credentials \
-# --docker-username="rokmc756@gmail.com" \
-# --docker-password="xxxxxxxx!@"
 

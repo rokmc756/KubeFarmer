@@ -1,0 +1,61 @@
+---
+- name: Delete Directory
+  file:
+    path: "/etc/docker/certs.d"
+    state: absent
+
+
+#- name: Generate an x509 v3 Extension File
+#  copy:
+#    src: "{{ item.src }}"
+#    dest: "{{ item.dest }}"
+#    remote_src: yes
+#  register: copy_certs
+#  with_items:
+#    - { src: "{{ _harbor.base_path }}/certs/{{ _harbor.hostname }}.{{ _harbor.domain }}.cert", dest: "/etc/docker/certs.d/{{ _harbor.hostname }}.{{ _harbor.domain }}:443/{{ _harbor.hostname }}.{{ _harbor.domain }}.cert" }
+#    - { src: "{{ _harbor.base_path }}/certs/{{ _harbor.hostname }}.{{ _harbor.domain }}.key",  dest: "/etc/docker/certs.d/{{ _harbor.hostname }}.{{ _harbor.domain }}:443/{{ _harbor.hostname }}.{{ _harbor.domain }}.key" }
+#    - { src: "{{ _harbor.base_path }}/certs/ca.crt",                  dest: "/etc/docker/certs.d/{{ _harbor.hostname }}.{{ _harbor.domain }}:443/ca.crt" }
+
+
+#- name: Configure the Docker Daemon to Use Systemd for the Management of the Cotainer's Cgroups and Repository
+#  template: src=daemon.json.j2 dest=/etc/docker/daemon.json owner=root group=root mode=644 force=yes
+#  register: config_cgroup_docker
+#- debug: msg={{ config_cgroup_docker }}
+#  when: print_debug == true
+
+
+#- name: Copy Docker Configuration
+#  synchronize:
+#    mode: push
+#    src:  "/etc/docker/"
+#    dest: "/etc/docker/"
+#    set_remote_user: true
+#    rsync_opts:
+#      - "-e ssh"          # "-e ssh -i ~/.ssh/id_rsa.pub"
+#    ssh_args:
+#      - "-p {{ _incus.ceph.passwd }} -o StrictHostKeyChecking=no"
+#  delegate_to: "{{ _incus.ceph.control_ip_addr }}"
+#  delegate_facts: true
+#  register: copy_ceph_config
+#- debug: msg={{ copy_ceph_config }}
+#  when: print_debug == true
+
+
+#- name: Copy Docker Configurations by Rsync
+#  become_user: root
+#  shell: |
+#    rsync -a --rsh='/usr/bin/sshpass -p changeme ssh -o StrictHostKeyChecking=no' /etc/docker/ {{ inventory_hostname }}:/etc/docker/
+#  delegate_to: "{{ _harbor.hostname}}.{{ _harbor.domain }}"
+
+
+- name: Restart Docker
+  systemd:
+    name: docker
+    state: restarted
+  register: restart_docker
+  until: restart_docker is succeeded
+  retries: 3
+  delay: 10
+- debug: msg={{ restart_docker }}
+  when: print_debug == true
+

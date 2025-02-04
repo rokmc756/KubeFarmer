@@ -68,6 +68,12 @@ _ytt:
     patch_version: 1
 
 
+_gateway_api:
+    major_version: 0
+    minor_version: 8
+    patch_version: 0
+
+
 _korifi:
   storage_path: "/mnt/korifi-storage"
   major_version: 0

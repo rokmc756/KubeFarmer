@@ -12,110 +12,110 @@
 - name: Enable Helm Repository
   import_tasks: enable-helm-repo.yml
   tags: enable, install
-  when: ( repo is defined and repo == true ) and inventory_hostname in groups['master']
+  when: (( repo is defined and repo == true ) or ( korifi_all is defined and korifi_all == true )) and inventory_hostname in groups['master']
 
 
 - name: Install GO
   import_tasks: install-go.yml
   tags: setup, install
-  when: ( go is defined and go == true ) and inventory_hostname in groups['master']
+  when: (( go is defined and go == true ) or ( korifi_all is defined and korifi_all == true )) and inventory_hostname in groups['master']
 
 
 - name: Install Kustomize
   import_tasks: install-kustomize.yml
   tags: setup, install
-  when: ( kustomize is defined and kustomize == true ) and inventory_hostname in groups['master']
-  # when: _kustomize.install == true and inventory_hostname in groups['master']
+  when: (( kustomize is defined and kustomize == true ) or ( korifi_all is defined and korifi_all == true )) and inventory_hostname in groups['master']
 
 
 - name: Install Cert Manager
   import_tasks: install-cert-manager.yml
   tags: setup, install
-  when: ( cm is defined and cm == true ) and inventory_hostname in groups['master']
+  when: (( cm is defined and cm == true ) or ( korifi_all is defined and korifi_all == true )) and inventory_hostname in groups['master']
 
 
-- name: Install K8S CLIs
+- name: Install CF CLIs
   import_tasks: install-cli.yml
   tags: setup, install
-  when: ( cli is defined and cli == true ) and inventory_hostname in groups['master']
+  when: (( cli is defined and cli == true ) or ( korifi_all is defined and korifi_all == true )) and inventory_hostname in groups['master']
 
 
 - name: Prepare Korifi
   import_tasks: prepare-korifi.yml
   tags: prepare, install
-  when: ( korifi is defined and korifi == true ) and inventory_hostname in groups['master']
+  when: (( korifi is defined and korifi == true ) or ( korifi_all is defined and korifi_all == true )) and inventory_hostname in groups['master']
 
 
-- name: Install Korifi
-  import_tasks: install-korifi.yml
+- name: Deploy Korifi
+  import_tasks: deploy-korifi.yml
   tags: deploy, install
-  when: ( korifi is defined and korifi == true ) and inventory_hostname in groups['master']
+  when: (( korifi is defined and korifi == true ) or ( korifi_all is defined and korifi_all == true )) and inventory_hostname in groups['master']
 
 
-- name: Create CF Admin
+- name: Create CF Admin User
   import_tasks: create-cf-admin.yml
   tags: create, install
-  when: ( admin is defined and admin == true ) and inventory_hostname in groups['master']
+  when: (( admin is defined and admin == true ) or ( korifi_all is defined and korifi_all == true )) and inventory_hostname in groups['master']
 
 
 - name: Enable Docker for Internal Harbor Registry
   import_tasks: enable-docker.yml
   tags: enable, install
-  when: ( docker is defined and docker == true )
+  when: ( docker is defined and docker == true ) or ( korifi_all is defined and korifi_all == true )
 
 
 - name: Distribute Applictions
   import_tasks: deploy-apps.yml
   tags: deploy, install
-  when: ( apps is defined and apps == true ) and inventory_hostname in groups['master']
+  when: (( apps is defined and apps == true ) or ( korifi_all is defined and korifi_all == true )) and inventory_hostname in groups['master']
+
+
+- name: Disable Docker for Internal Harbor Registry
+  import_tasks: disable-docker.yml
+  tags: disable, uninstall
+  when: ( docker is defined and docker == true ) or ( korifi_all is defined and korifi_all == true )
 
 
 - name: Delete CF Admin
   import_tasks: delete-cf-admin.yml
   tags: delete, uninstall
-  when: ( admin is defined and admin == true ) and inventory_hostname in groups['master']
+  when: (( admin is defined and admin == true ) or ( korifi_all is defined and korifi_all == true )) and inventory_hostname in groups['master']
 
 
-#- name: Destroy Korifi
-#  import_tasks: destroy-korifi.yml
-#  tags: destroy, uninstall
-#  when: ( korifi is defined and korifi == true ) and inventory_hostname in groups['master']
-
-
-- name: Uninstall Korifi
-  import_tasks: uninstall-korifi.yml
+- name: Destroy Korifi
+  import_tasks: destroy-korifi.yml
   tags: destroy, uninstall
-  when: ( korifi is defined and korifi == true ) and inventory_hostname in groups['master']
+  when: (( korifi is defined and korifi == true ) or ( korifi_all is defined and korifi_all == true )) and inventory_hostname in groups['master']
 
 
 - name: Cleanup Korifi
   import_tasks: cleanup-korifi.yml
   tags: clean, uninstall
-  when: ( korifi is defined and korifi == true ) and inventory_hostname in groups['master']
+  when: (( korifi is defined and korifi == true ) or ( korifi_all is defined and korifi_all == true )) and inventory_hostname in groups['master']
 
 
 - name: Uninstall K8S CLIs
   import_tasks: uninstall-cli.yml
   tags: remove, uninstall
-  when: ( cli is defined and cli == true ) and inventory_hostname in groups['master']
+  when: (( cli is defined and cli == true ) or ( korifi_all is defined and korifi_all == true )) and inventory_hostname in groups['master']
 
 
 - name: Uninstall Cert Manager
   import_tasks: uninstall-cert-manager.yml
   tags: remove, uninstall
-  when: ( cm is defined and cm == true ) and inventory_hostname in groups['master']
+  when: (( cm is defined and cm == true ) or ( korifi_all is defined and korifi_all == true )) and and inventory_hostname in groups['master']
 
 
 - name: Uninstall GO
   import_tasks: uninstall-go.yml
   tags: remove, uninstall
-  when: ( go is defined and go == true ) and inventory_hostname in groups['master']
+  when: (( go is defined and go == true ) or ( korifi_all is defined and korifi_all == true )) and inventory_hostname in groups['master']
 
 
 - name: Disable Helm Repository
   import_tasks: disable-helm-repo.yml
   tags: disable, uninstall
-  when: ( repo is defined and repo == true ) and inventory_hostname in groups['master']
+  when: (( repo is defined and repo == true ) or ( korifi_all is defined and korifi_all == true )) and inventory_hostname in groups['master']
+
 
 # https://dashaun.com/posts/korifi-on-raspberry-pi/
 
