@@ -12,6 +12,29 @@
 #  when: print_debug == true
 
 
+- name: Unintall Metrics Server
+  shell: |
+    helm uninstall metrics-server -n metrics-server
+  register: uninstall_metrics_server
+  ignore_errors: true
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ uninstall_metrics_server }}
+
+
+- name: Delete Metrics Server Config Yaml
+  file:
+    path: "{{ base_path }}/{{ item }}"
+    state: absent
+  register: delete_metrics_server_config_yaml
+  ignore_errors: true
+  with_items:
+    - "metrics-server-values.yaml"
+- debug: msg={{ delete_metrics_server_config_yaml }}
+
+
 - name: Create Namespaces
   shell: |
     kubectl delete -f {{ item }}
@@ -35,28 +58,9 @@
   ignore_errors: true
   args:
     chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ delete_service_binding_runtime }}
-
-
-#- name: Unintall Metrics Server
-#  shell: |
-#    /usr/local/bin/helm uninstall metrics-server -n metrics-server
-#  register: uninstall_metrics_server
-#  ignore_errors: true
-#  args:
-#    chdir: "{{ base_path }}/"
-#- debug: msg={{ uninstall_metrics_server }}
-
-
-#- name: Delete Metrics Server Config Yaml
-#  file:
-#    path: "{{ base_path }}/{{ item }}"
-#    state: absent
-#  register: delete_metrics_server_config_yaml
-#  ignore_errors: true
-#  with_items:
-#    - "metrics-server-values.yaml"
-#- debug: msg={{ delete_metrics_server_config_yaml }}
 
 
 - name: Unintall Contour
@@ -86,23 +90,6 @@
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ delete_kpack }}
   when: print_debug == true
-
-
-#- name: Delete Namespaces
-#  shell: |
-#    kubectl delete namespace {{ item }}
-#  register: delete_namespaces
-#  ignore_errors: true
-#  with_items:
-#    - korifi
-#  args:
-#    chdir: "{{ base_path }}/"
-#  environment:
-#    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-#- debug: msg={{ delete_namespaces }}
-#  when: print_debug == true
-##  - reflector
-##  - metrics-server
 
 
 - name: Delete CF Namespace
@@ -142,7 +129,7 @@
   with_items:
     - "cf-ns.yaml"
     - "gateway-class-name.yaml"
-- debug: msg={{ delete_namespaces }}
+- debug: msg={{ delete_namespaces_config }}
   when: print_debug == true
 
 
@@ -158,19 +145,4 @@
 - debug: msg={{ uninstall_reflector }}
   when: print_debug == true
   # kubectl -n kube-system delete -f https://github.com/emberstack/kubernetes-reflector/releases/latest/download/reflector.yaml
-
-
-- name: Delete Directory for Korifi Persistent Volumes
-  file:
-    path: "/mnt/korifi-storage"
-    state: absent
-    mode: 0777
-  register: delete_korifi_pv_dir
-  ignore_errors: true
-  delegate_to: "{{ item }}"
-  delegate_facts: True
-  with_items:
-    - "{{ groups['all'] }}"
-- debug: msg={{ delete_korifi_pv_dir }}
-  when: print_debug == true
 

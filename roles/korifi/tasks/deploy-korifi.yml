@@ -40,13 +40,15 @@
 # kubectl delete mutatingwebhookconfigurations --all
 
 
+
+
 # helm install korifi \
 # https://github.com/cloudfoundry/korifi/releases/download/v{{ _korifi.major_version }}.{{ _korifi.minor_version }}.{{ _korifi.patch_version }}/korifi-{{ _korifi.major_version }}.{{ _korifi.minor_version }}.{{ _korifi.patch_version }}.tgz \
 # -n korifi -f korifi-values.yaml
-
 - name: Deploy Korifi
   shell: |
-    helm install korifi https://github.com/cloudfoundry/korifi/releases/download/v{{ _korifi.major_version }}.{{ _korifi.minor_version }}.{{ _korifi.patch_version }}/korifi-{{ _korifi.major_version }}.{{ _korifi.minor_version }}.{{ _korifi.patch_version }}.tgz \
+    helm install korifi \
+    https://github.com/cloudfoundry/korifi/releases/download/v{{ _korifi.major_version }}.{{ _korifi.minor_version }}.{{ _korifi.patch_version }}/korifi-{{ _korifi.major_version }}.{{ _korifi.minor_version }}.{{ _korifi.patch_version }}.tgz \
     --namespace="korifi" \
     --set=generateIngressCertificates=true \
     --set=rootNamespace="cf" \
@@ -54,8 +56,8 @@
     --set=containerRegistrySecret="image-registry-credentials" \
     --set=api.apiServer.url="api.jtest.pivotal.io" \
     --set=defaultAppDomainName="apps.jtest.pivotal.io" \
-    --set=containerRepositoryPrefix=harbor.jtest.pivotal.io/ \
-    --set=kpackImageBuilder.builderRepository=harbor.jtest.pivotal.io/jproject01 \
+    --set=containerRepositoryPrefix=harbor.jtest.pivotal.io \
+    --set=kpackImageBuilder.builderRepository=harbor.jtest.pivotal.io/kpack-builder \
     --set=networking.gatewayClass=contour \
     --wait
   register: deploy_korifi
@@ -65,16 +67,14 @@
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 - debug: msg={{ deploy_korifi }}
   when: print_debug == true
-# --set=networking.gatewayClass=contour \
 # --set=networking.gatewayClass=contour-korifi \
 # kubectl get service envoy-korifi -n korifi-gateway -ojsonpath='{.status.loadBalancer.ingress[0]}'
 
 
 # --set=containerRegistrySecret="image-registry-credentials" \
 # --set=networking.gatewayClass=contour \
-# --wait
 
-#
+
 # 설치할 Korifi 버전에 따라 사용되는 옵션이 다릅니다.
 # 가령 Korifi 0.10.0 버전에서는 옵션에 global. 이라는 명칭이 제거되고, Korifi 0.11.0 에서는 networking.gatewayClass 옵션이 추가됩니다.
 # Korifi 0.7.1 이후의 버전 설치방법은 확인되면 업데이트 하겠습니다.

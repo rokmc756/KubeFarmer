@@ -14,8 +14,8 @@
 
 - name: Delete Namespaces
   shell: |
-    kubectl delete namespace {{ item }}
-  register: delete_namespaces
+    kubectl delete ns {{ item }}
+  register: delete_ns
   ignore_errors: true
   with_items:
     - korifi
@@ -23,47 +23,18 @@
     chdir: "{{ base_path }}/"
   environment:
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-- debug: msg={{ delete_namespaces }}
+- debug: msg={{ delete_ns }}
   when: print_debug == true
-#  - metrics-server
-
-
-#- name: Delete CF Namespace
-#  shell: |
-#    kubectl delete ns cf --grace-period=0 --force &
-#    sleep 10
-#  register: delete_cf_ns
-#  ignore_errors: true
-#  args:
-#    chdir: "{{ base_path }}/"
-#  environment:
-#    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-#- debug: msg={{ delete_cf_ns }}
-#  when: print_debug == true
-#
-#
-#- name: Force Delete CF Namespace
-#  shell: |
-#    kubectl get namespace "cf" -o json   | tr -d "\n" | sed "s/\"finalizers\": \[[^]]\+\]/\"finalizers\": []/" | \
-#    kubectl replace --raw /api/v1/namespaces/cf/finalize -f -
-#  register: force_delete_cf_ns
-#  ignore_errors: true
-#  args:
-#    chdir: "{{ base_path }}/"
-#  environment:
-#    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-#- debug: msg={{ force_delete_cf_ns }}
-#  when: print_debug == true
 
 
 - name: Delete Namespaces Config
   file:
     path: "{{ base_path }}/{{ item }}"
     state: absent
-  register: delete_namespaces_config
+  register: delete_ns_config
   ignore_errors: true
   with_items:
     - "korifi-ns.yaml"
-- debug: msg={{ delete_namespaces_config }}
+- debug: msg={{ delete_ns_config }}
   when: print_debug == true
 

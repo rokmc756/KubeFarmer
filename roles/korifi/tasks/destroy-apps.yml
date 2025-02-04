@@ -10,6 +10,7 @@
     path: "{{ base_path }}/sample-web-apps"
     state: absent
   register: distribute_java_apps
+  ignore_errors: true
   when: check_sample_web_apps_dir.stat.exists != True
 - debug: msg={{ distribute_java_apps }}
   when: check_sample_web_apps_dir.stat.exists != True
@@ -19,6 +20,7 @@
   shell: |
     cf delete-space -o org1 space1 -f
   register: delete_space
+  ignore_errors: true
   args:
     chdir: "{{ base_path }}"
   environment:
@@ -30,6 +32,7 @@
   shell: |
     cf delete-org org1 -f
   register: delete_org
+  ignore_errors: true
   args:
     chdir: "{{ base_path }}"
   environment:
@@ -41,6 +44,7 @@
   shell: |
     cf logout
   register: logout_cf_auth
+  ignore_errors: true
   args:
     chdir: "{{ base_path }}"
   environment:

@@ -69,6 +69,12 @@
   when: (( apps is defined and apps == true ) or ( korifi_all is defined and korifi_all == true )) and inventory_hostname in groups['master']
 
 
+- name: Destroy Applictions
+  import_tasks: destroy-apps.yml
+  tags: destroy, uninstall
+  when: (( apps is defined and apps == true ) or ( korifi_all is defined and korifi_all == true )) and inventory_hostname in groups['master']
+
+
 - name: Disable Docker for Internal Harbor Registry
   import_tasks: disable-docker.yml
   tags: disable, uninstall
@@ -95,7 +101,7 @@
 
 - name: Uninstall K8S CLIs
   import_tasks: uninstall-cli.yml
-  tags: remove, uninstall
+  tags: delete, uninstall
   when: (( cli is defined and cli == true ) or ( korifi_all is defined and korifi_all == true )) and inventory_hostname in groups['master']
 
 
@@ -107,7 +113,7 @@
 
 - name: Uninstall GO
   import_tasks: uninstall-go.yml
-  tags: remove, uninstall
+  tags: delete, uninstall
   when: (( go is defined and go == true ) or ( korifi_all is defined and korifi_all == true )) and inventory_hostname in groups['master']
 
 

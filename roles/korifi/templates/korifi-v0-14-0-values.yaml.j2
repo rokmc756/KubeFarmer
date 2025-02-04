@@ -142,7 +142,7 @@ kpackImageBuilder:
   clusterStackID: io.buildpacks.stacks.jammy
   clusterStackBuildImage: paketobuildpacks/build-jammy-full
   clusterStackRunImage: paketobuildpacks/run-jammy-full
-  builderRepository: "harbor.{{ _korifi.domain_prefix }}/{{ _korifi.domain_prefix }}"
+  builderRepository: "harbor.{{ _korifi.domain_prefix }}/jproject01"
 
 
 statefulsetRunner:
@@ -182,7 +182,7 @@ networking:
     http: 80
     https: 443
   gatewayInfrastructure:
-  gatewayClass: projectcontur
+  gatewayClass: contur
 
 
 #networking:

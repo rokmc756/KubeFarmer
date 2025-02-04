@@ -1,20 +1,4 @@
 ---
-- name: Create Directory
-  file:
-    path: "/mnt/korifi-storage"
-    state: directory
-    owner: root
-    group: root
-    mode: 0777
-  register: create_k8s_pv_dir
-  delegate_to: "{{ item }}"
-  delegate_facts: True
-  with_items:
-    - "{{ groups['all'] }}"
-- debug: msg={{ create_k8s_pv_dir }}
-  when: print_debug == true
-
-
 - name: Intall Reflector
   shell: |
     helm install reflector emberstack/reflector -n reflector --create-namespace
@@ -126,8 +110,8 @@
 - name: Create Docker Register Secret
   shell: |
     kubectl --namespace cf create secret docker-registry image-registry-credentials \
-    --docker-username="admin" --docker-password="changeme" \
-    --docker-server="https://harbor.{{ _korifi.domain_prefix }}"
+    --docker-username=admin --docker-password=changeme \
+    --docker-server=https://harbor.{{ _korifi.domain_prefix }}
   register: create_docker_secret
   ignore_errors: yes
   args:
@@ -152,22 +136,23 @@
   when: print_debug == true
 
 
-#- name: Copy Metrics Server Config Yaml
-#  template:
-#    src: "{{ item }}.j2"
-#    dest: "{{ base_path }}/{{ item }}"
-#  register: copy_metrics_server_config_yaml
-#  with_items:
-#    - "metrics-server-values.yaml"
-#- debug: msg={{ copy_metrics_server_config_yaml }}
+- name: Copy Metrics Server Config Yaml
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ base_path }}/{{ item }}"
+  register: copy_metrics_server_config_yaml
+  with_items:
+    - "metrics-server-values.yaml"
+- debug: msg={{ copy_metrics_server_config_yaml }}
 
 
-#- name: Intall Metrics Server
-#  shell: |
-#    /usr/local/bin/helm install metrics-server metrics-server/metrics-server -n metrics-server --create-namespace -f metrics-server-values.yaml --wait
-#  register: install_metrics_server
-#  ignore_errors: yes
-#  args:
-#    chdir: "{{ base_path }}"
-#- debug: msg={{ install_metrics_server }}
+- name: Intall Metrics Server
+  shell: |
+    /usr/local/bin/helm install metrics-server metrics-server/metrics-server \
+    -n metrics-server --create-namespace -f metrics-server-values.yaml --wait
+  register: install_metrics_server
+  ignore_errors: yes
+  args:
+    chdir: "{{ base_path }}"
+- debug: msg={{ install_metrics_server }}
 

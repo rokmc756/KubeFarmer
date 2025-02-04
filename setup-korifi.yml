@@ -4,4 +4,4 @@
   vars:
     print_debug: true
   roles:
-    - k8s
+    - korifi
