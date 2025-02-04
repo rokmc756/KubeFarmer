@@ -66,7 +66,7 @@
   when: print_debug == true
 
 
-- name: Validate the CSR if It got Created Successfully.
+- name: Validate the CSR if It got Created Successfully
   shell: |
     kubectl get csr
   register: validate_csr
@@ -102,7 +102,7 @@
   when: print_debug == true
 
 
-- name: Create Developer Role for the cf-admin.
+- name: Create Developer Role for the cf-admin
   shell: |
     kubectl create role developer --verb=create --verb=get --verb=list --verb=update --verb=delete --resource=pods
   register: create_developer_role
@@ -114,7 +114,7 @@
   when: print_debug == true
 
 
-- name: Bind the Role to the cf-admin.
+- name: Bind the Role to the cf-admin
   shell: |
     kubectl create rolebinding developer-binding-cf-admin --role=developer --user=cf-admin
   register: bind_role
@@ -126,7 +126,7 @@
   when: print_debug == true
 
 
-- name: Embed the Certificate and Key In the kubeconfig.
+- name: Embed the Certificate and Key In the kubeconfig
   shell: |
     kubectl config set-credentials cf-admin --client-key=cf-admin.key --client-certificate=cf-admin.crt --embed-certs=true
   register: embed_cert_key
@@ -138,7 +138,7 @@
   when: print_debug == true
 
 
-- name: Create Context For the cf-admin.
+- name: Create Context For the cf-admin
   shell: |
     kubectl config set-context cf-admin --cluster=kubernetes --user=cf-admin
   register: create_context

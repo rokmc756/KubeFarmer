@@ -1,5 +1,5 @@
 ---
-- name: Delete the Role to the cf-admin.
+- name: Delete the Role to the cf-admin
   shell: |
     kubectl delete rolebinding developer-binding-cf-admin
   register: delete_bind_role
@@ -12,7 +12,7 @@
   when: print_debug == true
 
 
-- name: Delete Developer Role for the cf-admin.
+- name: Delete Developer Role for the cf-admin
   shell: |
     kubectl delete role developer
   register: delete_developer_role
@@ -25,7 +25,7 @@
   when: print_debug == true
 
 
-- name: Delete Context For the cf-admin.
+- name: Delete Context For the cf-admin
   shell: |
     kubectl config delete-context cf-admin --cluster=kubernetes --user=cf-admin
   register: delete_context
@@ -38,7 +38,7 @@
   when: print_debug == true
 
 
-#- name: Unset embed the certificate and key in the kubeconfig.
+#- name: Unset embed the certificate and key in the kubeconfig
 #  shell: |
 #    kubectl config delete-credentials cf-admin --client-key=cf-admin.key --client-certificate=cf-admin.crt --embed-certs=true
 #  register: unset_embed_cert_key
