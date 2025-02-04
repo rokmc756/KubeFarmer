@@ -107,8 +107,8 @@
 
 - name: Uninstall Cert Manager
   import_tasks: uninstall-cert-manager.yml
-  tags: remove, uninstall
-  when: (( cm is defined and cm == true ) or ( korifi_all is defined and korifi_all == true )) and and inventory_hostname in groups['master']
+  tags: delete, uninstall
+  when: (( cm is defined and cm == true ) or ( korifi_all is defined and korifi_all == true )) and inventory_hostname in groups['master']
 
 
 - name: Uninstall GO
