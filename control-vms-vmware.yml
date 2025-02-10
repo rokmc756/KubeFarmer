@@ -18,8 +18,9 @@
         - "rk9-node05"
         - "rk9-node06"
         - "rk9-node07"
-        - "harbor"
-        - "VMware vCenter Server"
+      #  - "harbor"
+      #  - "VMware vCenter Server"
 
 # https://ugurakgul.medium.com/provisioning-a-linux-vm-with-ansible-in-vmware-18cf45a53cb3
+
 

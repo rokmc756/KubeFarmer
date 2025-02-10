@@ -9,7 +9,7 @@
     - { name: 'bitnami',  link: 'https://charts.bitnami.com/bitnami' }
     - { name: 'jetstack',  link: 'https://charts.jetstack.io' }
 - debug: msg={{ remove_helm_repos }}
-  #  - { name: 'truecharts', link: 'https://charts.truecharts.org/' }
+# - { name: 'truecharts', link: 'https://charts.truecharts.org/' }
 
 
 #- name: Delete Helm Install Script

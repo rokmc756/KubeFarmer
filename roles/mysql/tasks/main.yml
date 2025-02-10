@@ -6,91 +6,77 @@
 
 - name: Set Facts for mysql
   import_tasks: set-mysql-facts.yml
-  tags:
-    - install
-    - uninstall
+  tags: deploy, destroy, install, uninstall, enable, disable, setup, add, remove, delete
 
 
 - name: Enable Helm Repository
   import_tasks: enable-helm-repo.yml
-  tags: install
-  when: _helm.enable_repo == true and inventory_hostname in groups['master']
-
-
-- name: Install Cert Manager
-  import_tasks: install-cert-manager.yml
-  tags: install
-  when: _cm.install == true and inventory_hostname in groups['master']
+  tags: enable, add, install
+  when: ( repo is defined and repo == true ) and inventory_hostname in groups['master']
 
 
 - name: Deploy MySQL NDB Cluster
-  import_tasks: install-ndb.yml
-  tags: install
+  import_tasks: deploy-ndb.yml
+  tags: deploy, setup, install
   when: ( ndb is defined and ndb == true ) and inventory_hostname in groups['master']
 
 
 - name: Deploy MySQL InnoDB Cluster
-  import_tasks: install-innodb.yml
-  tags: install
+  import_tasks: deploy-innodb.yml
+  tags: deploy, setup, install
   when: ( innodb is defined and innodb == true ) and inventory_hostname in groups['master']
 
 
-- name: Deploy phpMyAdmin
-  import_tasks: install-phpmyadmin.yml
-  tags: install
+- name: Setup phpMyAdmin
+  import_tasks: setup-phpmyadmin.yml
+  tags: deploy, setup, install
   when: ( phpmyadmin is defined and phpmyadmin == true ) and inventory_hostname in groups['master']
 
 
-- name: Install Load Balancer
-  import_tasks: install-lb.yml
-  tags: install
+- name: Setup Load Balancer
+  import_tasks: setup-lb.yml
+  tags: setup, enable, install
   when: ( lb is defined and lb == true ) and inventory_hostname in groups['master']
 
 
-- name: Install NGINX Ingress
-  import_tasks: install-ingress.yml
-  tags: install
+- name: Setup NGINX Ingress
+  import_tasks: setup-ingress.yml
+  tags: setup, create, install
   when: ( ingress is defined and ingress == true ) and inventory_hostname in groups['master']
 
 
-- name: Unstall NGINX Ingress
-  import_tasks: uninstall-ingress.yml
-  tags: uninstall
+- name: Remove NGINX Ingress
+  import_tasks: remove-ingress.yml
+  tags: remove, delete, uninstall
   when: ( ingress is defined and ingress == true ) and inventory_hostname in groups['master']
 
 
-- name: Uninstall Load Balancer
-  import_tasks: uninstall-lb.yml
-  tags: uninstall
+- name: Remove Load Balancer
+  import_tasks: remove-lb.yml
+  tags: remove, delete, uninstall
   when: ( lb is defined and lb == true ) and inventory_hostname in groups['master']
 
 
-- name: Destroy phpMyAdmin
-  import_tasks: uninstall-phpmyadmin.yml
-  tags: uninstall
+- name: Remove phpMyAdmin
+  import_tasks: remove-phpmyadmin.yml
+  tags: remove, delete, uninstall
   when: ( phpmyadmin is defined and phpmyadmin == true ) and inventory_hostname in groups['master']
 
 
 - name: Destroy MySQL InnoDB Cluster
-  import_tasks: uninstall-innodb.yml
-  tags: uninstall
+  import_tasks: destroy-innodb.yml
+  tags: remove, delete, uninstall
   when: ( innodb is defined and innodb == true ) and inventory_hostname in groups['master']
 
 
 - name: Destroy MySQL NDB Cluster
-  import_tasks: uninstall-ndb.yml
-  tags: uninstall
+  import_tasks: destroy-ndb.yml
+  tags: destroy, remove, uninstall
   when: ( ndb is defined and ndb == true ) and inventory_hostname in groups['master']
-
-
-- name: Uninstall Cert Manager
-  import_tasks: uninstall-cert-manager.yml
-  tags: uninstall
-  when: _cm.install == true and inventory_hostname in groups['master']
 
 
 - name: Disable Helm Repository
   import_tasks: disable-helm-repo.yml
-  tags: uninstall
-  when: _helm.enable_repo == false and inventory_hostname in groups['master']
+  tags: disable, remove, uninstall
+  when: ( repo is defined and repo == true ) and inventory_hostname in groups['master']
 

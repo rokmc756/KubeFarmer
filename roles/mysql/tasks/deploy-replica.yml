@@ -1,3 +1,4 @@
+---
 - name: Create Directory for Persistent Volumes
   file:
     path: "{{ mysql.replica.storage_path }}"

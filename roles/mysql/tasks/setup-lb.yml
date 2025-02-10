@@ -47,3 +47,4 @@
   when: innodb is defined and innodb == true
 - debug: msg={{ apply_ndb_lb }}
   when: innodb is defined and innodb == true
+
