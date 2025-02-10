@@ -69,6 +69,24 @@
   when: (( apps is defined and apps == true ) or ( korifi_all is defined and korifi_all == true )) and inventory_hostname in groups['master']
 
 
+- name: Install NGINX Ingress
+  import_tasks: install-ingress.yml
+  tags: setup, install
+  when: ( ingress is defined and ingress == true ) and inventory_hostname in groups['master']
+
+
+- name: Create NGINX Ingress
+  import_tasks: create-ingress.yml
+  tags: create
+  when: ( ingress is defined and ingress == true ) and inventory_hostname in groups['master']
+
+
+- name: Unstall NGINX Ingress
+  import_tasks: uninstall-ingress.yml
+  tags: remove, uninstall
+  when: ( ingress is defined and ingress == true ) and inventory_hostname in groups['master']
+
+
 - name: Destroy Applictions
   import_tasks: destroy-apps.yml
   tags: destroy, uninstall

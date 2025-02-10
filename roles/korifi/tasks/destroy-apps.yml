@@ -40,7 +40,7 @@
 - debug: msg={{ delete_org }}
 
 
-- name: LogOut CF Auth
+- name: Logout CF Auth
   shell: |
     cf logout
   register: logout_cf_auth

@@ -81,6 +81,7 @@ _korifi:
   patch_version: 0
   root_namespace: "cf"
   korifi_namespace: "korifi"
+  namespace: "korifi-gateway"
   admin_username: "cf-admin"
   domain_prefix: "jtest.pivotal.io"
   gateway_class_name: "contour"
@@ -163,4 +164,25 @@ _harbor:
   database_password: "changeme"
   hostname: "harbor"
   domain: "jtest.pivotal.io"
+
+
+_nginx:
+  ingress:
+    install: true
+    name: nginx-ingress
+    class_name: korifi-ingress-class
+    namespace: "nginx-ingress"
+    major_version:
+    minor_version:
+    patch_version:
+    replica: 1
+    hostname: api
+    domain: jtest.pivotal.io
+    service: contour-korifi
+    ip_addr: "192.168.1.224"
+    port: 8081
+  k8s_ingress:
+    major_version: 3
+    minor_version: 0
+    patch_version: 2
 

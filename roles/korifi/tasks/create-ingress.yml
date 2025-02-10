@@ -1,0 +1,39 @@
+---
+- name: Copy NGINX Ingress Config
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ base_path }}/{{ item }}"
+  register: copy_nginx_ingress_config
+  with_items:
+    - "korifi-ingress-class.yaml"
+    - "create-korifi-ingress.yaml"
+- debug: msg={{ copy_nginx_ingress_config }}
+
+
+- name: Validate if NGINX Controller Adminission is Connected
+  shell: |
+    nc -zv $(kubectl -n nginx-ingress get svc | grep nginx-controller-admission | awk '{print $3}') 443 2>&1 | grep Connected | awk '{print $2}'
+  register: check_nginx_controller_admission
+  until: check_nginx_controller_admission.stdout.find(item.string) != -1
+  retries: 10
+  delay: 10
+  with_items:
+    - { svc: "nginx-controller-admission", string: "Connected" }
+- debug: msg={{ check_nginx_controller_admission }}
+  when: print_debug == true
+
+
+- name: Apply NGINX Ingress
+  shell: |
+    kubectl apply -f {{ item }}
+  register: apply_nginx_ingress
+  with_items:
+    - "korifi-ingress-class.yaml"
+    - "create-korifi-ingress.yaml"
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ apply_nginx_ingress }}
+  when: print_debug == true
+

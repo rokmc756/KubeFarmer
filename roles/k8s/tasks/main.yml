@@ -47,7 +47,7 @@
 
 - name: Install Metallb
   import_tasks: ext/install-metallb.yml
-  tags: install
+  tags: setup, create, install
   when: (( lb is defined and lb == true ) or ( k8s_all is defined and k8s_all == true )) and inventory_hostname in groups['master']
 
 
@@ -59,7 +59,7 @@
 
 - name: Uninstall Metallb
   import_tasks: ext/uninstall-metallb.yml
-  tags: uninstall
+  tags: remove, delete, uninstall
   when: (( lb is defined and lb == true ) or ( k8s_all is defined and k8s_all == true )) and inventory_hostname in groups['master']
 
 
