@@ -1,0 +1,13 @@
+---
+- name: Cleanup the NVME Devices
+  shell: |
+    lsblk
+    for nb in $(echo '{{ nvme_devices }}'); do nvme format /dev/$nb --force ;done
+    for nb in $(echo '{{ nvme_devices }}'); do wipefs -a /dev/$nb ;done
+    for nb in $(echo '{{ nvme_devices }}'); do sgdisk --zap-all /dev/$nb ;done
+    for nb in $(echo '{{ nvme_devices }}'); do dd if=/dev/zero of=/dev/$nb bs=10M count=10 ;done
+  register: cleanup_nvme_devices
+  ignore_errors: true
+- debug: msg={{ cleanup_nvme_devices }}
+  when: print_debug == true
+

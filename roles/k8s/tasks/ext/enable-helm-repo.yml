@@ -15,10 +15,11 @@
     /usr/local/bin/helm repo add {{ item.name }} {{ item.link }}
   register: add_helm_repos
   with_items:
-    - { name: 'jetstack',         link: 'https://charts.jetstack.io' }
+    - { name: 'jetstack',          link: 'https://charts.jetstack.io' }
     - { name: 'community-charts',  link: 'https://community-charts.github.io/helm-charts' }
-    - { name: 'metallb',          link: 'https://metallb.github.io/metallb' }
-    - { name: 'ingress-nginx',    link: 'https://kubernetes.github.io/ingress-nginx' }
+    - { name: 'metallb',           link: 'https://metallb.github.io/metallb' }
+    - { name: 'ingress-nginx',     link: 'https://kubernetes.github.io/ingress-nginx' }
+    - { name: 'cilium',             link: 'https://helm.cilium.io' }
 - debug: msg={{ add_helm_repos }}
 
 

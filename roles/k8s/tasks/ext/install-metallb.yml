@@ -27,13 +27,11 @@
 - name: Apply the Metallb
   shell: |
     kubectl apply -f \
-    https://raw.githubusercontent.com/metallb/metallb/v{{ _metallb.major_version }}.{{ _metallb.minor_version }}.{{ _metallb.patch_version }}/config/manifests/metallb-native.yaml
+    https://raw.githubusercontent.com/metallb/metallb/v{{ metallb_version }}/config/manifests/metallb-native.yaml
   register: apply_metallb_native_config
   ignore_errors: yes
 - debug: msg={{ apply_metallb_native_config }}
 # /usr/local/bin/helm install metallb metallb/metallb -n metallb-system
-# kubectl apply -f \
-# https://raw.githubusercontent.com/metallb/metallb/v{{ _metallb.major_version }}.{{ _metallb.minor_version }}.{{ _metallb.patch_version }}/config/manifests/metallb-native.yaml
 
 
 - name: Create Secret for Metallb Namespace

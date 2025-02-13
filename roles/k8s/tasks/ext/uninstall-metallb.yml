@@ -19,13 +19,11 @@
 - name: Delete the Metallb
   shell: |
     kubectl delete -f \
-    https://raw.githubusercontent.com/metallb/metallb/v{{ _metallb.major_version }}.{{ _metallb.minor_version }}.{{ _metallb.patch_version }}/config/manifests/metallb-native.yaml
+    https://raw.githubusercontent.com/metallb/metallb/v{{ metallb_version }}/config/manifests/metallb-native.yaml
   register: delete_metallb
   ignore_errors: true
 - debug: msg={{ delete_metallb }}
 # /usr/local/bin/helm uninstall metallb -n metallb-system
-# kubectl delete -f \
-# https://raw.githubusercontent.com/metallb/metallb/v{{ _metallb.major_version }}.{{ _metallb.minor_version }}.{{ _metallb.patch_version }}/config/manifests/metallb-native.yaml
 
 
 - name: Delete Namespace for Metallb

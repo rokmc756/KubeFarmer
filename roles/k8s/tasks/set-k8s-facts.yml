@@ -33,11 +33,16 @@
     netmask2: "{{ ( hostvars[inventory_hostname][_netdev2]['ipv4']['address'] + '/' + hostvars[inventory_hostname][_netdev2]['ipv4']['netmask'] ) | ansible.utils.ipaddr('prefix') }}"
 
 
-# https://stackoverflow.com/questions/36328907/ansible-get-all-the-ip-addresses-of-a-group
-#- name: Define Facts for All Worker's Hostname
-#  all_ext1_hostnames: "{{ groups['all'] | map('extract', hostvars, ['ansible_hostname']) | join(' ') }}"
-#  all_net0_ipaddrs: "{{ groups['all'] | map('extract', hostvars, ['ansible_'~netdev0, 'ipv4', 'address']) | join(',') }}"
+- name: Set Kubernetes Version
+  set_fact:
+    k8s_version: "{{ k8s.major_version }}.{{ k8s.minor_version }}.{{ k8s.patch_version }}"
+    metallb_version: "{{ _metallb.major_version }}.{{ _metallb.minor_version }}.{{ _metallb.patch_version }}"
 
+
+- name: Define Facts for All Nodes's Hostname and IP Addresses
+  set_fact:
+    all_ext_hostnames: "{{ groups['all'] | map('extract', hostvars, ['ansible_hostname']) | join(' ') }}"
+    all_net_ipaddrs: "{{ groups['all'] | map('extract', hostvars, [_netdev, 'ipv4', 'address']) | join(',') }}"
 
 
 ####################################################################################################################################################################
@@ -130,6 +135,22 @@
 #############################################################################################################################################
 # Get NVME List
 #############################################################################################################################################
+
+- name: Get NVME Devices with a Line
+  shell: |
+    nvme list | sed 1,2d | awk '{print $1}' | cut -d "/" -f 3 | tr '\n' ' ' | sed -e 's/ $//'
+  register: nvme_devices_line
+- debug: msg={{ nvme_devices_line.stdout_lines }}
+  when: print_debug == true
+
+
+- name: Set Fact for NVME Devices with a Line
+  set_fact:
+    nvme_devices: "{{ nvme_devices_line.stdout }}"
+- debug: msg={{ nvme_devices }}
+  when: print_debug == true
+
+
 - name: Get NVME Devices
   shell: |
     nvme list | sed 1,2d | awk '{print $1}' | cut -d "/" -f 3

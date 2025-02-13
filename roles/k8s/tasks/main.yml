@@ -27,22 +27,10 @@
   when: ( config is defined and config == true ) or ( k8s_all is defined and k8s_all == true )
 
 
-- name: Initialize Native Kubernetes Cluster
+- name: Initialize Kubernetes Cluster
   import_tasks: init-k8s.yml
   tags: init, install
   when: ( kube is defined and kube == true ) or ( k8s_all is defined and k8s_all == true )
-
-
-- name: Add Additional Slave Master Nodes
-  import_tasks: ext/add-masters.yml
-  tags: install, add
-  when: ( master is defined and master == true )
-
-
-- name: Add Additional Worker Nodes
-  import_tasks: ext/add-workers.yml
-  tags: install, add
-  when: ( worker is defined and worker == true )
 
 
 - name: Install Metallb
@@ -61,19 +49,6 @@
   import_tasks: ext/uninstall-metallb.yml
   tags: remove, delete, uninstall
   when: (( lb is defined and lb == true ) or ( k8s_all is defined and k8s_all == true )) and inventory_hostname in groups['master']
-
-
-- name: Remove Additional Worker Nodes
-  import_tasks: ext/remove-workers.yml
-  tags: uninstall, remove
-  when: ( worker is defined and worker == true )
-
-
-- name: Remove Additional Slave Master Nodes
-  import_tasks: ext/remove-masters.yml
-  tags: uninstall, remove
-  when: ( master is defined and master == true )
-
 
 
 - name: Stop Docker and Kube Services
@@ -98,4 +73,28 @@
   import_tasks: reboot-required.yml
   tags: uninstall, clean
   when: ( reboot is defined and reboot == true ) or ( k8s_all is defined and k8s_all == true )
+
+
+- name: Add Additional Slave Master Nodes
+  import_tasks: ext/add-masters.yml
+  tags: install, add
+  when: ( master is defined and master == true )
+
+
+- name: Add Additional Worker Nodes
+  import_tasks: ext/add-workers.yml
+  tags: install, add
+  when: ( worker is defined and worker == true )
+
+
+- name: Remove Additional Worker Nodes
+  import_tasks: ext/remove-workers.yml
+  tags: uninstall, remove
+  when: ( worker is defined and worker == true )
+
+
+- name: Remove Additional Slave Master Nodes
+  import_tasks: ext/remove-masters.yml
+  tags: uninstall, remove
+  when: ( master is defined and master == true )
 

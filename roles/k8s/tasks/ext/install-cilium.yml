@@ -2,34 +2,13 @@
 # https://itnext.io/run-your-kubernetes-cluster-on-bare-metal-with-cilium-cni-part-1-e88028800d90
 # https://docs.cilium.io/en/stable/gettingstarted/k8s-install-default/
 
-- name: Add Cilium CNI Plugin Helm Repo
-  shell: |
-    helm repo add cilium https://helm.cilium.io/
-  register: add_jetstack_helm_repo
-  environment:
-    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-  when: inventory_hostname in groups['master']
-- debug: msg={{ add_jetstack_helm_repo }}
-  when: print_debug == true and inventory_hostname in groups['master']
-
-
-- name: Update Helm Repo
-  shell: |
-    helm repo update
-  register: update_helm_repo
-  environment:
-    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-  when: inventory_hostname in groups['master']
-- debug: msg={{ update_helm_repo }}
-  when: print_debug == true and inventory_hostname in groups['master']
-
 
 - name: Install Cilium CNI Plugin to Define a Bunch of Options That Subsequently Enable Capabilities
   shell: |
-    helm install cilium cilium/cilium --version {{ k8s.cni.cilium.major_version }}.{{ k8s.cni.cilium.minor_version }}.{{ k8s.cni.cilium.patch_version }} \
+    helm install cilium cilium/cilium --version {{ _k8s.lb.cilium.major_version }}.{{ _k8s.lb.cilium.minor_version }}.{{ _k8s.lb.cilium.patch_version }} \
     --namespace kube-system \
     --set k8sServiceHost={{ hostvars[groups['master'][0]][_netdev]['ipv4']['address'] }} \
-    --set k8sServicePort={{ k8s.cni.cilium.api_server_port }} \
+    --set k8sServicePort={{ _k8s.lb.cilium.api_server_port }} \
     --set kubeProxyReplacement=true \
     --set l2announcements.enabled=true \
     --set encryption.enabled=true \
@@ -41,11 +20,10 @@
   register: install_cilium_cni_plugin
   environment:
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-  when: inventory_hostname in groups['master']
 - debug: msg={{ install_cilium_cni_plugin }}
-  when: print_debug == true and inventory_hostname in groups['master']
+  when: print_debug == true
 
-#
+
 # The important ones to mention are:
 #
 # Replacement of the kube-proxy by Cilium
@@ -60,11 +38,11 @@
 - name: Install Cilium CLI
   shell: |
     curl -L --fail --remote-name-all {{ k8s.cni.cilium.cli.download_path }}/v{{ k8s.cni.cilium.cli.major_version }}.{{ k8s.cni.cilium.cli.minor_version }}.{{ k8s.cni.cilium.cli.patch_version }}/cilium-linux-{{ k8s.cni.cilium.cli.arch }}.tar.gz
-    mv {{ k8s.base_path }}/calicoctl /usr/local/bin/
-  register: install_calicoctl
-  when: upload_calico == false and calicoctl_bin_exists.stat.exists == true and inventory_hostname in groups['master']
-- debug: msg={{ install_calicoctl }}
-  when: print_debug == true and upload_calico == false and calicoctl_bin_exists.stat.exists == false and inventory_hostname in groups['master']
+    mv {{ k8s.base_path }}/cilium /usr/local/bin/
+  register: install_cilium_cli
+  when: upload_cilium == false and check_cilium_bin.stat.exists == true and inventory_hostname in groups['master']
+- debug: msg={{ install_cilium_cli }}
+  when: print_debug == true and upload_cilium == false and check_cilium_bin.stat.exists == false and inventory_hostname in groups['master']
 
 
 

@@ -1,28 +1,46 @@
 ---
-#- name: Disabling SELinux Policy Required by Kubnernetes
-#  selinux:
-#    state: permissive
-#  register: selinux_disabled
-#  notify:
-#    - Restart System
-#    - Waiting for Server to Come Back After Reboot
-#  failed_when: selinux_disabled.msg | default('ok', True) is not search('(^ok$|libselinux-python|(SELinux state changed))')
-#- debug: msg={{ selinux_disabled }}
-#  when: print_debug == true
-#  # state: disabled
-#fatal: [rk9-node05]: FAILED! => {"changed": false, "failed_when_result": true, "msg": "Policy is required if state is not 'disabled'"}
-
-
-- name: Check if SELinux Have Been Disabled in Configurtion File
-  command: grep SELINUX /etc/selinux/config
-  register: sevalue
-- debug: msg={{ sevalue }}
-  when: print_debug == true
-
-
 - name: Disable Firewalld
   systemd:
     name: firewalld
     state: stopped
     enabled: no
+  register: disable_firewall
+- debug: msg={{ disable_firewall }}
+  when: print_debug == true
+
+
+- name: Disable SELinux to be Required
+  selinux:
+    state: disabled
+  register: disable_selinux
+- debug: msg={{ disable_selinux }}
+  when: print_debug == true
+  # failed_when: disable_selinux.reboot_required == false
+
+
+- name: Reboot Required
+  shell: ( /bin/sleep 5 ; /sbin/shutdown -r now "Ansible updates triggered" ) &
+  async: 30
+  poll: 0
+  notify:
+    - Waiting for server to come back after restart
+  when: disable_selinux.reboot_required == true
+
+
+- meta: flush_handlers
+  when: disable_selinux.reboot_required == true
+
+
+- name: Check SELinux Configuration
+  stat: path=/etc/sysconfig/selinux
+  register: check_selinux_config
+- debug: msg={{ check_selinux_config }}
+
+
+- name: Check if SELinux has been Disabled
+  command: grep SELINUX /etc/sysconfig/selinux
+  register: selinux_config
+  when: check_selinux_config.stat.exists == true
+- debug: msg={{ selinux_config }}
+  when: print_debug == true and check_selinux_config.stat.exists == true
 

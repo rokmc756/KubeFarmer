@@ -3,8 +3,6 @@
   import_tasks: security/disable-security.yml
 
 
-
-
 - name: Create Default Containerd Directory
   file:
     path: "/etc/containerd"
@@ -55,7 +53,7 @@
   register: config_image_pull
   until: config_image_pull is succeeded
   retries: 30
-  delay: 15
+  delay: 30
   when: inventory_hostname in groups['master']
 
 
@@ -146,7 +144,8 @@
 
 - name: Join the Other Kubernetes Nodes to Cluster, the Command must be Run on the Worker Nodes Only
   shell: |
-    kubeadm join "{{ hostvars[groups['master'][0]][_netdev]['ipv4']['address'] }}:6443" --token "{{ k8s_token }}" --discovery-token-ca-cert-hash "{{ k8s_token_ca_cert }}"
+    kubeadm join "{{ hostvars[groups['master'][0]][_netdev]['ipv4']['address'] }}:6443" \
+    --token "{{ k8s_token }}" --discovery-token-ca-cert-hash "{{ k8s_token_ca_cert }}"
   register: store_it_copied
   ignore_errors: yes
   when: inventory_hostname in groups['workers']
@@ -218,7 +217,7 @@
 
 
 - name: Cleanup the NVME Devices
-  import_tasks: cleanup-nvme-devices.yml
+  import_tasks: ext/cleanup-nvme-devices.yml
   when: k8s.disk.nvme == true
 
 

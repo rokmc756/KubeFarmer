@@ -1,0 +1,30 @@
+
+$ docker login
+
+# USING WEB-BASED LOGIN
+# To sign in with credentials on the command line, use 'docker login -u <username>'
+#
+# Your one-time device confirmation code is: ZDHD-QRMX
+# Press ENTER to open your browser or submit your device code here: https://login.docker.com/activate
+#
+# Waiting for authentication in the browser…
+#
+# WARNING! Your password will be stored unencrypted in /root/.docker/config.json.
+# Configure a credential helper to remove this warning. See
+# https://docs.docker.com/engine/reference/commandline/login/#credential-stores
+#
+# Login Succeeded
+
+$ docker login
+# Authenticating with existing credentials...
+#
+# WARNING! Your password will be stored unencrypted in /root/.docker/config.json.
+# Configure a credential helper to remove this warning. See
+# https://docs.docker.com/engine/reference/commandline/login/#credential-stores
+
+$ docker pull gcriocfbuildservice/kpack-builder:latest
+
+$ docker tag gcriocfbuildservice/kpack-builder:latest harbor.jtest.pivotal.io/jproject01/kpack-builder:latest
+
+$ docker push harbor.jtest.pivotal.io/jproject01/kpack-builder:latest
+

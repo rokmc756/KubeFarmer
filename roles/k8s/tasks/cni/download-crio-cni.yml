@@ -1,0 +1,31 @@
+---
+- name: Check if CrioCtl Exists
+  stat: path=/usr/local/bin/crictl
+  register: check_crictl_bin
+- debug: msg={{ check_crictl_bin }}
+  when: print_debug == true
+
+
+- name: Unarchive Tarball
+  unarchive:
+    src: "crioctl-v{{ k8s_version }}"
+    dest: "/usr/local/bin/"
+    mode: 0755
+    owner: root
+    group: root
+  register: unarchive_crioctl_tarball
+  when: check_crioctl_bin.stat.exists == false and upload_crioctl == true
+- debug: msg={{ unarchive_crioctl_tarball }}
+  when: print_debug == true and check_calicoctl_bin.stat.exists == false and upload_crioctl == true
+
+
+- name: Install CrioCtl
+  shell: |
+    curl -o {{ k8s.base_path }}/crioctl -O -L https://github.com/kubernetes-sigs/cri-tools/releases/v{{ k8s_version }}/crioctl-linux-amd64
+    chmod +x {{ k8s.base_path }}/crioctl
+    mv {{ k8s.base_path }}/crioctl /usr/local/bin/
+  register: install_crioctl
+  when: upload_crio == false and check_crioctl_bin.stat.exists == true and inventory_hostname in groups['master']
+- debug: msg={{ install_crioctl }}
+  when: print_debug == true and upload_crioctl == false and check_crioctl_bin.stat.exists == false and inventory_hostname in groups['master']
+

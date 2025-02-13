@@ -1,0 +1,20 @@
+---
+- name: Validate if Worker Nodes are All Ready
+  shell: |
+    kubectl get nodes | sed 1d | awk '{print $2}' | grep NotReady | wc -l
+  register: check_k8s_workers_status
+  until: check_k8s_workers_status.stdout|int == 0
+  retries: 30
+- debug: msg={{ check_k8s_workers_status }}
+  when: print_debug == true
+
+
+- name: Validate if All Containers are Running Normally
+  shell: |
+    kubectl get pods --all-namespaces -o wide | sed 1d | awk '{print $4}' | grep ContainerCreating | wc -l
+  register: all_containers_running_checked
+  until: all_containers_running_checked.stdout|int == 0
+  retries: 60
+- debug: msg={{ all_containers_running_checked }}
+  when: print_debug == true
+

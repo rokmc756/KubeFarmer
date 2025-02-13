@@ -33,16 +33,16 @@
     dest: "{{ base_path }}/korifi-values.yaml"
   register: copy_korifi_config_values
   with_items:
-    - "korifi-v{{ _korifi.major_version }}-{{ _korifi.minor_version }}-{{ _korifi.patch_version }}-values.yaml"
+    - "korifi-v{{ korifi_version }}-values.yaml"
 - debug: msg={{ copy_korifi_config_values }}
   when: print_debug == true
 
 
-# helm install korifi https://github.com/cloudfoundry/korifi/releases/download/v{{ _korifi.major_version }}.{{ _korifi.minor_version }}.{{ _korifi.patch_version }}/korifi-{{ _korifi.major_version }}.{{ _korifi.minor_version }}.{{ _korifi.patch_version }}.tgz -n korifi -f korifi-values.yaml
+# -f korifi-values.yaml
 - name: Deploy Korifi
   shell: |
     helm install korifi \
-    https://github.com/cloudfoundry/korifi/releases/download/v{{ _korifi.major_version }}.{{ _korifi.minor_version }}.{{ _korifi.patch_version }}/korifi-{{ _korifi.major_version }}.{{ _korifi.minor_version }}.{{ _korifi.patch_version }}.tgz \
+    {{ _korifi.download_url }}/v{{ korifi_version }}/korifi-{{ korifi_version }}.tgz \
     --namespace="korifi" \
     --set=generateIngressCertificates=true \
     --set=rootNamespace="cf" \
@@ -51,7 +51,7 @@
     --set=api.apiServer.url="api.jtest.pivotal.io" \
     --set=defaultAppDomainName="apps.jtest.pivotal.io" \
     --set=containerRepositoryPrefix="harbor.jtest.pivotal.io/" \
-    --set=kpackImageBuilder.builderRepository="harbor.jtest.pivotal.io/jproject01" \
+    --set=kpackImageBuilder.builderRepository="harbor.jtest.pivotal.io/jproject01/kpack-builder" \
     --set=networking.gatewayClass=contour \
     --wait
   register: deploy_korifi

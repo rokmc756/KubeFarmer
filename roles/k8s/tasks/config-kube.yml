@@ -61,7 +61,9 @@
   file:
     path: /etc/docker
     state: directory
-  ignore_errors: true
+    mode: 0755
+    owner: root
+    group: root
 
 
 - name: Configure the Docker Daemon to Use Systemd for the Management of the Cotainer's CGroups

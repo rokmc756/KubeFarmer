@@ -1,7 +1,4 @@
-# 2024-06-30 - First Deployment with the following versions and without any errrors although it's not working correctly yet
-# OS : Rocky Linux 9.x
-# k8s_version: v1.29.12
-
+---
 base_path: "/root"
 
 
@@ -26,12 +23,14 @@ _kpack:
   major_version: 0
   minor_version: 16
   patch_version: 1
+  download_url: "https://github.com/buildpacks-community/kpack/releases/download"
 
 
 _contour:
   major_version: 1
   minor_version: 30
   patch_version: 2
+  download_url: "https://raw.githubusercontent.com/projectcontour/contour"
 
 
 _cm:
@@ -50,6 +49,7 @@ _servicebinding:
   major_version: 1
   minor_version: 0
   patch_version: 0
+  download_url: "https://github.com/servicebinding/runtime/releases/download"
 
 
 _kind:
@@ -75,6 +75,7 @@ _gateway_api:
 
 
 _korifi:
+  download_url: "https://github.com/cloudfoundry/korifi/releases/download"
   storage_path: "/mnt/korifi-storage"
   major_version: 0
   minor_version: 14

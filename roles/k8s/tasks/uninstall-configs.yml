@@ -1,29 +1,29 @@
 ---
-- name: Umount Kubelet and Containred Directories Hold by Docker and Containerd
-  shell: |
-    umount $(df -HT | grep '{{ item }}' | awk '{print $7}')
-  register: umount_kubelet_dir
-  ignore_errors: true
-  with_items:
-    - "/var/lib/kubelet/pods"
-    - "/etc/kubernetes/manifests/kube-apiserver.yaml"
-    - "/etc/kubernetes/manifests/kube-controller-manager.yaml"
-    - "/etc/kubernetes/manifests/kube-scheduler.yaml"
-    - "/etc/kubernetes/manifests/etcd.yaml"
-    - "/var/lib/etcd"
-    - "/run/containerd"
-- debug: msg={{ umount_kubelet_dir }}
-  when: print_debug == true
+#- name: Umount Kubelet and Containred Directories Hold by Docker and Containerd
+#  shell: |
+#    umount $(df -HT | grep '{{ item }}' | awk '{print $7}')
+#  register: umount_kubelet_dir
+#  ignore_errors: true
+#  with_items:
+#    - "/var/lib/kubelet/pods"
+#    - "/etc/kubernetes/manifests/kube-apiserver.yaml"
+#    - "/etc/kubernetes/manifests/kube-controller-manager.yaml"
+#    - "/etc/kubernetes/manifests/kube-scheduler.yaml"
+#    - "/etc/kubernetes/manifests/etcd.yaml"
+#    - "/var/lib/etcd"
+#    - "/run/containerd"
+#- debug: msg={{ umount_kubelet_dir }}
+#  when: print_debug == true
 
 
 - name: Delete Kube Directories for Common Linux Distributions
   file:
     path: "{{ item }}"
     state: absent
-  register: kube_dir_removed
+  register: remove_kube_dirs
   ignore_errors: true
   with_items: "{{ common_conf_files }}"
-- debug: msg={{ kube_dir_removed }}
+- debug: msg={{ remove_kube_dirs }}
   when: print_debug == true
 
 
@@ -31,11 +31,11 @@
   file:
     path: "{{ item }}"
     state: absent
-  register: kube_dir_removed
+  register: remove_ubt_kube_dirs
   ignore_errors: true
   with_items: "{{ ubt_conf_files }}"
   when: ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
-- debug: msg={{ kube_dir_removed }}
+- debug: msg={{ remove_ubt_kube_dirs }}
   when: print_debug == true and ( ansible_distribution == "Ubuntu" or ansible_distribution == "Debian" )
 
 
@@ -43,11 +43,11 @@
   file:
     path: "{{ item }}"
     state: absent
-  register: kube_dir_removed
+  register: remove_rh_kube_dirs
   ignore_errors: true
   with_items: "{{ rh_conf_files }}"
   when: ansible_distribution == "RedHat" or ansible_distribution == "CentOS" or ansible_distribution == "Rocky"
-- debug: msg={{ kube_dir_removed }}
+- debug: msg={{ remove_rh_kube_dirs }}
   when: print_debug and ( ansible_distribution == "RedHat" or ansible_distribution == "CentOS" or ansible_distribution == "Rocky" )
 
 
@@ -55,20 +55,20 @@
   file:
     path: "{{ item }}"
     state: absent
-  register: kube_dir_removed
+  register: remove_suse_kube_dirs
   ignore_errors: true
   with_items: "{{ suse_conf_files }}"
   when: ansible_distribution == "openSUSE Leap"
-- debug: msg={{ kube_dir_removed }}
+- debug: msg={{ remove_suse_kube_dirs }}
   when: print_debug and ansible_distribution == "openSUSE Leap"
 
 
 - name: Refresh Metadata from Package Repository
   shell: |
     {{ update_repo_cache }}
-  register: repo_metadata_refreshed
+  register: refresh_repo_metadata
   ignore_errors: true
-- debug: msg={{ repo_metadata_refreshed }}
+- debug: msg={{ refresh_repo_metadata }}
   when: print_debug == true
 
 

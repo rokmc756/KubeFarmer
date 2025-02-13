@@ -1,3 +1,4 @@
+---
 - name: Enabling SELinux to be Required
   selinux:
     state: permissive
@@ -7,7 +8,7 @@
 - debug: msg={{ selinux_enabled }}
   when: print_debug == true
 
-#
+
 - name: Reboot required (Red Hat) - Step 2
   shell: ( /bin/sleep 5 ; /sbin/shutdown -r now "Ansible updates triggered" ) &
   async: 30
@@ -16,16 +17,28 @@
     - Waiting for server to come back after restart
   when: selinux_enabled.reboot_required == true
 
-# It works also
-#- name: Reboot machine and send a message
-#  reboot: msg="Rebooting machine in 5 seconds"
 
 - meta: flush_handlers
 
-#
+
 - name: Check if SELinux has been enabled in Configurtion File
   command: grep SELINUX /etc/sysconfig/selinux
   register: sevalue
 - debug: msg={{ sevalue }}
   when: print_debug == true
 
+
+
+#- name: Enable SELinux Policy Required by Kubnernetes
+#  selinux:
+#    state: permissive
+#  register: enable_selinux
+#  notify:
+#    - Restart System
+#    - Waiting for Server to Come Back After Reboot
+#  failed_when: disable_selinux.msg | default('ok', True) is not search('(^ok$|libselinux-python|(SELinux state changed))')
+#- debug: msg={{ disable_selinux }}
+#  when: print_debug == true
+# state: disabled
+# fatal: [rk9-node05]: FAILED! => {"changed": false, "failed_when_result": true, "msg": "Policy is required if state is not 'disabled'"}
+#

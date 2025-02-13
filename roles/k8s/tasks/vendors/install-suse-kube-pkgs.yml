@@ -63,15 +63,6 @@
   register: kube_pkgs_installed
 
 
-#- name: Install an SELinux Policy
-#  shell: |
-#    zypper install -y selinux-policy-targeted selinux-policy-devel
-#    zypper install -y libseccomp-devel
-#    zypper install -y libcgroup-tools libcgroup1 cpuset libcpuset1
-#    zypper install -y cni cni-plugins
-#  register: selinux_policy_installed
-
-
 - name: Install Extra Packages for SELinux Policy and CNI
   package:
     name: "{{ item }}"
@@ -83,11 +74,11 @@
 - name: Lock those versions to prevent them from being automatically updated
   shell: |
     {{ lock_kube_cmds }}
-  register: kube_command_locked
+  register: lock_kube_command
 
 
 - name: Start the kubelet service
   shell: |
     systemctl enable --now kubelet
-  register: kubelet_enabled
+  register: enable_kubelet
 

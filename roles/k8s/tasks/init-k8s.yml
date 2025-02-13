@@ -1,11 +1,12 @@
-- name: Restart Containerd to Apply Changes in config.toml
-  systemd:
-    name: containerd
-    state: restarted
-  register: restart_containerd
-  until: restart_containerd
-  retries: 20
-  delay: 10
+---
+#- name: Restart Containerd to Apply Changes in config.toml
+#  systemd:
+#    name: containerd
+#    state: restarted
+#  register: restart_containerd
+#  until: restart_containerd
+#  retries: 20
+#  delay: 10
 
 
 - name: Load Kernel Modules for Kurbernetes
@@ -14,6 +15,8 @@
   with_items:
     - overlay
     - br_netfilter
+  notify:
+    - Restart Containerd
 
 
 - name: Reset Kubernetes
@@ -28,7 +31,7 @@
   register: config_image_pull
   until: config_image_pull is succeeded
   retries: 30
-  delay: 15
+  delay: 30
   when: inventory_hostname in groups['master']
 
 
@@ -65,17 +68,7 @@
   when: inventory_hostname in groups['master']
 - debug: msg={{ k8s_token }}
   when: print_debug == true and inventory_hostname in groups['master']
-
-
-#- name: Set Fact for Certificate Key
-#  set_fact:
-#    k8s_cert_key: "{{ (kubeadm_init.stdout_lines | select('search', '--certificate-key') | list | string | split(' '))[1] }}"
-#  delegate_to: "{{ item }}"
-#  delegate_facts: True
-#  with_items: "{{ groups['all'] }}"
-#  when: inventory_hostname in groups['master']
-#- debug: msg={{ k8s_cert_key }}
-#  when: print_debug == true and inventory_hostname in groups['master']
+# k8s_cert_key: "{{ (kubeadm_init.stdout_lines | select('search', '--certificate-key') | list | string | split(' '))[1] }}"
 
 
 - name: Enable User as Admin Kube Environment
@@ -92,7 +85,7 @@
   when: inventory_hostname in groups['master']
 - debug: msg={{ kubectl_configured }}
   when: print_debug == true and inventory_hostname in groups['master']
-  # kubectl taint nodes --all node-role.kubernetes.io/master-
+# kubectl taint nodes --all node-role.kubernetes.io/master-
 
 
 - name: Create POD for Master
@@ -164,26 +157,9 @@
   when: print_debug == true and inventory_hostname in groups['master']
 
 
-- name: Validate if Worker Nodes are All Ready
-  shell: |
-    kubectl get nodes | sed 1d | awk '{print $2}' | grep NotReady | wc -l
-  register: check_k8s_workers_status
-  until: check_k8s_workers_status.stdout|int == 0
-  retries: 30
+- name: Check the Statuso of Nodes and Containers
+  import_tasks: ext/check-k8s-status.yml
   when: inventory_hostname in groups['master']
-- debug: msg={{ check_k8s_workers_status }}
-  when: print_debug == true and inventory_hostname in groups['master']
-
-
-- name: Validate if All Containers are Running Normally
-  shell: |
-    kubectl get pods --all-namespaces -o wide | sed 1d | awk '{print $4}' | grep ContainerCreating | wc -l
-  register: all_containers_running_checked
-  until: all_containers_running_checked.stdout|int == 0
-  retries: 60
-  when: inventory_hostname in groups['master']
-- debug: msg={{ all_containers_running_checked }}
-  when: print_debug == true and inventory_hostname in groups['master']
 
 
 - name: Check the Status fo CNI Network Plugin
@@ -204,15 +180,4 @@
 - name: Enable Helm Repository
   import_tasks: ext/enable-helm-repo.yml
   when: inventory_hostname in groups['master']
-
-
-# erinformations/default": x509: certificate signed by unknown authority 
-# (possibly because of "crypto/rsa: verification error" while trying to verify candidate authority certificate
-# docker login --username="rokmc756@gmail.com"
-# kubectl apply -f nginx-deploy.yml
-
-# kubectl patch svc nginx -p '{"spec":{"externalIPs":["192.168.1.194"]}}'
-# kubectl get all
-# ~~ snip
-# service/nginx        NodePort    10.96.0.2    192.168.1.194   80:30001/TCP   2m30s
 
