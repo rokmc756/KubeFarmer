@@ -50,6 +50,12 @@
     state: absent
 
 
+- name: Delete "{{ sudo_user }}" User Home Directory
+  file:
+    path: "/home/{{ sudo_user }}"
+    state: absent
+
+
 - name: Uninstall Prerequest Software Packages
   package:
     name: "{{ item }}"

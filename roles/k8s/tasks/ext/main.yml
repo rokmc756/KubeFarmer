@@ -1,0 +1,24 @@
+---
+- name: Add Additional Slave Master Nodes
+  import_tasks: ext/add-masters.yml
+  tags: install, add
+  when: ( master is defined and master == true )
+
+
+- name: Add Additional Worker Nodes
+  import_tasks: ext/add-workers.yml
+  tags: install, add
+  when: ( worker is defined and worker == true )
+
+
+- name: Remove Additional Worker Nodes
+  import_tasks: ext/remove-workers.yml
+  tags: uninstall, remove
+  when: ( worker is defined and worker == true )
+
+
+- name: Remove Additional Slave Master Nodes
+  import_tasks: ext/remove-masters.yml
+  tags: uninstall, remove
+  when: ( master is defined and master == true )
+
