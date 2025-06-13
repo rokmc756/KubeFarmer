@@ -49,3 +49,7 @@ kubectl apply -f rbac.yml
 kubectl -n kubernetes-dashboard create token admin-user
 ~~~
 
+
+## References
+- https://engineering.zalando.com/posts/2021/12/maps-with-postgresql-and-postgis.html
+
