@@ -1,0 +1,34 @@
+# https://oopflow.medium.com/setup-install-rancher-onto-existing-kubernetes-cluster-for-high-availability-7351f0284592
+
+- name: Download and Install Helm
+  shell: |
+    curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+    chmod 755 get_helm.sh
+    ./get_helm.sh
+  register: install_helm
+  args:
+    chdir: "{{ base_path }}/"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ install_helm }}
+
+
+- name: Add Helm Repositories
+  shell: |
+    /usr/local/bin/helm repo add {{ item.name }} {{ item.link }}
+  register: add_helm_repos
+  with_items:
+    - { name: 'jetstack', link: 'https://charts.jetstack.io' }
+    - { name: 'bitnami',  link: 'https://charts.bitnami.com/bitnami' }
+    - { name: 'cowboysysop', link: 'https://cowboysysop.github.io/charts/' }
+    - { name: 'nginx-ingress',  link: 'https://kubernetes.github.io/ingress-nginx' }
+- debug: msg={{ add_helm_repos }}
+
+
+- name: Update Helm Repo
+  shell: |
+    /usr/local/bin/helm repo update
+  register: update_helm_repo
+- debug: msg={{ update_helm_repo }}
+  when: print_debug == true
+

@@ -1,0 +1,5 @@
+---
+- name: Set Ollama Operator Version
+  set_fact:
+    _ollama_version: "{{ _ollama.major_version }}.{{ _ollama.minor_version }}.{{ _ollama.patch_version }}"
+

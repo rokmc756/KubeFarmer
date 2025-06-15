@@ -1,0 +1,21 @@
+---
+- name: Install the Ollama Operator
+  shell: |
+    kubectl apply --server-side=true -f \
+    https://raw.githubusercontent.com/nekomeowww/ollama-operator/v{{ _ollama_version }}/dist/install.yaml
+  register: install_ollama_operator
+- debug: msg={{ install_ollama_operator }}
+  when: print_debug == true
+
+
+- name: Wait for the Operator to be Ready
+  shell: |
+    kubectl wait -n ollama-operator-system --for=jsonpath='{.status.readyReplicas}'=1 deployment/ollama-operator-controller-manager
+  register: wait_for_ready
+  async: 400
+  poll: 20
+  args:
+    chdir: "{{ base_path }}"
+- debug: msg={{ wait_for_ready }}
+  when: print_debug == true
+

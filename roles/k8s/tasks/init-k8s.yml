@@ -25,13 +25,26 @@
   when: inventory_hostname in groups['master']
 
 
+- name: Restart Containerd to Apply Changes in config.toml
+  systemd:
+    name: containerd
+    state: restarted
+  register: restart_containerd
+  until: restart_containerd
+  retries: 20
+  delay: 10
+  when: inventory_hostname in groups['master']
+
+
 - name: Config Image Pull
   shell: |
     kubeadm config images pull --v=5
   register: config_image_pull
-  until: config_image_pull is succeeded
-  retries: 30
-  delay: 30
+  # until: config_image_pull is succeeded
+  # retries: 10
+  # delay: 180
+  async: 600
+  poll: 0
   when: inventory_hostname in groups['master']
 
 

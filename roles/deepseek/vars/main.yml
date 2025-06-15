@@ -1,0 +1,162 @@
+---
+base_path: /root
+
+
+_kustomize:
+  install: false
+  download_url: "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"
+  major_version: 5
+  minor_version: 4
+  patch_version: 2
+
+
+# go1.23.5.linux-amd64.tar.gz
+_go:
+  download: true
+  major_version: 1
+  minor_version: 23
+  patch_version: 10
+
+
+_ollama:
+  install: true
+  major_version: 0
+  minor_version: 10
+  patch_version: 7
+  admin_user: "admin"
+  admin_password: "Changeme123"
+  admin_email: "rokmc756@gmail.com"
+  enable_discovery_daemon: false
+  clone_git: true
+  nvme: true
+  namespace: ollama-operator-system
+  storage_path: "/mnt/ollama-storage"
+  storage_class: "ollama-storage"
+  hostname: "deepseek.jtest.pivotal.io"
+  service:
+    metadata:
+      name: deepseek-loadbalancer
+      namespace: deepseek
+  ingress:
+    metadata:
+      name: deepseek-ingress
+      namespace: deepseek
+    hostname: "deepseek.jtest.pivotal.io"
+  kernel_parameters:
+    - "net.ipv4.neigh.default.gc_thresh1 = 0"   # For ARP Cache
+    - "fs.inotify.max_user_instances=2280"
+    - "fs.inotify.max_user_watches=755360"
+  lb:
+    install: true
+    ip_addr: "192.168.1.234"
+  sharded_shard: 4                # It should be less than number of data nodes
+  shardsvr: 4
+  deepseeks: 3
+  configsvr: 2
+
+
+# ollama_total_pvs: "{{ ( _ollama.sharded_shard|int * _ollama.shardsvr|int ) + _ollama.configsvr|int }}"
+ollama_total_pvs: 10
+
+
+_deepseek:
+  install: true
+  major_version: 27
+  minor_version: 1
+  patch_version: 2
+  build_version:
+  admin_user: "admin"
+  admin_password: "Changeme123"
+  admin_email: "rokmc756@gmail.com"
+  enable_discovery_daemon: false
+  clone_git: true
+  nvme: true
+  namespace: deepseek
+  storage_path: "/mnt/deepseek-storage"
+  storage_class: "deepseek-storage"
+  k8s:
+    major_version: 1
+    minor_version: 28
+    patch_version: 0
+    build_version:
+  hostname: "deepseek.jtest.pivotal.io"
+  service:
+    metadata:
+      name: deepseek-loadbalancer
+      namespace: deepseek
+  ingress:
+    metadata:
+      name: deepseek-ingress
+      namespace: deepseek
+    hostname: "deepseek.jtest.pivotal.io"
+  kernel_parameters:
+    - "net.ipv4.neigh.default.gc_thresh1 = 0"   # For ARP Cache
+    - "fs.inotify.max_user_instances=2280"
+    - "fs.inotify.max_user_watches=755360"
+  lb:
+    install: true
+    ip_addr: "192.168.1.234"
+  sharded_shard: 4                # It should be less than number of data nodes
+  shardsvr: 4
+  deepseeks: 3
+  configsvr: 2
+
+deepseek_total_pvs: "{{ ( _deepseek.sharded_shard|int * _deepseek.shardsvr|int ) + _deepseek.configsvr|int }}"
+
+
+_deepseek_express:
+  install: true
+  namespace: deepseek-express
+  major_version: 2
+  minor_version: 6
+  patch_version: 5
+  build_version:
+  storage_class: "deepseek-express-storage"
+  storage_path: "/mnt/deepseek-express-storage"
+  repo_name: cowboysysop
+  download_link: "https://cowboysysop.github.io/charts/"
+  replica: 1
+  lb:
+    install: true
+    ip_addr: "192.168.1.218"
+
+
+_helm:
+  enable_repo: true
+  major_version: 3
+  minor_version:
+  patch_version:
+  build_version:
+
+
+_nginx:
+  ingress:
+    install: true
+    name: nginx-ingress
+    class_name: deepseek-express-ingress-class
+    namespace: "nginx-ingress"
+    major_version:
+    minor_version:
+    patch_version:
+    replica: 1
+    hostname: deepseek-express
+    domain: jtest.pivotal.io
+    service: deepseek-express
+    ip_addr: "192.168.1.219"
+    port: 8081
+  k8s_ingress:
+    major_version: 3
+    minor_version: 0
+    patch_version: 2
+
+
+_ssl:
+  dir: "{{ base_path }}/deepseek-express-certs"
+  days: 3660
+  country: "KR"
+  state: "Seoul"
+  location: "Guro"
+  organization: "Pivotal"
+  common_name: "jest.pivotal.io"
+  email: "rokmc756@gmail.com"
+

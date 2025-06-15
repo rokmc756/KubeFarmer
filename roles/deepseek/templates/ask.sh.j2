@@ -1,0 +1,24 @@
+#curl http://192.168.1.171:32379/v1/chat/completions -H "Content-Type: application/json" -d '{
+#  "model": "phi",
+#  "messages": [
+#    {
+#      "role": "user",
+#      "content": "Hello!"
+#    }
+#  ]
+#}'
+
+
+#curl http://192.168.1.210:11434/api/generate -d '{
+#  "model": "EEVE-Korean-Instruct-10.8B-v1.0-Q4_0",
+#  "prompt": "오늘 하루의 응원 문구를 하나 추천해줘"
+#}'
+
+
+# OLLAMA_HOST=192.168.1.171:32379 ollama run phi
+
+
+curl http://192.168.1.210:11434/api/generate -d '{
+  "model": "phi",
+  "prompt": "Let me know curent sttus of whenther in South Korea"
+}'

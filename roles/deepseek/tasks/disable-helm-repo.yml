@@ -1,0 +1,25 @@
+---
+- name: Remove Helm Repositories
+  shell: |
+    /usr/local/bin/helm repo remove {{ item.name }}
+  register: remove_helm_repos
+  ignore_errors: true
+  with_items:
+    - { name: 'cowboysysop', link: 'https://cowboysysop.github.io/charts/' }
+    - { name: 'bitnami',  link: 'https://charts.bitnami.com/bitnami' }
+    - { name: 'jetstack', link: 'https://charts.jetstack.io' }
+    - { name: 'nginx-ingress',  link: 'https://kubernetes.github.io/ingress-nginx' }
+- debug: msg={{ remove_helm_repos }}
+
+
+#- name: Delete Helm Install Script
+#  file:
+#    path: "{{ item }}"
+#    state: absent
+#  register: delete_helm_install_script
+#  ignore_errors: yes
+#  with_items:
+#    - "{{ base_path }}/get_helm.sh"
+#    - "/usr/local/bin/helm"
+#- debug: msg={{ delete_helm_install_script }}
+

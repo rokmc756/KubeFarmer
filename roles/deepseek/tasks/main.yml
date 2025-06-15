@@ -1,19 +1,100 @@
+---
+- name: Check OS ( DeepSeek )
+  fail: msg="Not a Red Hat or SUSE based System!"
+  when: ansible_os_family != 'RedHat' or  ansible_os_family != 'CentOS' or  ansible_os_family != 'Rocky' or ansible_os_family != 'openSUSE Leap'
 
-- https://community.aws/content/2sJofoAecl6jVdDwVqglbZwKz2E/hosting-deepseek-r1-on-amazon-eks
-- https://techcommunity.microsoft.com/blog/azurehighperformancecomputingblog/running-deepseek-on-aks-with-ollama/4372687
+
+- name: Set facts for DeepSeek
+  import_tasks: set-deepseek-facts.yml
+  tags: install, uninstall, create, delete, setup, remove, apply
 
 
-[ On Kubernetes ]
+#- name: Enable Helm Repository
+#  import_tasks: enable-helm-repo.yml
+#  tags: install
+#  when: (( repo is defined and repo == true ) or ( deepseek_all is defined and deepseek_all == true )) and inventory_hostname in groups['master']
 
-https://portworx.com/blog/a-step-by-step-guide-to-deploying-deepseek-r1/
 
-https://docs.byteplus.com/ko/docs/vke/Deploying-the-DeepSeek-R1-Distill-model-quickly-using-VKE
+- name: Apply Kernel Parameters for DeepSeek
+  import_tasks: apply-deepseek-kernel-parameters.yml
+  tags: apply, install
+  when: ( param is defined and param  == true ) or ( deepseek_all is defined and deepseek_all == true )
 
-https://collabnix.com/deploy-deepseek-r1-using-ollama-operator-on-kubernetes/
 
-https://github.com/vllm-project/vllm/issues/14740
+- name: Install GO
+  import_tasks: install-go.yml
+  tags: setup, install
+  when: (( go is defined and go == true ) or ( deepseek_all is defined and deepseek_all == true )) and inventory_hostname in groups['master']
 
-https://techcommunity.microsoft.com/blog/azurehighperformancecomputingblog/running-deepseek-on-aks-with-ollama/4372687
 
-https://dzone.com/articles/deepseek-on-kubernetes-ai-powered-reasoning-at-sca?fromrel=true
+- name: Create Local PV
+  import_tasks: create-local-pv.yml
+  tags: create, install
+  when: (( pv is defined and pv == true ) or ( deepseek_all is defined and deepseek_all == true )) and inventory_hostname in groups['master']
 
+
+- name: Install the Ollama Operator
+  import_tasks: install-ollama-operator.yml
+  tags: setup, install
+  when: (( ollama is defined and ollama == true ) or ( deepseek_all is defined and deepseek_all == true )) and inventory_hostname in groups['master']
+
+
+- name: Install the Kollama CLI
+  import_tasks: install-kollama-cli.yml
+  tags: setup, install
+  when: (( kollama is defined and kollama == true ) or ( deepseek_all is defined and deepseek_all == true )) and inventory_hostname in groups['master']
+
+
+- name: Install Ollama Cli
+  import_tasks: install-ollama-cli.yml
+  tags: setup, install
+  when: (( ollacli is defined and ollacli == true ) or ( deepseek_all is defined and deepseek_all == true )) and inventory_hostname in groups['master']
+
+
+- name: Delete Local PV
+  import_tasks: delete-local-pv.yml
+  tags: delete, uninstall
+  when: (( pv is defined and pv == true ) or ( deepseek_all is defined and deepseek_all == true )) and inventory_hostname in groups['master']
+
+
+- name: Remove Kernel Parameters for DeepSeek
+  import_tasks: remove-deepseek-kernel-parameters.yml
+  tags: remove, uninstall
+  when: ( param is defined and param == true ) or ( deepseek_all is defined and deepseek_all == true )
+
+
+#- name: Install Kustomize
+#  import_tasks: install-kustomize.yml
+#  tags: install
+#  when: _kustomize.install == true and inventory_hostname in groups['master']
+
+
+#- name: Install Load Balancer
+#  import_tasks: install-lb.yml
+#  tags: install
+#  when: (( lb is defined and lb == true ) or ( deepseek_all is defined and deepseek_all == true )) and inventory_hostname in groups['master']
+#
+#
+#- name: Install NGINX Ingress
+#  import_tasks: install-ingress.yml
+#  tags: install
+#  when: (( ingress is defined and ingress == true ) or ( deepseek_all is defined and deepseek_all == true )) and inventory_hostname in groups['master']
+#
+#
+#- name: Unstall NGINX Ingress
+#  import_tasks: uninstall-ingress.yml
+#  tags: uninstall
+#  when: (( ingress is defined and ingress == true ) or ( deepseek_all is defined and deepseek_all == true )) and inventory_hostname in groups['master']
+#
+#
+#- name: Uninstall Load Balancer
+#  import_tasks: uninstall-lb.yml
+#  tags: uninstall
+#  when: (( lb is defined and lb == true ) or ( deepseek_all is defined and deepseek_all == true )) and inventory_hostname in groups['master']
+
+
+#- name: Disable Helm Repository
+#  import_tasks: disable-helm-repo.yml
+#  tags: uninstall
+#  when: (( repo is defined and repo == true ) or ( deepseek_all is defined and deepseek_all == true )) and inventory_hostname in groups['master']
+#

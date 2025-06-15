@@ -1,0 +1,198 @@
+---
+diagnosticMode:
+  enabled: false
+  command:
+    - sleep
+  args:
+    - infinity
+
+
+auth:
+  enabled: true
+  usePasswordFiles: false
+  admin:
+    username: admin
+    password: "changeme"
+    token: ""
+    org: primary
+    bucket: primary
+    retention: ""
+  createUserToken: false
+  user:
+    username: "jomoon"
+    password: "changeme"
+    org: "Pivotal"
+    bucket: "jbucket01"
+  readUser:
+    username: "romoon"
+    password: "changme"
+  writeUser:
+    username: "womoon"
+    password: "changeme"
+  existingSecret: ""
+
+
+deepseek:
+  configuration: ""
+  existingConfiguration: ""
+  initdbScripts: {}
+  initdbScriptsCM: ""
+  initdbScriptsSecret: ""
+  podAffinityPreset: ""
+  podAntiAffinityPreset: soft
+  nodeAffinityPreset:
+    type: ""
+    key: ""
+    values: []
+  automountServiceAccountToken: false
+  updateStrategy:
+    type: RollingUpdate
+  priorityClassName: ""
+  schedulerName: ""
+  podManagementPolicy: OrderedReady
+  resourcesPreset: "nano"
+  extraEnvVarsCM: ""
+  extraEnvVarsSecret: ""
+  containerPorts:
+    http: 8086
+    rpc: 8088
+  sidecars: []
+  initContainers: []
+  pdb:
+    create: true
+    minAvailable: ""
+    maxUnavailable: ""
+  service:
+    type: ClusterIP
+    ports:
+      http: 8086
+      rpc: 8088
+    nodePorts:
+      http: ""
+      rpc: ""
+    loadBalancerIP: ""
+
+
+collectd:
+  enabled: true
+  service:
+    type: ClusterIP
+    port: 25826
+    nodePort: ""
+    loadBalancerIP: ""
+    clusterIP: ""
+    externalTrafficPolicy: Cluster
+
+
+ingress:
+  enabled: false
+  tls: false
+  pathType: ImplementationSpecific
+  apiVersion: ""
+  hostname: deepseek.local
+  path: /
+  ingressClassName: ""
+
+
+metrics:
+  enabled: true
+  service:
+    type: ClusterIP
+    port: 9122
+    nodePort: ""
+    loadBalancerIP: ""
+    clusterIP: ""
+    externalTrafficPolicy: Cluster
+  serviceMonitor:
+    enabled: false
+    namespace: ""
+    interval: ""
+    scrapeTimeout: ""
+    honorLabels: false
+
+
+networkPolicy:
+  enabled: true
+  allowExternal: true
+  allowExternalEgress: true
+
+
+persistence:
+  enabled: true
+  existingClaim: "deepseek"
+  storageClass: "{{ _deepseek.storage_class }}"
+  accessModes:
+    - ReadWriteOnce
+  size: 8Gi
+
+
+serviceAccount:
+  #enabled: false
+  create: true
+  name: ""
+  automountServiceAccountToken: false
+
+
+psp:
+  create: false
+
+
+rbac:
+  create: false
+
+
+volumePermissions:
+  enabled: false
+
+
+backup:
+  enabled: false
+  directory: "/backups"
+  retentionDays: 10
+  persistence:
+    ownConfig: false
+    enabled: true
+    existingClaim: ""
+    storageClass: ""
+    accessModes:
+      - ReadWriteOnce
+    size: 8Gi
+    annotations: {}
+  cronjob:
+    schedule: "0 2 * * *"
+    historyLimit: 1
+    caBundle:
+      enabled: false
+      existingConfigMap: ""
+      mountPath: "/opt/ca-certificates/ca-bundle.crt"
+      subPath: "ca-bundle.crt"
+  podAntiAffinityPreset: soft
+  nodeAffinityPreset:
+    type: ""
+    key: ""
+    values: []
+  uploadProviders:
+    google:
+      enabled: false
+      secret: ""
+      secretKey: "key.json"
+      existingSecret: ""
+      bucketName: "gs://bucket/deepseek"
+      resourcesPreset: "none"
+    azure:
+      enabled: false
+      secret: ""
+      secretKey: "connection-string"
+      existingSecret: ""
+      containerName: "deepseek-container"
+      resourcesPreset: "none"
+    aws:
+      enabled: false
+      accessKeyID: ""
+      secretAccessKey: ""
+      region: "us-east-1"
+      existingSecret: ""
+      bucketName: "s3://bucket/deepseek"
+      endpoint: ""
+      resourcesPreset: "none"
+

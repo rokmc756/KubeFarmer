@@ -51,10 +51,22 @@
   shell: |
     kubeadm config images pull --v=5
   register: config_image_pull
-  until: config_image_pull is succeeded
-  retries: 30
-  delay: 30
+  # until: config_image_pull is succeeded
+  # retries: 10
+  # delay: 180
+  async: 600
+  poll: 0
   when: inventory_hostname in groups['master']
+
+
+#- name: Config Image Pull
+#  shell: |
+#    kubeadm config images pull --v=5
+#  register: config_image_pull
+#  until: config_image_pull is succeeded
+#  retries: 30
+#  delay: 30
+#  when: inventory_hostname in groups['master']
 
 
 # kubeadm init --control-plane-endpoint={{ hostvars[groups['master'][0]][_netdev]['ipv4']['address'] }} --upload-certs \

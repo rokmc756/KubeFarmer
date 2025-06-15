@@ -1,5 +1,5 @@
 
-for i in `seq 1 7`
+for i in `seq 1 6`
 do
     
     sudo ping -c1 192.168.1.17$i

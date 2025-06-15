@@ -8,8 +8,8 @@ k8s:
   cluster_name: jack-kr-k8s
   domain: "jtest.pivotal.io"
   major_version: "1"
-  minor_version: "29"
-  patch_version: "12"
+  minor_version: "32"
+  patch_version: "5"
   build_version: ""
   repo_url: ""
   download_url: ""
@@ -105,7 +105,7 @@ k8s:
     # https://blog.devgenius.io/loxilb-another-load-balancer-aabf4a29d810
     # https://malwareanalysis.tistory.com/267
   vms:
-    rk9: [ "rk9-freeipa", "rk9-node01", "rk9-node02", "rk9-node03", "rk9-node04", "rk9-node05", "rk9-node06" ]
+    rk9: [ "rk9-freeipa", "rk9-node01", "rk9-node02", "rk9-node03", "rk9-node04", "rk9-node05" ]
     ubt24: [ "rk9-freeipa", "ubt24-node01", "ubt24-node02", "ubt24-node03", "ubt24-node04", "ubt24-node05" ]
 
 

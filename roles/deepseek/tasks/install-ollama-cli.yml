@@ -1,0 +1,53 @@
+---
+- name: Check if the Ollama Package Already Exists
+  stat: path={{ k8s.base_path }}/ollama-linux-amd64.tar.gz
+  register: check_ollama_file
+
+
+- name: Check if the Ollama Binary Already Exists
+  stat: path=/usr/local/bin/ollama
+  register: check_ollama_bin
+
+
+- name: Copy the Ollama File
+  copy:
+    src: "ollama-linux-amd64.tar.gz"
+    dest: "{{ k8s.base_path }}/ollama-linux-amd64.tar.gz"
+    mode: 0644
+    owner: root
+    group: root
+  register: copy_ollama_file
+  when: check_ollama_file.stat.exists != True and _ollama.download == false
+
+
+- name: Download Ollama File If Copy Fails
+  shell: wget https://ollama.com/download/ollama-linux-amd64.tar.gz -P {{ k8s.base_path }}
+  args:
+    executable: /bin/bash
+    chdir: "{{ base_path }}"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+  when: check_ollama_file.stat.exists != True and _ollama.download == true
+
+
+- name: Untar Ollama File
+  shell: |
+    tar -C /usr/local -xf {{ k8s.base_path }}/ollama-linux-amd64.tar.gz
+  args:
+    executable: /bin/bash
+    chdir: "{{ base_path }}"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+
+
+- name: Check Ollama Version
+  shell: |
+    ollama version
+  register: check_ollama_version
+  args:
+    executable: /bin/bash
+    chdir: "{{ base_path }}"
+  environment:
+    PATH: "/usr/local/go/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ check_ollama_version }}
+

@@ -1,0 +1,34 @@
+---
+- name: Install the Kollama CLI
+  shell: |
+    go install github.com/nekomeowww/ollama-operator/cmd/kollama@latest
+  register: install_kollama_operator
+  async: 300
+  poll: 10
+  args:
+    executable: /bin/bash
+    chdir: "{{ base_path }}"
+  environment:
+    PATH: "/usr/local/go/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ install_ollama_operator }}
+  when: print_debug == true
+
+
+- name: Add a line to the Kollama Binary Path
+  lineinfile:
+    path: "/root/.bashrc"
+    line: "export PATH=$PATH:$HOME/go/bin"
+    create: true
+
+
+- name: Check Kollama Version
+  shell: |
+    kollama version
+  register: check_kollama_version
+  args:
+    executable: /bin/bash
+    chdir: "{{ base_path }}"
+  environment:
+    PATH: "/root/go/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ check_kollama_version }}
+

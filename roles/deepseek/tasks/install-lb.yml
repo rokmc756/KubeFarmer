@@ -1,0 +1,26 @@
+---
+- name: Apply deepseek Load Balancer
+  shell: |
+    kubectl patch svc {{ item.svc }} -n {{ _deepseek.namespace }} -p '{"spec": {"type": "LoadBalancer", "loadBalancerIP": "{{ item.lb_ip_addr }}"}}'
+  register: apply_deepseek_lb
+  ignore_errors: yes
+  args:
+    chdir: "{{ base_path }}"
+  with_items:
+    - { svc: "deepseek-deepseek-sharded", lb_ip_addr: "{{ _deepseek.lb.ip_addr }}" }
+- debug: msg={{ apply_deepseek_lb }}
+  when: print_debug == true
+
+
+- name: Apply deepseek Express Load Balancer
+  shell: |
+    kubectl patch svc {{ item.svc }} -n {{ _deepseek_express.namespace }} -p '{"spec": {"type": "LoadBalancer", "loadBalancerIP": "{{ item.lb_ip_addr }}"}}'
+  register: apply_deepseek_express_lb
+  ignore_errors: yes
+  args:
+    chdir: "{{ base_path }}"
+  with_items:
+    - { svc: "deepseek-express", lb_ip_addr: "{{ _deepseek_express.lb.ip_addr }}" }
+- debug: msg={{ apply_deepseek_express_lb }}
+  when: print_debug == true
+
