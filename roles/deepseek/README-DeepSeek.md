@@ -21,3 +21,13 @@ https://collabnix.com/deploy-deepseek-r1-using-ollama-operator-on-kubernetes/
 
 https://jjaegii.tistory.com/27
 
+https://ollama-operator.ayaka.io/pages/en/references/cli/commands/deploy
+
+
+https://dev.to/thenjdevopsguy/ollama-llm-on-kubernetes-locally-run-it-on-your-laptop-1i3p
+
+https://collabnix.com/how-to-run-ollama-with-docker-desktop-and-kubernetes-a-step-by-step-guide/
+
+https://docs.lambda.ai/education/large-language-models/k8s-ollama-llama-3-2/
+
+
